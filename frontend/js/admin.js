@@ -21,7 +21,7 @@ function checkAuth() {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     
     if (!token || user.role !== 'admin') {
-        window.location.href = 'dashboard.html';
+        window.location.href = '/dashboard.html';
         return false;
     }
     return true;
@@ -230,7 +230,7 @@ async function deleteStory(storyId) {
 }
 
 function viewStory(storyId) {
-    window.location.href = `story-detail.html?id=${storyId}`;
+    window.location.href = `/story-detail.html?id=${storyId}`;
 }
 
 // Utility functions
@@ -264,5 +264,5 @@ function showSuccess(message) {
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = 'index.html';
+    window.location.href = '/index.html';
 }

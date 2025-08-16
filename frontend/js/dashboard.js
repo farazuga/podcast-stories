@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 function checkAuth() {
     const token = localStorage.getItem('token');
     if (!token) {
-        window.location.href = 'index.html';
+        window.location.href = '/index.html';
         return false;
     }
     return true;
@@ -263,7 +263,7 @@ async function handleCSVUpload(e) {
 }
 
 function viewStory(storyId) {
-    window.location.href = `story-detail.html?id=${storyId}`;
+    window.location.href = `/story-detail.html?id=${storyId}`;
 }
 
 async function deleteStory(storyId) {
@@ -304,5 +304,5 @@ function truncateText(text, maxLength) {
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = 'index.html';
+    window.location.href = '/index.html';
 }

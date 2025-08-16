@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 function checkAuth() {
     const token = localStorage.getItem('token');
     if (!token) {
-        window.location.href = 'index.html';
+        window.location.href = '/index.html';
         return false;
     }
     return true;
@@ -155,7 +155,7 @@ async function handleStorySubmit(e) {
         if (response.ok) {
             showSuccess('Story created successfully!');
             setTimeout(() => {
-                window.location.href = 'dashboard.html';
+                window.location.href = '/dashboard.html';
             }, 2000);
         } else {
             showError(result.error || 'Failed to create story');
@@ -191,5 +191,5 @@ function showSuccess(message) {
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = 'index.html';
+    window.location.href = '/index.html';
 }

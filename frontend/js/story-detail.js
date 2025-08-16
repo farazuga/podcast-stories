@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     storyId = urlParams.get('id');
     
     if (!storyId) {
-        window.location.href = 'dashboard.html';
+        window.location.href = '/dashboard.html';
         return;
     }
     
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 function checkAuth() {
     const token = localStorage.getItem('token');
     if (!token) {
-        window.location.href = 'index.html';
+        window.location.href = '/index.html';
         return false;
     }
     return true;
@@ -65,12 +65,12 @@ async function loadStory() {
             displayStory();
         } else {
             alert('Story not found');
-            window.location.href = 'dashboard.html';
+            window.location.href = '/dashboard.html';
         }
     } catch (error) {
         console.error('Error loading story:', error);
         alert('Error loading story');
-        window.location.href = 'dashboard.html';
+        window.location.href = '/dashboard.html';
     }
 }
 
@@ -144,7 +144,7 @@ function displayStory() {
 function editStory() {
     // For now, redirect to add story page with edit mode
     // In a full implementation, you'd populate the form with existing data
-    window.location.href = `add-story.html?edit=${storyId}`;
+    window.location.href = `/add-story.html?edit=${storyId}`;
 }
 
 async function deleteStory() {
@@ -162,7 +162,7 @@ async function deleteStory() {
         
         if (response.ok) {
             alert('Story deleted successfully');
-            window.location.href = 'dashboard.html';
+            window.location.href = '/dashboard.html';
         } else {
             alert('Failed to delete story');
         }
@@ -185,5 +185,5 @@ function formatDate(dateString) {
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = 'index.html';
+    window.location.href = '/index.html';
 }
