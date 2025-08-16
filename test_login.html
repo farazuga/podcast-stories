@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Test</title>
+</head>
+<body>
+    <h1>Login Test</h1>
+    <form id="testForm">
+        <input type="text" id="username" value="admin" placeholder="Username">
+        <input type="password" id="password" value="admin123" placeholder="Password">
+        <button type="submit">Test Login</button>
+    </form>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_URL = 'https://podcast-stories-production.up.railway.app/api';
+        
+        document.getElementById('testForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const resultsDiv = document.getElementById('results');
+            
+            console.log('Testing login with:', username);
+            resultsDiv.innerHTML = 'Testing login...';
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                console.log('Response:', response.status, data);
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        <h3>✅ Login Successful!</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Token:</strong> ${data.token.substring(0, 50)}...</p>
+                        <p><strong>User:</strong> ${JSON.stringify(data.user, null, 2)}</p>
+                        <p><strong>LocalStorage Test:</strong></p>
+                    `;
+                    
+                    // Test localStorage
+                    try {
+                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        const storedToken = localStorage.getItem('token');
+                        const storedUser = localStorage.getItem('user');
+                        
+                        resultsDiv.innerHTML += `
+                            <p>✅ localStorage.setItem() works</p>
+                            <p>✅ localStorage.getItem() works</p>
+                            <p><strong>Stored token:</strong> ${storedToken ? storedToken.substring(0, 50) + '...' : 'null'}</p>
+                            <p><strong>Stored user:</strong> ${storedUser}</p>
+                        `;
+                        
+                        // Test redirect (but don't actually redirect)
+                        resultsDiv.innerHTML += `
+                            <p><strong>Next step:</strong> Would redirect to /dashboard.html</p>
+                            <button onclick="testRedirect()">Test Dashboard Access</button>
+                        `;
+                    } catch (storageError) {
+                        resultsDiv.innerHTML += `<p>❌ localStorage error: ${storageError.message}</p>`;
+                    }
+                } else {
+                    resultsDiv.innerHTML = `
+                        <h3>❌ Login Failed</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Error:</strong> ${data.error || data.message || 'Unknown error'}</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                resultsDiv.innerHTML = `
+                    <h3>❌ Network Error</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p>Check console for details.</p>
+                `;
+            }
+        });
+        
+        function testRedirect() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                window.open('https://frontend-production-b75b.up.railway.app/dashboard.html', '_blank');
+            }
+        }
+    </script>
+</body>
+</html>
