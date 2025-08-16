@@ -30,11 +30,28 @@ async function loadUserInfo() {
         const user = JSON.parse(localStorage.getItem('user'));
         currentUser = user;
         
-        document.getElementById('userInfo').textContent = `${user.username} (${user.role})`;
+        // Display user info
+        document.getElementById('userInfo').textContent = user.name || user.username;
         
-        // Show admin link if user is admin
-        if (user.role === 'admin') {
+        // Display role badge
+        const roleBadge = document.getElementById('userRoleBadge');
+        if (roleBadge) {
+            roleBadge.textContent = user.role.toUpperCase().replace('_', ' ');
+            roleBadge.className = `role-badge role-${user.role}`;
+        }
+        
+        // Show appropriate navigation links based on role
+        if (user.role === 'admin' || user.role === 'amitrace_admin') {
             document.getElementById('adminLink').style.display = 'block';
+            document.getElementById('teacherLink').style.display = 'block';
+        } else if (user.role === 'teacher') {
+            document.getElementById('teacherLink').style.display = 'block';
+        }
+        
+        // Hide CSV import for students
+        if (user.role === 'student') {
+            const csvBtn = document.getElementById('csvImportBtn');
+            if (csvBtn) csvBtn.style.display = 'none';
         }
     } catch (error) {
         console.error('Error loading user info:', error);

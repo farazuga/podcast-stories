@@ -1275,6 +1275,41 @@ body {
     font-weight: 600;
 }
 
+/* Role Badges */
+.role-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-left: 0.5rem;
+}
+
+.role-amitrace_admin {
+    background: var(--primary-color);
+    color: var(--white);
+}
+
+.role-admin {
+    background: var(--primary-color);
+    color: var(--white);
+}
+
+.role-teacher {
+    background: var(--secondary-color);
+    color: var(--white);
+}
+
+.role-student {
+    background: #6c757d;
+    color: var(--white);
+}
+
+.role-user {
+    background: #17a2b8;
+    color: var(--white);
+}
+
 .text-center {
     text-align: center;
 }
