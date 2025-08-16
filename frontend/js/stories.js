@@ -1,5 +1,5 @@
 // API base URL
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'https://podcast-stories-production.up.railway.app/api';
 
 // Global variables
 let currentUser = null;

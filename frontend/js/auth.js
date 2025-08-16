@@ -1,5 +1,5 @@
 // API base URL - change this to your backend URL
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'https://podcast-stories-production.up.railway.app/api';
 
 // Check if user is already logged in
 if (localStorage.getItem('token') && window.location.pathname.includes('index.html')) {
