@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podcast Stories - Teacher Registration Request</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="login-card">
+            <div class="logo">
+                <h1>📻 Podcast Stories</h1>
+                <p>Request Teacher Account</p>
+            </div>
+            
+            <div class="info-message">
+                <p>Teacher accounts require admin approval. Submit your request below and an administrator will review it.</p>
+            </div>
+            
+            <form id="teacherRequestForm">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" placeholder="Enter your full name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="Enter your school email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="school">School</label>
+                    <select id="school" required>
+                        <option value="">Select your school</option>
+                        <!-- Schools will be loaded dynamically -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="message">Message (Optional)</label>
+                    <textarea id="message" placeholder="Additional information for the admin" rows="3"></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">Submit Request</button>
+            </form>
+            
+            <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
+            
+            <div class="auth-footer">
+                <p>Already have an account? <a href="index.html">Sign In</a></p>
+                <p>Are you a student? <a href="register-student.html">Student Registration</a></p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/register-teacher.js"></script>
+</body>
+</html>
