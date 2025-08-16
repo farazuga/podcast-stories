@@ -14,6 +14,8 @@ if (document.getElementById('loginForm')) {
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
         
+        console.log('Attempting login for:', username);
+        
         try {
             const response = await fetch(`${API_URL}/auth/login`, {
                 method: 'POST',
@@ -24,6 +26,7 @@ if (document.getElementById('loginForm')) {
             });
             
             const data = await response.json();
+            console.log('Response:', response.status, data);
             
             if (response.ok) {
                 localStorage.setItem('token', data.token);
@@ -33,7 +36,8 @@ if (document.getElementById('loginForm')) {
                 showError(data.error || 'Login failed');
             }
         } catch (error) {
-            showError('Network error. Please try again.');
+            console.error('Login error:', error);
+            showError('Network error. Please try again. Check console for details.');
         }
     });
 }
