@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podcast Stories - Story Details</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>📻 Podcast Stories</h1>
+        </div>
+        <div class="nav-menu">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="add-story.html">Add Story</a>
+            <a href="admin.html" id="adminLink" style="display: none;">Admin Panel</a>
+        </div>
+        <div class="nav-user">
+            <span id="userInfo"></span>
+            <button class="btn btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="dashboard.html">Dashboard</a> / <span>Story Details</span>
+        </div>
+
+        <div class="story-detail-card">
+            <div class="story-header">
+                <h1 id="storyTitle"></h1>
+                <div class="story-meta">
+                    <span>📅 Uploaded: <span id="uploadDate"></span></span>
+                    <span>👤 By: <span id="uploadedBy"></span></span>
+                    <span>🏫 <span id="school"></span></span>
+                    <span>✉️ <span id="email"></span></span>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h2 class="section-title">Story Description</h2>
+                <p id="storyDescription" class="description-text"></p>
+            </div>
+
+            <div class="detail-section">
+                <h2 class="section-title">Coverage Period</h2>
+                <div class="coverage-dates">
+                    <div><strong>Start Date:</strong> <span id="startDate"></span></div>
+                    <div><strong>End Date:</strong> <span id="endDate"></span></div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h2 class="section-title">Story Tags</h2>
+                <div id="storyTags" class="tags-container"></div>
+            </div>
+
+            <div class="detail-section">
+                <h2 class="section-title">Interview Questions</h2>
+                <div id="questionsList" class="questions-list"></div>
+            </div>
+
+            <div class="detail-section">
+                <h2 class="section-title">People to Interview</h2>
+                <div id="intervieweesList" class="people-grid"></div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
+                <div class="right-actions">
+                    <button class="btn btn-edit" id="editBtn" onclick="editStory()">Edit Story</button>
+                    <button class="btn btn-delete" id="deleteBtn" onclick="deleteStory()">Delete Story</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/story-detail.js"></script>
+</body>
+</html>
