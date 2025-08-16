@@ -2,8 +2,8 @@
 const API_URL = 'https://podcast-stories-production.up.railway.app/api';
 
 // Check if user is already logged in
-if (localStorage.getItem('token') && window.location.pathname.includes('index.html')) {
-    window.location.href = 'dashboard.html';
+if (localStorage.getItem('token') && (window.location.pathname === '/' || window.location.pathname.includes('index.html'))) {
+    window.location.href = '/dashboard.html';
 }
 
 // Login Form Handler
@@ -31,7 +31,7 @@ if (document.getElementById('loginForm')) {
             if (response.ok) {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
-                window.location.href = 'dashboard.html';
+                window.location.href = '/dashboard.html';
             } else {
                 showError(data.error || 'Login failed');
             }
@@ -72,7 +72,7 @@ if (document.getElementById('registerForm')) {
             if (response.ok) {
                 showSuccess('Registration successful! Redirecting to login...');
                 setTimeout(() => {
-                    window.location.href = 'index.html';
+                    window.location.href = '/index.html';
                 }, 2000);
             } else {
                 showError(data.error || 'Registration failed');
@@ -110,5 +110,5 @@ function showSuccess(message) {
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = 'index.html';
+    window.location.href = '/index.html';
 }
