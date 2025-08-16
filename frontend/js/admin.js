@@ -4,23 +4,27 @@ const API_URL = 'https://podcast-stories-production.up.railway.app/api';
 // Global variables
 let currentUser = null;
 let allTags = [];
+let allSchools = [];
+let teacherRequests = [];
+let currentRequestId = null;
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', async () => {
     if (!checkAuth()) return;
     
     await loadUserInfo();
-    await loadTags();
-    await loadStatistics();
-    await loadRecentStories();
+    await loadInitialData();
     setupEventListeners();
+    
+    // Show overview tab by default
+    showTab('overview');
 });
 
 function checkAuth() {
     const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     
-    if (!token || user.role !== 'admin') {
+    if (!token || (user.role !== 'admin' && user.role !== 'amitrace_admin')) {
         window.location.href = '/dashboard.html';
         return false;
     }
@@ -39,12 +43,344 @@ async function loadUserInfo() {
     }
 }
 
+async function loadInitialData() {
+    await Promise.all([
+        loadTags(),
+        loadSchools(),
+        loadTeacherRequests(),
+        loadStatistics(),
+        loadRecentStories()
+    ]);
+}
+
+// Tab Management
+function showTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Remove active class from all buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected tab
+    document.getElementById(`${tabName}-tab`).classList.add('active');
+    event.target.classList.add('active');
+    
+    // Load tab-specific data
+    switch(tabName) {
+        case 'schools':
+            loadSchools();
+            break;
+        case 'teachers':
+            loadTeacherRequests();
+            loadTeacherRequestStats();
+            break;
+        case 'tags':
+            loadTags();
+            break;
+        case 'overview':
+            loadStatistics();
+            loadRecentStories();
+            break;
+    }
+}
+
+// Statistics
+async function loadStatistics() {
+    try {
+        const [storiesResponse, schoolsResponse, teacherStatsResponse] = await Promise.all([
+            fetch(`${API_URL}/stories`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            }),
+            fetch(`${API_URL}/schools`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            }),
+            fetch(`${API_URL}/teacher-requests/stats/overview`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            })
+        ]);
+        
+        if (storiesResponse.ok) {
+            const stories = await storiesResponse.json();
+            document.getElementById('totalStories').textContent = stories.length;
+        }
+        
+        if (schoolsResponse.ok) {
+            const schools = await schoolsResponse.json();
+            document.getElementById('totalSchools').textContent = schools.length;
+            
+            // Calculate total users from schools
+            const totalUsers = schools.reduce((sum, school) => sum + (school.user_count || 0), 0);
+            document.getElementById('totalUsers').textContent = totalUsers;
+        }
+        
+        if (teacherStatsResponse.ok) {
+            const stats = await teacherStatsResponse.json();
+            document.getElementById('pendingRequests').textContent = stats.pending_count || 0;
+        }
+        
+        // Total classes - we'll need to implement this endpoint
+        try {
+            const classesResponse = await fetch(`${API_URL}/classes`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            if (classesResponse.ok) {
+                const classes = await classesResponse.json();
+                document.getElementById('totalClasses').textContent = classes.length;
+            }
+        } catch (e) {
+            document.getElementById('totalClasses').textContent = '—';
+        }
+        
+        document.getElementById('totalTags').textContent = allTags.length;
+        
+    } catch (error) {
+        console.error('Error loading statistics:', error);
+    }
+}
+
+// Schools Management
+async function loadSchools() {
+    try {
+        const response = await fetch(`${API_URL}/schools`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            allSchools = await response.json();
+            displaySchools();
+        }
+    } catch (error) {
+        console.error('Error loading schools:', error);
+    }
+}
+
+function displaySchools() {
+    const schoolsTable = document.getElementById('schoolsTable');
+    if (!schoolsTable) return;
+    
+    schoolsTable.innerHTML = allSchools.map(school => `
+        <tr>
+            <td>${school.school_name}</td>
+            <td>${formatDate(school.created_at)}</td>
+            <td>${school.user_count || 0}</td>
+            <td>—</td>
+            <td>—</td>
+            <td class="table-actions">
+                <button class="btn btn-small btn-edit" onclick="editSchool(${school.id})">Edit</button>
+                <button class="btn btn-small btn-delete" onclick="deleteSchool(${school.id})">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function addSchool(e) {
+    e.preventDefault();
+    
+    const schoolName = document.getElementById('schoolName').value.trim();
+    
+    if (!schoolName) {
+        showError('School name is required');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/schools`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ school_name: schoolName })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showSuccess('School added successfully!');
+            document.getElementById('schoolName').value = '';
+            await loadSchools();
+            await loadStatistics();
+        } else {
+            showError(result.error || 'Failed to add school');
+        }
+    } catch (error) {
+        showError('Network error. Please try again.');
+    }
+}
+
+async function deleteSchool(schoolId) {
+    if (!confirm('Are you sure you want to delete this school? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/schools/${schoolId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            showSuccess('School deleted successfully!');
+            await loadSchools();
+            await loadStatistics();
+        } else {
+            const result = await response.json();
+            showError(result.error || 'Failed to delete school');
+        }
+    } catch (error) {
+        showError('Network error. Please try again.');
+    }
+}
+
+// Teacher Requests Management
+async function loadTeacherRequests() {
+    try {
+        const statusFilter = document.getElementById('statusFilter')?.value || '';
+        const url = statusFilter ? 
+            `${API_URL}/teacher-requests?status=${statusFilter}` : 
+            `${API_URL}/teacher-requests`;
+            
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            teacherRequests = await response.json();
+            displayTeacherRequests();
+        }
+    } catch (error) {
+        console.error('Error loading teacher requests:', error);
+    }
+}
+
+async function loadTeacherRequestStats() {
+    try {
+        const response = await fetch(`${API_URL}/teacher-requests/stats/overview`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            const stats = await response.json();
+            document.getElementById('pendingTeacherRequests').textContent = stats.pending_count || 0;
+            document.getElementById('approvedTeacherRequests').textContent = stats.approved_count || 0;
+            document.getElementById('rejectedTeacherRequests').textContent = stats.rejected_count || 0;
+            document.getElementById('totalTeacherRequests').textContent = stats.total_count || 0;
+        }
+    } catch (error) {
+        console.error('Error loading teacher request stats:', error);
+    }
+}
+
+function displayTeacherRequests() {
+    const table = document.getElementById('teacherRequestsTable');
+    if (!table) return;
+    
+    table.innerHTML = teacherRequests.map(request => `
+        <tr>
+            <td>${request.name}</td>
+            <td>${request.email}</td>
+            <td>${request.school_name}</td>
+            <td>${request.message || 'No message'}</td>
+            <td><span class="status-badge status-${request.status}">${request.status}</span></td>
+            <td>${formatDate(request.requested_at)}</td>
+            <td class="table-actions">
+                ${request.status === 'pending' ? `
+                    <button class="btn btn-small btn-approve" onclick="showApprovalModal(${request.id})">Approve</button>
+                    <button class="btn btn-small btn-reject" onclick="rejectTeacherRequest(${request.id})">Reject</button>
+                ` : '—'}
+            </td>
+        </tr>
+    `).join('');
+}
+
+function showApprovalModal(requestId) {
+    currentRequestId = requestId;
+    const modal = document.getElementById('approvalModal');
+    modal.style.display = 'block';
+    
+    // Clear form
+    document.getElementById('teacherUsername').value = '';
+    document.getElementById('teacherPassword').value = '';
+    document.getElementById('requestId').value = requestId;
+}
+
+function closeApprovalModal() {
+    const modal = document.getElementById('approvalModal');
+    modal.style.display = 'none';
+    currentRequestId = null;
+}
+
+async function approveTeacherRequest(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('teacherUsername').value.trim();
+    const password = document.getElementById('teacherPassword').value;
+    const requestId = currentRequestId;
+    
+    if (!username || !password) {
+        showError('Username and password are required');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/teacher-requests/${requestId}/approve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ username, password })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showSuccess('Teacher request approved and account created!');
+            closeApprovalModal();
+            await loadTeacherRequests();
+            await loadTeacherRequestStats();
+            await loadStatistics();
+        } else {
+            showError(result.error || 'Failed to approve teacher request');
+        }
+    } catch (error) {
+        showError('Network error. Please try again.');
+    }
+}
+
+async function rejectTeacherRequest(requestId) {
+    if (!confirm('Are you sure you want to reject this teacher request?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/teacher-requests/${requestId}/reject`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            showSuccess('Teacher request rejected');
+            await loadTeacherRequests();
+            await loadTeacherRequestStats();
+        } else {
+            const result = await response.json();
+            showError(result.error || 'Failed to reject teacher request');
+        }
+    } catch (error) {
+        showError('Network error. Please try again.');
+    }
+}
+
+// Tags Management (existing functionality)
 async function loadTags() {
     try {
         const response = await fetch(`${API_URL}/tags`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
         if (response.ok) {
@@ -68,83 +404,7 @@ function displayTags() {
     `).join('');
 }
 
-async function loadStatistics() {
-    try {
-        // Load stories for statistics
-        const storiesResponse = await fetch(`${API_URL}/stories`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-        
-        if (storiesResponse.ok) {
-            const stories = await storiesResponse.json();
-            
-            // Calculate statistics
-            const totalStories = stories.length;
-            const currentMonth = new Date().getMonth();
-            const currentYear = new Date().getFullYear();
-            
-            const storiesThisMonth = stories.filter(story => {
-                const storyDate = new Date(story.uploaded_date);
-                return storyDate.getMonth() === currentMonth && storyDate.getFullYear() === currentYear;
-            }).length;
-            
-            // Update statistics display
-            document.getElementById('totalStories').textContent = totalStories;
-            document.getElementById('storiesThisMonth').textContent = storiesThisMonth;
-            document.getElementById('totalTags').textContent = allTags.length;
-            
-            // For user count, we'll need to implement a users endpoint or estimate
-            document.getElementById('totalUsers').textContent = '—';
-        }
-    } catch (error) {
-        console.error('Error loading statistics:', error);
-    }
-}
-
-async function loadRecentStories() {
-    try {
-        const response = await fetch(`${API_URL}/stories`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-        
-        if (response.ok) {
-            const stories = await response.json();
-            const recentStories = stories.slice(0, 10); // Get first 10 stories
-            
-            const tableBody = document.getElementById('recentStoriesTable');
-            if (tableBody) {
-                tableBody.innerHTML = recentStories.map(story => `
-                    <tr>
-                        <td>${story.idea_title}</td>
-                        <td>${story.uploaded_by_name}</td>
-                        <td>${formatDate(story.uploaded_date)}</td>
-                        <td>${story.tags ? story.tags.filter(tag => tag).join(', ') : 'None'}</td>
-                        <td>
-                            <button class="btn btn-view" onclick="viewStory(${story.id})" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">View</button>
-                            <button class="btn btn-delete" onclick="deleteStory(${story.id})" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">Delete</button>
-                        </td>
-                    </tr>
-                `).join('');
-            }
-        }
-    } catch (error) {
-        console.error('Error loading recent stories:', error);
-    }
-}
-
-function setupEventListeners() {
-    // Add tag form
-    const addTagForm = document.getElementById('addTagForm');
-    if (addTagForm) {
-        addTagForm.addEventListener('submit', handleAddTag);
-    }
-}
-
-async function handleAddTag(e) {
+async function addTag(e) {
     e.preventDefault();
     
     const tagName = document.getElementById('newTagName').value.trim();
@@ -187,9 +447,7 @@ async function deleteTag(tagId) {
     try {
         const response = await fetch(`${API_URL}/tags/${tagId}`, {
             method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
         if (response.ok) {
@@ -204,6 +462,38 @@ async function deleteTag(tagId) {
     }
 }
 
+// Recent Stories (existing functionality)
+async function loadRecentStories() {
+    try {
+        const response = await fetch(`${API_URL}/stories`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            const stories = await response.json();
+            const recentStories = stories.slice(0, 10);
+            
+            const tableBody = document.getElementById('recentStoriesTable');
+            if (tableBody) {
+                tableBody.innerHTML = recentStories.map(story => `
+                    <tr>
+                        <td>${story.idea_title}</td>
+                        <td>${story.uploaded_by_name}</td>
+                        <td>${formatDate(story.uploaded_date)}</td>
+                        <td>${story.tags ? story.tags.filter(tag => tag).join(', ') : 'None'}</td>
+                        <td class="table-actions">
+                            <button class="btn btn-small btn-secondary" onclick="viewStory(${story.id})">View</button>
+                            <button class="btn btn-small btn-delete" onclick="deleteStory(${story.id})">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+    } catch (error) {
+        console.error('Error loading recent stories:', error);
+    }
+}
+
 async function deleteStory(storyId) {
     if (!confirm('Are you sure you want to delete this story?')) {
         return;
@@ -212,9 +502,7 @@ async function deleteStory(storyId) {
     try {
         const response = await fetch(`${API_URL}/stories/${storyId}`, {
             method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
         if (response.ok) {
@@ -231,6 +519,35 @@ async function deleteStory(storyId) {
 
 function viewStory(storyId) {
     window.location.href = `/story-detail.html?id=${storyId}`;
+}
+
+// Event Listeners
+function setupEventListeners() {
+    // Add school form
+    const addSchoolForm = document.getElementById('addSchoolForm');
+    if (addSchoolForm) {
+        addSchoolForm.addEventListener('submit', addSchool);
+    }
+    
+    // Add tag form
+    const addTagForm = document.getElementById('addTagForm');
+    if (addTagForm) {
+        addTagForm.addEventListener('submit', addTag);
+    }
+    
+    // Approve teacher form
+    const approveTeacherForm = document.getElementById('approveTeacherForm');
+    if (approveTeacherForm) {
+        approveTeacherForm.addEventListener('submit', approveTeacherRequest);
+    }
+    
+    // Modal click outside to close
+    window.onclick = function(event) {
+        const modal = document.getElementById('approvalModal');
+        if (event.target === modal) {
+            closeApprovalModal();
+        }
+    }
 }
 
 // Utility functions
