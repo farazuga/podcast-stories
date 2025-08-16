@@ -27,6 +27,7 @@ const tagsRoutes = require('./routes/tags');
 const schoolsRoutes = require('./routes/schools');
 const teacherRequestsRoutes = require('./routes/teacher-requests');
 const classesRoutes = require('./routes/classes');
+const passwordResetRoutes = require('./routes/password-reset');
 const testConstraintsRoutes = require('./routes/test-constraints');
 
 // Use routes
@@ -36,6 +37,7 @@ app.use('/api/tags', tagsRoutes);
 app.use('/api/schools', schoolsRoutes);
 app.use('/api/teacher-requests', teacherRequestsRoutes);
 app.use('/api/classes', classesRoutes);
+app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/test', testConstraintsRoutes);
 
 // Root endpoint

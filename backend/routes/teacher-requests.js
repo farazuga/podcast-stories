@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Pool } = require('pg');
 const { verifyToken, isAmitraceAdmin } = require('../middleware/auth');
+const emailService = require('../services/emailService');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -208,9 +209,23 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
       
       await pool.query('COMMIT');
       
+      // Send approval email
+      const emailResult = await emailService.sendTeacherApprovalEmail(
+        request.email,
+        request.name,
+        username,
+        password
+      );
+      
+      if (!emailResult.success) {
+        console.error('Failed to send approval email:', emailResult.error);
+        // Don't fail the request, just log the error
+      }
+      
       res.json({
-        message: 'Teacher request approved and account created',
-        teacher: userResult.rows[0]
+        message: 'Teacher request approved and account created. Login credentials sent via email.',
+        teacher: userResult.rows[0],
+        emailSent: emailResult.success
       });
     } catch (error) {
       await pool.query('ROLLBACK');
@@ -227,6 +242,20 @@ router.post('/:id/reject', verifyToken, isAmitraceAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     
+    // Get the teacher request first for email notification
+    const requestResult = await pool.query(
+      'SELECT * FROM teacher_requests WHERE id = $1 AND status = $2',
+      [id, 'pending']
+    );
+    
+    if (requestResult.rows.length === 0) {
+      return res.status(404).json({ 
+        error: 'Pending teacher request not found' 
+      });
+    }
+    
+    const request = requestResult.rows[0];
+    
     const result = await pool.query(`
       UPDATE teacher_requests 
       SET status = $1, approved_by = $2, approved_at = CURRENT_TIMESTAMP 
@@ -234,15 +263,21 @@ router.post('/:id/reject', verifyToken, isAmitraceAdmin, async (req, res) => {
       RETURNING id, status
     `, ['rejected', req.user.id, id, 'pending']);
     
-    if (result.rows.length === 0) {
-      return res.status(404).json({ 
-        error: 'Pending teacher request not found' 
-      });
+    // Send rejection email
+    const emailResult = await emailService.sendTeacherRejectionEmail(
+      request.email,
+      request.name
+    );
+    
+    if (!emailResult.success) {
+      console.error('Failed to send rejection email:', emailResult.error);
+      // Don't fail the request, just log the error
     }
     
     res.json({
-      message: 'Teacher request rejected',
-      id: result.rows[0].id
+      message: 'Teacher request rejected. Notification sent via email.',
+      id: result.rows[0].id,
+      emailSent: emailResult.success
     });
   } catch (error) {
     console.error('Error rejecting teacher request:', error);
