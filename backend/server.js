@@ -28,6 +28,7 @@ const schoolsRoutes = require('./routes/schools');
 const teacherRequestsRoutes = require('./routes/teacher-requests');
 const classesRoutes = require('./routes/classes');
 const passwordResetRoutes = require('./routes/password-reset');
+const studentRegistrationRoutes = require('./routes/student-registration');
 const testConstraintsRoutes = require('./routes/test-constraints');
 const migrationRoutes = require('./routes/run-migration');
 const debugRoutes = require('./routes/debug');
@@ -41,6 +42,7 @@ app.use('/api/schools', schoolsRoutes);
 app.use('/api/teacher-requests', teacherRequestsRoutes);
 app.use('/api/classes', classesRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
+app.use('/api/students', studentRegistrationRoutes);
 app.use('/api/test', testConstraintsRoutes);
 app.use('/api/migration', migrationRoutes);
 app.use('/api/debug', debugRoutes);
@@ -81,7 +83,7 @@ async function initializeDatabase() {
       const schoolId = school.rows[0]?.id;
       
       const userResult = await pool.query(
-        'INSERT INTO users (username, password_hash, email, role, name, school_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+        'INSERT INTO users (username, password, email, role, name, school_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
         [
           process.env.ADMIN_USERNAME || 'admin',
           hashedPassword,
