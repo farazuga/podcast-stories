@@ -193,24 +193,40 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     
     // Start transaction
+    console.log('Starting teacher approval transaction for request:', id);
+    console.log('Creating user with data:', {
+      username,
+      email: request.email,
+      role: 'teacher',
+      name: request.name,
+      school_id: request.school_id
+    });
+    
     await pool.query('BEGIN');
     
     try {
       // Create user account
+      console.log('Attempting to create user account...');
       const userResult = await pool.query(`
         INSERT INTO users (username, email, password_hash, role, name, school_id) 
         VALUES ($1, $2, $3, $4, $5, $6) 
         RETURNING id, username, email, role, name, school_id
       `, [username, request.email, hashedPassword, 'teacher', request.name, request.school_id]);
       
+      console.log('User account created successfully:', userResult.rows[0]);
+      
       // Update teacher request status
+      console.log('Updating teacher request status to approved...');
       await pool.query(`
         UPDATE teacher_requests 
         SET status = $1, approved_by = $2, approved_at = CURRENT_TIMESTAMP 
         WHERE id = $3
       `, ['approved', req.user.id, id]);
       
+      console.log('Teacher request status updated successfully');
+      console.log('Committing transaction...');
       await pool.query('COMMIT');
+      console.log('Transaction committed successfully');
       
       // Send approval email - try Gmail API first
       console.log('Sending teacher approval email to:', request.email);
@@ -243,12 +259,26 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
         emailSent: emailResult.success
       });
     } catch (error) {
+      console.error('Transaction failed, rolling back:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        detail: error.detail,
+        constraint: error.constraint,
+        table: error.table,
+        column: error.column
+      });
       await pool.query('ROLLBACK');
       throw error;
     }
   } catch (error) {
     console.error('Error approving teacher request:', error);
-    res.status(500).json({ error: 'Failed to approve teacher request' });
+    console.error('Full error object:', error);
+    res.status(500).json({ 
+      error: 'Failed to approve teacher request',
+      details: error.message,
+      code: error.code 
+    });
   }
 });
 
