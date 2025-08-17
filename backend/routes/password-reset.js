@@ -47,12 +47,17 @@ router.post('/request', async (req, res) => {
       DO UPDATE SET token = $2, expires_at = $3, used = false, created_at = CURRENT_TIMESTAMP
     `, [user.id, resetToken, expiresAt]);
     
+    console.log('Attempting to send password reset email to:', user.email);
+    
     // Try Gmail API first, then fall back to SMTP
+    console.log('Trying Gmail API...');
     let emailResult = await gmailService.sendPasswordResetEmail(
       user.email, 
       user.name || user.username, 
       resetToken
     );
+    
+    console.log('Gmail API result:', emailResult);
     
     // If Gmail API fails, try SMTP
     if (!emailResult.success) {
@@ -62,13 +67,14 @@ router.post('/request', async (req, res) => {
         user.name || user.username, 
         resetToken
       );
+      console.log('SMTP result:', emailResult);
     }
     
     if (!emailResult.success) {
       console.error('Failed to send password reset email:', emailResult.error);
       // Still return success to user for security
     } else {
-      console.log('Password reset email sent successfully');
+      console.log('Password reset email sent successfully via', emailResult.messageId ? 'Gmail API' : 'SMTP');
     }
     
     res.json({ 

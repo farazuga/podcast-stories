@@ -16,6 +16,12 @@ class GmailService {
             }
 
             console.log('Initializing Gmail API with OAuth2...');
+            console.log('OAuth Config:', {
+                user: process.env.EMAIL_USER,
+                hasClientId: !!process.env.GMAIL_CLIENT_ID,
+                hasClientSecret: !!process.env.GMAIL_CLIENT_SECRET,
+                hasRefreshToken: !!process.env.GMAIL_REFRESH_TOKEN
+            });
             
             this.oauth2Client = new google.auth.OAuth2(
                 process.env.GMAIL_CLIENT_ID,
@@ -26,6 +32,10 @@ class GmailService {
             this.oauth2Client.setCredentials({
                 refresh_token: process.env.GMAIL_REFRESH_TOKEN
             });
+
+            // Test access token generation
+            const accessToken = await this.oauth2Client.getAccessToken();
+            console.log('Access token obtained:', !!accessToken.token);
 
             // Initialize Gmail API
             this.gmail = google.gmail({ version: 'v1', auth: this.oauth2Client });
@@ -48,7 +58,7 @@ class GmailService {
 
     async sendEmail(to, subject, html) {
         if (!this.gmail || !this.initialized) {
-            console.warn('Gmail API not available');
+            console.warn('Gmail API not available - initialized:', this.initialized, 'gmail:', !!this.gmail);
             return { success: false, error: 'Gmail API not configured' };
         }
 
