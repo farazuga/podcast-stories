@@ -6,11 +6,11 @@
 }
 
 :root {
-    --primary-color: #ff6b35;
-    --primary-hover: #e55a2b;
-    --secondary-color: #48bb78;
+    --primary-color: #f79b5b;
+    --primary-hover: #e58a4b;
+    --secondary-color: #04362a;
     --danger-color: #f56565;
-    --text-color: #333;
+    --text-color: #333333;
     --text-light: #666;
     --bg-color: #f5f7fa;
     --white: #ffffff;
