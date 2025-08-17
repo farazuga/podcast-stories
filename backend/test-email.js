@@ -6,17 +6,30 @@ async function testEmailService() {
     console.log('🧪 Testing Email Service...\n');
     
     // Check if email credentials are configured
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    const hasOAuth = !!(process.env.GMAIL_CLIENT_ID && 
+                       process.env.GMAIL_CLIENT_SECRET && 
+                       process.env.GMAIL_REFRESH_TOKEN && 
+                       process.env.EMAIL_USER);
+    
+    const hasAppPassword = !!(process.env.EMAIL_USER && process.env.EMAIL_PASS);
+    
+    if (!hasOAuth && !hasAppPassword) {
         console.log('❌ Email credentials not configured');
-        console.log('Set EMAIL_USER and EMAIL_PASS environment variables');
-        console.log('\nFor Gmail:');
+        console.log('\n🔐 Option 1: OAuth2 (Recommended)');
+        console.log('EMAIL_USER=your-email@gmail.com');
+        console.log('GMAIL_CLIENT_ID=your-client-id');
+        console.log('GMAIL_CLIENT_SECRET=your-client-secret');
+        console.log('GMAIL_REFRESH_TOKEN=your-refresh-token');
+        console.log('\n🔑 Option 2: App Password (Simpler)');
         console.log('EMAIL_USER=your-email@gmail.com');
         console.log('EMAIL_PASS=your-app-specific-password');
+        console.log('\n📖 See OAUTH_SETUP.md for detailed instructions');
         return;
     }
     
     console.log('✅ Email credentials found');
-    console.log(`📧 Email User: ${process.env.EMAIL_USER}\n`);
+    console.log(`📧 Email User: ${process.env.EMAIL_USER}`);
+    console.log(`🔐 Auth Method: ${hasOAuth ? 'OAuth2' : 'App Password'}\n`);
     
     // Test email methods
     const testEmail = process.env.EMAIL_USER; // Send test to yourself

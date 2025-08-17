@@ -1,41 +1,99 @@
 const nodemailer = require('nodemailer');
+const { google } = require('googleapis');
 
 class EmailService {
     constructor() {
         this.transporter = null;
+        this.oauth2Client = null;
         this.initializeTransporter();
     }
 
-    initializeTransporter() {
+    async initializeTransporter() {
         try {
-            this.transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS
-                }
-            });
-
-            // Alternative configuration for other SMTP providers
-            if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-                console.warn('Email credentials not configured. Email functionality will be disabled.');
+            // Check if OAuth credentials are provided
+            if (this.hasOAuthCredentials()) {
+                console.log('Initializing email service with OAuth2...');
+                await this.initializeOAuth();
+            } else if (this.hasAppPasswordCredentials()) {
+                console.log('Initializing email service with app password...');
+                this.initializeAppPassword();
+            } else {
+                console.warn('No email credentials configured. Email functionality will be disabled.');
                 this.transporter = null;
                 return;
             }
 
             // Verify the connection
-            this.transporter.verify((error, success) => {
-                if (error) {
-                    console.error('Email configuration error:', error);
-                    this.transporter = null;
-                } else {
-                    console.log('Email service ready');
-                }
-            });
+            if (this.transporter) {
+                this.transporter.verify((error, success) => {
+                    if (error) {
+                        console.error('Email configuration error:', error);
+                        this.transporter = null;
+                    } else {
+                        console.log('Email service ready');
+                    }
+                });
+            }
         } catch (error) {
             console.error('Failed to initialize email service:', error);
             this.transporter = null;
         }
+    }
+
+    hasOAuthCredentials() {
+        return !!(process.env.GMAIL_CLIENT_ID && 
+                 process.env.GMAIL_CLIENT_SECRET && 
+                 process.env.GMAIL_REFRESH_TOKEN && 
+                 process.env.EMAIL_USER);
+    }
+
+    hasAppPasswordCredentials() {
+        return !!(process.env.EMAIL_USER && process.env.EMAIL_PASS);
+    }
+
+    async initializeOAuth() {
+        try {
+            this.oauth2Client = new google.auth.OAuth2(
+                process.env.GMAIL_CLIENT_ID,
+                process.env.GMAIL_CLIENT_SECRET,
+                'https://developers.google.com/oauthplayground' // Redirect URL
+            );
+
+            this.oauth2Client.setCredentials({
+                refresh_token: process.env.GMAIL_REFRESH_TOKEN
+            });
+
+            // Get access token
+            const accessToken = await this.oauth2Client.getAccessToken();
+
+            this.transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    type: 'OAuth2',
+                    user: process.env.EMAIL_USER,
+                    clientId: process.env.GMAIL_CLIENT_ID,
+                    clientSecret: process.env.GMAIL_CLIENT_SECRET,
+                    refreshToken: process.env.GMAIL_REFRESH_TOKEN,
+                    accessToken: accessToken.token
+                }
+            });
+
+            console.log('OAuth2 email service initialized successfully');
+        } catch (error) {
+            console.error('OAuth2 initialization failed:', error);
+            throw error;
+        }
+    }
+
+    initializeAppPassword() {
+        this.transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+        console.log('App password email service initialized successfully');
     }
 
     async sendEmail(to, subject, html, text = null) {
