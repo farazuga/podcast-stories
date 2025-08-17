@@ -5,6 +5,7 @@ class EmailService {
     constructor() {
         this.transporter = null;
         this.oauth2Client = null;
+        this.initialized = false;
         this.initializeTransporter();
     }
 
@@ -29,8 +30,10 @@ class EmailService {
                     if (error) {
                         console.error('Email configuration error:', error);
                         this.transporter = null;
+                        this.initialized = false;
                     } else {
                         console.log('Email service ready');
+                        this.initialized = true;
                     }
                 });
             }
@@ -53,6 +56,8 @@ class EmailService {
 
     async initializeOAuth() {
         try {
+            console.log('Initializing OAuth2 with user:', process.env.EMAIL_USER);
+            
             this.oauth2Client = new google.auth.OAuth2(
                 process.env.GMAIL_CLIENT_ID,
                 process.env.GMAIL_CLIENT_SECRET,
@@ -64,7 +69,12 @@ class EmailService {
             });
 
             // Get access token
+            console.log('Getting OAuth2 access token...');
             const accessToken = await this.oauth2Client.getAccessToken();
+            
+            if (!accessToken.token) {
+                throw new Error('Failed to get access token');
+            }
 
             this.transporter = nodemailer.createTransport({
                 service: 'gmail',
@@ -79,9 +89,18 @@ class EmailService {
             });
 
             console.log('OAuth2 email service initialized successfully');
+            this.initialized = true;
         } catch (error) {
-            console.error('OAuth2 initialization failed:', error);
-            throw error;
+            console.error('OAuth2 initialization failed:', error.message);
+            console.error('Full error:', error);
+            
+            // Fallback to app password if available
+            if (this.hasAppPasswordCredentials()) {
+                console.log('Falling back to app password authentication...');
+                this.initializeAppPassword();
+            } else {
+                throw error;
+            }
         }
     }
 
@@ -94,9 +113,15 @@ class EmailService {
             }
         });
         console.log('App password email service initialized successfully');
+        this.initialized = true;
     }
 
     async sendEmail(to, subject, html, text = null) {
+        // Wait for initialization if not ready
+        if (!this.initialized && this.transporter) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+        
         if (!this.transporter) {
             console.warn('Email service not available');
             return { success: false, error: 'Email service not configured' };
