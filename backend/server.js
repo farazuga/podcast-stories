@@ -20,9 +20,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from the frontend directory
 const path = require('path');
-app.use(express.static(path.join(__dirname, 'frontend')));
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -52,25 +50,25 @@ app.use('/api/migration', migrationRoutes);
 app.use('/api/debug', debugRoutes);
 app.use('/api/test-email', testEmailRoutes);
 
+// Serve static files from the frontend directory (after API routes)
+app.use(express.static(path.join(__dirname, 'frontend')));
+
 // API root endpoint  
 app.get('/api', (req, res) => {
   res.json({ message: 'Podcast Stories API is running!' });
 });
 
-// Serve the main index.html for root
+// Explicit routes for main pages
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend/index.html'));
+  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
 
-// Catch-all handler for frontend routes
-app.get('*', (req, res, next) => {
-  // Only serve files for non-API routes
-  if (!req.path.startsWith('/api/')) {
-    // Let express.static handle it first, then fall back to 404
-    next();
-  } else {
-    next();
-  }
+app.get('/admin.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'admin.html'));
+});
+
+app.get('/dashboard.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'dashboard.html'));
 });
 
 // Error handling middleware
