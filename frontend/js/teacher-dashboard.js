@@ -121,17 +121,22 @@ function updateStatistics() {
 
 async function createClass(e) {
     e.preventDefault();
+    console.log('Create class form submitted');
     
     const className = document.getElementById('className').value.trim();
     const subject = document.getElementById('subject').value.trim();
     const description = document.getElementById('description').value.trim();
     
+    console.log('Form data:', { className, subject, description });
+    
     if (!className) {
+        console.log('Class name is empty, showing error');
         showError('Class name is required');
         return;
     }
     
     try {
+        console.log('Making API request to create class...');
         const response = await fetch(`${API_URL}/classes`, {
             method: 'POST',
             headers: {
@@ -145,9 +150,12 @@ async function createClass(e) {
             })
         });
         
+        console.log('API response status:', response.status);
         const result = await response.json();
+        console.log('API response data:', result);
         
         if (response.ok) {
+            console.log('Class created successfully');
             showSuccess(`Class created successfully! Class code: ${result.class_code}`);
             
             // Clear form
@@ -156,6 +164,7 @@ async function createClass(e) {
             // Reload classes
             await loadClasses();
         } else {
+            console.log('Class creation failed:', result);
             showError(result.error || 'Failed to create class');
         }
     } catch (error) {
@@ -334,10 +343,17 @@ async function deleteClass() {
 
 // Event Listeners
 function setupEventListeners() {
+    console.log('Setting up event listeners...');
+    
     // Create class form
     const createClassForm = document.getElementById('createClassForm');
+    console.log('Create class form element:', createClassForm);
+    
     if (createClassForm) {
+        console.log('Adding submit event listener to create class form');
         createClassForm.addEventListener('submit', createClass);
+    } else {
+        console.error('Create class form not found!');
     }
     
     // Modal click outside to close

@@ -37,7 +37,12 @@ function checkAuth() {
     const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     
-    if (!token || (user.role !== 'admin' && user.role !== 'amitrace_admin')) {
+    if (!token) {
+        window.location.href = '/index.html';
+        return false;
+    }
+    
+    if (user.role !== 'admin' && user.role !== 'amitrace_admin') {
         window.location.href = '/dashboard.html';
         return false;
     }
@@ -645,6 +650,49 @@ function showSuccess(message) {
         setTimeout(() => {
             successDiv.style.display = 'none';
         }, 5000);
+    }
+}
+
+// Missing editSchool function - placeholder implementation
+function editSchool(schoolId) {
+    console.log('Edit school functionality called for school ID:', schoolId);
+    
+    // Find the school in the allSchools array
+    const school = allSchools.find(s => s.id === schoolId);
+    if (!school) {
+        showError('School not found');
+        return;
+    }
+    
+    // For now, show a simple prompt to edit the school name
+    const newName = prompt('Edit school name:', school.school_name);
+    if (newName && newName.trim() && newName.trim() !== school.school_name) {
+        updateSchoolName(schoolId, newName.trim());
+    }
+}
+
+// Function to update school name via API
+async function updateSchoolName(schoolId, newName) {
+    try {
+        const response = await fetch(`${API_URL}/schools/${schoolId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ school_name: newName })
+        });
+        
+        if (response.ok) {
+            showSuccess('School updated successfully');
+            await loadSchools(); // Reload the schools list
+        } else {
+            const errorData = await response.json();
+            showError(errorData.error || 'Failed to update school');
+        }
+    } catch (error) {
+        console.error('Error updating school:', error);
+        showError('Failed to update school');
     }
 }
 
