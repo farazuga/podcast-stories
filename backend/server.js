@@ -30,6 +30,7 @@ const classesRoutes = require('./routes/classes');
 const passwordResetRoutes = require('./routes/password-reset');
 const testConstraintsRoutes = require('./routes/test-constraints');
 const migrationRoutes = require('./routes/run-migration');
+const debugRoutes = require('./routes/debug');
 
 // Use routes
 app.use('/api/auth', authRoutes);
@@ -41,6 +42,7 @@ app.use('/api/classes', classesRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/test', testConstraintsRoutes);
 app.use('/api/migration', migrationRoutes);
+app.use('/api/debug', debugRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
