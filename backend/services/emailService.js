@@ -24,18 +24,24 @@ class EmailService {
                 return;
             }
 
-            // Verify the connection
+            // Skip verification for OAuth to avoid authentication issues
             if (this.transporter) {
-                this.transporter.verify((error, success) => {
-                    if (error) {
-                        console.error('Email configuration error:', error);
-                        this.transporter = null;
-                        this.initialized = false;
-                    } else {
-                        console.log('Email service ready');
-                        this.initialized = true;
-                    }
-                });
+                if (this.hasOAuthCredentials()) {
+                    console.log('OAuth2 email service configured (skipping verification)');
+                    this.initialized = true;
+                } else {
+                    // Only verify for app password
+                    this.transporter.verify((error, success) => {
+                        if (error) {
+                            console.error('Email configuration error:', error);
+                            this.transporter = null;
+                            this.initialized = false;
+                        } else {
+                            console.log('Email service ready');
+                            this.initialized = true;
+                        }
+                    });
+                }
             }
         } catch (error) {
             console.error('Failed to initialize email service:', error);
@@ -77,7 +83,9 @@ class EmailService {
             }
 
             this.transporter = nodemailer.createTransport({
-                service: 'gmail',
+                host: 'smtp.gmail.com',
+                port: 465,
+                secure: true,
                 auth: {
                     type: 'OAuth2',
                     user: process.env.EMAIL_USER,
