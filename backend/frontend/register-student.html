@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podcast Stories - Student Registration</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="login-card">
+            <div class="logo">
+                <h1>📻 Podcast Stories</h1>
+                <p>Student Registration</p>
+            </div>
+            
+            <form id="studentRegisterForm">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" placeholder="Enter your full name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Choose a username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="studentId">Student ID (Optional)</label>
+                    <input type="text" id="studentId" placeholder="Enter your student ID">
+                </div>
+                
+                <div class="form-group">
+                    <label for="school">School (Optional)</label>
+                    <select id="school">
+                        <option value="">Select your school</option>
+                    </select>
+                    <small>You can skip this if your teacher hasn't specified a school</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="classCode">Class Code</label>
+                    <input type="text" id="classCode" placeholder="Enter 4-digit class code" maxlength="4" required>
+                    <small>Ask your teacher for the class code</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Create a password" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">Register</button>
+            </form>
+            
+            <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
+            
+            <div class="auth-footer">
+                <p>Already have an account? <a href="index.html">Sign In</a></p>
+                <p>Are you a teacher? <a href="register-teacher.html">Request Teacher Account</a></p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/register-student.js"></script>
+</body>
+</html>

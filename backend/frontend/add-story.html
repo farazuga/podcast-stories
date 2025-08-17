@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podcast Stories - Add Story</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>📻 Podcast Stories</h1>
+        </div>
+        <div class="nav-menu">
+            <a href="/dashboard.html">Dashboard</a>
+            <a href="/add-story.html" class="active">Add Story</a>
+            <a href="/admin.html" id="adminLink" style="display: none;">Admin Panel</a>
+            <button class="btn btn-secondary" onclick="window.location.href='dashboard.html'">View Stories</button>
+        </div>
+        <div class="nav-user">
+            <span id="userInfo"></span>
+            <button class="btn btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="form-card">
+            <div class="form-header">
+                <h2>Add New Story Idea</h2>
+            </div>
+
+            <form id="storyForm">
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Basic Information</h3>
+                    
+                    <div class="form-group">
+                        <label>Story Title <span class="required">*</span></label>
+                        <input type="text" id="idea_title" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Story Description <span class="required">*</span></label>
+                        <textarea id="idea_description" rows="4" required></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Coverage Start Date <span class="required">*</span></label>
+                            <input type="date" id="coverage_start_date" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Coverage End Date</label>
+                            <input type="date" id="coverage_end_date">
+                            <small>Leave empty for single-day coverage</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tags <span class="required">*</span></label>
+                        <select id="tags" multiple required></select>
+                        <small>Hold Ctrl/Cmd to select multiple tags</small>
+                    </div>
+                </div>
+
+                <!-- Interview Questions -->
+                <div class="form-section">
+                    <h3 class="section-title">Interview Questions</h3>
+                    <p class="section-description">Add up to 6 key questions for interviews</p>
+                    
+                    <div class="questions-section">
+                        <div class="form-group">
+                            <label>Question 1</label>
+                            <input type="text" id="question_1" placeholder="What is your main concern regarding...">
+                        </div>
+                        <div class="form-group">
+                            <label>Question 2</label>
+                            <input type="text" id="question_2" placeholder="How has this issue affected...">
+                        </div>
+                        <div class="form-group">
+                            <label>Question 3</label>
+                            <input type="text" id="question_3" placeholder="What solutions would you propose...">
+                        </div>
+                        <div class="form-group">
+                            <label>Question 4</label>
+                            <input type="text" id="question_4">
+                        </div>
+                        <div class="form-group">
+                            <label>Question 5</label>
+                            <input type="text" id="question_5">
+                        </div>
+                        <div class="form-group">
+                            <label>Question 6</label>
+                            <input type="text" id="question_6">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- People to Interview -->
+                <div class="form-section">
+                    <h3 class="section-title">People to Interview</h3>
+                    <p class="section-description">Add people or roles to interview</p>
+                    
+                    <div class="interviewee-section">
+                        <div id="intervieweeList" class="interviewee-list"></div>
+                        <div class="add-interviewee">
+                            <input type="text" id="newInterviewee" placeholder="Enter person or role (e.g., Mayor, Doctor)">
+                            <button type="button" class="btn btn-add" onclick="addInterviewee()">Add Person</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="errorMessage" class="error-message"></div>
+                <div id="successMessage" class="success-message"></div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='dashboard.html'">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Story Idea</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/stories.js"></script>
+</body>
+</html>

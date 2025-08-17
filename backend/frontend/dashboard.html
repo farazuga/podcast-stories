@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podcast Stories - Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>📻 Podcast Stories</h1>
+        </div>
+        <div class="nav-menu">
+            <a href="/dashboard.html" class="active">Stories</a>
+            <a href="/add-story.html">Add Story</a>
+            <a href="/teacher-dashboard.html" id="teacherLink" style="display: none;">My Classes</a>
+            <a href="/admin.html" id="adminLink" style="display: none;">Admin Panel</a>
+            <button class="btn btn-secondary" id="csvImportBtn">Import CSV</button>
+        </div>
+        <div class="nav-user">
+            <span id="userInfo"></span>
+            <span id="userRoleBadge" class="role-badge"></span>
+            <button class="btn btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Search Section -->
+        <div class="search-section">
+            <h2>Search & Filter Stories</h2>
+            <form id="searchForm">
+                <div class="search-grid">
+                    <div class="form-group">
+                        <label>Search Keywords</label>
+                        <input type="text" id="searchKeywords" placeholder="Search titles and descriptions...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Tags</label>
+                        <select id="searchTags" multiple></select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Start Date</label>
+                        <input type="date" id="searchStartDate">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>End Date</label>
+                        <input type="date" id="searchEndDate">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Interviewee</label>
+                        <input type="text" id="searchInterviewee" placeholder="e.g., Mayor, Doctor">
+                    </div>
+                </div>
+                
+                <div class="search-actions">
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearFilters()">Clear All</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Stories Grid -->
+        <div id="storiesGrid" class="stories-grid">
+            <!-- Stories will be loaded here -->
+        </div>
+    </div>
+
+    <!-- CSV Import Modal -->
+    <div id="csvModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Import Stories from CSV</h2>
+            <form id="csvUploadForm">
+                <div class="form-group">
+                    <label>Select CSV File</label>
+                    <input type="file" id="csvFile" accept=".csv" required>
+                </div>
+                <div class="csv-instructions">
+                    <h3>CSV Format:</h3>
+                    <p>Your CSV should have the following columns:</p>
+                    <ul>
+                        <li>idea_title (required)</li>
+                        <li>idea_description</li>
+                        <li>question_1 through question_6</li>
+                        <li>coverage_start_date (YYYY-MM-DD)</li>
+                        <li>coverage_end_date (YYYY-MM-DD, optional)</li>
+                        <li>tags (comma-separated)</li>
+                        <li>interviewees (comma-separated)</li>
+                    </ul>
+                </div>
+                <button type="submit" class="btn btn-primary">Upload CSV</button>
+            </form>
+            <div id="csvResult"></div>
+        </div>
+    </div>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

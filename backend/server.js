@@ -22,7 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from the frontend directory
 const path = require('path');
-app.use(express.static(path.join(__dirname, '../frontend')));
+app.use(express.static(path.join(__dirname, 'frontend')));
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -59,7 +59,7 @@ app.get('/api', (req, res) => {
 
 // Serve the main index.html for root
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/index.html'));
+  res.sendFile(path.join(__dirname, 'frontend/index.html'));
 });
 
 // Catch-all handler for frontend routes

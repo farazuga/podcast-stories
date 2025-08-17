@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podcast Stories - Admin Panel</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>📻 Podcast Stories - Admin</h1>
+        </div>
+        <div class="nav-menu">
+            <a href="/dashboard.html">Dashboard</a>
+            <a href="/add-story.html">Add Story</a>
+            <a href="/admin.html" class="active">Admin Panel</a>
+        </div>
+        <div class="nav-user">
+            <span id="userInfo"></span>
+            <span class="admin-badge">ADMIN</span>
+            <button class="btn btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Admin Panel Navigation Tabs -->
+        <div class="admin-tabs">
+            <button class="tab-btn active" onclick="showTab('overview')">Overview</button>
+            <button class="tab-btn" onclick="showTab('schools')">Schools</button>
+            <button class="tab-btn" onclick="showTab('teachers')">Teacher Requests</button>
+            <button class="tab-btn" onclick="showTab('tags')">Tags</button>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="overview-tab" class="tab-content active">
+            <div class="admin-grid">
+                <!-- Statistics Section -->
+                <div class="admin-card">
+                    <h2>System Statistics</h2>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalStories">0</div>
+                            <div class="stat-label">Total Stories</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalUsers">0</div>
+                            <div class="stat-label">Total Users</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalSchools">0</div>
+                            <div class="stat-label">Total Schools</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalClasses">0</div>
+                            <div class="stat-label">Total Classes</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="pendingRequests">0</div>
+                            <div class="stat-label">Pending Teacher Requests</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalTags">0</div>
+                            <div class="stat-label">Total Tags</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="admin-card full-width">
+                    <h2>Recent Stories</h2>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Uploaded By</th>
+                                    <th>Date</th>
+                                    <th>Tags</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentStoriesTable">
+                                <!-- Recent stories will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schools Tab -->
+        <div id="schools-tab" class="tab-content">
+            <div class="admin-grid">
+                <!-- Add School Form -->
+                <div class="admin-card">
+                    <h2>School Management</h2>
+                    
+                    <div class="form-section">
+                        <h3>Add New School</h3>
+                        <form id="addSchoolForm">
+                            <div class="form-group">
+                                <label for="schoolName">School Name</label>
+                                <input type="text" id="schoolName" placeholder="Enter school name" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add School</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Schools List -->
+                <div class="admin-card full-width">
+                    <h2>All Schools</h2>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>School Name</th>
+                                    <th>Created</th>
+                                    <th>Teachers</th>
+                                    <th>Students</th>
+                                    <th>Classes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schoolsTable">
+                                <!-- Schools will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teacher Requests Tab -->
+        <div id="teachers-tab" class="tab-content">
+            <div class="admin-grid">
+                <!-- Teacher Request Stats -->
+                <div class="admin-card">
+                    <h2>Teacher Request Statistics</h2>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="pendingTeacherRequests">0</div>
+                            <div class="stat-label">Pending</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="approvedTeacherRequests">0</div>
+                            <div class="stat-label">Approved</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="rejectedTeacherRequests">0</div>
+                            <div class="stat-label">Rejected</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalTeacherRequests">0</div>
+                            <div class="stat-label">Total Requests</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Teacher Requests List -->
+                <div class="admin-card full-width">
+                    <h2>Teacher Requests</h2>
+                    <div class="filter-controls">
+                        <select id="statusFilter">
+                            <option value="">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                        <button onclick="loadTeacherRequests()" class="btn btn-secondary">Filter</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>School</th>
+                                    <th>Message</th>
+                                    <th>Status</th>
+                                    <th>Requested</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teacherRequestsTable">
+                                <!-- Teacher requests will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tags Tab -->
+        <div id="tags-tab" class="tab-content">
+            <div class="admin-grid">
+                <!-- Tag Management Section -->
+                <div class="admin-card">
+                    <h2>Tag Management</h2>
+                    
+                    <div class="tag-form">
+                        <h3>Add New Tag</h3>
+                        <form id="addTagForm">
+                            <div class="form-group">
+                                <input type="text" id="newTagName" placeholder="Enter tag name" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add Tag</button>
+                        </form>
+                    </div>
+
+                    <div class="existing-tags">
+                        <h3>Existing Tags</h3>
+                        <div id="tagsList" class="tags-list">
+                            <!-- Tags will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approval Modal -->
+        <div id="approvalModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Approve Teacher Request</h2>
+                    <span class="close" onclick="closeApprovalModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="approveTeacherForm">
+                        <input type="hidden" id="requestId" />
+                        <div class="form-group">
+                            <label for="teacherUsername">Username</label>
+                            <input type="text" id="teacherUsername" required placeholder="Enter username for new teacher account">
+                        </div>
+                        <div class="form-group">
+                            <label for="teacherPassword">Password</label>
+                            <input type="password" id="teacherPassword" required placeholder="Enter password for new teacher account">
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closeApprovalModal()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Approve & Create Account</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

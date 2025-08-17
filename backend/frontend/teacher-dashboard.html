@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podcast Stories - Teacher Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>📻 Podcast Stories - Teacher Portal</h1>
+        </div>
+        <div class="nav-menu">
+            <a href="/dashboard.html">Stories</a>
+            <a href="/teacher-dashboard.html" class="active">My Classes</a>
+            <a href="/add-story.html">Add Story</a>
+        </div>
+        <div class="nav-user">
+            <span id="userInfo"></span>
+            <span class="teacher-badge">TEACHER</span>
+            <button class="btn btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Teacher Dashboard Header -->
+        <div class="dashboard-header">
+            <h2>Welcome, <span id="teacherName"></span>!</h2>
+            <p>Manage your classes and student enrollments</p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value" id="totalClasses">0</div>
+                <div class="stat-label">Active Classes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalStudents">0</div>
+                <div class="stat-label">Total Students</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="schoolName">—</div>
+                <div class="stat-label">School</div>
+            </div>
+        </div>
+
+        <!-- Create New Class Section -->
+        <div class="action-card">
+            <h3>Create New Class</h3>
+            <form id="createClassForm" class="inline-form">
+                <div class="form-row">
+                    <input type="text" id="className" placeholder="Class Name" required>
+                    <input type="text" id="subject" placeholder="Subject (optional)">
+                    <button type="submit" class="btn btn-primary">Create Class</button>
+                </div>
+                <div class="form-row">
+                    <textarea id="description" placeholder="Class Description (optional)" rows="2"></textarea>
+                </div>
+            </form>
+        </div>
+
+        <!-- My Classes -->
+        <div class="classes-section">
+            <h2>My Classes</h2>
+            <div id="classesGrid" class="classes-grid">
+                <!-- Classes will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Class Details Modal -->
+        <div id="classModal" class="modal">
+            <div class="modal-content large-modal">
+                <div class="modal-header">
+                    <h2 id="modalClassName">Class Details</h2>
+                    <span class="close" onclick="closeClassModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="class-info">
+                        <div class="info-row">
+                            <strong>Class Code:</strong>
+                            <div class="code-display">
+                                <span id="classCode" class="class-code-large"></span>
+                                <button class="btn btn-small btn-secondary" onclick="copyClassCode()">Copy</button>
+                                <button class="btn btn-small btn-primary" onclick="regenerateCode()">Regenerate</button>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <strong>Subject:</strong> <span id="modalSubject"></span>
+                        </div>
+                        <div class="info-row">
+                            <strong>Description:</strong> <span id="modalDescription"></span>
+                        </div>
+                        <div class="info-row">
+                            <strong>Status:</strong> <span id="modalStatus"></span>
+                        </div>
+                        <div class="info-row">
+                            <strong>Created:</strong> <span id="modalCreated"></span>
+                        </div>
+                    </div>
+
+                    <div class="students-section">
+                        <h3>Enrolled Students (<span id="studentCount">0</span>)</h3>
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Student ID</th>
+                                        <th>Joined</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentsTable">
+                                    <!-- Students will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" onclick="closeClassModal()">Close</button>
+                        <button class="btn btn-danger" onclick="deleteClass()">Delete Class</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/teacher-dashboard.js"></script>
+</body>
+</html>

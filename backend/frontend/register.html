@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podcast Stories - Choose Registration Type</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="login-card">
+            <div class="logo">
+                <h1>📻 Podcast Stories</h1>
+                <p>Choose your account type</p>
+            </div>
+            
+            <div class="registration-options">
+                <div class="option-card">
+                    <h3>🎓 Student Account</h3>
+                    <p>Join your teacher's class with a class code</p>
+                    <a href="register-student.html" class="btn btn-primary btn-block">Register as Student</a>
+                </div>
+                
+                <div class="option-card">
+                    <h3>👨‍🏫 Teacher Account</h3>
+                    <p>Create and manage classes (requires admin approval)</p>
+                    <a href="register-teacher.html" class="btn btn-secondary btn-block">Request Teacher Account</a>
+                </div>
+            </div>
+            
+            <div class="auth-footer">
+                <p>Already have an account? <a href="index.html">Sign In</a></p>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        .registration-options {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .option-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+        
+        .option-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .option-card h3 {
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .option-card p {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</body>
+</html>
