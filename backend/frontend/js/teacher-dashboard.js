@@ -1,5 +1,4 @@
-// API base URL
-const API_URL = 'https://podcast-stories-production.up.railway.app/api';
+// API_URL is declared in auth.js which loads first
 
 // Global variables
 let currentUser = null;
@@ -121,10 +120,13 @@ function updateStatistics() {
 
 async function createClass(e) {
     e.preventDefault();
+    console.log('createClass function called');
     
     const className = document.getElementById('className').value.trim();
     const subject = document.getElementById('subject').value.trim();
     const description = document.getElementById('description').value.trim();
+    
+    console.log('Form values:', { className, subject, description });
     
     if (!className) {
         showError('Class name is required');
@@ -132,11 +134,15 @@ async function createClass(e) {
     }
     
     try {
+        console.log('Making API call to create class...');
+        const token = localStorage.getItem('token');
+        console.log('Token exists:', !!token);
+        
         const response = await fetch(`${API_URL}/classes`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
                 class_name: className,
@@ -145,7 +151,9 @@ async function createClass(e) {
             })
         });
         
+        console.log('API response status:', response.status);
         const result = await response.json();
+        console.log('API response data:', result);
         
         if (response.ok) {
             showSuccess(`Class created successfully! Class code: ${result.class_code}`);
@@ -334,10 +342,17 @@ async function deleteClass() {
 
 // Event Listeners
 function setupEventListeners() {
+    console.log('Setting up event listeners...');
+    
     // Create class form
     const createClassForm = document.getElementById('createClassForm');
+    console.log('createClassForm element found:', !!createClassForm);
+    
     if (createClassForm) {
         createClassForm.addEventListener('submit', createClass);
+        console.log('Event listener added to form');
+    } else {
+        console.error('createClassForm element not found!');
     }
     
     // Modal click outside to close
