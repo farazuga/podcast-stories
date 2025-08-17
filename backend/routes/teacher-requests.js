@@ -3,6 +3,7 @@ const router = express.Router();
 const { Pool } = require('pg');
 const { verifyToken, isAmitraceAdmin } = require('../middleware/auth');
 const emailService = require('../services/emailService');
+const gmailService = require('../services/gmailService');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -154,6 +155,8 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
     const { id } = req.params;
     const { username, password } = req.body;
     
+    console.log('Approving teacher request:', id, 'with username:', username);
+    
     // Validate required fields
     if (!username || !password) {
       return res.status(400).json({ 
@@ -209,13 +212,25 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
       
       await pool.query('COMMIT');
       
-      // Send approval email
-      const emailResult = await emailService.sendTeacherApprovalEmail(
+      // Send approval email - try Gmail API first
+      console.log('Sending teacher approval email to:', request.email);
+      let emailResult = await gmailService.sendTeacherApprovalEmail(
         request.email,
         request.name,
         username,
         password
       );
+      
+      // Fallback to SMTP if Gmail API fails
+      if (!emailResult.success) {
+        console.log('Gmail API failed for approval email, trying SMTP...');
+        emailResult = await emailService.sendTeacherApprovalEmail(
+          request.email,
+          request.name,
+          username,
+          password
+        );
+      }
       
       if (!emailResult.success) {
         console.error('Failed to send approval email:', emailResult.error);
@@ -263,11 +278,21 @@ router.post('/:id/reject', verifyToken, isAmitraceAdmin, async (req, res) => {
       RETURNING id, status
     `, ['rejected', req.user.id, id, 'pending']);
     
-    // Send rejection email
-    const emailResult = await emailService.sendTeacherRejectionEmail(
+    // Send rejection email - try Gmail API first
+    console.log('Sending teacher rejection email to:', request.email);
+    let emailResult = await gmailService.sendTeacherRejectionEmail(
       request.email,
       request.name
     );
+    
+    // Fallback to SMTP if Gmail API fails
+    if (!emailResult.success) {
+      console.log('Gmail API failed for rejection email, trying SMTP...');
+      emailResult = await emailService.sendTeacherRejectionEmail(
+        request.email,
+        request.name
+      );
+    }
     
     if (!emailResult.success) {
       console.error('Failed to send rejection email:', emailResult.error);
