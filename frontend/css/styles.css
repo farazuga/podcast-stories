@@ -31,17 +31,38 @@ body {
     min-height: 100vh;
     display: flex;
     align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, var(--primary-color) 0%, #ff8f65 100%);
+    justify-content: flex-end;
+    padding-right: 10%;
+    background-image: url('../bg_image.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+}
+
+.auth-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1;
 }
 
 .login-card {
-    background: var(--white);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     padding: 2.5rem;
-    border-radius: 10px;
+    border-radius: 15px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     width: 100%;
     max-width: 400px;
+    position: relative;
+    z-index: 2;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .logo {
@@ -774,6 +795,15 @@ body {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    .auth-container {
+        justify-content: center;
+        padding: 1rem;
+    }
+    
+    .login-card {
+        margin: 0 auto;
+    }
+    
     .nav-menu {
         flex-direction: column;
         align-items: flex-start;
