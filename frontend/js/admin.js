@@ -67,7 +67,18 @@ function showTab(tabName) {
     
     // Show selected tab
     document.getElementById(`${tabName}-tab`).classList.add('active');
-    event.target.classList.add('active');
+    
+    // Add active class to the clicked button
+    const buttons = document.querySelectorAll('.tab-btn');
+    buttons.forEach((btn, index) => {
+        if (btn.textContent.toLowerCase().includes(tabName) || 
+            (tabName === 'overview' && index === 0) ||
+            (tabName === 'schools' && index === 1) ||
+            (tabName === 'teachers' && index === 2) ||
+            (tabName === 'tags' && index === 3)) {
+            btn.classList.add('active');
+        }
+    });
     
     // Load tab-specific data
     switch(tabName) {
@@ -105,37 +116,44 @@ async function loadStatistics() {
         
         if (storiesResponse.ok) {
             const stories = await storiesResponse.json();
-            document.getElementById('totalStories').textContent = stories.length;
+            const totalStoriesEl = document.getElementById('totalStories');
+            if (totalStoriesEl) totalStoriesEl.textContent = stories.length;
         }
         
         if (schoolsResponse.ok) {
             const schools = await schoolsResponse.json();
-            document.getElementById('totalSchools').textContent = schools.length;
+            const totalSchoolsEl = document.getElementById('totalSchools');
+            if (totalSchoolsEl) totalSchoolsEl.textContent = schools.length;
             
             // Calculate total users from schools
-            const totalUsers = schools.reduce((sum, school) => sum + (school.user_count || 0), 0);
-            document.getElementById('totalUsers').textContent = totalUsers;
+            const totalUsers = schools.reduce((sum, school) => sum + parseInt(school.user_count || 0), 0);
+            const totalUsersEl = document.getElementById('totalUsers');
+            if (totalUsersEl) totalUsersEl.textContent = totalUsers;
         }
         
         if (teacherStatsResponse.ok) {
             const stats = await teacherStatsResponse.json();
-            document.getElementById('pendingRequests').textContent = stats.pending_count || 0;
+            const pendingRequestsEl = document.getElementById('pendingRequests');
+            if (pendingRequestsEl) pendingRequestsEl.textContent = stats.pending_count || 0;
         }
         
-        // Total classes - we'll need to implement this endpoint
+        // Total classes
         try {
             const classesResponse = await fetch(`${API_URL}/classes`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
             if (classesResponse.ok) {
                 const classes = await classesResponse.json();
-                document.getElementById('totalClasses').textContent = classes.length;
+                const totalClassesEl = document.getElementById('totalClasses');
+                if (totalClassesEl) totalClassesEl.textContent = classes.length;
             }
         } catch (e) {
-            document.getElementById('totalClasses').textContent = '—';
+            const totalClassesEl = document.getElementById('totalClasses');
+            if (totalClassesEl) totalClassesEl.textContent = '—';
         }
         
-        document.getElementById('totalTags').textContent = allTags.length;
+        const totalTagsEl = document.getElementById('totalTags');
+        if (totalTagsEl) totalTagsEl.textContent = allTags.length;
         
     } catch (error) {
         console.error('Error loading statistics:', error);
@@ -265,10 +283,15 @@ async function loadTeacherRequestStats() {
         
         if (response.ok) {
             const stats = await response.json();
-            document.getElementById('pendingTeacherRequests').textContent = stats.pending_count || 0;
-            document.getElementById('approvedTeacherRequests').textContent = stats.approved_count || 0;
-            document.getElementById('rejectedTeacherRequests').textContent = stats.rejected_count || 0;
-            document.getElementById('totalTeacherRequests').textContent = stats.total_count || 0;
+            const pendingEl = document.getElementById('pendingTeacherRequests');
+            const approvedEl = document.getElementById('approvedTeacherRequests');
+            const rejectedEl = document.getElementById('rejectedTeacherRequests');
+            const totalEl = document.getElementById('totalTeacherRequests');
+            
+            if (pendingEl) pendingEl.textContent = stats.pending_count || 0;
+            if (approvedEl) approvedEl.textContent = stats.approved_count || 0;
+            if (rejectedEl) rejectedEl.textContent = stats.rejected_count || 0;
+            if (totalEl) totalEl.textContent = stats.total_count || 0;
         }
     } catch (error) {
         console.error('Error loading teacher request stats:', error);
