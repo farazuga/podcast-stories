@@ -29,6 +29,7 @@ const teacherRequestsRoutes = require('./routes/teacher-requests');
 const classesRoutes = require('./routes/classes');
 const passwordResetRoutes = require('./routes/password-reset');
 const testConstraintsRoutes = require('./routes/test-constraints');
+const migrationRoutes = require('./routes/run-migration');
 
 // Use routes
 app.use('/api/auth', authRoutes);
@@ -39,6 +40,7 @@ app.use('/api/teacher-requests', teacherRequestsRoutes);
 app.use('/api/classes', classesRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/test', testConstraintsRoutes);
+app.use('/api/migration', migrationRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
