@@ -4,6 +4,7 @@ const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const emailService = require('../services/emailService');
+const gmailService = require('../services/gmailService');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -46,16 +47,28 @@ router.post('/request', async (req, res) => {
       DO UPDATE SET token = $2, expires_at = $3, used = false, created_at = CURRENT_TIMESTAMP
     `, [user.id, resetToken, expiresAt]);
     
-    // Send email
-    const emailResult = await emailService.sendPasswordResetEmail(
+    // Try Gmail API first, then fall back to SMTP
+    let emailResult = await gmailService.sendPasswordResetEmail(
       user.email, 
       user.name || user.username, 
       resetToken
     );
     
+    // If Gmail API fails, try SMTP
+    if (!emailResult.success) {
+      console.log('Gmail API failed, trying SMTP...');
+      emailResult = await emailService.sendPasswordResetEmail(
+        user.email, 
+        user.name || user.username, 
+        resetToken
+      );
+    }
+    
     if (!emailResult.success) {
       console.error('Failed to send password reset email:', emailResult.error);
       // Still return success to user for security
+    } else {
+      console.log('Password reset email sent successfully');
     }
     
     res.json({ 

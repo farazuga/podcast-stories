@@ -83,16 +83,13 @@ class EmailService {
             }
 
             this.transporter = nodemailer.createTransport({
-                host: 'smtp.gmail.com',
-                port: 465,
-                secure: true,
+                service: 'gmail',
                 auth: {
                     type: 'OAuth2',
                     user: process.env.EMAIL_USER,
                     clientId: process.env.GMAIL_CLIENT_ID,
                     clientSecret: process.env.GMAIL_CLIENT_SECRET,
-                    refreshToken: process.env.GMAIL_REFRESH_TOKEN,
-                    accessToken: accessToken.token
+                    refreshToken: process.env.GMAIL_REFRESH_TOKEN
                 }
             });
 
