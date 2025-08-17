@@ -1,5 +1,4 @@
-// API base URL
-const API_URL = 'https://podcast-stories-production.up.railway.app/api';
+// API_URL is declared in auth.js which loads first
 
 // Global variables
 let currentUser = null;
