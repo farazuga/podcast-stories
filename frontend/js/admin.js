@@ -10,14 +10,27 @@ let currentRequestId = null;
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', async () => {
-    if (!checkAuth()) return;
+    console.log('Admin page loading...');
     
+    if (!checkAuth()) {
+        console.log('Auth check failed');
+        return;
+    }
+    
+    console.log('Auth check passed, loading user info...');
     await loadUserInfo();
+    
+    console.log('Loading initial data...');
     await loadInitialData();
+    
+    console.log('Setting up event listeners...');
     setupEventListeners();
     
     // Show overview tab by default
+    console.log('Showing overview tab...');
     showTab('overview');
+    
+    console.log('Admin page loaded successfully');
 });
 
 function checkAuth() {
@@ -101,40 +114,74 @@ function showTab(tabName) {
 
 // Statistics
 async function loadStatistics() {
+    console.log('Loading statistics...');
     try {
+        const token = localStorage.getItem('token');
+        console.log('Token exists:', !!token);
+        
         const [storiesResponse, schoolsResponse, teacherStatsResponse] = await Promise.all([
             fetch(`${API_URL}/stories`, {
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                headers: { 'Authorization': `Bearer ${token}` }
             }),
             fetch(`${API_URL}/schools`, {
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                headers: { 'Authorization': `Bearer ${token}` }
             }),
             fetch(`${API_URL}/teacher-requests/stats/overview`, {
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                headers: { 'Authorization': `Bearer ${token}` }
             })
         ]);
         
+        console.log('API responses:', {
+            stories: storiesResponse.status,
+            schools: schoolsResponse.status,
+            teacherStats: teacherStatsResponse.status
+        });
+        
         if (storiesResponse.ok) {
             const stories = await storiesResponse.json();
+            console.log('Stories loaded:', stories.length);
             const totalStoriesEl = document.getElementById('totalStories');
-            if (totalStoriesEl) totalStoriesEl.textContent = stories.length;
+            if (totalStoriesEl) {
+                totalStoriesEl.textContent = stories.length;
+                console.log('Updated totalStories element to:', stories.length);
+            } else {
+                console.error('totalStories element not found');
+            }
+        } else {
+            console.error('Stories API failed:', storiesResponse.status);
         }
         
         if (schoolsResponse.ok) {
             const schools = await schoolsResponse.json();
+            console.log('Schools loaded:', schools.length);
             const totalSchoolsEl = document.getElementById('totalSchools');
-            if (totalSchoolsEl) totalSchoolsEl.textContent = schools.length;
+            if (totalSchoolsEl) {
+                totalSchoolsEl.textContent = schools.length;
+                console.log('Updated totalSchools element to:', schools.length);
+            }
             
             // Calculate total users from schools
             const totalUsers = schools.reduce((sum, school) => sum + parseInt(school.user_count || 0), 0);
+            console.log('Total users calculated:', totalUsers);
             const totalUsersEl = document.getElementById('totalUsers');
-            if (totalUsersEl) totalUsersEl.textContent = totalUsers;
+            if (totalUsersEl) {
+                totalUsersEl.textContent = totalUsers;
+                console.log('Updated totalUsers element to:', totalUsers);
+            }
+        } else {
+            console.error('Schools API failed:', schoolsResponse.status);
         }
         
         if (teacherStatsResponse.ok) {
             const stats = await teacherStatsResponse.json();
+            console.log('Teacher stats loaded:', stats);
             const pendingRequestsEl = document.getElementById('pendingRequests');
-            if (pendingRequestsEl) pendingRequestsEl.textContent = stats.pending_count || 0;
+            if (pendingRequestsEl) {
+                pendingRequestsEl.textContent = stats.pending_count || 0;
+                console.log('Updated pendingRequests element to:', stats.pending_count);
+            }
+        } else {
+            console.error('Teacher stats API failed:', teacherStatsResponse.status);
         }
         
         // Total classes
