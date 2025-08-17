@@ -1357,3 +1357,160 @@ body {
         align-items: flex-start;
     }
 }
+
+/* Student Dashboard Styles */
+.student-dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.student-dashboard h2 {
+    color: var(--text-color);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.no-classes {
+    text-align: center;
+    padding: 3rem;
+    background: var(--white);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    margin-bottom: 2rem;
+}
+
+.no-classes p {
+    color: var(--text-light);
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.join-class-form {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 10px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.join-class-form h3 {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.join-class-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.join-class-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.join-class-form input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    text-align: center;
+    font-weight: bold;
+    letter-spacing: 1px;
+    transition: border-color 0.3s;
+}
+
+.join-class-form input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.join-class-form button {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--primary-color);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.join-class-form button:hover {
+    background: var(--primary-hover);
+}
+
+.join-class-form button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* Student Class Cards - Enhanced */
+.student-dashboard .classes-grid {
+    margin-bottom: 2rem;
+}
+
+.student-dashboard .class-card {
+    border-left: 4px solid var(--primary-color);
+}
+
+.student-dashboard .class-header {
+    background: #fff5f0;
+    margin: -1.5rem -1.5rem 1rem -1.5rem;
+    padding: 1rem 1.5rem;
+    border-radius: 10px 10px 0 0;
+}
+
+.student-dashboard .class-details p {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0.75rem 0;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.student-dashboard .class-details p:last-child {
+    border-bottom: none;
+}
+
+.student-dashboard .class-actions button {
+    background: var(--danger-color);
+    color: var(--white);
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.student-dashboard .class-actions button:hover {
+    background: #e04545;
+}
+
+/* Join Message Styling */
+#joinMessage {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .student-dashboard {
+        padding: 0 1rem;
+    }
+    
+    .join-class-form {
+        padding: 1.5rem;
+    }
+    
+    .no-classes {
+        padding: 2rem 1rem;
+    }
+}

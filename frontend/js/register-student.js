@@ -4,6 +4,7 @@ const API_URL = 'https://podcast-stories-production.up.railway.app/api';
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
+    loadSchools();
     
     // Check if already logged in
     if (localStorage.getItem('token')) {
@@ -26,6 +27,37 @@ function setupEventListeners() {
     }
 }
 
+async function loadSchools() {
+    try {
+        const response = await fetch(`${API_URL}/students/schools`);
+        
+        if (response.ok) {
+            const schools = await response.json();
+            populateSchoolDropdown(schools);
+        } else {
+            console.warn('Could not load schools list');
+        }
+    } catch (error) {
+        console.error('Error loading schools:', error);
+    }
+}
+
+function populateSchoolDropdown(schools) {
+    const schoolSelect = document.getElementById('school');
+    if (!schoolSelect) return;
+    
+    // Clear existing options except the first
+    schoolSelect.innerHTML = '<option value="">Select your school</option>';
+    
+    // Add school options
+    schools.forEach(school => {
+        const option = document.createElement('option');
+        option.value = school.id;
+        option.textContent = school.school_name;
+        schoolSelect.appendChild(option);
+    });
+}
+
 async function handleRegistration(e) {
     e.preventDefault();
     
@@ -33,6 +65,7 @@ async function handleRegistration(e) {
     const username = document.getElementById('username').value.trim();
     const email = document.getElementById('email').value.trim();
     const studentId = document.getElementById('studentId').value.trim();
+    const schoolId = document.getElementById('school').value;
     const classCode = document.getElementById('classCode').value.trim();
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
@@ -50,8 +83,14 @@ async function handleRegistration(e) {
     }
     
     try {
-        // Step 1: Register the student account
-        const registerResponse = await fetch(`${API_URL}/auth/register`, {
+        // Show loading state
+        const submitButton = document.querySelector('button[type="submit"]');
+        const originalText = submitButton.textContent;
+        submitButton.textContent = 'Registering...';
+        submitButton.disabled = true;
+        
+        // Step 1: Register the student account using dedicated student endpoint
+        const registerResponse = await fetch(`${API_URL}/students/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -62,46 +101,33 @@ async function handleRegistration(e) {
                 password,
                 name,
                 student_id: studentId || null,
-                role: 'student'
+                school_id: schoolId ? parseInt(schoolId) : null
             })
         });
         
         const registerResult = await registerResponse.json();
         
         if (!registerResponse.ok) {
+            // Reset button state
+            submitButton.textContent = originalText;
+            submitButton.disabled = false;
             showError(registerResult.error || 'Registration failed');
             return;
         }
         
-        // Step 2: Login to get token
-        const loginResponse = await fetch(`${API_URL}/auth/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ username, password })
-        });
+        // Store token and user info (new endpoint returns token directly)
+        localStorage.setItem('token', registerResult.token);
+        localStorage.setItem('user', JSON.stringify(registerResult.user));
         
-        const loginResult = await loginResponse.json();
+        // Update button text for next step
+        submitButton.textContent = 'Joining class...';
         
-        if (!loginResponse.ok) {
-            showError('Account created but login failed. Please sign in manually.');
-            setTimeout(() => {
-                window.location.href = '/index.html';
-            }, 3000);
-            return;
-        }
-        
-        // Store token and user info
-        localStorage.setItem('token', loginResult.token);
-        localStorage.setItem('user', JSON.stringify(loginResult.user));
-        
-        // Step 3: Join the class using the code
+        // Step 2: Join the class using the code
         const joinResponse = await fetch(`${API_URL}/classes/join`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${loginResult.token}`
+                'Authorization': `Bearer ${registerResult.token}`
             },
             body: JSON.stringify({ class_code: classCode })
         });
@@ -110,6 +136,9 @@ async function handleRegistration(e) {
         
         if (!joinResponse.ok) {
             // Registration successful but class join failed
+            // Reset button state
+            submitButton.textContent = originalText;
+            submitButton.disabled = false;
             showError(`Registration successful but couldn't join class: ${joinResult.error}. You can join the class later from your dashboard.`);
             setTimeout(() => {
                 window.location.href = '/dashboard.html';
@@ -118,6 +147,7 @@ async function handleRegistration(e) {
         }
         
         // Success - show message and redirect
+        submitButton.textContent = 'Success! Redirecting...';
         showSuccess(`Registration successful! You've been enrolled in ${joinResult.class_name}. Redirecting...`);
         setTimeout(() => {
             window.location.href = '/dashboard.html';
@@ -125,6 +155,12 @@ async function handleRegistration(e) {
         
     } catch (error) {
         console.error('Registration error:', error);
+        // Reset button state
+        const submitButton = document.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.textContent = 'Register';
+            submitButton.disabled = false;
+        }
         showError('Network error. Please try again.');
     }
 }

@@ -11,9 +11,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!checkAuth()) return;
     
     await loadUserInfo();
-    await loadTags();
-    await loadStories();
-    setupEventListeners();
+    
+    // Load different content based on user role
+    if (currentUser && currentUser.role === 'student') {
+        await loadStudentClasses();
+        setupStudentEventListeners();
+    } else {
+        await loadTags();
+        await loadStories();
+        setupEventListeners();
+    }
 });
 
 function checkAuth() {
@@ -322,4 +329,196 @@ function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.href = '/index.html';
+}
+
+// Student-specific functions
+async function loadStudentClasses() {
+    try {
+        const response = await fetch(`${API_URL}/classes`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            const classes = await response.json();
+            displayStudentClasses(classes);
+        } else {
+            console.error('Failed to load classes');
+        }
+    } catch (error) {
+        console.error('Error loading classes:', error);
+    }
+}
+
+function displayStudentClasses(classes) {
+    const container = document.querySelector('.container');
+    
+    if (classes.length === 0) {
+        container.innerHTML = `
+            <div class="student-dashboard">
+                <h2>My Classes</h2>
+                <div class="no-classes">
+                    <p>You're not enrolled in any classes yet.</p>
+                    <div class="join-class-form">
+                        <h3>Join a Class</h3>
+                        <form id="joinClassForm">
+                            <div class="form-group">
+                                <label for="classCode">4-Digit Class Code</label>
+                                <input type="text" id="classCode" placeholder="Enter class code" maxlength="4" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Join Class</button>
+                        </form>
+                        <div id="joinMessage"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        container.innerHTML = `
+            <div class="student-dashboard">
+                <h2>My Classes</h2>
+                <div class="classes-grid">
+                    ${classes.map(classItem => createClassCard(classItem)).join('')}
+                </div>
+                <div class="join-class-form">
+                    <h3>Join Another Class</h3>
+                    <form id="joinClassForm">
+                        <div class="form-group">
+                            <label for="classCode">4-Digit Class Code</label>
+                            <input type="text" id="classCode" placeholder="Enter class code" maxlength="4" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Join Class</button>
+                    </form>
+                    <div id="joinMessage"></div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function createClassCard(classItem) {
+    return `
+        <div class="class-card">
+            <div class="class-header">
+                <h3>${classItem.class_name}</h3>
+                <span class="class-code">Code: ${classItem.class_code}</span>
+            </div>
+            <div class="class-details">
+                <p><strong>Subject:</strong> ${classItem.subject || 'N/A'}</p>
+                <p><strong>Teacher:</strong> ${classItem.teacher_name}</p>
+                <p><strong>School:</strong> ${classItem.school_name}</p>
+                <p><strong>Students:</strong> ${classItem.student_count}</p>
+                <p><strong>Joined:</strong> ${formatDate(classItem.joined_at)}</p>
+            </div>
+            ${classItem.description ? `<p class="class-description">${classItem.description}</p>` : ''}
+            <div class="class-actions">
+                <button class="btn btn-secondary" onclick="leaveClass(${classItem.id})">Leave Class</button>
+            </div>
+        </div>
+    `;
+}
+
+function setupStudentEventListeners() {
+    // Will be set up after DOM is created
+    setTimeout(() => {
+        const joinForm = document.getElementById('joinClassForm');
+        if (joinForm) {
+            joinForm.addEventListener('submit', handleJoinClass);
+        }
+        
+        // Format class code input
+        const classCodeInput = document.getElementById('classCode');
+        if (classCodeInput) {
+            classCodeInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            });
+        }
+    }, 100);
+}
+
+async function handleJoinClass(e) {
+    e.preventDefault();
+    
+    const classCode = document.getElementById('classCode').value.trim();
+    const messageDiv = document.getElementById('joinMessage');
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    
+    if (classCode.length !== 4) {
+        showJoinMessage('Class code must be exactly 4 characters', 'error');
+        return;
+    }
+    
+    // Show loading state
+    const originalText = submitButton.textContent;
+    submitButton.textContent = 'Joining...';
+    submitButton.disabled = true;
+    
+    try {
+        const response = await fetch(`${API_URL}/classes/join`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ class_code: classCode })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showJoinMessage(`Successfully joined ${result.class_name}!`, 'success');
+            document.getElementById('classCode').value = '';
+            
+            // Reload classes after 2 seconds
+            setTimeout(() => {
+                loadStudentClasses();
+            }, 2000);
+        } else {
+            showJoinMessage(result.error || 'Failed to join class', 'error');
+        }
+    } catch (error) {
+        showJoinMessage('Network error. Please try again.', 'error');
+    } finally {
+        // Reset button state
+        submitButton.textContent = originalText;
+        submitButton.disabled = false;
+    }
+}
+
+async function leaveClass(classId) {
+    if (!confirm('Are you sure you want to leave this class?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/classes/${classId}/leave`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            await loadStudentClasses();
+        } else {
+            alert('Failed to leave class');
+        }
+    } catch (error) {
+        alert('Error leaving class');
+    }
+}
+
+function showJoinMessage(message, type) {
+    const messageDiv = document.getElementById('joinMessage');
+    if (messageDiv) {
+        messageDiv.textContent = message;
+        messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
+        messageDiv.style.display = 'block';
+        messageDiv.style.marginTop = '1rem';
+        
+        setTimeout(() => {
+            messageDiv.style.display = 'none';
+        }, 5000);
+    }
 }
