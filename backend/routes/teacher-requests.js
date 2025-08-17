@@ -208,7 +208,7 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
       // Create user account
       console.log('Attempting to create user account...');
       const userResult = await pool.query(`
-        INSERT INTO users (username, email, password_hash, role, name, school_id) 
+        INSERT INTO users (username, email, password, role, name, school_id) 
         VALUES ($1, $2, $3, $4, $5, $6) 
         RETURNING id, username, email, role, name, school_id
       `, [username, request.email, hashedPassword, 'teacher', request.name, request.school_id]);
