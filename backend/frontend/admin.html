@@ -28,7 +28,8 @@
         <div class="admin-tabs">
             <button class="tab-btn active" onclick="showTab('overview')">Overview</button>
             <button class="tab-btn" onclick="showTab('schools')">Schools</button>
-            <button class="tab-btn" onclick="showTab('teachers')">Teacher Requests</button>
+            <button class="tab-btn" onclick="showTab('teachers')">Teachers</button>
+            <button class="tab-btn" onclick="showTab('teacher-requests')">Teacher Requests</button>
             <button class="tab-btn" onclick="showTab('tags')">Tags</button>
         </div>
 
@@ -132,8 +133,80 @@
             </div>
         </div>
 
-        <!-- Teacher Requests Tab -->
+        <!-- Teachers Management Tab -->
         <div id="teachers-tab" class="tab-content">
+            <div class="admin-grid">
+                <!-- Add Teacher Form -->
+                <div class="admin-card">
+                    <h2>Teacher Management</h2>
+                    
+                    <div class="form-section">
+                        <h3>Add New Teacher</h3>
+                        <form id="addTeacherForm">
+                            <div class="form-group">
+                                <label for="teacherName">Full Name</label>
+                                <input type="text" id="teacherName" placeholder="Enter teacher's full name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="teacherEmail">Email</label>
+                                <input type="email" id="teacherEmail" placeholder="Enter teacher's email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="teacherUsername">Username</label>
+                                <input type="text" id="teacherUsername" placeholder="Enter username" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="teacherPassword">Password</label>
+                                <input type="password" id="teacherPassword" placeholder="Enter password" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="teacherSchool">School (Optional)</label>
+                                <select id="teacherSchool">
+                                    <option value="">Select school</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add Teacher</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Teachers List -->
+                <div class="admin-card full-width">
+                    <h2>All Teachers</h2>
+                    <div class="filter-controls">
+                        <select id="teacherStatusFilter">
+                            <option value="">All Teachers</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                        <button onclick="loadTeachers()" class="btn btn-secondary">Filter</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>School</th>
+                                    <th>Classes</th>
+                                    <th>Students</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teachersTable">
+                                <!-- Teachers will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teacher Requests Tab -->
+        <div id="teacher-requests-tab" class="tab-content">
             <div class="admin-grid">
                 <!-- Teacher Request Stats -->
                 <div class="admin-card">
@@ -214,6 +287,29 @@
                         <div id="tagsList" class="tags-list">
                             <!-- Tags will be loaded here -->
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teacher Deactivation Modal -->
+        <div id="deactivateTeacherModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Deactivate Teacher</h2>
+                    <span class="close" onclick="closeDeactivateModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to deactivate this teacher account?</p>
+                    <div class="teacher-info">
+                        <p><strong>Name:</strong> <span id="deactivateTeacherName"></span></p>
+                        <p><strong>Username:</strong> <span id="deactivateTeacherUsername"></span></p>
+                        <p><strong>Email:</strong> <span id="deactivateTeacherEmail"></span></p>
+                    </div>
+                    <p class="warning-text">⚠️ This will prevent the teacher from logging in and managing their classes. Students will still have access to existing classes.</p>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeDeactivateModal()">Cancel</button>
+                        <button type="button" class="btn btn-danger" onclick="confirmDeactivateTeacher()">Deactivate Teacher</button>
                     </div>
                 </div>
             </div>

@@ -344,24 +344,48 @@ async function deleteClass() {
 function setupEventListeners() {
     console.log('Setting up event listeners...');
     
-    // Create class form
-    const createClassForm = document.getElementById('createClassForm');
-    console.log('createClassForm element found:', !!createClassForm);
-    
-    if (createClassForm) {
-        createClassForm.addEventListener('submit', createClass);
-        console.log('Event listener added to form');
-    } else {
-        console.error('createClassForm element not found!');
-    }
-    
-    // Modal click outside to close
-    window.onclick = function(event) {
-        const modal = document.getElementById('classModal');
-        if (event.target === modal) {
-            closeClassModal();
+    // Use a small delay to ensure DOM is fully ready
+    setTimeout(() => {
+        // Create class form
+        const createClassForm = document.getElementById('createClassForm');
+        console.log('createClassForm element found:', !!createClassForm);
+        
+        if (createClassForm) {
+            // Remove any existing event listeners to prevent duplicates
+            createClassForm.removeEventListener('submit', createClass);
+            createClassForm.addEventListener('submit', createClass);
+            console.log('Event listener added to form');
+            
+            // Also add a backup click handler to the submit button
+            const submitButton = createClassForm.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.addEventListener('click', (e) => {
+                    console.log('Submit button clicked directly');
+                    if (createClassForm.checkValidity()) {
+                        e.preventDefault();
+                        createClass(e);
+                    }
+                });
+                console.log('Backup click handler added to submit button');
+            }
+        } else {
+            console.error('createClassForm element not found!');
+            // Try to find it by querying all forms
+            const allForms = document.querySelectorAll('form');
+            console.log('All forms found:', allForms.length);
+            allForms.forEach((form, index) => {
+                console.log(`Form ${index}: id="${form.id}", class="${form.className}"`);
+            });
         }
-    }
+        
+        // Modal click outside to close
+        window.onclick = function(event) {
+            const modal = document.getElementById('classModal');
+            if (event.target === modal) {
+                closeClassModal();
+            }
+        }
+    }, 100);
 }
 
 // Utility functions
@@ -371,24 +395,44 @@ function formatDate(dateString) {
 }
 
 function showError(message) {
+    console.error('Showing error:', message);
     const errorDiv = document.getElementById('errorMessage');
     if (errorDiv) {
         errorDiv.textContent = message;
         errorDiv.style.display = 'block';
+        errorDiv.style.color = '#c00';
+        errorDiv.style.background = '#fee';
+        errorDiv.style.padding = '10px';
+        errorDiv.style.borderRadius = '5px';
+        errorDiv.style.border = '1px solid #fcc';
+        errorDiv.style.marginTop = '1rem';
         setTimeout(() => {
             errorDiv.style.display = 'none';
-        }, 5000);
+        }, 7000);
+    } else {
+        console.error('Error div not found, using alert');
+        alert('Error: ' + message);
     }
 }
 
 function showSuccess(message) {
+    console.log('Showing success:', message);
     const successDiv = document.getElementById('successMessage');
     if (successDiv) {
         successDiv.textContent = message;
         successDiv.style.display = 'block';
+        successDiv.style.color = '#0a0';
+        successDiv.style.background = '#efe';
+        successDiv.style.padding = '10px';
+        successDiv.style.borderRadius = '5px';
+        successDiv.style.border = '1px solid #cfc';
+        successDiv.style.marginTop = '1rem';
         setTimeout(() => {
             successDiv.style.display = 'none';
         }, 5000);
+    } else {
+        console.log('Success div not found, using alert');
+        alert('Success: ' + message);
     }
 }
 

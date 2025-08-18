@@ -98,5 +98,9 @@ module.exports = {
   isAuthenticated, 
   hasRole, 
   hasAnyRole, 
-  optionalAuth 
+  optionalAuth,
+  // Aliases for common usage
+  authenticateToken: verifyToken,
+  requireAdmin: isAdmin,
+  requireTeacherOrAdmin: isTeacherOrAbove
 };

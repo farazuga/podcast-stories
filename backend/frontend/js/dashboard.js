@@ -117,6 +117,8 @@ async function loadStories(filters = {}) {
         
         if (response.ok) {
             allStories = await response.json();
+            // Load favorite status for the stories
+            allStories = await loadFavoriteStatus(allStories);
             displayStories(allStories);
         } else {
             console.error('Failed to load stories');
@@ -152,10 +154,21 @@ function createStoryCard(story) {
     const deleteButton = currentUser && currentUser.role === 'admin' ? 
         `<button class="btn btn-delete" onclick="deleteStory(${story.id})">Delete</button>` : '';
     
+    const favoriteButton = currentUser ? 
+        `<button class="btn btn-favorite ${story.is_favorited ? 'favorited' : ''}" 
+                onclick="toggleFavorite(${story.id}, this)" 
+                title="${story.is_favorited ? 'Remove from favorites' : 'Add to favorites'}">
+            <span class="star-icon">${story.is_favorited ? '★' : '☆'}</span>
+            <span class="favorite-count">${story.favorite_count || 0}</span>
+        </button>` : '';
+    
     return `
         <div class="story-card">
             <div class="story-header">
-                <h3 class="story-title">${story.idea_title}</h3>
+                <div class="story-title-row">
+                    <h3 class="story-title">${story.idea_title}</h3>
+                    ${favoriteButton}
+                </div>
                 <div class="story-meta">
                     <span>📅 ${formatDate(story.uploaded_date)}</span>
                     <span>👤 ${story.uploaded_by_name}</span>
@@ -521,4 +534,110 @@ function showJoinMessage(message, type) {
             messageDiv.style.display = 'none';
         }, 5000);
     }
+}
+
+// Favorite functionality
+async function toggleFavorite(storyId, buttonElement) {
+    try {
+        const isFavorited = buttonElement.classList.contains('favorited');
+        const starIcon = buttonElement.querySelector('.star-icon');
+        const countElement = buttonElement.querySelector('.favorite-count');
+        
+        // Show loading state
+        starIcon.textContent = '⭐';
+        buttonElement.disabled = true;
+        
+        if (isFavorited) {
+            // Remove from favorites
+            const response = await fetch(`${API_URL}/favorites/${storyId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                buttonElement.classList.remove('favorited');
+                starIcon.textContent = '☆';
+                countElement.textContent = result.total_favorites;
+                buttonElement.title = 'Add to favorites';
+                showJoinMessage('Removed from favorites', 'success');
+            } else {
+                throw new Error('Failed to remove from favorites');
+            }
+        } else {
+            // Add to favorites
+            const response = await fetch(`${API_URL}/favorites/${storyId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                buttonElement.classList.add('favorited');
+                starIcon.textContent = '★';
+                countElement.textContent = result.total_favorites;
+                buttonElement.title = 'Remove from favorites';
+                showJoinMessage('Added to favorites', 'success');
+            } else {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to add to favorites');
+            }
+        }
+    } catch (error) {
+        console.error('Error toggling favorite:', error);
+        showJoinMessage(error.message, 'error');
+        
+        // Reset button state on error
+        const isFavorited = buttonElement.classList.contains('favorited');
+        const starIcon = buttonElement.querySelector('.star-icon');
+        starIcon.textContent = isFavorited ? '★' : '☆';
+    } finally {
+        buttonElement.disabled = false;
+    }
+}
+
+// Load favorite status for stories
+async function loadFavoriteStatus(stories) {
+    if (!currentUser || stories.length === 0) return stories;
+    
+    try {
+        // Get user's favorites
+        const favoritesResponse = await fetch(`${API_URL}/favorites`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (favoritesResponse.ok) {
+            const userFavorites = await favoritesResponse.json();
+            const favoriteIds = new Set(userFavorites.map(fav => fav.id));
+            
+            // Mark stories as favorited
+            stories.forEach(story => {
+                story.is_favorited = favoriteIds.has(story.id);
+            });
+        }
+        
+        // Get favorite counts for all stories
+        const popularResponse = await fetch(`${API_URL}/favorites/popular?limit=1000`);
+        if (popularResponse.ok) {
+            const popularStories = await popularResponse.json();
+            const favoriteCounts = {};
+            popularStories.forEach(story => {
+                favoriteCounts[story.id] = story.favorite_count;
+            });
+            
+            stories.forEach(story => {
+                story.favorite_count = favoriteCounts[story.id] || 0;
+            });
+        }
+    } catch (error) {
+        console.error('Error loading favorite status:', error);
+    }
+    
+    return stories;
 }

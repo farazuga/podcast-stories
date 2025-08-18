@@ -66,21 +66,34 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Login
+// Login - Updated to support both email and username (with email preference)
 router.post('/login', async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, email, password } = req.body;
+    const loginIdentifier = email || username; // Prefer email if provided
 
     // Validate input
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password are required' });
+    if (!loginIdentifier || !password) {
+      return res.status(400).json({ 
+        error: 'Email (or username) and password are required' 
+      });
     }
 
-    // Find user
-    const user = await pool.query(
-      'SELECT * FROM users WHERE username = $1',
-      [username]
-    );
+    // Find user by email first, then fallback to username for backward compatibility
+    let user;
+    if (loginIdentifier.includes('@')) {
+      // Login identifier contains @, treat as email
+      user = await pool.query(
+        'SELECT u.*, s.school_name FROM users u LEFT JOIN schools s ON u.school_id = s.id WHERE u.email = $1',
+        [loginIdentifier]
+      );
+    } else {
+      // No @, treat as username (backward compatibility)
+      user = await pool.query(
+        'SELECT u.*, s.school_name FROM users u LEFT JOIN schools s ON u.school_id = s.id WHERE u.username = $1',
+        [loginIdentifier]
+      );
+    }
 
     if (user.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -92,12 +105,15 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Create token
+    const userData = user.rows[0];
+
+    // Create token with email as primary identifier
     const token = jwt.sign(
       { 
-        id: user.rows[0].id, 
-        username: user.rows[0].username,
-        role: user.rows[0].role 
+        id: userData.id, 
+        email: userData.email,
+        username: userData.username, // Keep for backward compatibility
+        role: userData.role 
       },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
@@ -107,11 +123,13 @@ router.post('/login', async (req, res) => {
       message: 'Login successful',
       token,
       user: {
-        id: user.rows[0].id,
-        username: user.rows[0].username,
-        email: user.rows[0].email,
-        school: user.rows[0].school,
-        role: user.rows[0].role
+        id: userData.id,
+        username: userData.username,
+        email: userData.email,
+        name: userData.name,
+        school: userData.school_name,
+        role: userData.role,
+        student_id: userData.student_id
       }
     });
   } catch (error) {
@@ -131,9 +149,9 @@ router.get('/verify', async (req, res) => {
   try {
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Get fresh user data
+    // Get fresh user data with school information
     const user = await pool.query(
-      'SELECT id, username, email, school, role FROM users WHERE id = $1',
+      'SELECT u.id, u.username, u.email, u.name, u.role, u.student_id, s.school_name FROM users u LEFT JOIN schools s ON u.school_id = s.id WHERE u.id = $1',
       [verified.id]
     );
 
@@ -141,9 +159,19 @@ router.get('/verify', async (req, res) => {
       return res.status(401).json({ error: 'User not found' });
     }
 
+    const userData = user.rows[0];
+
     res.json({
       valid: true,
-      user: user.rows[0]
+      user: {
+        id: userData.id,
+        username: userData.username,
+        email: userData.email,
+        name: userData.name,
+        school: userData.school_name,
+        role: userData.role,
+        student_id: userData.student_id
+      }
     });
   } catch (error) {
     res.status(401).json({ error: 'Invalid token' });

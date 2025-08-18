@@ -87,7 +87,8 @@ function showTab(tabName) {
             (tabName === 'overview' && index === 0) ||
             (tabName === 'schools' && index === 1) ||
             (tabName === 'teachers' && index === 2) ||
-            (tabName === 'tags' && index === 3)) {
+            (tabName === 'teacher-requests' && index === 3) ||
+            (tabName === 'tags' && index === 4)) {
             btn.classList.add('active');
         }
     });
@@ -98,6 +99,10 @@ function showTab(tabName) {
             loadSchools();
             break;
         case 'teachers':
+            loadTeachers();
+            loadSchoolsForTeacher();
+            break;
+        case 'teacher-requests':
             loadTeacherRequests();
             loadTeacherRequestStats();
             break;
@@ -598,6 +603,12 @@ function setupEventListeners() {
         addSchoolForm.addEventListener('submit', addSchool);
     }
     
+    // Add teacher form
+    const addTeacherForm = document.getElementById('addTeacherForm');
+    if (addTeacherForm) {
+        addTeacherForm.addEventListener('submit', addTeacher);
+    }
+    
     // Add tag form
     const addTagForm = document.getElementById('addTagForm');
     if (addTagForm) {
@@ -612,9 +623,13 @@ function setupEventListeners() {
     
     // Modal click outside to close
     window.onclick = function(event) {
-        const modal = document.getElementById('approvalModal');
-        if (event.target === modal) {
+        const approvalModal = document.getElementById('approvalModal');
+        const deactivateModal = document.getElementById('deactivateTeacherModal');
+        
+        if (event.target === approvalModal) {
             closeApprovalModal();
+        } else if (event.target === deactivateModal) {
+            closeDeactivateModal();
         }
     }
 }
@@ -644,6 +659,185 @@ function showSuccess(message) {
         setTimeout(() => {
             successDiv.style.display = 'none';
         }, 5000);
+    }
+}
+
+// Teacher Management Functions
+async function loadTeachers() {
+    try {
+        const response = await fetch(`${API_URL}/admin/teachers`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            const teachers = await response.json();
+            displayTeachers(teachers);
+        } else {
+            showError('Failed to load teachers');
+        }
+    } catch (error) {
+        console.error('Error loading teachers:', error);
+        showError('Network error loading teachers');
+    }
+}
+
+function displayTeachers(teachers) {
+    const teachersTable = document.getElementById('teachersTable');
+    
+    if (teachers.length === 0) {
+        teachersTable.innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center">No teachers found</td>
+            </tr>
+        `;
+        return;
+    }
+    
+    teachersTable.innerHTML = teachers.map(teacher => `
+        <tr>
+            <td>${teacher.name || teacher.username}</td>
+            <td>${teacher.username}</td>
+            <td>${teacher.email}</td>
+            <td>${teacher.school_name || 'Not assigned'}</td>
+            <td>${teacher.class_count || 0}</td>
+            <td>${teacher.student_count || 0}</td>
+            <td>
+                <span class="status-badge ${teacher.is_active ? 'status-approved' : 'status-rejected'}">
+                    ${teacher.is_active ? 'Active' : 'Inactive'}
+                </span>
+            </td>
+            <td>${formatDate(teacher.created_at)}</td>
+            <td>
+                ${teacher.is_active ? 
+                    `<button class="btn btn-small btn-danger" onclick="showDeactivateModal(${teacher.id}, '${teacher.name || teacher.username}', '${teacher.username}', '${teacher.email}')">Deactivate</button>` :
+                    `<button class="btn btn-small btn-success" onclick="reactivateTeacher(${teacher.id})">Reactivate</button>`
+                }
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function loadSchoolsForTeacher() {
+    try {
+        const response = await fetch(`${API_URL}/schools`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            const schools = await response.json();
+            const schoolSelect = document.getElementById('teacherSchool');
+            if (schoolSelect) {
+                schoolSelect.innerHTML = '<option value="">Select school</option>' +
+                    schools.map(school => `<option value="${school.id}">${school.school_name}</option>`).join('');
+            }
+        }
+    } catch (error) {
+        console.error('Error loading schools:', error);
+    }
+}
+
+async function addTeacher(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('teacherName').value.trim();
+    const email = document.getElementById('teacherEmail').value.trim();
+    const username = document.getElementById('teacherUsername').value.trim();
+    const password = document.getElementById('teacherPassword').value;
+    const schoolId = document.getElementById('teacherSchool').value;
+    
+    if (!name || !email || !username || !password) {
+        showError('All fields except school are required');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/admin/teachers`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                name,
+                email,
+                username,
+                password,
+                school_id: schoolId ? parseInt(schoolId) : null
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showSuccess('Teacher created successfully!');
+            document.getElementById('addTeacherForm').reset();
+            loadTeachers();
+        } else {
+            showError(result.error || 'Failed to create teacher');
+        }
+    } catch (error) {
+        console.error('Error creating teacher:', error);
+        showError('Network error creating teacher');
+    }
+}
+
+let teacherToDeactivate = null;
+
+function showDeactivateModal(teacherId, teacherName, teacherUsername, teacherEmail) {
+    teacherToDeactivate = teacherId;
+    document.getElementById('deactivateTeacherName').textContent = teacherName;
+    document.getElementById('deactivateTeacherUsername').textContent = teacherUsername;
+    document.getElementById('deactivateTeacherEmail').textContent = teacherEmail;
+    document.getElementById('deactivateTeacherModal').style.display = 'block';
+}
+
+function closeDeactivateModal() {
+    document.getElementById('deactivateTeacherModal').style.display = 'none';
+    teacherToDeactivate = null;
+}
+
+async function confirmDeactivateTeacher() {
+    if (!teacherToDeactivate) return;
+    
+    try {
+        const response = await fetch(`${API_URL}/admin/teachers/${teacherToDeactivate}/deactivate`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showSuccess('Teacher deactivated successfully');
+            closeDeactivateModal();
+            loadTeachers();
+        } else {
+            showError(result.error || 'Failed to deactivate teacher');
+        }
+    } catch (error) {
+        console.error('Error deactivating teacher:', error);
+        showError('Network error deactivating teacher');
+    }
+}
+
+async function reactivateTeacher(teacherId) {
+    try {
+        const response = await fetch(`${API_URL}/admin/teachers/${teacherId}/reactivate`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showSuccess('Teacher reactivated successfully');
+            loadTeachers();
+        } else {
+            showError(result.error || 'Failed to reactivate teacher');
+        }
+    } catch (error) {
+        console.error('Error reactivating teacher:', error);
+        showError('Network error reactivating teacher');
     }
 }
 

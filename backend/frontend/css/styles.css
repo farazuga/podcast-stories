@@ -1501,6 +1501,81 @@ body {
     font-weight: 600;
 }
 
+/* Favorite Button Styling */
+.story-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.btn-favorite {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: transparent;
+    border: 2px solid #ddd;
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 0.9rem;
+    min-width: 60px;
+    justify-content: center;
+}
+
+.btn-favorite:hover {
+    border-color: #ffd700;
+    background: #fffbf0;
+}
+
+.btn-favorite.favorited {
+    border-color: #ffd700;
+    background: #fff8dc;
+    color: #b8860b;
+}
+
+.btn-favorite .star-icon {
+    font-size: 1.2rem;
+    color: #ffd700;
+    transition: all 0.2s;
+}
+
+.btn-favorite:not(.favorited) .star-icon {
+    color: #ddd;
+}
+
+.btn-favorite:hover .star-icon {
+    color: #ffd700;
+    transform: scale(1.1);
+}
+
+.btn-favorite.favorited .star-icon {
+    color: #ffd700;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+.favorite-count {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #666;
+}
+
+.btn-favorite.favorited .favorite-count {
+    color: #b8860b;
+}
+
+.btn-favorite:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Story card adjustments for favorites */
+.story-card .story-title {
+    margin: 0;
+    flex: 1;
+}
+
 @media (max-width: 768px) {
     .student-dashboard {
         padding: 0 1rem;
