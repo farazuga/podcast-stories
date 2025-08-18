@@ -1794,6 +1794,59 @@ app.use((req, res, next) => {
 
 ## 9. Recent Updates
 
+### Critical Admin Page Fixes (August 2025)
+
+#### Button Functionality Issues Resolved
+**Problem:** Admin page buttons were completely non-responsive due to JavaScript function scope issues.
+
+**Root Cause:** Functions called by `onclick` attributes were not accessible due to module scope isolation.
+
+**Solution Implemented:**
+```javascript
+// Before: function showTab(tabName) {...}
+// After: window.showTab = function(tabName) {...}
+```
+
+**Functions Made Globally Available:**
+- `window.showTab()` - Tab switching functionality
+- `window.editSchool()` - School editing with API integration
+- `window.deleteSchool()` - School deletion with confirmation
+- `window.showApprovalModal()` - Teacher approval modal
+- `window.closeApprovalModal()` - Modal closing
+- `window.rejectTeacherRequest()` - Teacher request rejection
+- `window.deleteTag()` - Tag management
+- `window.logout()` - User session management
+
+**Enhanced Error Handling:**
+- Comprehensive try-catch blocks for all functions
+- User-friendly error messages
+- Detailed console logging for debugging
+- Proper error feedback to users
+
+**Debug Tools Added:**
+- `frontend/debug-admin.html` - Isolated testing environment
+- `frontend/ADMIN_DEBUG_GUIDE.md` - Comprehensive testing guide
+- Enhanced JavaScript error tracking
+- API connectivity testing tools
+
+#### Teacher Dashboard Debugging Improvements
+**Enhanced Class Creation Process:**
+- Added comprehensive console logging for form submission
+- API call debugging with detailed request/response tracking
+- Event listener verification and setup confirmation
+- Form data validation logging
+
+**Console Output Example:**
+```javascript
+// Now provides detailed feedback:
+Create class form submitted
+Form data: {className: "Test Class", subject: "Science", description: "..."}
+Making API request to create class...
+API response status: 201
+API response data: {id: 10, class_code: "ABC123", ...}
+Class created successfully
+```
+
 ### VidPOD Rebranding
 
 #### Brand Identity Changes
@@ -2391,10 +2444,76 @@ VidPOD represents a comprehensive educational platform that successfully bridges
 - **Maintainability:** Modular code structure, clear separation of concerns
 - **User Experience:** Responsive design, real-time feedback, intuitive navigation
 
+## 11. Troubleshooting Guide
+
+### Admin Page Issues
+
+#### Button Not Working
+**Symptoms:** Clicking admin page buttons (tabs, add, edit, delete) produces no response.
+
+**Debugging Steps:**
+1. **Check Browser Console:** Press F12 → Console tab, look for JavaScript errors
+2. **Verify Function Availability:** In console, type `typeof window.showTab` (should return "function")
+3. **Test Tab Switching:** In console, run `window.showTab('schools')`
+4. **Check Authentication:** Verify token in localStorage: `localStorage.getItem('token')`
+
+**Common Solutions:**
+- Clear browser cache and reload page
+- Check if using admin credentials (admin/admin123)
+- Verify API connectivity to production server
+- Use debug page: `/debug-admin.html` for isolated testing
+
+#### School Edit/Delete Not Working
+**Check:** Ensure `editSchool()` and `deleteSchool()` functions are globally available
+**Test:** In console: `window.editSchool(1)` should show prompt or error message
+
+### Teacher Dashboard Issues
+
+#### Class Creation "Nothing Happens"
+**Enhanced Debugging:** Open browser console during form submission to see detailed logs.
+
+**Expected Console Output:**
+```
+Create class form submitted
+Form data: {className: "...", subject: "...", description: "..."}
+Making API request to create class...
+API response status: 201
+```
+
+**Troubleshooting:**
+1. **Check Form Data:** Ensure class name is not empty
+2. **Verify API Token:** Check localStorage token validity
+3. **Monitor Network Tab:** Look for failed API calls
+4. **Check Error Messages:** Look for error display on page
+
+### General Authentication Issues
+
+#### Redirect Loops or Access Denied
+**Solution:** Clear localStorage and login again:
+```javascript
+localStorage.clear();
+window.location.href = '/index.html';
+```
+
+#### API Connection Issues
+**Test API Status:**
+```javascript
+fetch('https://podcast-stories-production.up.railway.app/api/')
+  .then(r => r.json())
+  .then(data => console.log('API Status:', data));
+```
+
+### Debug Tools Available
+
+1. **Debug Admin Page:** `/debug-admin.html` - Isolated testing environment
+2. **Admin Debug Guide:** `/ADMIN_DEBUG_GUIDE.md` - Comprehensive testing instructions
+3. **Browser Console:** Enhanced logging for real-time debugging
+4. **Network Tab:** Monitor API calls and responses
+
 This documentation serves as a comprehensive reference for understanding, maintaining, and extending the VidPOD platform. The modular architecture and clear patterns established make it straightforward to add new features while maintaining code quality and system reliability.
 
 ---
 
-*Last Updated: August 2024*  
-*VidPOD Version: 2.0.0*  
+*Last Updated: August 2025*  
+*VidPOD Version: 2.1.0*  
 *Documentation Maintained by: Claude AI Assistant*
