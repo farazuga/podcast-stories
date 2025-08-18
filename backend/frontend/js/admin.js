@@ -1,5 +1,5 @@
-// API base URL
-const API_URL = 'https://podcast-stories-production.up.railway.app/api';
+// API base URL (use global one set by auth.js)
+const API_URL = window.API_URL || 'https://podcast-stories-production.up.railway.app/api';
 
 // Global variables
 let currentUser = null;
