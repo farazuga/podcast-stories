@@ -159,17 +159,17 @@ router.post('/', verifyToken, async (req, res) => {
       interviewees
     } = req.body;
 
-    // Insert story
+    // Insert story with draft status
     const storyResult = await client.query(
       `INSERT INTO story_ideas (
         idea_title, idea_description, 
         question_1, question_2, question_3, question_4, question_5, question_6,
-        coverage_start_date, coverage_end_date, uploaded_by
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
+        coverage_start_date, coverage_end_date, uploaded_by, approval_status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
       [
         idea_title, idea_description,
         question_1, question_2, question_3, question_4, question_5, question_6,
-        coverage_start_date, coverage_end_date || null, req.user.id
+        coverage_start_date, coverage_end_date || null, req.user.id, 'draft'
       ]
     );
 
@@ -356,13 +356,13 @@ router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
         
         for (const row of results) {
           try {
-            // Insert story
+            // Insert story with draft status
             const storyResult = await client.query(
               `INSERT INTO story_ideas (
                 idea_title, idea_description,
                 question_1, question_2, question_3, question_4, question_5, question_6,
-                coverage_start_date, coverage_end_date, uploaded_by
-              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
+                coverage_start_date, coverage_end_date, uploaded_by, approval_status
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
               [
                 row.idea_title || row.title,
                 row.idea_description || row.description,
@@ -370,7 +370,7 @@ router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
                 row.question_4, row.question_5, row.question_6,
                 row.coverage_start_date || row.start_date,
                 row.coverage_end_date || row.end_date || null,
-                req.user.id
+                req.user.id, 'draft'
               ]
             );
 
