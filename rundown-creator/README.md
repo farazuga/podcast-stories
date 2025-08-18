@@ -4,6 +4,14 @@
 
 A standalone application for managing podcast show rundowns with comprehensive approval workflows, drag-and-drop segment management, and story integration. Built to work independently alongside the main VidPOD system.
 
+**🔗 Integration Status: Ready for Production Integration**
+- ✅ Complete navigation integration documentation available ([INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md))
+- ✅ SSO authentication with main VidPOD implemented  
+- ✅ Story module examined and optimized ([stories.js](./frontend/js/stories.js))
+- ✅ Comprehensive testing and debugging guides provided ([INTEGRATION_TESTING_GUIDE.md](./INTEGRATION_TESTING_GUIDE.md))
+- ✅ Navigation updates documented ([NAVIGATION_UPDATES.md](./NAVIGATION_UPDATES.md))
+- ✅ Production deployment ready
+
 ---
 
 ## 🎯 Project Overview
@@ -95,6 +103,40 @@ npm run dev  # Starts with nodemon for auto-reload
 - Open: http://localhost:3001
 - Login with main VidPOD credentials
 - Create your first rundown!
+
+---
+
+## 🔗 Integration with Main VidPOD
+
+### For Claude Code Users
+
+If you're working on the main VidPOD application and want to integrate the rundown creator, follow these guides:
+
+1. **[Integration Guide](./INTEGRATION_GUIDE.md)** - Complete integration documentation
+   - Navigation link integration (recommended approach)
+   - SSO authentication setup
+   - Cross-service data sharing
+   - Production deployment considerations
+
+2. **[Navigation Updates](./NAVIGATION_UPDATES.md)** - Specific file changes needed
+   - Exact code changes for dashboard navigation
+   - CSS styling updates
+   - JavaScript integration functions
+   - Responsive design considerations
+
+3. **[Integration Testing Guide](./INTEGRATION_TESTING_GUIDE.md)** - Testing and debugging
+   - Comprehensive testing procedures
+   - Automated test scripts
+   - Debug tools and functions
+   - Troubleshooting common issues
+
+### Integration Benefits
+
+- **Seamless User Experience**: Users navigate between services without noticing
+- **Single Sign-On**: Automatic authentication across services
+- **Story Integration**: Access VidPOD stories within rundown creator
+- **Independent Development**: Both teams can work simultaneously
+- **Graceful Degradation**: Main app works even if rundown creator is unavailable
 
 ---
 
@@ -556,8 +598,12 @@ This provides:
 
 ### Related Documentation
 - [Main VidPOD Documentation](../README.md)
-- [API Integration Guide](./API_INTEGRATION.md)
-- [Deployment Guide](./DEPLOYMENT.md)
+- **Integration Documentation:**
+  - [Integration Guide](./INTEGRATION_GUIDE.md) - Complete guide for integrating with main VidPOD
+  - [Navigation Updates](./NAVIGATION_UPDATES.md) - Specific file updates for navigation
+  - [Integration Testing Guide](./INTEGRATION_TESTING_GUIDE.md) - Testing and debugging procedures
+- [Deployment Guide](./DEPLOYMENT_GUIDE.md)
+- [Debug Guide](./DEBUG_GUIDE.md)
 - [Troubleshooting Guide](./TROUBLESHOOTING.md)
 
 ### External References

@@ -1,4 +1,4 @@
-// API base URL
+// API base URL - Updated for browse stories fix
 const API_URL = 'https://podcast-stories-production.up.railway.app/api';
 
 // Global variables
