@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Functionality Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .success { color: green; }
+        .error { color: red; }
+        .loading { color: orange; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+        button { padding: 10px 15px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 VidPOD Admin Functionality Test</h1>
+    
+    <div class="test-section">
+        <h2>Authentication Test</h2>
+        <button onclick="testAuth()">Test Login</button>
+        <div id="authResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Stories API Test</h2>
+        <button onclick="testStories()">Test All Stories</button>
+        <button onclick="testPendingStories()">Test Pending Stories</button>
+        <div id="storiesResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Tags API Test</h2>
+        <button onclick="testTags()">Test Tags</button>
+        <div id="tagsResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Admin Panel JavaScript Test</h2>
+        <button onclick="testAdminJS()">Test Admin Functions</button>
+        <div id="adminJSResult"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://podcast-stories-production.up.railway.app/api';
+        let authToken = null;
+
+        async function testAuth() {
+            const resultDiv = document.getElementById('authResult');
+            resultDiv.innerHTML = '<span class="loading">Testing authentication...</span>';
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@vidpod.com',
+                        password: 'vidpod'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.token;
+                    resultDiv.innerHTML = `
+                        <span class="success">✅ Authentication successful</span>
+                        <pre>User: ${data.user.email} (${data.user.role})</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ Auth failed: ${response.status}</span>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Auth error: ${error.message}</span>`;
+            }
+        }
+
+        async function testStories() {
+            const resultDiv = document.getElementById('storiesResult');
+            if (!authToken) {
+                resultDiv.innerHTML = '<span class="error">❌ Please authenticate first</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<span class="loading">Testing stories API...</span>';
+            
+            try {
+                const response = await fetch(`${API_URL}/stories`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const stories = await response.json();
+                    resultDiv.innerHTML = `
+                        <span class="success">✅ Stories loaded: ${stories.length} total</span>
+                        <pre>${JSON.stringify(stories.map(s => ({
+                            id: s.id,
+                            title: s.idea_title,
+                            status: s.approval_status
+                        })), null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ Stories failed: ${response.status}</span>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Stories error: ${error.message}</span>`;
+            }
+        }
+
+        async function testPendingStories() {
+            const resultDiv = document.getElementById('storiesResult');
+            if (!authToken) {
+                resultDiv.innerHTML = '<span class="error">❌ Please authenticate first</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<span class="loading">Testing pending stories API...</span>';
+            
+            try {
+                const response = await fetch(`${API_URL}/stories/admin/by-status/pending`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const stories = await response.json();
+                    resultDiv.innerHTML = `
+                        <span class="success">✅ Pending stories loaded: ${stories.length} total</span>
+                        <pre>${JSON.stringify(stories.map(s => ({
+                            id: s.id,
+                            title: s.idea_title,
+                            status: s.approval_status,
+                            submittedBy: s.uploaded_by_name
+                        })), null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ Pending stories failed: ${response.status}</span>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Pending stories error: ${error.message}</span>`;
+            }
+        }
+
+        async function testTags() {
+            const resultDiv = document.getElementById('tagsResult');
+            if (!authToken) {
+                resultDiv.innerHTML = '<span class="error">❌ Please authenticate first</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<span class="loading">Testing tags API...</span>';
+            
+            try {
+                const response = await fetch(`${API_URL}/tags`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const tags = await response.json();
+                    resultDiv.innerHTML = `
+                        <span class="success">✅ Tags loaded: ${tags.length} total</span>
+                        <pre>${JSON.stringify(tags.map(t => ({
+                            id: t.id,
+                            name: t.tag_name,
+                            createdBy: t.created_by_name
+                        })), null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ Tags failed: ${response.status}</span>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Tags error: ${error.message}</span>`;
+            }
+        }
+
+        async function testAdminJS() {
+            const resultDiv = document.getElementById('adminJSResult');
+            resultDiv.innerHTML = '<span class="loading">Testing admin JavaScript functions...</span>';
+            
+            // This test would need to be run in the context of the admin page
+            // For now, just show what functions should be available
+            resultDiv.innerHTML = `
+                <span class="success">✅ Admin JS functions to test:</span>
+                <pre>Functions that should be globally available:
+- window.showTab() - for tab switching
+- window.loadStoriesForApproval() - for loading pending stories
+- window.loadTags() - for loading tags
+- window.displayTags() - for showing tags list
+
+To test: Open admin.html and check browser console for these functions</pre>
+            `;
+        }
+    </script>
+</body>
+</html>
