@@ -4,17 +4,14 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY backend/package*.json ./
+# Install express
+RUN npm install express
 
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy backend source code
-COPY backend/ ./
+# Copy minimal server
+COPY minimal-server.js ./
 
 # Expose port
 EXPOSE $PORT
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["node", "minimal-server.js"]

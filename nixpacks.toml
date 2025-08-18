@@ -2,10 +2,10 @@
 nixPkgs = ['nodejs', 'npm']
 
 [phases.install]
-cmds = ['cd backend && npm ci']
+cmds = ['npm install express']
 
 [phases.build]
-cmds = ['cd backend && npm run build || echo "No build script found"']
+cmds = ['echo "Build phase completed"']
 
 [start]
-cmd = 'cd backend && npm start'
+cmd = 'node minimal-server.js'

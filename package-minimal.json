@@ -1,0 +1,16 @@
+{
+  "name": "vidpod-app",
+  "version": "1.0.0",
+  "description": "VidPOD - Podcast Stories Database",
+  "main": "minimal-server.js",
+  "scripts": {
+    "start": "node minimal-server.js",
+    "dev": "node minimal-server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
