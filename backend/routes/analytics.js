@@ -76,7 +76,7 @@ router.get('/teacher/dashboard', authenticateToken, requireTeacherOrAdmin, async
         s.idea_title as title,
         COUNT(DISTINCT ca.student_id) as view_count,
         COUNT(DISTINCT uf.user_id) as favorite_count
-      FROM stories s
+      FROM story_ideas s
       JOIN class_analytics ca ON s.id = ca.story_id
       JOIN classes c ON ca.class_id = c.id
       LEFT JOIN user_favorites uf ON s.id = uf.story_id
@@ -273,7 +273,7 @@ router.get('/class/:classId', authenticateToken, requireTeacherOrAdmin, async (r
         COUNT(DISTINCT uf.user_id) FILTER (WHERE uf.user_id IN (
           SELECT student_id FROM enrollments WHERE class_id = $1
         )) as favorite_count_in_class
-      FROM stories s
+      FROM story_ideas s
       JOIN class_analytics ca ON s.id = ca.story_id
       LEFT JOIN user_favorites uf ON s.id = uf.story_id
       WHERE ca.class_id = $1 AND ca.activity_type = 'story_view'

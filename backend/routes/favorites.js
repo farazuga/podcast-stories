@@ -20,11 +20,11 @@ router.get('/', authenticateToken, async (req, res) => {
         uf.created_at as favorited_at,
         COUNT(uf2.id) as total_favorites
       FROM user_favorites uf
-      JOIN stories s ON uf.story_id = s.id
+      JOIN story_ideas s ON uf.story_id = s.id
       JOIN users u ON s.uploaded_by = u.id
       LEFT JOIN user_favorites uf2 ON s.id = uf2.story_id
-      WHERE uf.user_id = $1 AND s.is_approved = true
-      GROUP BY s.id, s.title, s.description, s.audio_url, s.uploaded_by, s.created_at, s.is_approved, u.username, uf.created_at
+      WHERE uf.user_id = $1
+      GROUP BY s.id, s.idea_title, s.idea_description, s.uploaded_by, s.uploaded_date, u.username, uf.created_at
       ORDER BY uf.created_at DESC
     `;
     
@@ -42,9 +42,9 @@ router.post('/:storyId', authenticateToken, async (req, res) => {
     const userId = req.user.id;
     const storyId = parseInt(req.params.storyId);
     
-    // Check if story exists and is approved
+    // Check if story exists
     const storyCheck = await pool.query(
-      'SELECT id, title FROM stories WHERE id = $1 AND is_approved = true',
+      'SELECT id, idea_title FROM story_ideas WHERE id = $1',
       [storyId]
     );
     
@@ -76,7 +76,7 @@ router.post('/:storyId', authenticateToken, async (req, res) => {
     
     res.status(201).json({
       message: 'Story added to favorites',
-      story_title: storyCheck.rows[0].title,
+      story_title: storyCheck.rows[0].idea_title,
       total_favorites: parseInt(favoriteCount.rows[0].count)
     });
   } catch (error) {
@@ -134,12 +134,11 @@ router.get('/popular', async (req, res) => {
         s.*,
         u.username as uploaded_by_username,
         COUNT(uf.id) as favorite_count
-      FROM stories s
+      FROM story_ideas s
       JOIN users u ON s.uploaded_by = u.id
       LEFT JOIN user_favorites uf ON s.id = uf.story_id
-      WHERE s.is_approved = true
-      GROUP BY s.id, s.title, s.description, s.audio_url, s.uploaded_by, s.created_at, s.is_approved, u.username
-      ORDER BY favorite_count DESC, s.created_at DESC
+      GROUP BY s.id, s.idea_title, s.idea_description, s.uploaded_by, s.uploaded_date, u.username
+      ORDER BY favorite_count DESC, s.uploaded_date DESC
       LIMIT $1 OFFSET $2
     `;
     
@@ -184,14 +183,13 @@ router.get('/stats', authenticateToken, async (req, res) => {
     const statsQuery = `
       SELECT 
         s.id,
-        s.title,
+        s.idea_title,
         COUNT(uf.id) as favorite_count,
         ARRAY_AGG(DISTINCT u.username) FILTER (WHERE u.username IS NOT NULL) as favorited_by
-      FROM stories s
+      FROM story_ideas s
       LEFT JOIN user_favorites uf ON s.id = uf.story_id
       LEFT JOIN users u ON uf.user_id = u.id
-      WHERE s.is_approved = true
-      GROUP BY s.id, s.title
+      GROUP BY s.id, s.idea_title
       HAVING COUNT(uf.id) > 0
       ORDER BY favorite_count DESC
       LIMIT 20
