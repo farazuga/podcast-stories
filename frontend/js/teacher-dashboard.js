@@ -90,17 +90,33 @@ function displayClasses() {
         <div class="class-card">
             <div class="class-header">
                 <h3>${classItem.class_name}</h3>
-                <span class="class-code">${classItem.class_code}</span>
+                <div class="class-code-section">
+                    <div class="class-code-display">
+                        <span class="class-code-label">Class Code:</span>
+                        <span class="class-code-large">${classItem.class_code}</span>
+                        <button class="btn btn-outline btn-tiny" onclick="copyCode('${classItem.class_code}')" title="Copy class code">
+                            📋
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="class-details">
-                ${classItem.subject ? `<p><strong>Subject:</strong> ${classItem.subject}</p>` : ''}
-                ${classItem.description ? `<p class="class-description">${classItem.description}</p>` : ''}
-                <p><strong>Students:</strong> ${classItem.student_count || 0}</p>
-                <p><strong>School:</strong> ${classItem.school_name}</p>
+                ${classItem.subject ? `<p><strong>📚 Subject:</strong> ${classItem.subject}</p>` : ''}
+                ${classItem.description ? `<p class="class-description"><strong>📝 Description:</strong> ${classItem.description}</p>` : ''}
+                <p><strong>👥 Students:</strong> ${classItem.student_count || 0}</p>
+                <p><strong>🏫 School:</strong> ${classItem.school_name}</p>
+                <p><strong>📅 Created:</strong> ${formatDate(classItem.created_at)}</p>
             </div>
             <div class="class-actions">
-                <button class="btn btn-primary" onclick="viewClassDetails(${classItem.id})">View Details</button>
-                <button class="btn btn-secondary" onclick="copyCode('${classItem.class_code}')">Copy Code</button>
+                <button class="btn btn-primary" onclick="viewClassDetails(${classItem.id})">
+                    👀 View Details
+                </button>
+                <button class="btn btn-secondary" onclick="copyCode('${classItem.class_code}')">
+                    📋 Copy Code
+                </button>
+                <button class="btn btn-outline" onclick="shareClassCode('${classItem.class_code}', '${classItem.class_name}')">
+                    📤 Share
+                </button>
             </div>
         </div>
     `).join('');
@@ -156,7 +172,9 @@ async function createClass(e) {
         
         if (response.ok) {
             console.log('Class created successfully');
-            showSuccess(`Class created successfully! Class code: ${result.class_code}`);
+            
+            // Show enhanced success alert
+            showNewClassAlert(result.class_name, result.class_code);
             
             // Clear form
             document.getElementById('createClassForm').reset();
@@ -392,6 +410,97 @@ function showSuccess(message) {
         }, 5000);
     }
 }
+
+// Enhanced class code functionality
+function showNewClassAlert(className, classCode) {
+    const alert = document.getElementById('newClassAlert');
+    const alertClassName = document.getElementById('alertClassName');
+    const alertClassCode = document.getElementById('alertClassCode');
+    
+    if (alert && alertClassName && alertClassCode) {
+        alertClassName.textContent = className;
+        alertClassCode.textContent = classCode;
+        alert.style.display = 'block';
+        
+        // Auto-hide after 10 seconds
+        setTimeout(() => {
+            hideNewClassAlert();
+        }, 10000);
+        
+        // Scroll to alert
+        alert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function hideNewClassAlert() {
+    const alert = document.getElementById('newClassAlert');
+    if (alert) {
+        alert.style.display = 'none';
+    }
+}
+
+function copyNewClassCode() {
+    const code = document.getElementById('alertClassCode').textContent;
+    copyCode(code);
+}
+
+function shareClassCode(classCode, className) {
+    const shareText = `Join my VidPOD class "${className}" using code: ${classCode}`;
+    
+    if (navigator.share) {
+        // Use native sharing if available (mobile devices)
+        navigator.share({
+            title: `Join ${className} - VidPOD`,
+            text: shareText,
+            url: window.location.origin
+        }).catch(err => {
+            console.log('Error sharing:', err);
+            fallbackShare(shareText);
+        });
+    } else {
+        fallbackShare(shareText);
+    }
+}
+
+function fallbackShare(shareText) {
+    // Fallback to clipboard copy
+    navigator.clipboard.writeText(shareText).then(() => {
+        showSuccess('Share text copied to clipboard! You can now paste it in your messaging app.');
+    }).catch(err => {
+        showError('Failed to copy share text');
+    });
+}
+
+// Enhanced copy functionality with better feedback
+function copyCode(code) {
+    navigator.clipboard.writeText(code).then(() => {
+        showSuccess(`📋 Class code ${code} copied to clipboard!`);
+        
+        // Visual feedback - highlight the copied code
+        const codeElements = document.querySelectorAll('.class-code-large');
+        codeElements.forEach(el => {
+            if (el.textContent === code) {
+                el.classList.add('code-copied');
+                setTimeout(() => {
+                    el.classList.remove('code-copied');
+                }, 1000);
+            }
+        });
+    }).catch(err => {
+        showError('Failed to copy code to clipboard');
+    });
+}
+
+// Enhanced copy for modal
+function copyClassCode() {
+    const code = document.getElementById('classCode').textContent;
+    copyCode(code);
+}
+
+// Make functions globally available
+window.copyNewClassCode = copyNewClassCode;
+window.hideNewClassAlert = hideNewClassAlert;
+window.shareClassCode = shareClassCode;
 
 function logout() {
     localStorage.removeItem('token');

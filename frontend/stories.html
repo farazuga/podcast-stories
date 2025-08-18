@@ -84,6 +84,16 @@
                     📋 List View
                 </button>
             </div>
+            <div class="selection-controls">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                    <span class="checkmark"></span>
+                    Select All
+                </label>
+                <div class="selection-info" id="selectionInfo" style="display: none;">
+                    <span id="selectedCount">0</span> selected
+                </div>
+            </div>
             <div class="sort-controls">
                 <label>Sort by:</label>
                 <select id="sortBy" onchange="sortStories()">
@@ -92,6 +102,29 @@
                     <option value="title">Title A-Z</option>
                     <option value="author">Author A-Z</option>
                 </select>
+            </div>
+        </div>
+
+        <!-- Bulk Actions Bar -->
+        <div class="bulk-actions-bar" id="bulkActionsBar" style="display: none;">
+            <div class="bulk-actions-content">
+                <div class="bulk-actions-info">
+                    <span id="bulkSelectedCount">0</span> stories selected
+                </div>
+                <div class="bulk-actions-buttons">
+                    <button class="btn btn-outline btn-small" onclick="bulkFavorite()">
+                        ❤️ Add to Favorites
+                    </button>
+                    <button class="btn btn-outline btn-small" onclick="bulkExport()">
+                        📄 Export
+                    </button>
+                    <button class="btn btn-danger btn-small" onclick="bulkDelete()" id="bulkDeleteBtn" style="display: none;">
+                        🗑️ Delete
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="clearSelection()">
+                        ✕ Clear Selection
+                    </button>
+                </div>
             </div>
         </div>
 

@@ -48,17 +48,40 @@
 
         <!-- Create New Class Section -->
         <div class="action-card">
-            <h3>Create New Class</h3>
+            <h3>🎓 Create New Class</h3>
             <form id="createClassForm" class="inline-form">
                 <div class="form-row">
                     <input type="text" id="className" placeholder="Class Name" required>
                     <input type="text" id="subject" placeholder="Subject (optional)">
-                    <button type="submit" class="btn btn-primary">Create Class</button>
+                    <button type="submit" class="btn btn-primary">✨ Create Class</button>
                 </div>
                 <div class="form-row">
                     <textarea id="description" placeholder="Class Description (optional)" rows="2"></textarea>
                 </div>
             </form>
+            <div id="newClassAlert" class="new-class-alert" style="display: none;">
+                <div class="alert-content">
+                    <div class="alert-header">
+                        <span class="alert-icon">🎉</span>
+                        <h4>Class Created Successfully!</h4>
+                    </div>
+                    <div class="alert-body">
+                        <p>Your new class <strong id="alertClassName"></strong> has been created.</p>
+                        <div class="class-code-highlight">
+                            <label>Share this code with your students:</label>
+                            <div class="code-display-large">
+                                <span id="alertClassCode" class="class-code-jumbo"></span>
+                                <button class="btn btn-secondary btn-small" onclick="copyNewClassCode()">
+                                    📋 Copy Code
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert-actions">
+                        <button class="btn btn-outline btn-small" onclick="hideNewClassAlert()">Got it!</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- My Classes -->
