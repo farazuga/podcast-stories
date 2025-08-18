@@ -29,6 +29,7 @@
             <button class="tab-btn active" onclick="showTab('overview')">Overview</button>
             <button class="tab-btn" onclick="showTab('schools')">Schools</button>
             <button class="tab-btn" onclick="showTab('teachers')">Teacher Requests</button>
+            <button class="tab-btn" onclick="showTab('stories')">Story Approval</button>
             <button class="tab-btn" onclick="showTab('tags')">Tags</button>
         </div>
 
@@ -62,6 +63,14 @@
                         <div class="stat-item">
                             <div class="stat-value" id="totalTags">0</div>
                             <div class="stat-label">Total Tags</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="pendingStories">0</div>
+                            <div class="stat-label">Pending Stories</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="approvedStories">0</div>
+                            <div class="stat-label">Approved Stories</div>
                         </div>
                     </div>
                 </div>
@@ -192,6 +201,75 @@
             </div>
         </div>
 
+        <!-- Story Approval Tab -->
+        <div id="stories-tab" class="tab-content">
+            <div class="admin-grid">
+                <!-- Story Approval Stats -->
+                <div class="admin-card">
+                    <h2>Story Approval Statistics</h2>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="storyStatsPending">0</div>
+                            <div class="stat-label">Pending Approval</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="storyStatsApproved">0</div>
+                            <div class="stat-label">Approved</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="storyStatsRejected">0</div>
+                            <div class="stat-label">Rejected</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="storyStatsDraft">0</div>
+                            <div class="stat-label">Draft</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="storyStatsThisWeek">0</div>
+                            <div class="stat-label">Submitted This Week</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="storyStatsTotal">0</div>
+                            <div class="stat-label">Total Stories</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Story Approval Actions -->
+                <div class="admin-card full-width">
+                    <h2>Story Approval Management</h2>
+                    <div class="filter-controls">
+                        <select id="storyStatusFilter">
+                            <option value="pending">Pending Stories</option>
+                            <option value="approved">Approved Stories</option>
+                            <option value="rejected">Rejected Stories</option>
+                            <option value="draft">Draft Stories</option>
+                            <option value="">All Stories</option>
+                        </select>
+                        <button onclick="loadStoriesForApproval()" class="btn btn-secondary">Filter</button>
+                        <button onclick="loadStoriesForApproval('pending')" class="btn btn-primary">Show Pending</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Author</th>
+                                    <th>Status</th>
+                                    <th>Submitted</th>
+                                    <th>Description</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="storiesApprovalTable">
+                                <!-- Stories for approval will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Tags Tab -->
         <div id="tags-tab" class="tab-content">
             <div class="admin-grid">
@@ -242,6 +320,77 @@
                             <button type="submit" class="btn btn-primary">Approve & Create Account</button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Story Approval Modal -->
+        <div id="storyApprovalModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Approve Story</h2>
+                    <span class="close" onclick="closeStoryModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="approveStoryForm">
+                        <input type="hidden" id="approveStoryId" />
+                        <div class="story-details">
+                            <h3 id="approveStoryTitle"></h3>
+                            <p><strong>Author:</strong> <span id="approveStoryAuthor"></span></p>
+                            <p><strong>Description:</strong> <span id="approveStoryDescription"></span></p>
+                        </div>
+                        <div class="form-group">
+                            <label for="approvalNotes">Approval Notes (optional)</label>
+                            <textarea id="approvalNotes" rows="3" placeholder="Add any notes for the author..."></textarea>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closeStoryModal()">Cancel</button>
+                            <button type="submit" class="btn btn-success">Approve Story</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Story Rejection Modal -->
+        <div id="storyRejectionModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Reject Story</h2>
+                    <span class="close" onclick="closeStoryModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="rejectStoryForm">
+                        <input type="hidden" id="rejectStoryId" />
+                        <div class="story-details">
+                            <h3 id="rejectStoryTitle"></h3>
+                            <p><strong>Author:</strong> <span id="rejectStoryAuthor"></span></p>
+                            <p><strong>Description:</strong> <span id="rejectStoryDescription"></span></p>
+                        </div>
+                        <div class="form-group">
+                            <label for="rejectionNotes">Rejection Reason (required)</label>
+                            <textarea id="rejectionNotes" rows="4" placeholder="Please explain why this story is being rejected..." required></textarea>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closeStoryModal()">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Reject Story</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Story Details Modal -->
+        <div id="storyDetailsModal" class="modal">
+            <div class="modal-content large-modal">
+                <div class="modal-header">
+                    <h2>Story Details</h2>
+                    <span class="close" onclick="closeStoryModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div id="storyDetailsContent">
+                        <!-- Story details will be loaded here -->
+                    </div>
                 </div>
             </div>
         </div>

@@ -121,7 +121,8 @@ window.showTab = function(tabName) {
                 (tabName === 'overview' && index === 0) ||
                 (tabName === 'schools' && index === 1) ||
                 (tabName === 'teachers' && index === 2) ||
-                (tabName === 'tags' && index === 3)) {
+                (tabName === 'stories' && index === 3) ||
+                (tabName === 'tags' && index === 4)) {
                 btn.classList.add('active');
                 console.log('Activated button:', btn.textContent);
             }
@@ -137,12 +138,17 @@ window.showTab = function(tabName) {
                 window.loadTeacherRequests();
                 loadTeacherRequestStats();
                 break;
+            case 'stories':
+                loadStoryApprovalStats();
+                window.loadStoriesForApproval('pending');
+                break;
             case 'tags':
                 loadTags();
                 break;
             case 'overview':
                 loadStatistics();
                 loadRecentStories();
+                loadStoryOverviewStats();
                 break;
             default:
                 console.warn('Unknown tab name:', tabName);
@@ -677,7 +683,7 @@ function setupEventListeners() {
         const tabButtons = document.querySelectorAll('.tab-btn');
         tabButtons.forEach((btn, index) => {
             btn.addEventListener('click', function() {
-                const tabNames = ['overview', 'schools', 'teachers', 'tags'];
+                const tabNames = ['overview', 'schools', 'teachers', 'stories', 'tags'];
                 const tabName = tabNames[index];
                 console.log('Tab button clicked via event listener:', tabName);
                 window.showTab(tabName);
@@ -696,11 +702,36 @@ function setupEventListeners() {
             console.log('✓ Filter button listener attached');
         }
         
+        // Story approval form listeners
+        const approveStoryForm = document.getElementById('approveStoryForm');
+        if (approveStoryForm) {
+            approveStoryForm.addEventListener('submit', approveStory);
+            console.log('✓ Approve story form listener attached');
+        } else {
+            console.warn('⚠ Approve story form not found');
+        }
+        
+        const rejectStoryForm = document.getElementById('rejectStoryForm');
+        if (rejectStoryForm) {
+            rejectStoryForm.addEventListener('submit', rejectStory);
+            console.log('✓ Reject story form listener attached');
+        } else {
+            console.warn('⚠ Reject story form not found');
+        }
+        
         // Modal click outside to close
         window.onclick = function(event) {
             const modal = document.getElementById('approvalModal');
+            const storyApprovalModal = document.getElementById('storyApprovalModal');
+            const storyRejectionModal = document.getElementById('storyRejectionModal');
+            const storyDetailsModal = document.getElementById('storyDetailsModal');
+            
             if (event.target === modal) {
                 window.closeApprovalModal();
+            } else if (event.target === storyApprovalModal || 
+                       event.target === storyRejectionModal || 
+                       event.target === storyDetailsModal) {
+                window.closeStoryModal();
             }
         }
         
@@ -788,4 +819,319 @@ window.logout = function() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.href = '/index.html';
+}
+
+// ============================================================================
+// STORY APPROVAL FUNCTIONALITY
+// ============================================================================
+
+// Load story approval statistics
+async function loadStoryApprovalStats() {
+    try {
+        const response = await fetch(`${API_URL}/stories/admin/stats`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            const stats = await response.json();
+            
+            // Update story approval stats
+            const pendingEl = document.getElementById('storyStatsPending');
+            const approvedEl = document.getElementById('storyStatsApproved');
+            const rejectedEl = document.getElementById('storyStatsRejected');
+            const draftEl = document.getElementById('storyStatsDraft');
+            const thisWeekEl = document.getElementById('storyStatsThisWeek');
+            const totalEl = document.getElementById('storyStatsTotal');
+            
+            if (pendingEl) pendingEl.textContent = stats.pending || 0;
+            if (approvedEl) approvedEl.textContent = stats.approved || 0;
+            if (rejectedEl) rejectedEl.textContent = stats.rejected || 0;
+            if (draftEl) draftEl.textContent = stats.draft || 0;
+            if (thisWeekEl) thisWeekEl.textContent = stats.pending_this_week || 0;
+            if (totalEl) totalEl.textContent = stats.total || 0;
+        }
+    } catch (error) {
+        console.error('Error loading story approval stats:', error);
+    }
+}
+
+// Load story overview stats for the overview tab
+async function loadStoryOverviewStats() {
+    try {
+        const response = await fetch(`${API_URL}/stories/admin/stats`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            const stats = await response.json();
+            
+            // Update overview stats
+            const pendingStoriesEl = document.getElementById('pendingStories');
+            const approvedStoriesEl = document.getElementById('approvedStories');
+            
+            if (pendingStoriesEl) pendingStoriesEl.textContent = stats.pending || 0;
+            if (approvedStoriesEl) approvedStoriesEl.textContent = stats.approved || 0;
+        }
+    } catch (error) {
+        console.error('Error loading story overview stats:', error);
+    }
+}
+
+// Make function globally available - Load stories for approval
+window.loadStoriesForApproval = async function(status = null) {
+    try {
+        const filterStatus = status || document.getElementById('storyStatusFilter')?.value || 'pending';
+        const url = filterStatus ? 
+            `${API_URL}/stories/admin/by-status/${filterStatus}` : 
+            `${API_URL}/stories`;
+            
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            const stories = await response.json();
+            displayStoriesForApproval(stories);
+        }
+    } catch (error) {
+        console.error('Error loading stories for approval:', error);
+        showError('Failed to load stories');
+    }
+}
+
+function displayStoriesForApproval(stories) {
+    const table = document.getElementById('storiesApprovalTable');
+    if (!table) return;
+    
+    table.innerHTML = stories.map(story => `
+        <tr>
+            <td>
+                <div class="story-title-cell">
+                    <strong>${story.idea_title}</strong>
+                    <br><small>ID: ${story.id}</small>
+                </div>
+            </td>
+            <td>
+                <div class="story-author-cell">
+                    ${story.uploaded_by_name || 'Unknown'}
+                    <br><small>${story.uploaded_by_email || ''}</small>
+                </div>
+            </td>
+            <td>
+                <span class="status-badge status-${story.approval_status}">
+                    ${story.approval_status}
+                </span>
+            </td>
+            <td>${formatDate(story.submitted_at || story.uploaded_date)}</td>
+            <td>
+                <div class="story-description-cell">
+                    ${story.idea_description ? 
+                        (story.idea_description.length > 100 ? 
+                            story.idea_description.substring(0, 100) + '...' : 
+                            story.idea_description) 
+                        : 'No description'}
+                </div>
+            </td>
+            <td class="table-actions">
+                <button class="btn btn-small btn-secondary" onclick="viewStoryDetails(${story.id})">View</button>
+                ${story.approval_status === 'pending' ? `
+                    <button class="btn btn-small btn-success" onclick="showStoryApprovalModal(${story.id})">Approve</button>
+                    <button class="btn btn-small btn-danger" onclick="showStoryRejectionModal(${story.id})">Reject</button>
+                ` : story.approval_status === 'rejected' ? `
+                    <button class="btn btn-small btn-success" onclick="showStoryApprovalModal(${story.id})">Approve</button>
+                ` : story.approval_status === 'approved' ? `
+                    <button class="btn btn-small btn-warning" onclick="showStoryRejectionModal(${story.id})">Reject</button>
+                ` : ''}
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Make function globally available - Show story approval modal
+window.showStoryApprovalModal = async function(storyId) {
+    try {
+        const response = await fetch(`${API_URL}/stories/${storyId}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            const story = await response.json();
+            
+            // Populate modal with story details
+            document.getElementById('approveStoryId').value = storyId;
+            document.getElementById('approveStoryTitle').textContent = story.idea_title;
+            document.getElementById('approveStoryAuthor').textContent = story.uploaded_by_name || 'Unknown';
+            document.getElementById('approveStoryDescription').textContent = story.idea_description || 'No description';
+            document.getElementById('approvalNotes').value = '';
+            
+            // Show modal
+            document.getElementById('storyApprovalModal').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error loading story details:', error);
+        showError('Failed to load story details');
+    }
+}
+
+// Make function globally available - Show story rejection modal
+window.showStoryRejectionModal = async function(storyId) {
+    try {
+        const response = await fetch(`${API_URL}/stories/${storyId}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            const story = await response.json();
+            
+            // Populate modal with story details
+            document.getElementById('rejectStoryId').value = storyId;
+            document.getElementById('rejectStoryTitle').textContent = story.idea_title;
+            document.getElementById('rejectStoryAuthor').textContent = story.uploaded_by_name || 'Unknown';
+            document.getElementById('rejectStoryDescription').textContent = story.idea_description || 'No description';
+            document.getElementById('rejectionNotes').value = '';
+            
+            // Show modal
+            document.getElementById('storyRejectionModal').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error loading story details:', error);
+        showError('Failed to load story details');
+    }
+}
+
+// Make function globally available - View story details modal
+window.viewStoryDetails = async function(storyId) {
+    try {
+        const response = await fetch(`${API_URL}/stories/${storyId}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            const story = await response.json();
+            
+            // Create detailed story view
+            const detailsHTML = `
+                <div class="story-details-full">
+                    <h3>${story.idea_title}</h3>
+                    <div class="story-meta">
+                        <p><strong>Author:</strong> ${story.uploaded_by_name || 'Unknown'} (${story.uploaded_by_email || ''})</p>
+                        <p><strong>Status:</strong> <span class="status-badge status-${story.approval_status}">${story.approval_status}</span></p>
+                        <p><strong>Uploaded:</strong> ${formatDate(story.uploaded_date)}</p>
+                        ${story.submitted_at ? `<p><strong>Submitted:</strong> ${formatDate(story.submitted_at)}</p>` : ''}
+                        ${story.approved_at ? `<p><strong>Approved/Rejected:</strong> ${formatDate(story.approved_at)}</p>` : ''}
+                        ${story.coverage_start_date ? `<p><strong>Coverage:</strong> ${story.coverage_start_date} ${story.coverage_end_date ? `to ${story.coverage_end_date}` : ''}</p>` : ''}
+                    </div>
+                    
+                    <div class="story-content">
+                        <h4>Description</h4>
+                        <p>${story.idea_description || 'No description provided'}</p>
+                        
+                        <h4>Interview Questions</h4>
+                        <ol>
+                            ${[1,2,3,4,5,6].map(i => story[`question_${i}`] ? `<li>${story[`question_${i}`]}</li>` : '').join('')}
+                        </ol>
+                        
+                        ${story.tags && story.tags.length > 0 ? `
+                            <h4>Tags</h4>
+                            <p>${story.tags.filter(tag => tag).join(', ')}</p>
+                        ` : ''}
+                        
+                        ${story.interviewees && story.interviewees.length > 0 ? `
+                            <h4>Interviewees</h4>
+                            <p>${story.interviewees.filter(person => person).join(', ')}</p>
+                        ` : ''}
+                        
+                        ${story.approval_notes ? `
+                            <h4>Admin Notes</h4>
+                            <p class="approval-notes">${story.approval_notes}</p>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('storyDetailsContent').innerHTML = detailsHTML;
+            document.getElementById('storyDetailsModal').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error loading story details:', error);
+        showError('Failed to load story details');
+    }
+}
+
+// Make function globally available - Close story modals
+window.closeStoryModal = function() {
+    document.getElementById('storyApprovalModal').style.display = 'none';
+    document.getElementById('storyRejectionModal').style.display = 'none';
+    document.getElementById('storyDetailsModal').style.display = 'none';
+}
+
+// Handle story approval form submission
+async function approveStory(e) {
+    e.preventDefault();
+    
+    const storyId = document.getElementById('approveStoryId').value;
+    const notes = document.getElementById('approvalNotes').value.trim();
+    
+    try {
+        const response = await fetch(`${API_URL}/stories/${storyId}/approve`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ notes: notes || null })
+        });
+        
+        if (response.ok) {
+            showSuccess('Story approved successfully!');
+            closeStoryModal();
+            await loadStoriesForApproval();
+            await loadStoryApprovalStats();
+            await loadStoryOverviewStats();
+        } else {
+            const result = await response.json();
+            showError(result.error || 'Failed to approve story');
+        }
+    } catch (error) {
+        console.error('Error approving story:', error);
+        showError('Network error. Please try again.');
+    }
+}
+
+// Handle story rejection form submission
+async function rejectStory(e) {
+    e.preventDefault();
+    
+    const storyId = document.getElementById('rejectStoryId').value;
+    const notes = document.getElementById('rejectionNotes').value.trim();
+    
+    if (!notes) {
+        showError('Rejection reason is required');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/stories/${storyId}/reject`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ notes })
+        });
+        
+        if (response.ok) {
+            showSuccess('Story rejected');
+            closeStoryModal();
+            await loadStoriesForApproval();
+            await loadStoryApprovalStats();
+            await loadStoryOverviewStats();
+        } else {
+            const result = await response.json();
+            showError(result.error || 'Failed to reject story');
+        }
+    } catch (error) {
+        console.error('Error rejecting story:', error);
+        showError('Network error. Please try again.');
+    }
 }

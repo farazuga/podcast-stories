@@ -1544,3 +1544,176 @@ body {
         padding: 2rem 1rem;
     }
 }
+
+/* ============================================================================ */
+/* STORY APPROVAL STYLES - Phase 2 */
+/* ============================================================================ */
+
+/* Draft status badge */
+.status-draft {
+    background: #f7fafc;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+}
+
+/* Story approval table cells */
+.story-title-cell strong {
+    color: var(--text-color);
+    font-size: 0.95rem;
+}
+
+.story-title-cell small {
+    color: var(--text-light);
+    font-size: 0.8rem;
+}
+
+.story-author-cell {
+    font-size: 0.9rem;
+}
+
+.story-author-cell small {
+    color: var(--text-light);
+    font-size: 0.8rem;
+}
+
+.story-description-cell {
+    max-width: 200px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--text-light);
+}
+
+/* Story modals */
+.large-modal .modal-content {
+    max-width: 800px;
+    width: 90%;
+}
+
+.story-details {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+.story-details h3 {
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.story-details p {
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
+}
+
+.story-details-full {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.story-meta {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.story-meta p {
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.story-content h4 {
+    color: var(--secondary-color);
+    margin: 1.5rem 0 0.5rem 0;
+    font-size: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.25rem;
+}
+
+.story-content ol {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.story-content ol li {
+    margin: 0.5rem 0;
+    line-height: 1.5;
+}
+
+.approval-notes {
+    background: #fff5cd;
+    border: 1px solid #fbd24e;
+    border-radius: 6px;
+    padding: 1rem;
+    font-style: italic;
+    color: #744210;
+}
+
+/* Success button variant */
+.btn-success {
+    background: #38a169;
+    color: white;
+    border: none;
+}
+
+.btn-success:hover {
+    background: #2f855a;
+}
+
+/* Warning button variant */
+.btn-warning {
+    background: #d69e2e;
+    color: white;
+    border: none;
+}
+
+.btn-warning:hover {
+    background: #b7791f;
+}
+
+/* Filter controls spacing */
+.filter-controls {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-controls select {
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: white;
+    min-width: 150px;
+}
+
+/* Responsive adjustments for story approval */
+@media (max-width: 768px) {
+    .story-description-cell {
+        max-width: 150px;
+        font-size: 0.8rem;
+    }
+    
+    .table-actions {
+        min-width: 120px;
+    }
+    
+    .table-actions .btn-small {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+        margin: 0.1rem;
+    }
+    
+    .filter-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-controls select {
+        min-width: auto;
+    }
+}
