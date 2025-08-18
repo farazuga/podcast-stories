@@ -861,6 +861,15 @@ function showNotification(message, type = 'info') {
 }
 
 // Make functions globally available
+window.loadStories = loadStories;
+window.displayStories = displayStories;
+window.setViewMode = setViewMode;
+window.applyFilters = applyFilters;
+window.clearFilters = clearFilters;
+window.sortStories = sortStories;
+window.loadMoreStories = loadMoreStories;
+window.viewStory = viewStory;
+window.editStory = editStory;
 window.toggleStorySelection = toggleStorySelection;
 window.toggleSelectAll = toggleSelectAll;
 window.clearSelection = clearSelection;
@@ -868,6 +877,7 @@ window.bulkFavorite = bulkFavorite;
 window.bulkExport = bulkExport;
 window.bulkDelete = bulkDelete;
 window.rateStory = rateStory;
+window.showNotification = showNotification;
 
 // Utility function
 function logout() {
