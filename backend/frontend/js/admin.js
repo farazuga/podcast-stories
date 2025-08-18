@@ -1134,4 +1134,4 @@ async function rejectStory(e) {
         console.error('Error rejecting story:', error);
         showError('Network error. Please try again.');
     }
-}
+}// Force cache refresh - Sun Aug 17 23:52:52 CDT 2025
