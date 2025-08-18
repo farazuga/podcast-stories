@@ -1,4 +1,5 @@
-// API_URL is declared in auth.js which loads first
+// API base URL
+const API_URL = 'https://podcast-stories-production.up.railway.app/api';
 
 // Global variables
 let currentUser = null;
@@ -89,17 +90,33 @@ function displayClasses() {
         <div class="class-card">
             <div class="class-header">
                 <h3>${classItem.class_name}</h3>
-                <span class="class-code">${classItem.class_code}</span>
+                <div class="class-code-section">
+                    <div class="class-code-display">
+                        <span class="class-code-label">Class Code:</span>
+                        <span class="class-code-large">${classItem.class_code}</span>
+                        <button class="btn btn-outline btn-tiny" onclick="copyCode('${classItem.class_code}')" title="Copy class code">
+                            📋
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="class-details">
-                ${classItem.subject ? `<p><strong>Subject:</strong> ${classItem.subject}</p>` : ''}
-                ${classItem.description ? `<p class="class-description">${classItem.description}</p>` : ''}
-                <p><strong>Students:</strong> ${classItem.student_count || 0}</p>
-                <p><strong>School:</strong> ${classItem.school_name}</p>
+                ${classItem.subject ? `<p><strong>📚 Subject:</strong> ${classItem.subject}</p>` : ''}
+                ${classItem.description ? `<p class="class-description"><strong>📝 Description:</strong> ${classItem.description}</p>` : ''}
+                <p><strong>👥 Students:</strong> ${classItem.student_count || 0}</p>
+                <p><strong>🏫 School:</strong> ${classItem.school_name}</p>
+                <p><strong>📅 Created:</strong> ${formatDate(classItem.created_at)}</p>
             </div>
             <div class="class-actions">
-                <button class="btn btn-primary" onclick="viewClassDetails(${classItem.id})">View Details</button>
-                <button class="btn btn-secondary" onclick="copyCode('${classItem.class_code}')">Copy Code</button>
+                <button class="btn btn-primary" onclick="viewClassDetails(${classItem.id})">
+                    👀 View Details
+                </button>
+                <button class="btn btn-secondary" onclick="copyCode('${classItem.class_code}')">
+                    📋 Copy Code
+                </button>
+                <button class="btn btn-outline" onclick="shareClassCode('${classItem.class_code}', '${classItem.class_name}')">
+                    📤 Share
+                </button>
             </div>
         </div>
     `).join('');
@@ -120,29 +137,27 @@ function updateStatistics() {
 
 async function createClass(e) {
     e.preventDefault();
-    console.log('createClass function called');
+    console.log('Create class form submitted');
     
     const className = document.getElementById('className').value.trim();
     const subject = document.getElementById('subject').value.trim();
     const description = document.getElementById('description').value.trim();
     
-    console.log('Form values:', { className, subject, description });
+    console.log('Form data:', { className, subject, description });
     
     if (!className) {
+        console.log('Class name is empty, showing error');
         showError('Class name is required');
         return;
     }
     
     try {
-        console.log('Making API call to create class...');
-        const token = localStorage.getItem('token');
-        console.log('Token exists:', !!token);
-        
+        console.log('Making API request to create class...');
         const response = await fetch(`${API_URL}/classes`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
             body: JSON.stringify({
                 class_name: className,
@@ -156,7 +171,10 @@ async function createClass(e) {
         console.log('API response data:', result);
         
         if (response.ok) {
-            showSuccess(`Class created successfully! Class code: ${result.class_code}`);
+            console.log('Class created successfully');
+            
+            // Show enhanced success alert
+            showNewClassAlert(result.class_name, result.class_code);
             
             // Clear form
             document.getElementById('createClassForm').reset();
@@ -164,6 +182,7 @@ async function createClass(e) {
             // Reload classes
             await loadClasses();
         } else {
+            console.log('Class creation failed:', result);
             showError(result.error || 'Failed to create class');
         }
     } catch (error) {
@@ -344,48 +363,24 @@ async function deleteClass() {
 function setupEventListeners() {
     console.log('Setting up event listeners...');
     
-    // Use a small delay to ensure DOM is fully ready
-    setTimeout(() => {
-        // Create class form
-        const createClassForm = document.getElementById('createClassForm');
-        console.log('createClassForm element found:', !!createClassForm);
-        
-        if (createClassForm) {
-            // Remove any existing event listeners to prevent duplicates
-            createClassForm.removeEventListener('submit', createClass);
-            createClassForm.addEventListener('submit', createClass);
-            console.log('Event listener added to form');
-            
-            // Also add a backup click handler to the submit button
-            const submitButton = createClassForm.querySelector('button[type="submit"]');
-            if (submitButton) {
-                submitButton.addEventListener('click', (e) => {
-                    console.log('Submit button clicked directly');
-                    if (createClassForm.checkValidity()) {
-                        e.preventDefault();
-                        createClass(e);
-                    }
-                });
-                console.log('Backup click handler added to submit button');
-            }
-        } else {
-            console.error('createClassForm element not found!');
-            // Try to find it by querying all forms
-            const allForms = document.querySelectorAll('form');
-            console.log('All forms found:', allForms.length);
-            allForms.forEach((form, index) => {
-                console.log(`Form ${index}: id="${form.id}", class="${form.className}"`);
-            });
+    // Create class form
+    const createClassForm = document.getElementById('createClassForm');
+    console.log('Create class form element:', createClassForm);
+    
+    if (createClassForm) {
+        console.log('Adding submit event listener to create class form');
+        createClassForm.addEventListener('submit', createClass);
+    } else {
+        console.error('Create class form not found!');
+    }
+    
+    // Modal click outside to close
+    window.onclick = function(event) {
+        const modal = document.getElementById('classModal');
+        if (event.target === modal) {
+            closeClassModal();
         }
-        
-        // Modal click outside to close
-        window.onclick = function(event) {
-            const modal = document.getElementById('classModal');
-            if (event.target === modal) {
-                closeClassModal();
-            }
-        }
-    }, 100);
+    }
 }
 
 // Utility functions
@@ -395,46 +390,117 @@ function formatDate(dateString) {
 }
 
 function showError(message) {
-    console.error('Showing error:', message);
     const errorDiv = document.getElementById('errorMessage');
     if (errorDiv) {
         errorDiv.textContent = message;
         errorDiv.style.display = 'block';
-        errorDiv.style.color = '#c00';
-        errorDiv.style.background = '#fee';
-        errorDiv.style.padding = '10px';
-        errorDiv.style.borderRadius = '5px';
-        errorDiv.style.border = '1px solid #fcc';
-        errorDiv.style.marginTop = '1rem';
         setTimeout(() => {
             errorDiv.style.display = 'none';
-        }, 7000);
-    } else {
-        console.error('Error div not found, using alert');
-        alert('Error: ' + message);
+        }, 5000);
     }
 }
 
 function showSuccess(message) {
-    console.log('Showing success:', message);
     const successDiv = document.getElementById('successMessage');
     if (successDiv) {
         successDiv.textContent = message;
         successDiv.style.display = 'block';
-        successDiv.style.color = '#0a0';
-        successDiv.style.background = '#efe';
-        successDiv.style.padding = '10px';
-        successDiv.style.borderRadius = '5px';
-        successDiv.style.border = '1px solid #cfc';
-        successDiv.style.marginTop = '1rem';
         setTimeout(() => {
             successDiv.style.display = 'none';
         }, 5000);
-    } else {
-        console.log('Success div not found, using alert');
-        alert('Success: ' + message);
     }
 }
+
+// Enhanced class code functionality
+function showNewClassAlert(className, classCode) {
+    const alert = document.getElementById('newClassAlert');
+    const alertClassName = document.getElementById('alertClassName');
+    const alertClassCode = document.getElementById('alertClassCode');
+    
+    if (alert && alertClassName && alertClassCode) {
+        alertClassName.textContent = className;
+        alertClassCode.textContent = classCode;
+        alert.style.display = 'block';
+        
+        // Auto-hide after 10 seconds
+        setTimeout(() => {
+            hideNewClassAlert();
+        }, 10000);
+        
+        // Scroll to alert
+        alert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function hideNewClassAlert() {
+    const alert = document.getElementById('newClassAlert');
+    if (alert) {
+        alert.style.display = 'none';
+    }
+}
+
+function copyNewClassCode() {
+    const code = document.getElementById('alertClassCode').textContent;
+    copyCode(code);
+}
+
+function shareClassCode(classCode, className) {
+    const shareText = `Join my VidPOD class "${className}" using code: ${classCode}`;
+    
+    if (navigator.share) {
+        // Use native sharing if available (mobile devices)
+        navigator.share({
+            title: `Join ${className} - VidPOD`,
+            text: shareText,
+            url: window.location.origin
+        }).catch(err => {
+            console.log('Error sharing:', err);
+            fallbackShare(shareText);
+        });
+    } else {
+        fallbackShare(shareText);
+    }
+}
+
+function fallbackShare(shareText) {
+    // Fallback to clipboard copy
+    navigator.clipboard.writeText(shareText).then(() => {
+        showSuccess('Share text copied to clipboard! You can now paste it in your messaging app.');
+    }).catch(err => {
+        showError('Failed to copy share text');
+    });
+}
+
+// Enhanced copy functionality with better feedback
+function copyCode(code) {
+    navigator.clipboard.writeText(code).then(() => {
+        showSuccess(`📋 Class code ${code} copied to clipboard!`);
+        
+        // Visual feedback - highlight the copied code
+        const codeElements = document.querySelectorAll('.class-code-large');
+        codeElements.forEach(el => {
+            if (el.textContent === code) {
+                el.classList.add('code-copied');
+                setTimeout(() => {
+                    el.classList.remove('code-copied');
+                }, 1000);
+            }
+        });
+    }).catch(err => {
+        showError('Failed to copy code to clipboard');
+    });
+}
+
+// Enhanced copy for modal
+function copyClassCode() {
+    const code = document.getElementById('classCode').textContent;
+    copyCode(code);
+}
+
+// Make functions globally available
+window.copyNewClassCode = copyNewClassCode;
+window.hideNewClassAlert = hideNewClassAlert;
+window.shareClassCode = shareClassCode;
 
 function logout() {
     localStorage.removeItem('token');

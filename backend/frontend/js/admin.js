@@ -1,4 +1,5 @@
-// API_URL is declared in auth.js which loads first
+// API base URL
+const API_URL = 'https://podcast-stories-production.up.railway.app/api';
 
 // Global variables
 let currentUser = null;
@@ -11,32 +12,51 @@ let currentRequestId = null;
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Admin page loading...');
     
-    if (!checkAuth()) {
-        console.log('Auth check failed');
-        return;
+    try {
+        if (!checkAuth()) {
+            console.log('Auth check failed');
+            return;
+        }
+        
+        console.log('Auth check passed, loading user info...');
+        await loadUserInfo();
+        
+        console.log('Loading initial data...');
+        await loadInitialData();
+        
+        console.log('Setting up event listeners...');
+        setupEventListeners();
+        
+        // Show overview tab by default
+        console.log('Showing overview tab...');
+        window.showTab('overview');
+        
+        console.log('Admin page loaded successfully');
+        
+        // Test that tab buttons are working
+        console.log('Testing tab button functionality...');
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        console.log('Found tab buttons:', tabButtons.length);
+        tabButtons.forEach((btn, index) => {
+            console.log(`Tab button ${index}:`, btn.textContent, btn.onclick);
+        });
+        
+    } catch (error) {
+        console.error('Error during admin page initialization:', error);
+        showError('Failed to initialize admin page. Please refresh and try again.');
     }
-    
-    console.log('Auth check passed, loading user info...');
-    await loadUserInfo();
-    
-    console.log('Loading initial data...');
-    await loadInitialData();
-    
-    console.log('Setting up event listeners...');
-    setupEventListeners();
-    
-    // Show overview tab by default
-    console.log('Showing overview tab...');
-    showTab('overview');
-    
-    console.log('Admin page loaded successfully');
 });
 
 function checkAuth() {
     const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     
-    if (!token || (user.role !== 'admin' && user.role !== 'amitrace_admin')) {
+    if (!token) {
+        window.location.href = '/index.html';
+        return false;
+    }
+    
+    if (user.role !== 'admin' && user.role !== 'amitrace_admin') {
         window.location.href = '/dashboard.html';
         return false;
     }
@@ -65,54 +85,78 @@ async function loadInitialData() {
     ]);
 }
 
-// Tab Management
-function showTab(tabName) {
-    // Hide all tab contents
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-    });
+// Tab Management - Make function globally available
+window.showTab = function(tabName) {
+    console.log('showTab called with:', tabName);
     
-    // Remove active class from all buttons
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // Show selected tab
-    document.getElementById(`${tabName}-tab`).classList.add('active');
-    
-    // Add active class to the clicked button
-    const buttons = document.querySelectorAll('.tab-btn');
-    buttons.forEach((btn, index) => {
-        if (btn.textContent.toLowerCase().includes(tabName) || 
-            (tabName === 'overview' && index === 0) ||
-            (tabName === 'schools' && index === 1) ||
-            (tabName === 'teachers' && index === 2) ||
-            (tabName === 'teacher-requests' && index === 3) ||
-            (tabName === 'tags' && index === 4)) {
-            btn.classList.add('active');
+    try {
+        // Hide all tab contents
+        const tabContents = document.querySelectorAll('.tab-content');
+        console.log('Found tab contents:', tabContents.length);
+        tabContents.forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Remove active class from all buttons
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        console.log('Found tab buttons:', tabButtons.length);
+        tabButtons.forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Show selected tab
+        const targetTab = document.getElementById(`${tabName}-tab`);
+        if (targetTab) {
+            targetTab.classList.add('active');
+            console.log('Activated tab:', `${tabName}-tab`);
+        } else {
+            console.error('Target tab not found:', `${tabName}-tab`);
+            return;
         }
-    });
-    
-    // Load tab-specific data
-    switch(tabName) {
-        case 'schools':
-            loadSchools();
-            break;
-        case 'teachers':
-            loadTeachers();
-            loadSchoolsForTeacher();
-            break;
-        case 'teacher-requests':
-            loadTeacherRequests();
-            loadTeacherRequestStats();
-            break;
-        case 'tags':
-            loadTags();
-            break;
-        case 'overview':
-            loadStatistics();
-            loadRecentStories();
-            break;
+        
+        // Add active class to the clicked button
+        const buttons = document.querySelectorAll('.tab-btn');
+        buttons.forEach((btn, index) => {
+            if (btn.textContent.toLowerCase().includes(tabName) || 
+                (tabName === 'overview' && index === 0) ||
+                (tabName === 'schools' && index === 1) ||
+                (tabName === 'teachers' && index === 2) ||
+                (tabName === 'stories' && index === 3) ||
+                (tabName === 'tags' && index === 4)) {
+                btn.classList.add('active');
+                console.log('Activated button:', btn.textContent);
+            }
+        });
+        
+        // Load tab-specific data
+        console.log('Loading data for tab:', tabName);
+        switch(tabName) {
+            case 'schools':
+                loadSchools();
+                break;
+            case 'teachers':
+                window.loadTeacherRequests();
+                loadTeacherRequestStats();
+                break;
+            case 'stories':
+                loadStoryApprovalStats();
+                window.loadStoriesForApproval('pending');
+                break;
+            case 'tags':
+                loadTags();
+                break;
+            case 'overview':
+                loadStatistics();
+                loadRecentStories();
+                loadStoryOverviewStats();
+                break;
+            default:
+                console.warn('Unknown tab name:', tabName);
+        }
+        
+    } catch (error) {
+        console.error('Error in showTab function:', error);
+        showError('Failed to switch tabs. Please refresh the page.');
     }
 }
 
@@ -281,7 +325,8 @@ async function addSchool(e) {
     }
 }
 
-async function deleteSchool(schoolId) {
+// Make function globally available
+window.deleteSchool = async function(schoolId) {
     if (!confirm('Are you sure you want to delete this school? This action cannot be undone.')) {
         return;
     }
@@ -306,7 +351,8 @@ async function deleteSchool(schoolId) {
 }
 
 // Teacher Requests Management
-async function loadTeacherRequests() {
+// Make function globally available
+window.loadTeacherRequests = async function() {
     try {
         const statusFilter = document.getElementById('statusFilter')?.value || '';
         const url = statusFilter ? 
@@ -371,7 +417,8 @@ function displayTeacherRequests() {
     `).join('');
 }
 
-function showApprovalModal(requestId) {
+// Make function globally available
+window.showApprovalModal = function(requestId) {
     currentRequestId = requestId;
     const modal = document.getElementById('approvalModal');
     modal.style.display = 'block';
@@ -382,7 +429,8 @@ function showApprovalModal(requestId) {
     document.getElementById('requestId').value = requestId;
 }
 
-function closeApprovalModal() {
+// Make function globally available
+window.closeApprovalModal = function() {
     const modal = document.getElementById('approvalModal');
     modal.style.display = 'none';
     currentRequestId = null;
@@ -426,7 +474,8 @@ async function approveTeacherRequest(e) {
     }
 }
 
-async function rejectTeacherRequest(requestId) {
+// Make function globally available
+window.rejectTeacherRequest = async function(requestId) {
     if (!confirm('Are you sure you want to reject this teacher request?')) {
         return;
     }
@@ -513,7 +562,8 @@ async function addTag(e) {
     }
 }
 
-async function deleteTag(tagId) {
+// Make function globally available
+window.deleteTag = async function(tagId) {
     if (!confirm('Are you sure you want to delete this tag? This will remove it from all stories.')) {
         return;
     }
@@ -568,7 +618,8 @@ async function loadRecentStories() {
     }
 }
 
-async function deleteStory(storyId) {
+// Make function globally available
+window.deleteStory = async function(storyId) {
     if (!confirm('Are you sure you want to delete this story?')) {
         return;
     }
@@ -591,46 +642,103 @@ async function deleteStory(storyId) {
     }
 }
 
-function viewStory(storyId) {
+// Make function globally available
+window.viewStory = function(storyId) {
     window.location.href = `/story-detail.html?id=${storyId}`;
 }
 
 // Event Listeners
 function setupEventListeners() {
-    // Add school form
-    const addSchoolForm = document.getElementById('addSchoolForm');
-    if (addSchoolForm) {
-        addSchoolForm.addEventListener('submit', addSchool);
-    }
+    console.log('Setting up event listeners...');
     
-    // Add teacher form
-    const addTeacherForm = document.getElementById('addTeacherForm');
-    if (addTeacherForm) {
-        addTeacherForm.addEventListener('submit', addTeacher);
-    }
-    
-    // Add tag form
-    const addTagForm = document.getElementById('addTagForm');
-    if (addTagForm) {
-        addTagForm.addEventListener('submit', addTag);
-    }
-    
-    // Approve teacher form
-    const approveTeacherForm = document.getElementById('approveTeacherForm');
-    if (approveTeacherForm) {
-        approveTeacherForm.addEventListener('submit', approveTeacherRequest);
-    }
-    
-    // Modal click outside to close
-    window.onclick = function(event) {
-        const approvalModal = document.getElementById('approvalModal');
-        const deactivateModal = document.getElementById('deactivateTeacherModal');
-        
-        if (event.target === approvalModal) {
-            closeApprovalModal();
-        } else if (event.target === deactivateModal) {
-            closeDeactivateModal();
+    try {
+        // Add school form
+        const addSchoolForm = document.getElementById('addSchoolForm');
+        if (addSchoolForm) {
+            addSchoolForm.addEventListener('submit', addSchool);
+            console.log('✓ Add school form listener attached');
+        } else {
+            console.warn('⚠ Add school form not found');
         }
+        
+        // Add tag form
+        const addTagForm = document.getElementById('addTagForm');
+        if (addTagForm) {
+            addTagForm.addEventListener('submit', addTag);
+            console.log('✓ Add tag form listener attached');
+        } else {
+            console.warn('⚠ Add tag form not found');
+        }
+        
+        // Approve teacher form
+        const approveTeacherForm = document.getElementById('approveTeacherForm');
+        if (approveTeacherForm) {
+            approveTeacherForm.addEventListener('submit', approveTeacherRequest);
+            console.log('✓ Approve teacher form listener attached');
+        } else {
+            console.warn('⚠ Approve teacher form not found');
+        }
+        
+        // Add click listeners to tab buttons as backup
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        tabButtons.forEach((btn, index) => {
+            btn.addEventListener('click', function() {
+                const tabNames = ['overview', 'schools', 'teachers', 'stories', 'tags'];
+                const tabName = tabNames[index];
+                console.log('Tab button clicked via event listener:', tabName);
+                window.showTab(tabName);
+            });
+        });
+        console.log('✓ Tab button event listeners attached:', tabButtons.length);
+        
+        // Filter button listener
+        const filterButton = document.querySelector('button[onclick="loadTeacherRequests()"]');
+        if (filterButton) {
+            filterButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Filter button clicked');
+                window.loadTeacherRequests();
+            });
+            console.log('✓ Filter button listener attached');
+        }
+        
+        // Story approval form listeners
+        const approveStoryForm = document.getElementById('approveStoryForm');
+        if (approveStoryForm) {
+            approveStoryForm.addEventListener('submit', approveStory);
+            console.log('✓ Approve story form listener attached');
+        } else {
+            console.warn('⚠ Approve story form not found');
+        }
+        
+        const rejectStoryForm = document.getElementById('rejectStoryForm');
+        if (rejectStoryForm) {
+            rejectStoryForm.addEventListener('submit', rejectStory);
+            console.log('✓ Reject story form listener attached');
+        } else {
+            console.warn('⚠ Reject story form not found');
+        }
+        
+        // Modal click outside to close
+        window.onclick = function(event) {
+            const modal = document.getElementById('approvalModal');
+            const storyApprovalModal = document.getElementById('storyApprovalModal');
+            const storyRejectionModal = document.getElementById('storyRejectionModal');
+            const storyDetailsModal = document.getElementById('storyDetailsModal');
+            
+            if (event.target === modal) {
+                window.closeApprovalModal();
+            } else if (event.target === storyApprovalModal || 
+                       event.target === storyRejectionModal || 
+                       event.target === storyDetailsModal) {
+                window.closeStoryModal();
+            }
+        }
+        
+        console.log('Event listeners setup completed');
+        
+    } catch (error) {
+        console.error('Error setting up event listeners:', error);
     }
 }
 
@@ -662,187 +770,368 @@ function showSuccess(message) {
     }
 }
 
-// Teacher Management Functions
-async function loadTeachers() {
+// Missing editSchool function - placeholder implementation
+// Make function globally available
+window.editSchool = function(schoolId) {
+    console.log('Edit school functionality called for school ID:', schoolId);
+    
+    // Find the school in the allSchools array
+    const school = allSchools.find(s => s.id === schoolId);
+    if (!school) {
+        showError('School not found');
+        return;
+    }
+    
+    // For now, show a simple prompt to edit the school name
+    const newName = prompt('Edit school name:', school.school_name);
+    if (newName && newName.trim() && newName.trim() !== school.school_name) {
+        updateSchoolName(schoolId, newName.trim());
+    }
+}
+
+// Function to update school name via API
+async function updateSchoolName(schoolId, newName) {
     try {
-        const response = await fetch(`${API_URL}/admin/teachers`, {
+        const response = await fetch(`${API_URL}/schools/${schoolId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ school_name: newName })
+        });
+        
+        if (response.ok) {
+            showSuccess('School updated successfully');
+            await loadSchools(); // Reload the schools list
+        } else {
+            const errorData = await response.json();
+            showError(errorData.error || 'Failed to update school');
+        }
+    } catch (error) {
+        console.error('Error updating school:', error);
+        showError('Failed to update school');
+    }
+}
+
+// Make function globally available
+window.logout = function() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/index.html';
+}
+
+// ============================================================================
+// STORY APPROVAL FUNCTIONALITY
+// ============================================================================
+
+// Load story approval statistics
+async function loadStoryApprovalStats() {
+    try {
+        const response = await fetch(`${API_URL}/stories/admin/stats`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
         if (response.ok) {
-            const teachers = await response.json();
-            displayTeachers(teachers);
-        } else {
-            showError('Failed to load teachers');
+            const stats = await response.json();
+            
+            // Update story approval stats
+            const pendingEl = document.getElementById('storyStatsPending');
+            const approvedEl = document.getElementById('storyStatsApproved');
+            const rejectedEl = document.getElementById('storyStatsRejected');
+            const draftEl = document.getElementById('storyStatsDraft');
+            const thisWeekEl = document.getElementById('storyStatsThisWeek');
+            const totalEl = document.getElementById('storyStatsTotal');
+            
+            if (pendingEl) pendingEl.textContent = stats.pending || 0;
+            if (approvedEl) approvedEl.textContent = stats.approved || 0;
+            if (rejectedEl) rejectedEl.textContent = stats.rejected || 0;
+            if (draftEl) draftEl.textContent = stats.draft || 0;
+            if (thisWeekEl) thisWeekEl.textContent = stats.pending_this_week || 0;
+            if (totalEl) totalEl.textContent = stats.total || 0;
         }
     } catch (error) {
-        console.error('Error loading teachers:', error);
-        showError('Network error loading teachers');
+        console.error('Error loading story approval stats:', error);
     }
 }
 
-function displayTeachers(teachers) {
-    const teachersTable = document.getElementById('teachersTable');
-    
-    if (teachers.length === 0) {
-        teachersTable.innerHTML = `
-            <tr>
-                <td colspan="9" class="text-center">No teachers found</td>
-            </tr>
-        `;
-        return;
+// Load story overview stats for the overview tab
+async function loadStoryOverviewStats() {
+    try {
+        const response = await fetch(`${API_URL}/stories/admin/stats`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            const stats = await response.json();
+            
+            // Update overview stats
+            const pendingStoriesEl = document.getElementById('pendingStories');
+            const approvedStoriesEl = document.getElementById('approvedStories');
+            
+            if (pendingStoriesEl) pendingStoriesEl.textContent = stats.pending || 0;
+            if (approvedStoriesEl) approvedStoriesEl.textContent = stats.approved || 0;
+        }
+    } catch (error) {
+        console.error('Error loading story overview stats:', error);
     }
+}
+
+// Make function globally available - Load stories for approval
+window.loadStoriesForApproval = async function(status = null) {
+    try {
+        const filterStatus = status || document.getElementById('storyStatusFilter')?.value || 'pending';
+        const url = filterStatus ? 
+            `${API_URL}/stories/admin/by-status/${filterStatus}` : 
+            `${API_URL}/stories`;
+            
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            const stories = await response.json();
+            displayStoriesForApproval(stories);
+        }
+    } catch (error) {
+        console.error('Error loading stories for approval:', error);
+        showError('Failed to load stories');
+    }
+}
+
+function displayStoriesForApproval(stories) {
+    const table = document.getElementById('storiesApprovalTable');
+    if (!table) return;
     
-    teachersTable.innerHTML = teachers.map(teacher => `
+    table.innerHTML = stories.map(story => `
         <tr>
-            <td>${teacher.name || teacher.username}</td>
-            <td>${teacher.username}</td>
-            <td>${teacher.email}</td>
-            <td>${teacher.school_name || 'Not assigned'}</td>
-            <td>${teacher.class_count || 0}</td>
-            <td>${teacher.student_count || 0}</td>
             <td>
-                <span class="status-badge ${teacher.is_active ? 'status-approved' : 'status-rejected'}">
-                    ${teacher.is_active ? 'Active' : 'Inactive'}
+                <div class="story-title-cell">
+                    <strong>${story.idea_title}</strong>
+                    <br><small>ID: ${story.id}</small>
+                </div>
+            </td>
+            <td>
+                <div class="story-author-cell">
+                    ${story.uploaded_by_name || 'Unknown'}
+                    <br><small>${story.uploaded_by_email || ''}</small>
+                </div>
+            </td>
+            <td>
+                <span class="status-badge status-${story.approval_status}">
+                    ${story.approval_status}
                 </span>
             </td>
-            <td>${formatDate(teacher.created_at)}</td>
+            <td>${formatDate(story.submitted_at || story.uploaded_date)}</td>
             <td>
-                ${teacher.is_active ? 
-                    `<button class="btn btn-small btn-danger" onclick="showDeactivateModal(${teacher.id}, '${teacher.name || teacher.username}', '${teacher.username}', '${teacher.email}')">Deactivate</button>` :
-                    `<button class="btn btn-small btn-success" onclick="reactivateTeacher(${teacher.id})">Reactivate</button>`
-                }
+                <div class="story-description-cell">
+                    ${story.idea_description ? 
+                        (story.idea_description.length > 100 ? 
+                            story.idea_description.substring(0, 100) + '...' : 
+                            story.idea_description) 
+                        : 'No description'}
+                </div>
+            </td>
+            <td class="table-actions">
+                <button class="btn btn-small btn-secondary" onclick="viewStoryDetails(${story.id})">View</button>
+                ${story.approval_status === 'pending' ? `
+                    <button class="btn btn-small btn-success" onclick="showStoryApprovalModal(${story.id})">Approve</button>
+                    <button class="btn btn-small btn-danger" onclick="showStoryRejectionModal(${story.id})">Reject</button>
+                ` : story.approval_status === 'rejected' ? `
+                    <button class="btn btn-small btn-success" onclick="showStoryApprovalModal(${story.id})">Approve</button>
+                ` : story.approval_status === 'approved' ? `
+                    <button class="btn btn-small btn-warning" onclick="showStoryRejectionModal(${story.id})">Reject</button>
+                ` : ''}
             </td>
         </tr>
     `).join('');
 }
 
-async function loadSchoolsForTeacher() {
+// Make function globally available - Show story approval modal
+window.showStoryApprovalModal = async function(storyId) {
     try {
-        const response = await fetch(`${API_URL}/schools`, {
+        const response = await fetch(`${API_URL}/stories/${storyId}`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
         if (response.ok) {
-            const schools = await response.json();
-            const schoolSelect = document.getElementById('teacherSchool');
-            if (schoolSelect) {
-                schoolSelect.innerHTML = '<option value="">Select school</option>' +
-                    schools.map(school => `<option value="${school.id}">${school.school_name}</option>`).join('');
-            }
+            const story = await response.json();
+            
+            // Populate modal with story details
+            document.getElementById('approveStoryId').value = storyId;
+            document.getElementById('approveStoryTitle').textContent = story.idea_title;
+            document.getElementById('approveStoryAuthor').textContent = story.uploaded_by_name || 'Unknown';
+            document.getElementById('approveStoryDescription').textContent = story.idea_description || 'No description';
+            document.getElementById('approvalNotes').value = '';
+            
+            // Show modal
+            document.getElementById('storyApprovalModal').style.display = 'block';
         }
     } catch (error) {
-        console.error('Error loading schools:', error);
+        console.error('Error loading story details:', error);
+        showError('Failed to load story details');
     }
 }
 
-async function addTeacher(e) {
+// Make function globally available - Show story rejection modal
+window.showStoryRejectionModal = async function(storyId) {
+    try {
+        const response = await fetch(`${API_URL}/stories/${storyId}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            const story = await response.json();
+            
+            // Populate modal with story details
+            document.getElementById('rejectStoryId').value = storyId;
+            document.getElementById('rejectStoryTitle').textContent = story.idea_title;
+            document.getElementById('rejectStoryAuthor').textContent = story.uploaded_by_name || 'Unknown';
+            document.getElementById('rejectStoryDescription').textContent = story.idea_description || 'No description';
+            document.getElementById('rejectionNotes').value = '';
+            
+            // Show modal
+            document.getElementById('storyRejectionModal').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error loading story details:', error);
+        showError('Failed to load story details');
+    }
+}
+
+// Make function globally available - View story details modal
+window.viewStoryDetails = async function(storyId) {
+    try {
+        const response = await fetch(`${API_URL}/stories/${storyId}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            const story = await response.json();
+            
+            // Create detailed story view
+            const detailsHTML = `
+                <div class="story-details-full">
+                    <h3>${story.idea_title}</h3>
+                    <div class="story-meta">
+                        <p><strong>Author:</strong> ${story.uploaded_by_name || 'Unknown'} (${story.uploaded_by_email || ''})</p>
+                        <p><strong>Status:</strong> <span class="status-badge status-${story.approval_status}">${story.approval_status}</span></p>
+                        <p><strong>Uploaded:</strong> ${formatDate(story.uploaded_date)}</p>
+                        ${story.submitted_at ? `<p><strong>Submitted:</strong> ${formatDate(story.submitted_at)}</p>` : ''}
+                        ${story.approved_at ? `<p><strong>Approved/Rejected:</strong> ${formatDate(story.approved_at)}</p>` : ''}
+                        ${story.coverage_start_date ? `<p><strong>Coverage:</strong> ${story.coverage_start_date} ${story.coverage_end_date ? `to ${story.coverage_end_date}` : ''}</p>` : ''}
+                    </div>
+                    
+                    <div class="story-content">
+                        <h4>Description</h4>
+                        <p>${story.idea_description || 'No description provided'}</p>
+                        
+                        <h4>Interview Questions</h4>
+                        <ol>
+                            ${[1,2,3,4,5,6].map(i => story[`question_${i}`] ? `<li>${story[`question_${i}`]}</li>` : '').join('')}
+                        </ol>
+                        
+                        ${story.tags && story.tags.length > 0 ? `
+                            <h4>Tags</h4>
+                            <p>${story.tags.filter(tag => tag).join(', ')}</p>
+                        ` : ''}
+                        
+                        ${story.interviewees && story.interviewees.length > 0 ? `
+                            <h4>Interviewees</h4>
+                            <p>${story.interviewees.filter(person => person).join(', ')}</p>
+                        ` : ''}
+                        
+                        ${story.approval_notes ? `
+                            <h4>Admin Notes</h4>
+                            <p class="approval-notes">${story.approval_notes}</p>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('storyDetailsContent').innerHTML = detailsHTML;
+            document.getElementById('storyDetailsModal').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error loading story details:', error);
+        showError('Failed to load story details');
+    }
+}
+
+// Make function globally available - Close story modals
+window.closeStoryModal = function() {
+    document.getElementById('storyApprovalModal').style.display = 'none';
+    document.getElementById('storyRejectionModal').style.display = 'none';
+    document.getElementById('storyDetailsModal').style.display = 'none';
+}
+
+// Handle story approval form submission
+async function approveStory(e) {
     e.preventDefault();
     
-    const name = document.getElementById('teacherName').value.trim();
-    const email = document.getElementById('teacherEmail').value.trim();
-    const username = document.getElementById('teacherUsername').value.trim();
-    const password = document.getElementById('teacherPassword').value;
-    const schoolId = document.getElementById('teacherSchool').value;
-    
-    if (!name || !email || !username || !password) {
-        showError('All fields except school are required');
-        return;
-    }
+    const storyId = document.getElementById('approveStoryId').value;
+    const notes = document.getElementById('approvalNotes').value.trim();
     
     try {
-        const response = await fetch(`${API_URL}/admin/teachers`, {
-            method: 'POST',
+        const response = await fetch(`${API_URL}/stories/${storyId}/approve`, {
+            method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify({
-                name,
-                email,
-                username,
-                password,
-                school_id: schoolId ? parseInt(schoolId) : null
-            })
+            body: JSON.stringify({ notes: notes || null })
         });
         
-        const result = await response.json();
-        
         if (response.ok) {
-            showSuccess('Teacher created successfully!');
-            document.getElementById('addTeacherForm').reset();
-            loadTeachers();
+            showSuccess('Story approved successfully!');
+            closeStoryModal();
+            await loadStoriesForApproval();
+            await loadStoryApprovalStats();
+            await loadStoryOverviewStats();
         } else {
-            showError(result.error || 'Failed to create teacher');
+            const result = await response.json();
+            showError(result.error || 'Failed to approve story');
         }
     } catch (error) {
-        console.error('Error creating teacher:', error);
-        showError('Network error creating teacher');
+        console.error('Error approving story:', error);
+        showError('Network error. Please try again.');
     }
 }
 
-let teacherToDeactivate = null;
-
-function showDeactivateModal(teacherId, teacherName, teacherUsername, teacherEmail) {
-    teacherToDeactivate = teacherId;
-    document.getElementById('deactivateTeacherName').textContent = teacherName;
-    document.getElementById('deactivateTeacherUsername').textContent = teacherUsername;
-    document.getElementById('deactivateTeacherEmail').textContent = teacherEmail;
-    document.getElementById('deactivateTeacherModal').style.display = 'block';
-}
-
-function closeDeactivateModal() {
-    document.getElementById('deactivateTeacherModal').style.display = 'none';
-    teacherToDeactivate = null;
-}
-
-async function confirmDeactivateTeacher() {
-    if (!teacherToDeactivate) return;
+// Handle story rejection form submission
+async function rejectStory(e) {
+    e.preventDefault();
+    
+    const storyId = document.getElementById('rejectStoryId').value;
+    const notes = document.getElementById('rejectionNotes').value.trim();
+    
+    if (!notes) {
+        showError('Rejection reason is required');
+        return;
+    }
     
     try {
-        const response = await fetch(`${API_URL}/admin/teachers/${teacherToDeactivate}/deactivate`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        const response = await fetch(`${API_URL}/stories/${storyId}/reject`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ notes })
         });
         
-        const result = await response.json();
-        
         if (response.ok) {
-            showSuccess('Teacher deactivated successfully');
-            closeDeactivateModal();
-            loadTeachers();
+            showSuccess('Story rejected');
+            closeStoryModal();
+            await loadStoriesForApproval();
+            await loadStoryApprovalStats();
+            await loadStoryOverviewStats();
         } else {
-            showError(result.error || 'Failed to deactivate teacher');
+            const result = await response.json();
+            showError(result.error || 'Failed to reject story');
         }
     } catch (error) {
-        console.error('Error deactivating teacher:', error);
-        showError('Network error deactivating teacher');
+        console.error('Error rejecting story:', error);
+        showError('Network error. Please try again.');
     }
-}
-
-async function reactivateTeacher(teacherId) {
-    try {
-        const response = await fetch(`${API_URL}/admin/teachers/${teacherId}/reactivate`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok) {
-            showSuccess('Teacher reactivated successfully');
-            loadTeachers();
-        } else {
-            showError(result.error || 'Failed to reactivate teacher');
-        }
-    } catch (error) {
-        console.error('Error reactivating teacher:', error);
-        showError('Network error reactivating teacher');
-    }
-}
-
-function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/index.html';
 }

@@ -117,8 +117,6 @@ async function loadStories(filters = {}) {
         
         if (response.ok) {
             allStories = await response.json();
-            // Load favorite status for the stories
-            allStories = await loadFavoriteStatus(allStories);
             displayStories(allStories);
         } else {
             console.error('Failed to load stories');
@@ -154,21 +152,10 @@ function createStoryCard(story) {
     const deleteButton = currentUser && currentUser.role === 'admin' ? 
         `<button class="btn btn-delete" onclick="deleteStory(${story.id})">Delete</button>` : '';
     
-    const favoriteButton = currentUser ? 
-        `<button class="btn btn-favorite ${story.is_favorited ? 'favorited' : ''}" 
-                onclick="toggleFavorite(${story.id}, this)" 
-                title="${story.is_favorited ? 'Remove from favorites' : 'Add to favorites'}">
-            <span class="star-icon">${story.is_favorited ? '★' : '☆'}</span>
-            <span class="favorite-count">${story.favorite_count || 0}</span>
-        </button>` : '';
-    
     return `
         <div class="story-card">
             <div class="story-header">
-                <div class="story-title-row">
-                    <h3 class="story-title">${story.idea_title}</h3>
-                    ${favoriteButton}
-                </div>
+                <h3 class="story-title">${story.idea_title}</h3>
                 <div class="story-meta">
                     <span>📅 ${formatDate(story.uploaded_date)}</span>
                     <span>👤 ${story.uploaded_by_name}</span>
@@ -370,19 +357,54 @@ function displayStudentClasses(classes) {
     if (classes.length === 0) {
         container.innerHTML = `
             <div class="student-dashboard">
-                <h2>My Classes</h2>
+                <div class="welcome-section">
+                    <h2>🎓 Welcome to VidPOD!</h2>
+                    <p>Get started by joining your first class using a 4-digit code from your teacher.</p>
+                </div>
+                
                 <div class="no-classes">
-                    <p>You're not enrolled in any classes yet.</p>
-                    <div class="join-class-form">
-                        <h3>Join a Class</h3>
-                        <form id="joinClassForm">
-                            <div class="form-group">
-                                <label for="classCode">4-Digit Class Code</label>
-                                <input type="text" id="classCode" placeholder="Enter class code" maxlength="4" required>
+                    <div class="join-class-card">
+                        <div class="join-header">
+                            <div class="join-icon">🚀</div>
+                            <h3>Join Your First Class</h3>
+                            <p>Enter the 4-digit class code provided by your teacher</p>
+                        </div>
+                        
+                        <form id="joinClassForm" class="enhanced-join-form">
+                            <div class="code-input-section">
+                                <label for="classCode">Class Code</label>
+                                <div class="code-input-container">
+                                    <input type="text" 
+                                           id="classCode" 
+                                           placeholder="ABCD" 
+                                           maxlength="4" 
+                                           class="class-code-input"
+                                           autocomplete="off"
+                                           spellcheck="false"
+                                           required>
+                                    <div class="input-help">
+                                        <span class="char-count">0/4</span>
+                                    </div>
+                                </div>
+                                <div class="input-feedback" id="inputFeedback"></div>
                             </div>
-                            <button type="submit" class="btn btn-primary">Join Class</button>
+                            
+                            <button type="submit" class="btn btn-primary btn-join" disabled>
+                                <span class="btn-text">🎯 Join Class</span>
+                                <span class="btn-loader" style="display: none;">⏳ Joining...</span>
+                            </button>
                         </form>
-                        <div id="joinMessage"></div>
+                        
+                        <div id="joinMessage" class="join-message"></div>
+                        
+                        <div class="help-section">
+                            <h4>💡 Need help?</h4>
+                            <ul>
+                                <li>Ask your teacher for the 4-digit class code</li>
+                                <li>Class codes are case-insensitive</li>
+                                <li>You can join multiple classes</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -390,20 +412,50 @@ function displayStudentClasses(classes) {
     } else {
         container.innerHTML = `
             <div class="student-dashboard">
-                <h2>My Classes</h2>
+                <div class="dashboard-header">
+                    <h2>📚 My Classes</h2>
+                    <p>Manage your enrolled classes and join new ones</p>
+                </div>
+                
                 <div class="classes-grid">
                     ${classes.map(classItem => createClassCard(classItem)).join('')}
                 </div>
-                <div class="join-class-form">
-                    <h3>Join Another Class</h3>
-                    <form id="joinClassForm">
-                        <div class="form-group">
-                            <label for="classCode">4-Digit Class Code</label>
-                            <input type="text" id="classCode" placeholder="Enter class code" maxlength="4" required>
+                
+                <div class="join-another-class">
+                    <div class="join-class-card compact">
+                        <div class="join-header">
+                            <div class="join-icon">➕</div>
+                            <h3>Join Another Class</h3>
+                            <p>Add more classes to your dashboard</p>
                         </div>
-                        <button type="submit" class="btn btn-primary">Join Class</button>
-                    </form>
-                    <div id="joinMessage"></div>
+                        
+                        <form id="joinClassForm" class="enhanced-join-form">
+                            <div class="code-input-section">
+                                <label for="classCode">Class Code</label>
+                                <div class="code-input-container">
+                                    <input type="text" 
+                                           id="classCode" 
+                                           placeholder="ABCD" 
+                                           maxlength="4" 
+                                           class="class-code-input"
+                                           autocomplete="off"
+                                           spellcheck="false"
+                                           required>
+                                    <div class="input-help">
+                                        <span class="char-count">0/4</span>
+                                    </div>
+                                </div>
+                                <div class="input-feedback" id="inputFeedback"></div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-join" disabled>
+                                <span class="btn-text">🎯 Join Class</span>
+                                <span class="btn-loader" style="display: none;">⏳ Joining...</span>
+                            </button>
+                        </form>
+                        
+                        <div id="joinMessage" class="join-message"></div>
+                    </div>
                 </div>
             </div>
         `;
@@ -440,14 +492,71 @@ function setupStudentEventListeners() {
             joinForm.addEventListener('submit', handleJoinClass);
         }
         
-        // Format class code input
+        // Enhanced class code input handling
         const classCodeInput = document.getElementById('classCode');
         if (classCodeInput) {
+            // Real-time validation and formatting
             classCodeInput.addEventListener('input', (e) => {
-                e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                e.target.value = value;
+                
+                // Update character count
+                const charCount = document.querySelector('.char-count');
+                if (charCount) {
+                    charCount.textContent = `${value.length}/4`;
+                    charCount.className = `char-count ${value.length === 4 ? 'complete' : ''}`;
+                }
+                
+                // Update input feedback
+                updateInputFeedback(value);
+                
+                // Enable/disable submit button
+                const submitBtn = document.querySelector('.btn-join');
+                if (submitBtn) {
+                    submitBtn.disabled = value.length !== 4;
+                    submitBtn.classList.toggle('enabled', value.length === 4);
+                }
+                
+                // Add visual feedback to input
+                e.target.classList.toggle('valid', value.length === 4);
+                e.target.classList.toggle('partial', value.length > 0 && value.length < 4);
+            });
+            
+            // Focus effect
+            classCodeInput.addEventListener('focus', () => {
+                document.querySelector('.code-input-container').classList.add('focused');
+            });
+            
+            classCodeInput.addEventListener('blur', () => {
+                document.querySelector('.code-input-container').classList.remove('focused');
+            });
+            
+            // Paste handling
+            classCodeInput.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const paste = (e.clipboardData || window.clipboardData).getData('text');
+                const cleanPaste = paste.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 4);
+                e.target.value = cleanPaste;
+                e.target.dispatchEvent(new Event('input'));
             });
         }
     }, 100);
+}
+
+function updateInputFeedback(value) {
+    const feedback = document.getElementById('inputFeedback');
+    if (!feedback) return;
+    
+    if (value.length === 0) {
+        feedback.textContent = '';
+        feedback.className = 'input-feedback';
+    } else if (value.length < 4) {
+        feedback.textContent = `Enter ${4 - value.length} more character${4 - value.length > 1 ? 's' : ''}`;
+        feedback.className = 'input-feedback partial';
+    } else if (value.length === 4) {
+        feedback.textContent = 'Ready to join! Click the button below.';
+        feedback.className = 'input-feedback valid';
+    }
 }
 
 async function handleJoinClass(e) {
@@ -456,16 +565,19 @@ async function handleJoinClass(e) {
     const classCode = document.getElementById('classCode').value.trim();
     const messageDiv = document.getElementById('joinMessage');
     const submitButton = e.target.querySelector('button[type="submit"]');
+    const btnText = submitButton.querySelector('.btn-text');
+    const btnLoader = submitButton.querySelector('.btn-loader');
     
     if (classCode.length !== 4) {
-        showJoinMessage('Class code must be exactly 4 characters', 'error');
+        showEnhancedJoinMessage('Class code must be exactly 4 characters', 'error');
         return;
     }
     
     // Show loading state
-    const originalText = submitButton.textContent;
-    submitButton.textContent = 'Joining...';
+    btnText.style.display = 'none';
+    btnLoader.style.display = 'inline';
     submitButton.disabled = true;
+    submitButton.classList.add('loading');
     
     try {
         const response = await fetch(`${API_URL}/classes/join`, {
@@ -480,22 +592,35 @@ async function handleJoinClass(e) {
         const result = await response.json();
         
         if (response.ok) {
-            showJoinMessage(`Successfully joined ${result.class_name}!`, 'success');
-            document.getElementById('classCode').value = '';
+            // Show success message with class details
+            showEnhancedJoinMessage(
+                `🎉 Successfully joined "${result.class_name}"!`, 
+                'success',
+                result
+            );
             
-            // Reload classes after 2 seconds
+            // Clear form
+            document.getElementById('classCode').value = '';
+            updateInputFeedback('');
+            document.querySelector('.char-count').textContent = '0/4';
+            document.querySelector('.char-count').className = 'char-count';
+            
+            // Reload classes after showing success
             setTimeout(() => {
                 loadStudentClasses();
-            }, 2000);
+            }, 2500);
         } else {
-            showJoinMessage(result.error || 'Failed to join class', 'error');
+            showEnhancedJoinMessage(result.error || 'Failed to join class', 'error');
         }
     } catch (error) {
-        showJoinMessage('Network error. Please try again.', 'error');
+        showEnhancedJoinMessage('Network error. Please try again.', 'error');
     } finally {
         // Reset button state
-        submitButton.textContent = originalText;
-        submitButton.disabled = false;
+        btnText.style.display = 'inline';
+        btnLoader.style.display = 'none';
+        submitButton.disabled = classCode.length !== 4;
+        submitButton.classList.remove('loading');
+        submitButton.classList.toggle('enabled', classCode.length === 4);
     }
 }
 
@@ -522,122 +647,46 @@ async function leaveClass(classId) {
     }
 }
 
-function showJoinMessage(message, type) {
+function showEnhancedJoinMessage(message, type, classData = null) {
     const messageDiv = document.getElementById('joinMessage');
-    if (messageDiv) {
-        messageDiv.textContent = message;
-        messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
-        messageDiv.style.display = 'block';
-        messageDiv.style.marginTop = '1rem';
-        
-        setTimeout(() => {
-            messageDiv.style.display = 'none';
-        }, 5000);
-    }
-}
-
-// Favorite functionality
-async function toggleFavorite(storyId, buttonElement) {
-    try {
-        const isFavorited = buttonElement.classList.contains('favorited');
-        const starIcon = buttonElement.querySelector('.star-icon');
-        const countElement = buttonElement.querySelector('.favorite-count');
-        
-        // Show loading state
-        starIcon.textContent = '⭐';
-        buttonElement.disabled = true;
-        
-        if (isFavorited) {
-            // Remove from favorites
-            const response = await fetch(`${API_URL}/favorites/${storyId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                buttonElement.classList.remove('favorited');
-                starIcon.textContent = '☆';
-                countElement.textContent = result.total_favorites;
-                buttonElement.title = 'Add to favorites';
-                showJoinMessage('Removed from favorites', 'success');
-            } else {
-                throw new Error('Failed to remove from favorites');
-            }
-        } else {
-            // Add to favorites
-            const response = await fetch(`${API_URL}/favorites/${storyId}`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                buttonElement.classList.add('favorited');
-                starIcon.textContent = '★';
-                countElement.textContent = result.total_favorites;
-                buttonElement.title = 'Remove from favorites';
-                showJoinMessage('Added to favorites', 'success');
-            } else {
-                const error = await response.json();
-                throw new Error(error.error || 'Failed to add to favorites');
-            }
-        }
-    } catch (error) {
-        console.error('Error toggling favorite:', error);
-        showJoinMessage(error.message, 'error');
-        
-        // Reset button state on error
-        const isFavorited = buttonElement.classList.contains('favorited');
-        const starIcon = buttonElement.querySelector('.star-icon');
-        starIcon.textContent = isFavorited ? '★' : '☆';
-    } finally {
-        buttonElement.disabled = false;
-    }
-}
-
-// Load favorite status for stories
-async function loadFavoriteStatus(stories) {
-    if (!currentUser || stories.length === 0) return stories;
+    if (!messageDiv) return;
     
-    try {
-        // Get user's favorites
-        const favoritesResponse = await fetch(`${API_URL}/favorites`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-        
-        if (favoritesResponse.ok) {
-            const userFavorites = await favoritesResponse.json();
-            const favoriteIds = new Set(userFavorites.map(fav => fav.id));
-            
-            // Mark stories as favorited
-            stories.forEach(story => {
-                story.is_favorited = favoriteIds.has(story.id);
-            });
-        }
-        
-        // Get favorite counts for all stories
-        const popularResponse = await fetch(`${API_URL}/favorites/popular?limit=1000`);
-        if (popularResponse.ok) {
-            const popularStories = await popularResponse.json();
-            const favoriteCounts = {};
-            popularStories.forEach(story => {
-                favoriteCounts[story.id] = story.favorite_count;
-            });
-            
-            stories.forEach(story => {
-                story.favorite_count = favoriteCounts[story.id] || 0;
-            });
-        }
-    } catch (error) {
-        console.error('Error loading favorite status:', error);
+    messageDiv.className = `join-message ${type}`;
+    
+    if (type === 'success' && classData) {
+        messageDiv.innerHTML = `
+            <div class="success-content">
+                <div class="success-icon">✅</div>
+                <div class="success-text">
+                    <h4>${message}</h4>
+                    <div class="class-info">
+                        <p><strong>Teacher:</strong> ${classData.teacher_name || 'N/A'}</p>
+                        <p><strong>Subject:</strong> ${classData.subject || 'General'}</p>
+                        <p><strong>Students:</strong> ${classData.student_count || 0} enrolled</p>
+                    </div>
+                    <p class="reload-note">Updating your dashboard...</p>
+                </div>
+            </div>
+        `;
+    } else {
+        messageDiv.innerHTML = `
+            <div class="message-content">
+                <div class="message-icon">${type === 'error' ? '❌' : '✅'}</div>
+                <div class="message-text">${message}</div>
+            </div>
+        `;
     }
     
-    return stories;
+    messageDiv.style.display = 'block';
+    
+    // Auto-hide after delay
+    const hideDelay = type === 'success' ? 3000 : 5000;
+    setTimeout(() => {
+        messageDiv.style.display = 'none';
+    }, hideDelay);
+}
+
+// Keep backward compatibility
+function showJoinMessage(message, type) {
+    showEnhancedJoinMessage(message, type);
 }

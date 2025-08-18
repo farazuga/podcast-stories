@@ -26,17 +26,17 @@ if (localStorage.getItem('token') && (window.location.pathname === '/' || window
     });
 }
 
-// Login Form Handler
+// Login Form Handler - Updated for email-based authentication
 if (document.getElementById('loginForm')) {
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const username = document.getElementById('username').value;
+        const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         
         console.log('Login attempt starting...');
         console.log('API URL:', `${API_URL}/auth/login`);
-        console.log('Attempting login for:', username);
+        console.log('Attempting login for:', email);
         
         try {
             const response = await fetch(`${API_URL}/auth/login`, {
@@ -44,7 +44,7 @@ if (document.getElementById('loginForm')) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify({ email, password })
             });
             
             const data = await response.json();
@@ -53,7 +53,9 @@ if (document.getElementById('loginForm')) {
             if (response.ok) {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
-                window.location.href = '/dashboard.html';
+                
+                // Redirect based on user role
+                redirectBasedOnRole(data.user);
             } else {
                 showError(data.error || 'Login failed');
             }
@@ -134,6 +136,24 @@ function showSuccess(message) {
         setTimeout(() => {
             successDiv.style.display = 'none';
         }, 5000);
+    }
+}
+
+// Role-based redirect function
+function redirectBasedOnRole(user) {
+    console.log('Redirecting user based on role:', user.role);
+    
+    switch(user.role) {
+        case 'amitrace_admin':
+            window.location.href = '/admin.html';
+            break;
+        case 'teacher':
+            window.location.href = '/teacher-dashboard.html';
+            break;
+        case 'student':
+        default:
+            window.location.href = '/dashboard.html';
+            break;
     }
 }
 

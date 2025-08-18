@@ -1,7 +1,7 @@
 {
   "name": "podcast-stories-frontend",
   "version": "1.0.0",
-  "description": "Frontend for Podcast Stories",
+  "description": "Frontend for VidPOD",
   "scripts": {
     "start": "npx serve -s . -l 3000"
   },

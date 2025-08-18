@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Podcast Stories - Admin Panel</title>
+    <title>VidPOD - Admin Panel</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
     <nav class="navbar">
         <div class="nav-brand">
-            <h1>📻 Podcast Stories - Admin</h1>
+            <h1>📻 VidPOD - Admin</h1>
         </div>
         <div class="nav-menu">
             <a href="/dashboard.html">Dashboard</a>
@@ -28,8 +28,8 @@
         <div class="admin-tabs">
             <button class="tab-btn active" onclick="showTab('overview')">Overview</button>
             <button class="tab-btn" onclick="showTab('schools')">Schools</button>
-            <button class="tab-btn" onclick="showTab('teachers')">Teachers</button>
-            <button class="tab-btn" onclick="showTab('teacher-requests')">Teacher Requests</button>
+            <button class="tab-btn" onclick="showTab('teachers')">Teacher Requests</button>
+            <button class="tab-btn" onclick="showTab('stories')">Story Approval</button>
             <button class="tab-btn" onclick="showTab('tags')">Tags</button>
         </div>
 
@@ -63,6 +63,14 @@
                         <div class="stat-item">
                             <div class="stat-value" id="totalTags">0</div>
                             <div class="stat-label">Total Tags</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="pendingStories">0</div>
+                            <div class="stat-label">Pending Stories</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="approvedStories">0</div>
+                            <div class="stat-label">Approved Stories</div>
                         </div>
                     </div>
                 </div>
@@ -133,80 +141,8 @@
             </div>
         </div>
 
-        <!-- Teachers Management Tab -->
-        <div id="teachers-tab" class="tab-content">
-            <div class="admin-grid">
-                <!-- Add Teacher Form -->
-                <div class="admin-card">
-                    <h2>Teacher Management</h2>
-                    
-                    <div class="form-section">
-                        <h3>Add New Teacher</h3>
-                        <form id="addTeacherForm">
-                            <div class="form-group">
-                                <label for="teacherName">Full Name</label>
-                                <input type="text" id="teacherName" placeholder="Enter teacher's full name" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="teacherEmail">Email</label>
-                                <input type="email" id="teacherEmail" placeholder="Enter teacher's email" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="teacherUsername">Username</label>
-                                <input type="text" id="teacherUsername" placeholder="Enter username" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="teacherPassword">Password</label>
-                                <input type="password" id="teacherPassword" placeholder="Enter password" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="teacherSchool">School (Optional)</label>
-                                <select id="teacherSchool">
-                                    <option value="">Select school</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Add Teacher</button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Teachers List -->
-                <div class="admin-card full-width">
-                    <h2>All Teachers</h2>
-                    <div class="filter-controls">
-                        <select id="teacherStatusFilter">
-                            <option value="">All Teachers</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                        <button onclick="loadTeachers()" class="btn btn-secondary">Filter</button>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Username</th>
-                                    <th>Email</th>
-                                    <th>School</th>
-                                    <th>Classes</th>
-                                    <th>Students</th>
-                                    <th>Status</th>
-                                    <th>Created</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="teachersTable">
-                                <!-- Teachers will be loaded here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Teacher Requests Tab -->
-        <div id="teacher-requests-tab" class="tab-content">
+        <div id="teachers-tab" class="tab-content">
             <div class="admin-grid">
                 <!-- Teacher Request Stats -->
                 <div class="admin-card">
@@ -265,6 +201,75 @@
             </div>
         </div>
 
+        <!-- Story Approval Tab -->
+        <div id="stories-tab" class="tab-content">
+            <div class="admin-grid">
+                <!-- Story Approval Stats -->
+                <div class="admin-card">
+                    <h2>Story Approval Statistics</h2>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="storyStatsPending">0</div>
+                            <div class="stat-label">Pending Approval</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="storyStatsApproved">0</div>
+                            <div class="stat-label">Approved</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="storyStatsRejected">0</div>
+                            <div class="stat-label">Rejected</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="storyStatsDraft">0</div>
+                            <div class="stat-label">Draft</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="storyStatsThisWeek">0</div>
+                            <div class="stat-label">Submitted This Week</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="storyStatsTotal">0</div>
+                            <div class="stat-label">Total Stories</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Story Approval Actions -->
+                <div class="admin-card full-width">
+                    <h2>Story Approval Management</h2>
+                    <div class="filter-controls">
+                        <select id="storyStatusFilter">
+                            <option value="pending">Pending Stories</option>
+                            <option value="approved">Approved Stories</option>
+                            <option value="rejected">Rejected Stories</option>
+                            <option value="draft">Draft Stories</option>
+                            <option value="">All Stories</option>
+                        </select>
+                        <button onclick="loadStoriesForApproval()" class="btn btn-secondary">Filter</button>
+                        <button onclick="loadStoriesForApproval('pending')" class="btn btn-primary">Show Pending</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Author</th>
+                                    <th>Status</th>
+                                    <th>Submitted</th>
+                                    <th>Description</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="storiesApprovalTable">
+                                <!-- Stories for approval will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Tags Tab -->
         <div id="tags-tab" class="tab-content">
             <div class="admin-grid">
@@ -287,29 +292,6 @@
                         <div id="tagsList" class="tags-list">
                             <!-- Tags will be loaded here -->
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Teacher Deactivation Modal -->
-        <div id="deactivateTeacherModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Deactivate Teacher</h2>
-                    <span class="close" onclick="closeDeactivateModal()">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to deactivate this teacher account?</p>
-                    <div class="teacher-info">
-                        <p><strong>Name:</strong> <span id="deactivateTeacherName"></span></p>
-                        <p><strong>Username:</strong> <span id="deactivateTeacherUsername"></span></p>
-                        <p><strong>Email:</strong> <span id="deactivateTeacherEmail"></span></p>
-                    </div>
-                    <p class="warning-text">⚠️ This will prevent the teacher from logging in and managing their classes. Students will still have access to existing classes.</p>
-                    <div class="modal-actions">
-                        <button type="button" class="btn btn-secondary" onclick="closeDeactivateModal()">Cancel</button>
-                        <button type="button" class="btn btn-danger" onclick="confirmDeactivateTeacher()">Deactivate Teacher</button>
                     </div>
                 </div>
             </div>
@@ -342,11 +324,129 @@
             </div>
         </div>
 
+        <!-- Story Approval Modal -->
+        <div id="storyApprovalModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Approve Story</h2>
+                    <span class="close" onclick="closeStoryModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="approveStoryForm">
+                        <input type="hidden" id="approveStoryId" />
+                        <div class="story-details">
+                            <h3 id="approveStoryTitle"></h3>
+                            <p><strong>Author:</strong> <span id="approveStoryAuthor"></span></p>
+                            <p><strong>Description:</strong> <span id="approveStoryDescription"></span></p>
+                        </div>
+                        <div class="form-group">
+                            <label for="approvalNotes">Approval Notes (optional)</label>
+                            <textarea id="approvalNotes" rows="3" placeholder="Add any notes for the author..."></textarea>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closeStoryModal()">Cancel</button>
+                            <button type="submit" class="btn btn-success">Approve Story</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Story Rejection Modal -->
+        <div id="storyRejectionModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Reject Story</h2>
+                    <span class="close" onclick="closeStoryModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="rejectStoryForm">
+                        <input type="hidden" id="rejectStoryId" />
+                        <div class="story-details">
+                            <h3 id="rejectStoryTitle"></h3>
+                            <p><strong>Author:</strong> <span id="rejectStoryAuthor"></span></p>
+                            <p><strong>Description:</strong> <span id="rejectStoryDescription"></span></p>
+                        </div>
+                        <div class="form-group">
+                            <label for="rejectionNotes">Rejection Reason (required)</label>
+                            <textarea id="rejectionNotes" rows="4" placeholder="Please explain why this story is being rejected..." required></textarea>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closeStoryModal()">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Reject Story</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Story Details Modal -->
+        <div id="storyDetailsModal" class="modal">
+            <div class="modal-content large-modal">
+                <div class="modal-header">
+                    <h2>Story Details</h2>
+                    <span class="close" onclick="closeStoryModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div id="storyDetailsContent">
+                        <!-- Story details will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="errorMessage" class="error-message"></div>
         <div id="successMessage" class="success-message"></div>
     </div>
 
     <script src="js/auth.js"></script>
     <script src="js/admin.js"></script>
+    
+    <!-- Debug Script -->
+    <script>
+        // Debug script to check if buttons are working
+        window.addEventListener('load', function() {
+            console.log('🔍 Admin Debug: Page loaded, checking buttons...');
+            
+            // Check if showTab function exists
+            if (typeof window.showTab === 'function') {
+                console.log('✅ showTab function is available');
+            } else {
+                console.error('❌ showTab function is NOT available');
+            }
+            
+            // Test tab buttons
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            console.log('🔍 Found tab buttons:', tabButtons.length);
+            
+            tabButtons.forEach((btn, index) => {
+                console.log(`Tab ${index}: "${btn.textContent.trim()}" - onclick: ${btn.getAttribute('onclick')}`);
+                
+                // Add manual click test
+                btn.addEventListener('click', function(e) {
+                    console.log('🔍 Tab button manually clicked:', btn.textContent.trim());
+                });
+            });
+            
+            // Check for JavaScript errors
+            window.onerror = function(message, source, lineno, colno, error) {
+                console.error('🚨 JavaScript Error:', {
+                    message: message,
+                    source: source,
+                    line: lineno,
+                    column: colno,
+                    error: error
+                });
+                return false;
+            };
+            
+            // Add unhandled promise rejection handler
+            window.addEventListener('unhandledrejection', function(event) {
+                console.error('🚨 Unhandled Promise Rejection:', event.reason);
+            });
+            
+            console.log('🔍 Debug setup complete');
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD - Browse Stories</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>📻 VidPOD</h1>
+        </div>
+        <div class="nav-menu">
+            <a href="/dashboard.html">Dashboard</a>
+            <a href="/stories.html" class="active">Browse Stories</a>
+            <a href="/add-story.html">Add Story</a>
+            <a href="/teacher-dashboard.html" id="teacherLink" style="display: none;">My Classes</a>
+            <a href="/admin.html" id="adminLink" style="display: none;">Admin Panel</a>
+            <button class="btn btn-secondary" id="csvImportBtn">Import CSV</button>
+        </div>
+        <div class="nav-user">
+            <span id="userInfo"></span>
+            <span id="userRoleBadge" class="role-badge"></span>
+            <button class="btn btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Stories Header -->
+        <div class="page-header">
+            <h1>📚 Browse Stories</h1>
+            <p>Discover and explore podcast story ideas from the VidPOD community</p>
+        </div>
+
+        <!-- Search & Filter Section -->
+        <div class="search-section">
+            <h2>🔍 Search & Filter</h2>
+            <form id="searchForm">
+                <div class="search-grid">
+                    <div class="form-group">
+                        <label>Search Keywords</label>
+                        <input type="text" id="searchKeywords" placeholder="Search titles and descriptions...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Tags</label>
+                        <select id="searchTags" multiple></select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Coverage Start Date</label>
+                        <input type="date" id="searchStartDate">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Coverage End Date</label>
+                        <input type="date" id="searchEndDate">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Interviewee</label>
+                        <input type="text" id="searchInterviewee" placeholder="Search by interviewee name...">
+                    </div>
+                </div>
+                
+                <div class="search-actions">
+                    <button type="submit" class="btn btn-primary">🔍 Apply Filters</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearFilters()">🗑️ Clear All</button>
+                    <div class="search-stats" id="searchStats">
+                        <span id="resultsCount">Loading stories...</span>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Story Display Options -->
+        <div class="display-options">
+            <div class="view-controls">
+                <button class="btn btn-outline active" id="gridViewBtn" onclick="setViewMode('grid')">
+                    📱 Grid View
+                </button>
+                <button class="btn btn-outline" id="listViewBtn" onclick="setViewMode('list')">
+                    📋 List View
+                </button>
+            </div>
+            <div class="selection-controls">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                    <span class="checkmark"></span>
+                    Select All
+                </label>
+                <div class="selection-info" id="selectionInfo" style="display: none;">
+                    <span id="selectedCount">0</span> selected
+                </div>
+            </div>
+            <div class="sort-controls">
+                <label>Sort by:</label>
+                <select id="sortBy" onchange="sortStories()">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="title">Title A-Z</option>
+                    <option value="author">Author A-Z</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Bulk Actions Bar -->
+        <div class="bulk-actions-bar" id="bulkActionsBar" style="display: none;">
+            <div class="bulk-actions-content">
+                <div class="bulk-actions-info">
+                    <span id="bulkSelectedCount">0</span> stories selected
+                </div>
+                <div class="bulk-actions-buttons">
+                    <button class="btn btn-outline btn-small" onclick="bulkFavorite()">
+                        ❤️ Add to Favorites
+                    </button>
+                    <button class="btn btn-outline btn-small" onclick="bulkExport()">
+                        📄 Export
+                    </button>
+                    <button class="btn btn-danger btn-small" onclick="bulkDelete()" id="bulkDeleteBtn" style="display: none;">
+                        🗑️ Delete
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="clearSelection()">
+                        ✕ Clear Selection
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stories Grid/List -->
+        <div id="storiesContainer" class="stories-container">
+            <div id="storiesGrid" class="stories-grid">
+                <!-- Stories will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Load More Button -->
+        <div class="load-more-section" id="loadMoreSection" style="display: none;">
+            <button class="btn btn-secondary" id="loadMoreBtn" onclick="loadMoreStories()">
+                📚 Load More Stories
+            </button>
+        </div>
+
+        <!-- No Results -->
+        <div id="noResults" class="no-results" style="display: none;">
+            <div class="no-results-content">
+                <h3>🔍 No Stories Found</h3>
+                <p>Try adjusting your search filters or <a href="/add-story.html">create a new story</a>.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CSV Import Modal -->
+    <div id="csvModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>📁 Import Stories from CSV</h2>
+            <form id="csvForm">
+                <div class="form-group">
+                    <label for="csvFile">Choose CSV File</label>
+                    <input type="file" id="csvFile" accept=".csv" required>
+                </div>
+                
+                <div class="csv-instructions">
+                    <h4>CSV Format Instructions:</h4>
+                    <p>Your CSV file should include the following columns:</p>
+                    <ul>
+                        <li><strong>idea_title</strong> - Story title (required)</li>
+                        <li><strong>idea_description</strong> - Story description</li>
+                        <li><strong>question_1</strong> to <strong>question_6</strong> - Interview questions</li>
+                        <li><strong>coverage_start_date</strong> - Start date (YYYY-MM-DD)</li>
+                        <li><strong>coverage_end_date</strong> - End date (YYYY-MM-DD)</li>
+                        <li><strong>tags</strong> - Comma-separated tags</li>
+                        <li><strong>interviewees</strong> - Comma-separated names</li>
+                    </ul>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">📤 Upload CSV</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/stories.js"></script>
+</body>
+</html>
