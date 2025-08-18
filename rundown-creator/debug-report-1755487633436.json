@@ -1,0 +1,41 @@
+{
+  "timestamp": "2025-08-18T03:27:13.433Z",
+  "environment": "development",
+  "results": {
+    "total": 31,
+    "passed": 16,
+    "failed": 15,
+    "warnings": 2,
+    "details": [
+      {
+        "test": "Database Connection",
+        "passed": false,
+        "message": "read ECONNRESET",
+        "critical": true
+      },
+      {
+        "test": "VidPOD API Health",
+        "passed": false,
+        "message": "Error: Request failed with status code 404",
+        "critical": true
+      },
+      {
+        "test": "Rundown Creator Health",
+        "passed": false,
+        "message": "Error: ",
+        "critical": true
+      },
+      {
+        "test": "Frontend Loading",
+        "passed": false,
+        "message": "",
+        "critical": true
+      }
+    ]
+  },
+  "config": {
+    "rundownCreatorUrl": "http://localhost:3001",
+    "vidpodApiUrl": "https://podcast-stories-production.up.railway.app",
+    "databaseUrl": "[CONFIGURED]"
+  }
+}

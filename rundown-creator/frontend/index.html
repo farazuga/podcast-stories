@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD Rundown Creator</title>
+    <link rel="stylesheet" href="css/rundown-styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>📻 VidPOD</h1>
+                    <span class="subtitle">Rundown Creator</span>
+                </div>
+                <nav class="nav">
+                    <a href="#" id="navRundowns" class="nav-link active">My Rundowns</a>
+                    <a href="#" id="navCreate" class="nav-link">Create New</a>
+                    <a href="#" id="navAnalytics" class="nav-link teacher-only">Analytics</a>
+                    <a href="http://localhost:3000" class="nav-link">Back to VidPOD</a>
+                </nav>
+                <div class="user-info">
+                    <span id="userGreeting">Loading...</span>
+                    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Rundowns List View -->
+            <div id="rundownsView" class="content-view active">
+                <div class="view-header">
+                    <h2>My Rundowns</h2>
+                    <div class="view-controls">
+                        <div class="search-filters">
+                            <input type="text" id="searchInput" placeholder="Search rundowns..." class="search-input">
+                            <select id="statusFilter" class="filter-select">
+                                <option value="">All Status</option>
+                                <option value="draft">Draft</option>
+                                <option value="submitted">Submitted</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                            <select id="classFilter" class="filter-select">
+                                <option value="">All Classes</option>
+                            </select>
+                            <button id="clearFilters" class="btn btn-secondary">Clear</button>
+                        </div>
+                        <button id="createRundownBtn" class="btn btn-primary">
+                            <span>+</span> New Rundown
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Rundown Stats -->
+                <div class="stats-bar" id="rundownStats">
+                    <div class="stat-item">
+                        <span class="stat-value" id="statTotal">0</span>
+                        <span class="stat-label">Total Rundowns</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="statDrafts">0</span>
+                        <span class="stat-label">Drafts</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="statSubmitted">0</span>
+                        <span class="stat-label">Submitted</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="statApproved">0</span>
+                        <span class="stat-label">Approved</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="statSlots">99</span>
+                        <span class="stat-label">Slots Remaining</span>
+                    </div>
+                </div>
+
+                <!-- Rundowns Grid -->
+                <div class="rundowns-grid" id="rundownsGrid">
+                    <!-- Rundown cards will be populated here -->
+                </div>
+
+                <!-- Loading/Empty States -->
+                <div class="loading-state" id="loadingState" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Loading rundowns...</p>
+                </div>
+
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <div class="empty-icon">📝</div>
+                    <h3>No rundowns yet</h3>
+                    <p>Create your first podcast rundown to get started!</p>
+                    <button class="btn btn-primary" onclick="showCreateView()">Create First Rundown</button>
+                </div>
+            </div>
+
+            <!-- Create/Edit Rundown View -->
+            <div id="createView" class="content-view">
+                <div class="view-header">
+                    <h2 id="createViewTitle">Create New Rundown</h2>
+                    <div class="view-controls">
+                        <button id="backToListBtn" class="btn btn-secondary">← Back to List</button>
+                        <div class="create-actions">
+                            <button id="saveRundownBtn" class="btn btn-primary">Save</button>
+                            <button id="submitRundownBtn" class="btn btn-success" style="display: none;">Submit for Review</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rundown Form -->
+                <div class="rundown-form">
+                    <form id="rundownForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="rundownTitle">Title *</label>
+                                <input type="text" id="rundownTitle" required maxlength="255" placeholder="Enter rundown title">
+                            </div>
+                            <div class="form-group">
+                                <label for="rundownClass">Class</label>
+                                <select id="rundownClass">
+                                    <option value="">Select class (optional)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="rundownDescription">Description</label>
+                            <textarea id="rundownDescription" rows="3" placeholder="Describe your podcast episode..."></textarea>
+                        </div>
+
+                        <!-- Rundown Status Info -->
+                        <div class="status-info" id="statusInfo" style="display: none;">
+                            <div class="status-badge" id="statusBadge"></div>
+                            <div class="status-details">
+                                <p id="statusMessage"></p>
+                                <div id="teacherComment" style="display: none;">
+                                    <strong>Teacher Comment:</strong>
+                                    <p id="commentText"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Segments Section -->
+                <div class="segments-section">
+                    <div class="section-header">
+                        <h3>Segments</h3>
+                        <div class="segment-controls">
+                            <span class="duration-display">Total: <span id="totalDuration">0:00</span></span>
+                            <button id="addSegmentBtn" class="btn btn-primary">+ Add Segment</button>
+                        </div>
+                    </div>
+
+                    <!-- Segments List -->
+                    <div class="segments-list" id="segmentsList">
+                        <!-- Segments will be populated here -->
+                    </div>
+
+                    <!-- Empty Segments State -->
+                    <div class="empty-segments" id="emptySegments">
+                        <p>No segments yet. Add your first segment to start building your rundown.</p>
+                        <button class="btn btn-primary" onclick="showAddSegmentModal()">Add First Segment</button>
+                    </div>
+                </div>
+
+                <!-- Stories Integration Section -->
+                <div class="stories-section">
+                    <div class="section-header">
+                        <h3>Associated Stories</h3>
+                        <button id="addStoryBtn" class="btn btn-secondary">+ Add Story</button>
+                    </div>
+                    
+                    <div class="stories-list" id="storiesList">
+                        <!-- Associated stories will be shown here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics View (Teachers Only) -->
+            <div id="analyticsView" class="content-view teacher-only">
+                <div class="view-header">
+                    <h2>Rundown Analytics</h2>
+                    <div class="view-controls">
+                        <select id="analyticsClassFilter">
+                            <option value="">All Classes</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="analytics-content" id="analyticsContent">
+                    <!-- Analytics will be populated here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    
+    <!-- Add/Edit Segment Modal -->
+    <div id="segmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="segmentModalTitle">Add Segment</h3>
+                <button class="modal-close" onclick="closeSegmentModal()">&times;</button>
+            </div>
+            <form id="segmentForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="segmentType">Type *</label>
+                        <select id="segmentType" required>
+                            <option value="intro">Intro</option>
+                            <option value="story">Story</option>
+                            <option value="interview">Interview</option>
+                            <option value="break">Break</option>
+                            <option value="commercial">Commercial</option>
+                            <option value="music">Music</option>
+                            <option value="outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="segmentDuration">Duration (minutes)</label>
+                        <input type="number" id="segmentDuration" min="0" step="0.5" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="segmentTitle">Title *</label>
+                    <input type="text" id="segmentTitle" required placeholder="Segment title">
+                </div>
+
+                <div class="form-row" id="guestFields" style="display: none;">
+                    <div class="form-group">
+                        <label for="guestName">Guest Name</label>
+                        <input type="text" id="guestName" placeholder="Guest name">
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="isRemote">
+                            Remote Interview
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group" id="storyField" style="display: none;">
+                    <label for="linkedStory">Linked Story</label>
+                    <select id="linkedStory">
+                        <option value="">Select story (optional)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="segmentNotes">Notes</label>
+                    <textarea id="segmentNotes" rows="3" placeholder="Segment notes and talking points"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="scriptNotes">Script Notes</label>
+                    <textarea id="scriptNotes" rows="3" placeholder="Script or teleprompter notes"></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeSegmentModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Segment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Story Browser Modal -->
+    <div id="storyModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>Add Story to Rundown</h3>
+                <button class="modal-close" onclick="closeStoryModal()">&times;</button>
+            </div>
+            
+            <div class="story-search">
+                <input type="text" id="storySearchInput" placeholder="Search stories..." class="search-input">
+                <button id="storySearchBtn" class="btn btn-primary">Search</button>
+            </div>
+
+            <div class="stories-browser" id="storiesBrowser">
+                <!-- Available stories will be listed here -->
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeStoryModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3 id="confirmTitle">Confirm Action</h3>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage">Are you sure?</p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmYesBtn" onclick="confirmAction()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notifications" class="notifications-container"></div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/rundowns.js"></script>
+    <script src="js/segments.js"></script>
+    <script src="js/stories.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

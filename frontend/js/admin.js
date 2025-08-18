@@ -1,5 +1,5 @@
-// API base URL
-const API_URL = 'https://podcast-stories-production.up.railway.app/api';
+// Use global window.API_URL from auth.js (no redeclaration)
+// window.API_URL is available as window.window.API_URL
 
 // Global variables
 let currentUser = null;
@@ -168,13 +168,13 @@ async function loadStatistics() {
         console.log('Token exists:', !!token);
         
         const [storiesResponse, schoolsResponse, teacherStatsResponse] = await Promise.all([
-            fetch(`${API_URL}/stories`, {
+            fetch(`${window.API_URL}/stories`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             }),
-            fetch(`${API_URL}/schools`, {
+            fetch(`${window.API_URL}/schools`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             }),
-            fetch(`${API_URL}/teacher-requests/stats/overview`, {
+            fetch(`${window.API_URL}/teacher-requests/stats/overview`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
         ]);
@@ -234,7 +234,7 @@ async function loadStatistics() {
         
         // Total classes
         try {
-            const classesResponse = await fetch(`${API_URL}/classes`, {
+            const classesResponse = await fetch(`${window.API_URL}/classes`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
             if (classesResponse.ok) {
@@ -258,7 +258,7 @@ async function loadStatistics() {
 // Schools Management
 async function loadSchools() {
     try {
-        const response = await fetch(`${API_URL}/schools`, {
+        const response = await fetch(`${window.API_URL}/schools`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
@@ -301,7 +301,7 @@ async function addSchool(e) {
     }
     
     try {
-        const response = await fetch(`${API_URL}/schools`, {
+        const response = await fetch(`${window.API_URL}/schools`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -332,7 +332,7 @@ window.deleteSchool = async function(schoolId) {
     }
     
     try {
-        const response = await fetch(`${API_URL}/schools/${schoolId}`, {
+        const response = await fetch(`${window.API_URL}/schools/${schoolId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
@@ -356,8 +356,8 @@ window.loadTeacherRequests = async function() {
     try {
         const statusFilter = document.getElementById('statusFilter')?.value || '';
         const url = statusFilter ? 
-            `${API_URL}/teacher-requests?status=${statusFilter}` : 
-            `${API_URL}/teacher-requests`;
+            `${window.API_URL}/teacher-requests?status=${statusFilter}` : 
+            `${window.API_URL}/teacher-requests`;
             
         const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -374,7 +374,7 @@ window.loadTeacherRequests = async function() {
 
 async function loadTeacherRequestStats() {
     try {
-        const response = await fetch(`${API_URL}/teacher-requests/stats/overview`, {
+        const response = await fetch(`${window.API_URL}/teacher-requests/stats/overview`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
@@ -449,7 +449,7 @@ async function approveTeacherRequest(e) {
     }
     
     try {
-        const response = await fetch(`${API_URL}/teacher-requests/${requestId}/approve`, {
+        const response = await fetch(`${window.API_URL}/teacher-requests/${requestId}/approve`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -481,7 +481,7 @@ window.rejectTeacherRequest = async function(requestId) {
     }
     
     try {
-        const response = await fetch(`${API_URL}/teacher-requests/${requestId}/reject`, {
+        const response = await fetch(`${window.API_URL}/teacher-requests/${requestId}/reject`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
@@ -502,7 +502,7 @@ window.rejectTeacherRequest = async function(requestId) {
 // Tags Management (existing functionality)
 async function loadTags() {
     try {
-        const response = await fetch(`${API_URL}/tags`, {
+        const response = await fetch(`${window.API_URL}/tags`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
@@ -538,7 +538,7 @@ async function addTag(e) {
     }
     
     try {
-        const response = await fetch(`${API_URL}/tags`, {
+        const response = await fetch(`${window.API_URL}/tags`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -569,7 +569,7 @@ window.deleteTag = async function(tagId) {
     }
     
     try {
-        const response = await fetch(`${API_URL}/tags/${tagId}`, {
+        const response = await fetch(`${window.API_URL}/tags/${tagId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
@@ -589,7 +589,7 @@ window.deleteTag = async function(tagId) {
 // Recent Stories (existing functionality)
 async function loadRecentStories() {
     try {
-        const response = await fetch(`${API_URL}/stories`, {
+        const response = await fetch(`${window.API_URL}/stories`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
@@ -625,7 +625,7 @@ window.deleteStory = async function(storyId) {
     }
     
     try {
-        const response = await fetch(`${API_URL}/stories/${storyId}`, {
+        const response = await fetch(`${window.API_URL}/stories/${storyId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
@@ -792,7 +792,7 @@ window.editSchool = function(schoolId) {
 // Function to update school name via API
 async function updateSchoolName(schoolId, newName) {
     try {
-        const response = await fetch(`${API_URL}/schools/${schoolId}`, {
+        const response = await fetch(`${window.API_URL}/schools/${schoolId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -828,7 +828,7 @@ window.logout = function() {
 // Load story approval statistics
 async function loadStoryApprovalStats() {
     try {
-        const response = await fetch(`${API_URL}/stories/admin/stats`, {
+        const response = await fetch(`${window.API_URL}/stories/admin/stats`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
@@ -858,7 +858,7 @@ async function loadStoryApprovalStats() {
 // Load story overview stats for the overview tab
 async function loadStoryOverviewStats() {
     try {
-        const response = await fetch(`${API_URL}/stories/admin/stats`, {
+        const response = await fetch(`${window.API_URL}/stories/admin/stats`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
@@ -882,8 +882,8 @@ window.loadStoriesForApproval = async function(status = null) {
     try {
         const filterStatus = status || document.getElementById('storyStatusFilter')?.value || 'pending';
         const url = filterStatus ? 
-            `${API_URL}/stories/admin/by-status/${filterStatus}` : 
-            `${API_URL}/stories`;
+            `${window.API_URL}/stories/admin/by-status/${filterStatus}` : 
+            `${window.API_URL}/stories`;
             
         const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -950,7 +950,7 @@ function displayStoriesForApproval(stories) {
 // Make function globally available - Show story approval modal
 window.showStoryApprovalModal = async function(storyId) {
     try {
-        const response = await fetch(`${API_URL}/stories/${storyId}`, {
+        const response = await fetch(`${window.API_URL}/stories/${storyId}`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
@@ -976,7 +976,7 @@ window.showStoryApprovalModal = async function(storyId) {
 // Make function globally available - Show story rejection modal
 window.showStoryRejectionModal = async function(storyId) {
     try {
-        const response = await fetch(`${API_URL}/stories/${storyId}`, {
+        const response = await fetch(`${window.API_URL}/stories/${storyId}`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
@@ -1002,7 +1002,7 @@ window.showStoryRejectionModal = async function(storyId) {
 // Make function globally available - View story details modal
 window.viewStoryDetails = async function(storyId) {
     try {
-        const response = await fetch(`${API_URL}/stories/${storyId}`, {
+        const response = await fetch(`${window.API_URL}/stories/${storyId}`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
@@ -1073,7 +1073,7 @@ async function approveStory(e) {
     const notes = document.getElementById('approvalNotes').value.trim();
     
     try {
-        const response = await fetch(`${API_URL}/stories/${storyId}/approve`, {
+        const response = await fetch(`${window.API_URL}/stories/${storyId}/approve`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -1111,7 +1111,7 @@ async function rejectStory(e) {
     }
     
     try {
-        const response = await fetch(`${API_URL}/stories/${storyId}/reject`, {
+        const response = await fetch(`${window.API_URL}/stories/${storyId}/reject`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',

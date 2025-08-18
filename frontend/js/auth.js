@@ -1,5 +1,7 @@
 // API base URL - change this to your backend URL
 const API_URL = 'https://podcast-stories-production.up.railway.app/api';
+// Make it globally available for other scripts
+window.API_URL = API_URL;
 
 // Debug logging
 console.log('Auth.js loaded, current path:', window.location.pathname);

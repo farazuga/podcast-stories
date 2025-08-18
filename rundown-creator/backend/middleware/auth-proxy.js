@@ -8,7 +8,7 @@ const axios = require('axios');
  * integration while maintaining independence.
  */
 
-const VIDPOD_API_URL = process.env.VIDPOD_API_URL || 'http://localhost:3000/api';
+const VIDPOD_API_URL = process.env.VIDPOD_API_URL || 'http://localhost:3000';
 
 /**
  * Verify token with main VidPOD API
@@ -25,9 +25,9 @@ const verifyToken = async (req, res, next) => {
     }
 
     // Forward token to main VidPOD auth service
-    console.log(`[AUTH-PROXY] Verifying token with VidPOD API: ${VIDPOD_API_URL}/auth/verify`);
+    console.log(`[AUTH-PROXY] Verifying token with VidPOD API: ${VIDPOD_API_URL}/api/auth/verify`);
     
-    const response = await axios.get(`${VIDPOD_API_URL}/auth/verify`, {
+    const response = await axios.get(`${VIDPOD_API_URL}/api/auth/verify`, {
       headers: {
         'Authorization': authHeader,
         'User-Agent': 'VidPOD-Rundown-Creator/1.0'
@@ -110,7 +110,7 @@ const requireRole = (allowedRoles) => {
  */
 const getUserClasses = async (token) => {
   try {
-    const response = await axios.get(`${VIDPOD_API_URL}/classes`, {
+    const response = await axios.get(`${VIDPOD_API_URL}/api/classes`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'User-Agent': 'VidPOD-Rundown-Creator/1.0'
@@ -131,7 +131,7 @@ const getUserClasses = async (token) => {
 const getAvailableStories = async (token, filters = {}) => {
   try {
     const queryParams = new URLSearchParams(filters);
-    const url = `${VIDPOD_API_URL}/stories${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    const url = `${VIDPOD_API_URL}/api/stories${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     
     const response = await axios.get(url, {
       headers: {
@@ -153,7 +153,7 @@ const getAvailableStories = async (token, filters = {}) => {
  */
 const getStoryById = async (token, storyId) => {
   try {
-    const response = await axios.get(`${VIDPOD_API_URL}/stories/${storyId}`, {
+    const response = await axios.get(`${VIDPOD_API_URL}/api/stories/${storyId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'User-Agent': 'VidPOD-Rundown-Creator/1.0'
