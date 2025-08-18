@@ -12,25 +12,39 @@ let currentRequestId = null;
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Admin page loading...');
     
-    if (!checkAuth()) {
-        console.log('Auth check failed');
-        return;
+    try {
+        if (!checkAuth()) {
+            console.log('Auth check failed');
+            return;
+        }
+        
+        console.log('Auth check passed, loading user info...');
+        await loadUserInfo();
+        
+        console.log('Loading initial data...');
+        await loadInitialData();
+        
+        console.log('Setting up event listeners...');
+        setupEventListeners();
+        
+        // Show overview tab by default
+        console.log('Showing overview tab...');
+        window.showTab('overview');
+        
+        console.log('Admin page loaded successfully');
+        
+        // Test that tab buttons are working
+        console.log('Testing tab button functionality...');
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        console.log('Found tab buttons:', tabButtons.length);
+        tabButtons.forEach((btn, index) => {
+            console.log(`Tab button ${index}:`, btn.textContent, btn.onclick);
+        });
+        
+    } catch (error) {
+        console.error('Error during admin page initialization:', error);
+        showError('Failed to initialize admin page. Please refresh and try again.');
     }
-    
-    console.log('Auth check passed, loading user info...');
-    await loadUserInfo();
-    
-    console.log('Loading initial data...');
-    await loadInitialData();
-    
-    console.log('Setting up event listeners...');
-    setupEventListeners();
-    
-    // Show overview tab by default
-    console.log('Showing overview tab...');
-    showTab('overview');
-    
-    console.log('Admin page loaded successfully');
 });
 
 function checkAuth() {
@@ -71,49 +85,72 @@ async function loadInitialData() {
     ]);
 }
 
-// Tab Management
-function showTab(tabName) {
-    // Hide all tab contents
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-    });
+// Tab Management - Make function globally available
+window.showTab = function(tabName) {
+    console.log('showTab called with:', tabName);
     
-    // Remove active class from all buttons
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // Show selected tab
-    document.getElementById(`${tabName}-tab`).classList.add('active');
-    
-    // Add active class to the clicked button
-    const buttons = document.querySelectorAll('.tab-btn');
-    buttons.forEach((btn, index) => {
-        if (btn.textContent.toLowerCase().includes(tabName) || 
-            (tabName === 'overview' && index === 0) ||
-            (tabName === 'schools' && index === 1) ||
-            (tabName === 'teachers' && index === 2) ||
-            (tabName === 'tags' && index === 3)) {
-            btn.classList.add('active');
+    try {
+        // Hide all tab contents
+        const tabContents = document.querySelectorAll('.tab-content');
+        console.log('Found tab contents:', tabContents.length);
+        tabContents.forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Remove active class from all buttons
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        console.log('Found tab buttons:', tabButtons.length);
+        tabButtons.forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Show selected tab
+        const targetTab = document.getElementById(`${tabName}-tab`);
+        if (targetTab) {
+            targetTab.classList.add('active');
+            console.log('Activated tab:', `${tabName}-tab`);
+        } else {
+            console.error('Target tab not found:', `${tabName}-tab`);
+            return;
         }
-    });
-    
-    // Load tab-specific data
-    switch(tabName) {
-        case 'schools':
-            loadSchools();
-            break;
-        case 'teachers':
-            loadTeacherRequests();
-            loadTeacherRequestStats();
-            break;
-        case 'tags':
-            loadTags();
-            break;
-        case 'overview':
-            loadStatistics();
-            loadRecentStories();
-            break;
+        
+        // Add active class to the clicked button
+        const buttons = document.querySelectorAll('.tab-btn');
+        buttons.forEach((btn, index) => {
+            if (btn.textContent.toLowerCase().includes(tabName) || 
+                (tabName === 'overview' && index === 0) ||
+                (tabName === 'schools' && index === 1) ||
+                (tabName === 'teachers' && index === 2) ||
+                (tabName === 'tags' && index === 3)) {
+                btn.classList.add('active');
+                console.log('Activated button:', btn.textContent);
+            }
+        });
+        
+        // Load tab-specific data
+        console.log('Loading data for tab:', tabName);
+        switch(tabName) {
+            case 'schools':
+                loadSchools();
+                break;
+            case 'teachers':
+                window.loadTeacherRequests();
+                loadTeacherRequestStats();
+                break;
+            case 'tags':
+                loadTags();
+                break;
+            case 'overview':
+                loadStatistics();
+                loadRecentStories();
+                break;
+            default:
+                console.warn('Unknown tab name:', tabName);
+        }
+        
+    } catch (error) {
+        console.error('Error in showTab function:', error);
+        showError('Failed to switch tabs. Please refresh the page.');
     }
 }
 
@@ -282,7 +319,8 @@ async function addSchool(e) {
     }
 }
 
-async function deleteSchool(schoolId) {
+// Make function globally available
+window.deleteSchool = async function(schoolId) {
     if (!confirm('Are you sure you want to delete this school? This action cannot be undone.')) {
         return;
     }
@@ -307,7 +345,8 @@ async function deleteSchool(schoolId) {
 }
 
 // Teacher Requests Management
-async function loadTeacherRequests() {
+// Make function globally available
+window.loadTeacherRequests = async function() {
     try {
         const statusFilter = document.getElementById('statusFilter')?.value || '';
         const url = statusFilter ? 
@@ -372,7 +411,8 @@ function displayTeacherRequests() {
     `).join('');
 }
 
-function showApprovalModal(requestId) {
+// Make function globally available
+window.showApprovalModal = function(requestId) {
     currentRequestId = requestId;
     const modal = document.getElementById('approvalModal');
     modal.style.display = 'block';
@@ -383,7 +423,8 @@ function showApprovalModal(requestId) {
     document.getElementById('requestId').value = requestId;
 }
 
-function closeApprovalModal() {
+// Make function globally available
+window.closeApprovalModal = function() {
     const modal = document.getElementById('approvalModal');
     modal.style.display = 'none';
     currentRequestId = null;
@@ -427,7 +468,8 @@ async function approveTeacherRequest(e) {
     }
 }
 
-async function rejectTeacherRequest(requestId) {
+// Make function globally available
+window.rejectTeacherRequest = async function(requestId) {
     if (!confirm('Are you sure you want to reject this teacher request?')) {
         return;
     }
@@ -514,7 +556,8 @@ async function addTag(e) {
     }
 }
 
-async function deleteTag(tagId) {
+// Make function globally available
+window.deleteTag = async function(tagId) {
     if (!confirm('Are you sure you want to delete this tag? This will remove it from all stories.')) {
         return;
     }
@@ -569,7 +612,8 @@ async function loadRecentStories() {
     }
 }
 
-async function deleteStory(storyId) {
+// Make function globally available
+window.deleteStory = async function(storyId) {
     if (!confirm('Are you sure you want to delete this story?')) {
         return;
     }
@@ -592,36 +636,78 @@ async function deleteStory(storyId) {
     }
 }
 
-function viewStory(storyId) {
+// Make function globally available
+window.viewStory = function(storyId) {
     window.location.href = `/story-detail.html?id=${storyId}`;
 }
 
 // Event Listeners
 function setupEventListeners() {
-    // Add school form
-    const addSchoolForm = document.getElementById('addSchoolForm');
-    if (addSchoolForm) {
-        addSchoolForm.addEventListener('submit', addSchool);
-    }
+    console.log('Setting up event listeners...');
     
-    // Add tag form
-    const addTagForm = document.getElementById('addTagForm');
-    if (addTagForm) {
-        addTagForm.addEventListener('submit', addTag);
-    }
-    
-    // Approve teacher form
-    const approveTeacherForm = document.getElementById('approveTeacherForm');
-    if (approveTeacherForm) {
-        approveTeacherForm.addEventListener('submit', approveTeacherRequest);
-    }
-    
-    // Modal click outside to close
-    window.onclick = function(event) {
-        const modal = document.getElementById('approvalModal');
-        if (event.target === modal) {
-            closeApprovalModal();
+    try {
+        // Add school form
+        const addSchoolForm = document.getElementById('addSchoolForm');
+        if (addSchoolForm) {
+            addSchoolForm.addEventListener('submit', addSchool);
+            console.log('✓ Add school form listener attached');
+        } else {
+            console.warn('⚠ Add school form not found');
         }
+        
+        // Add tag form
+        const addTagForm = document.getElementById('addTagForm');
+        if (addTagForm) {
+            addTagForm.addEventListener('submit', addTag);
+            console.log('✓ Add tag form listener attached');
+        } else {
+            console.warn('⚠ Add tag form not found');
+        }
+        
+        // Approve teacher form
+        const approveTeacherForm = document.getElementById('approveTeacherForm');
+        if (approveTeacherForm) {
+            approveTeacherForm.addEventListener('submit', approveTeacherRequest);
+            console.log('✓ Approve teacher form listener attached');
+        } else {
+            console.warn('⚠ Approve teacher form not found');
+        }
+        
+        // Add click listeners to tab buttons as backup
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        tabButtons.forEach((btn, index) => {
+            btn.addEventListener('click', function() {
+                const tabNames = ['overview', 'schools', 'teachers', 'tags'];
+                const tabName = tabNames[index];
+                console.log('Tab button clicked via event listener:', tabName);
+                window.showTab(tabName);
+            });
+        });
+        console.log('✓ Tab button event listeners attached:', tabButtons.length);
+        
+        // Filter button listener
+        const filterButton = document.querySelector('button[onclick="loadTeacherRequests()"]');
+        if (filterButton) {
+            filterButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Filter button clicked');
+                window.loadTeacherRequests();
+            });
+            console.log('✓ Filter button listener attached');
+        }
+        
+        // Modal click outside to close
+        window.onclick = function(event) {
+            const modal = document.getElementById('approvalModal');
+            if (event.target === modal) {
+                window.closeApprovalModal();
+            }
+        }
+        
+        console.log('Event listeners setup completed');
+        
+    } catch (error) {
+        console.error('Error setting up event listeners:', error);
     }
 }
 
@@ -654,7 +740,8 @@ function showSuccess(message) {
 }
 
 // Missing editSchool function - placeholder implementation
-function editSchool(schoolId) {
+// Make function globally available
+window.editSchool = function(schoolId) {
     console.log('Edit school functionality called for school ID:', schoolId);
     
     // Find the school in the allSchools array
@@ -696,7 +783,8 @@ async function updateSchoolName(schoolId, newName) {
     }
 }
 
-function logout() {
+// Make function globally available
+window.logout = function() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.href = '/index.html';

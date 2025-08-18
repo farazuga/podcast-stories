@@ -252,5 +252,52 @@
 
     <script src="js/auth.js"></script>
     <script src="js/admin.js"></script>
+    
+    <!-- Debug Script -->
+    <script>
+        // Debug script to check if buttons are working
+        window.addEventListener('load', function() {
+            console.log('🔍 Admin Debug: Page loaded, checking buttons...');
+            
+            // Check if showTab function exists
+            if (typeof window.showTab === 'function') {
+                console.log('✅ showTab function is available');
+            } else {
+                console.error('❌ showTab function is NOT available');
+            }
+            
+            // Test tab buttons
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            console.log('🔍 Found tab buttons:', tabButtons.length);
+            
+            tabButtons.forEach((btn, index) => {
+                console.log(`Tab ${index}: "${btn.textContent.trim()}" - onclick: ${btn.getAttribute('onclick')}`);
+                
+                // Add manual click test
+                btn.addEventListener('click', function(e) {
+                    console.log('🔍 Tab button manually clicked:', btn.textContent.trim());
+                });
+            });
+            
+            // Check for JavaScript errors
+            window.onerror = function(message, source, lineno, colno, error) {
+                console.error('🚨 JavaScript Error:', {
+                    message: message,
+                    source: source,
+                    line: lineno,
+                    column: colno,
+                    error: error
+                });
+                return false;
+            };
+            
+            // Add unhandled promise rejection handler
+            window.addEventListener('unhandledrejection', function(event) {
+                console.error('🚨 Unhandled Promise Rejection:', event.reason);
+            });
+            
+            console.log('🔍 Debug setup complete');
+        });
+    </script>
 </body>
 </html>

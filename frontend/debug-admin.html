@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        .btn { padding: 10px 20px; margin: 5px; border: none; background: #007bff; color: white; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .error { color: red; }
+        .success { color: green; }
+        .log { background: #f8f9fa; padding: 10px; margin: 10px 0; border-left: 3px solid #007bff; }
+    </style>
+</head>
+<body>
+    <h1>Admin Page Debug Test</h1>
+    
+    <div class="test-section">
+        <h2>1. JavaScript Console Test</h2>
+        <button class="btn" onclick="testConsole()">Test Console</button>
+        <div id="consoleResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Tab Button Test</h2>
+        <button class="btn" onclick="testTab('overview')">Overview Tab</button>
+        <button class="btn" onclick="testTab('schools')">Schools Tab</button>
+        <button class="btn" onclick="testTab('teachers')">Teachers Tab</button>
+        <button class="btn" onclick="testTab('tags')">Tags Tab</button>
+        <div id="tabResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. API Connection Test</h2>
+        <button class="btn" onclick="testAPIConnection()">Test API</button>
+        <div id="apiResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Local Storage Test</h2>
+        <button class="btn" onclick="testLocalStorage()">Check Auth</button>
+        <button class="btn" onclick="clearStorage()">Clear Storage</button>
+        <button class="btn" onclick="setTestAuth()">Set Test Auth</button>
+        <div id="storageResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>5. DOM Ready Test</h2>
+        <div id="domResult"></div>
+    </div>
+    
+    <script>
+        // Test Console
+        function testConsole() {
+            const result = document.getElementById('consoleResult');
+            try {
+                console.log('Console test successful');
+                result.innerHTML = '<div class="success">Console is working! Check browser dev tools.</div>';
+            } catch (error) {
+                result.innerHTML = '<div class="error">Console error: ' + error.message + '</div>';
+            }
+        }
+        
+        // Test Tab Functions
+        function testTab(tabName) {
+            const result = document.getElementById('tabResult');
+            try {
+                result.innerHTML = '<div class="success">Tab function called: ' + tabName + '</div>';
+                console.log('Tab clicked:', tabName);
+            } catch (error) {
+                result.innerHTML = '<div class="error">Tab error: ' + error.message + '</div>';
+            }
+        }
+        
+        // Test API Connection
+        async function testAPIConnection() {
+            const result = document.getElementById('apiResult');
+            const API_URL = 'https://podcast-stories-production.up.railway.app/api';
+            
+            try {
+                result.innerHTML = '<div>Testing API connection...</div>';
+                
+                const response = await fetch(API_URL + '/auth/verify', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer test'
+                    }
+                });
+                
+                result.innerHTML = '<div class="log">API Response Status: ' + response.status + '</div>';
+                console.log('API test response:', response.status);
+                
+            } catch (error) {
+                result.innerHTML = '<div class="error">API Connection Error: ' + error.message + '</div>';
+                console.error('API test error:', error);
+            }
+        }
+        
+        // Test Local Storage
+        function testLocalStorage() {
+            const result = document.getElementById('storageResult');
+            try {
+                const token = localStorage.getItem('token');
+                const user = localStorage.getItem('user');
+                
+                result.innerHTML = `
+                    <div class="log">
+                        <strong>Token:</strong> ${token ? 'Present (' + token.substring(0, 20) + '...)' : 'Not found'}<br>
+                        <strong>User:</strong> ${user ? user : 'Not found'}
+                    </div>
+                `;
+            } catch (error) {
+                result.innerHTML = '<div class="error">Local Storage Error: ' + error.message + '</div>';
+            }
+        }
+        
+        function clearStorage() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            testLocalStorage();
+        }
+        
+        function setTestAuth() {
+            // Set test admin credentials
+            const testUser = {
+                username: 'admin',
+                role: 'admin',
+                id: 1
+            };
+            localStorage.setItem('user', JSON.stringify(testUser));
+            localStorage.setItem('token', 'test-token-123');
+            testLocalStorage();
+        }
+        
+        // DOM Ready Test
+        document.addEventListener('DOMContentLoaded', function() {
+            const result = document.getElementById('domResult');
+            result.innerHTML = '<div class="success">DOM Content Loaded event fired successfully</div>';
+            console.log('DOMContentLoaded fired');
+        });
+        
+        // Test if this script is loading
+        console.log('Debug script loaded successfully');
+        
+        // Simulate the admin.js loading pattern
+        window.addEventListener('load', function() {
+            console.log('Window load event fired');
+        });
+    </script>
+</body>
+</html>
