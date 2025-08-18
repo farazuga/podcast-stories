@@ -68,7 +68,36 @@ async function loadUserInfo() {
         const user = JSON.parse(localStorage.getItem('user'));
         currentUser = user;
         
+        console.log('🔍 Admin Debug - User Info:', {
+            username: user.username,
+            role: user.role,
+            email: user.email,
+            id: user.id
+        });
+        
         document.getElementById('userInfo').textContent = `${user.username} (${user.role})`;
+        
+        // Verify admin permissions with backend
+        const token = localStorage.getItem('token');
+        console.log('🔍 Admin Debug - Token exists:', !!token);
+        
+        if (token) {
+            try {
+                const response = await fetch(`${window.API_URL}/auth/verify`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                console.log('🔍 Admin Debug - Token verification:', response.status, response.ok);
+                
+                if (!response.ok) {
+                    console.error('❌ Token verification failed');
+                    logout();
+                    return;
+                }
+            } catch (verifyError) {
+                console.error('❌ Token verification error:', verifyError);
+            }
+        }
+        
     } catch (error) {
         console.error('Error loading user info:', error);
         logout();
@@ -129,29 +158,34 @@ window.showTab = function(tabName) {
         });
         
         // Load tab-specific data
-        console.log('Loading data for tab:', tabName);
+        console.log('🔍 Admin Debug - Loading data for tab:', tabName);
         switch(tabName) {
             case 'schools':
+                console.log('🔍 Loading schools tab...');
                 loadSchools();
                 break;
             case 'teachers':
+                console.log('🔍 Loading teachers tab...');
                 window.loadTeacherRequests();
                 loadTeacherRequestStats();
                 break;
             case 'stories':
+                console.log('🔍 Loading stories tab...');
                 loadStoryApprovalStats();
                 window.loadStoriesForApproval('pending');
                 break;
             case 'tags':
+                console.log('🔍 Loading tags tab...');
                 loadTags();
                 break;
             case 'overview':
+                console.log('🔍 Loading overview tab...');
                 loadStatistics();
                 loadRecentStories();
                 loadStoryOverviewStats();
                 break;
             default:
-                console.warn('Unknown tab name:', tabName);
+                console.warn('❌ Unknown tab name:', tabName);
         }
         
     } catch (error) {
@@ -502,22 +536,51 @@ window.rejectTeacherRequest = async function(requestId) {
 // Tags Management (existing functionality)
 async function loadTags() {
     try {
+        console.log('🔍 Admin Debug - Loading tags...');
+        const token = localStorage.getItem('token');
+        console.log('🔍 Admin Debug - Token for tags API:', token ? 'Present' : 'Missing');
+        
         const response = await fetch(`${window.API_URL}/tags`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        console.log('🔍 Admin Debug - Tags API response:', {
+            status: response.status,
+            ok: response.ok,
+            url: `${window.API_URL}/tags`
         });
         
         if (response.ok) {
             allTags = await response.json();
+            console.log('🔍 Admin Debug - Tags loaded:', allTags.length, allTags);
             displayTags();
+        } else {
+            const errorData = await response.text();
+            console.error('❌ Tags API failed:', response.status, errorData);
+            showError(`Failed to load tags: ${response.status} ${response.statusText}`);
         }
     } catch (error) {
-        console.error('Error loading tags:', error);
+        console.error('❌ Error loading tags:', error);
+        showError('Network error loading tags. Check console for details.');
     }
 }
 
 function displayTags() {
+    console.log('🔍 Admin Debug - Displaying tags...');
     const tagsList = document.getElementById('tagsList');
-    if (!tagsList) return;
+    
+    if (!tagsList) {
+        console.error('❌ tagsList element not found!');
+        return;
+    }
+    
+    console.log('🔍 Admin Debug - Tags to display:', allTags.length, allTags);
+    
+    if (allTags.length === 0) {
+        tagsList.innerHTML = '<p class="no-data">No tags found. You can add some using the form above.</p>';
+        console.log('📝 Displayed empty state for tags');
+        return;
+    }
     
     tagsList.innerHTML = allTags.map(tag => `
         <div class="tag-item">
@@ -525,6 +588,8 @@ function displayTags() {
             <button class="tag-delete" onclick="deleteTag(${tag.id})">×</button>
         </div>
     `).join('');
+    
+    console.log('✅ Tags displayed successfully');
 }
 
 async function addTag(e) {
@@ -880,28 +945,59 @@ async function loadStoryOverviewStats() {
 // Make function globally available - Load stories for approval
 window.loadStoriesForApproval = async function(status = null) {
     try {
+        console.log('🔍 Admin Debug - Loading stories for approval...');
         const filterStatus = status || document.getElementById('storyStatusFilter')?.value || 'pending';
         const url = filterStatus ? 
             `${window.API_URL}/stories/admin/by-status/${filterStatus}` : 
             `${window.API_URL}/stories`;
             
+        console.log('🔍 Admin Debug - Story approval request:', {
+            status: filterStatus,
+            url: url,
+            token: localStorage.getItem('token') ? 'Present' : 'Missing'
+        });
+            
         const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
+        console.log('🔍 Admin Debug - Story approval API response:', {
+            status: response.status,
+            ok: response.ok,
+            url: url
+        });
+        
         if (response.ok) {
             const stories = await response.json();
+            console.log('🔍 Admin Debug - Stories loaded for approval:', stories.length, stories);
             displayStoriesForApproval(stories);
+        } else {
+            const errorData = await response.text();
+            console.error('❌ Stories approval API failed:', response.status, errorData);
+            showError(`Failed to load stories: ${response.status} ${response.statusText}`);
         }
     } catch (error) {
-        console.error('Error loading stories for approval:', error);
-        showError('Failed to load stories');
+        console.error('❌ Error loading stories for approval:', error);
+        showError('Network error loading stories. Check console for details.');
     }
 }
 
 function displayStoriesForApproval(stories) {
+    console.log('🔍 Admin Debug - Displaying stories for approval...');
     const table = document.getElementById('storiesApprovalTable');
-    if (!table) return;
+    
+    if (!table) {
+        console.error('❌ storiesApprovalTable element not found!');
+        return;
+    }
+    
+    console.log('🔍 Admin Debug - Stories to display:', stories.length, stories);
+    
+    if (stories.length === 0) {
+        table.innerHTML = '<tr><td colspan="6" class="no-data">No stories found for the selected status.</td></tr>';
+        console.log('📝 Displayed empty state for stories');
+        return;
+    }
     
     table.innerHTML = stories.map(story => `
         <tr>
@@ -945,6 +1041,8 @@ function displayStoriesForApproval(stories) {
             </td>
         </tr>
     `).join('');
+    
+    console.log('✅ Stories displayed successfully');
 }
 
 // Make function globally available - Show story approval modal

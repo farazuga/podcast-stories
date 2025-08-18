@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD API Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin-bottom: 30px; padding: 15px; border: 1px solid #ddd; }
+        .result { background: #f5f5f5; padding: 10px; margin-top: 10px; white-space: pre-wrap; }
+        .error { background: #ffe6e6; color: red; }
+        .success { background: #e6ffe6; color: green; }
+        button { padding: 10px 15px; margin: 5px; }
+        input[type="text"], input[type="password"] { padding: 8px; margin: 5px; width: 200px; }
+    </style>
+</head>
+<body>
+    <h1>VidPOD API Debug Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Login Test</h2>
+        <input type="text" id="email" placeholder="Email (admin@vidpod.com)" value="admin@vidpod.com">
+        <input type="password" id="password" placeholder="Password (vidpod)" value="vidpod">
+        <button onclick="testLogin()">Test Login</button>
+        <div id="loginResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. API Endpoint Tests</h2>
+        <button onclick="testStoriesAPI()">Test GET /api/stories</button>
+        <button onclick="testTagsAPI()">Test GET /api/tags</button>
+        <button onclick="testPendingStoriesAPI()">Test GET /api/stories/admin/by-status/pending</button>
+        <button onclick="testStoryStatsAPI()">Test GET /api/stories/admin/stats</button>
+        <div id="apiResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Frontend JavaScript Test</h2>
+        <button onclick="testFrontendFunctions()">Test Frontend Functions</button>
+        <div id="frontendResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. DOM Elements Test</h2>
+        <button onclick="testDOMElements()">Test DOM Elements</button>
+        <div id="domResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://podcast-stories-production.up.railway.app/api';
+        let currentToken = null;
+        
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('loginResult');
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentToken = data.token;
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `Login successful! 
+Token: ${data.token.substring(0, 20)}...
+User: ${JSON.stringify(data.user, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `Login failed: ${data.error}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Login error: ${error.message}`;
+            }
+        }
+        
+        async function testStoriesAPI() {
+            await testAPI('/stories', 'GET');
+        }
+        
+        async function testTagsAPI() {
+            await testAPI('/tags', 'GET');
+        }
+        
+        async function testPendingStoriesAPI() {
+            await testAPI('/stories/admin/by-status/pending', 'GET');
+        }
+        
+        async function testStoryStatsAPI() {
+            await testAPI('/stories/admin/stats', 'GET');
+        }
+        
+        async function testAPI(endpoint, method = 'GET') {
+            const resultDiv = document.getElementById('apiResult');
+            const token = localStorage.getItem('token') || currentToken;
+            
+            if (!token) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'No token available. Please login first.';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`, {
+                    method,
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `${method} ${endpoint} - SUCCESS (${response.status})
+Data count: ${Array.isArray(data) ? data.length : 'Not an array'}
+Response: ${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `${method} ${endpoint} - FAILED (${response.status})
+Error: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `${method} ${endpoint} - ERROR
+${error.message}`;
+            }
+        }
+        
+        function testFrontendFunctions() {
+            const resultDiv = document.getElementById('frontendResult');
+            const results = [];
+            
+            // Test if window.API_URL is set
+            results.push(`window.API_URL: ${window.API_URL || 'NOT SET'}`);
+            
+            // Test if functions exist
+            const functionsToTest = [
+                'showTab',
+                'loadStoriesForApproval', 
+                'loadTeacherRequests',
+                'loadTags'
+            ];
+            
+            functionsToTest.forEach(funcName => {
+                if (typeof window[funcName] === 'function') {
+                    results.push(`✅ ${funcName}: Available`);
+                } else {
+                    results.push(`❌ ${funcName}: NOT Available`);
+                }
+            });
+            
+            // Test localStorage
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            results.push(`localStorage token: ${token ? '✅ Present' : '❌ Missing'}`);
+            results.push(`localStorage user: ${user ? '✅ Present' : '❌ Missing'}`);
+            
+            resultDiv.className = 'result';
+            resultDiv.textContent = results.join('\n');
+        }
+        
+        function testDOMElements() {
+            const resultDiv = document.getElementById('domResult');
+            const elements = [
+                'storiesApprovalTable',
+                'tagsList',
+                'totalStories',
+                'totalTags',
+                'pendingStories'
+            ];
+            
+            const results = elements.map(id => {
+                const element = document.getElementById(id);
+                return `${id}: ${element ? '✅ Found' : '❌ Not Found'}`;
+            });
+            
+            // Test tab buttons
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            results.push(`Tab buttons found: ${tabButtons.length}`);
+            
+            resultDiv.className = 'result';
+            resultDiv.textContent = results.join('\n');
+        }
+        
+        // Auto-load token if available
+        window.addEventListener('load', function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                currentToken = token;
+                console.log('Token loaded from localStorage');
+            }
+        });
+    </script>
+</body>
+</html>
