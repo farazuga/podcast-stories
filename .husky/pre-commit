@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Run tests before commit
+./run-tests.sh api
+
+# Check for common issues
+echo "🔍 Checking for secrets..."
+if grep -r "password.*=" --exclude-dir=node_modules --exclude="*.md" .; then
+    echo "❌ Potential hardcoded passwords found!"
+    exit 1
+fi
+
+echo "✅ Pre-commit checks passed"

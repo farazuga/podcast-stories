@@ -69,7 +69,8 @@ podcast-stories/
 │   │
 │   ├── migrations/                  # Database migrations
 │   │   ├── 007_create_user_favorites.sql    # Favorites functionality
-│   │   └── 008_create_analytics_tables.sql  # Analytics and tracking
+│   │   ├── 008_create_analytics_tables.sql  # Analytics and tracking
+│   │   └── 009_phase1_user_email_migration.sql  # Phase 1: Email authentication & data reset
 │   │
 │   ├── routes/                      # API endpoint handlers
 │   │   ├── auth.js                  # Authentication endpoints
@@ -167,21 +168,28 @@ The application uses a **hybrid separation approach**:
 
 ### Core Tables
 
-#### `users` Table
-**Purpose:** Central user management for all user types
+#### `users` Table  
+**Purpose:** Central user management for all user types (Updated in Phase 1 for email-based authentication)
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `id` | SERIAL PRIMARY KEY | Unique user identifier |
-| `username` | VARCHAR(50) UNIQUE | Login username |
-| `password` | VARCHAR(255) | Bcrypt hashed password |
-| `email` | VARCHAR(255) | User email address |
+| `username` | VARCHAR(50) NULL | Login username (nullable after Phase 1, kept for backward compatibility) |
+| `password` | VARCHAR(255) NOT NULL | Bcrypt hashed password |
+| `email` | VARCHAR(255) NOT NULL UNIQUE | **Primary login identifier** - User email address |
 | `name` | VARCHAR(255) | Full display name |
-| `student_id` | VARCHAR(50) | Student identification number |
-| `role` | VARCHAR(20) | User role: 'amitrace_admin', 'teacher', 'student' |
+| `student_id` | VARCHAR(50) | Student identification number (added in Phase 1) |
+| `role` | VARCHAR(20) | User role: 'amitrace_admin', 'teacher', 'student' (constraint updated in Phase 1) |
 | `school_id` | INTEGER | Foreign key to schools table |
 | `teacher_id` | INTEGER | Foreign key to teacher (for students) |
 | `created_at` | TIMESTAMP | Account creation date |
+
+**Phase 1 Schema Changes:**
+- **Email-based Authentication:** Email is now the primary login identifier with unique constraint
+- **Username Optional:** Username field made nullable for new email-based accounts
+- **Role Constraint:** Updated to enforce three-tier system ('amitrace_admin', 'teacher', 'student')
+- **Backward Compatibility:** Username login still supported for existing accounts
+- **Default Accounts:** Three test accounts created: admin@vidpod.com, teacher@vidpod.com, student@vidpod.com
 
 #### `schools` Table
 **Purpose:** Educational institution management
@@ -1792,7 +1800,165 @@ app.use((req, res, next) => {
 
 ---
 
-## 9. Recent Updates
+## 9. Role-based Enhancement Implementation Plan
+
+### 6-Phase Implementation Strategy
+
+VidPOD is undergoing a comprehensive role-based enhancement following a structured 6-phase approach. This plan was developed to systematically improve the user experience, add advanced features, and establish a robust foundation for future development.
+
+#### Phase 1: Email-based Authentication & Database Reset ✅ COMPLETED
+**Status:** Completed August 2025  
+**Objective:** Clean slate with email-based authentication system
+
+**Deliverables:**
+- ✅ Complete database reset and migration
+- ✅ Email as primary login identifier  
+- ✅ Three-tier role system (amitrace_admin, teacher, student)
+- ✅ Default test accounts with known credentials
+- ✅ Backward compatibility for username login
+- ✅ Role-based redirect system
+- ✅ Comprehensive testing suite
+
+#### Phase 2: Story Approval System 📋 PENDING
+**Objective:** Implement story approval workflow for content moderation
+
+**Planned Features:**
+- Story status field (draft, pending, approved, rejected)
+- Admin approval interface and endpoints
+- Story submission workflow
+- Filter stories by approval status
+- Email notifications for approval decisions
+
+#### Phase 3: Dashboard/Stories Separation 📋 PENDING  
+**Objective:** Separate dashboard and story browsing for better UX
+
+**Planned Features:**
+- Dedicated Stories page for browsing
+- Updated navigation menu structure
+- Clear separation of user dashboard vs content browsing
+- Improved information architecture
+
+#### Phase 4: List View & Multi-select 📋 PENDING
+**Objective:** Advanced story management with bulk operations
+
+**Planned Features:**
+- List view toggle for stories
+- Multi-select checkboxes
+- Bulk actions (favorite, export, delete)
+- CSV/PDF export functionality
+- Enhanced story management tools
+
+#### Phase 5: Class Code Auto-population 📋 PENDING
+**Objective:** Improve class management and student enrollment UX
+
+**Planned Features:**
+- Auto-display class codes in teacher dashboard
+- Copy-to-clipboard functionality
+- Enhanced student class joining experience
+- Enrollment confirmation and feedback
+
+#### Phase 6: Favorites/Stars System 📋 PENDING
+**Objective:** Complete favorites functionality with analytics
+
+**Planned Features:**
+- Star rating system for stories
+- User favorites page
+- Popular stories ranking
+- Favorites analytics for teachers
+- Engagement tracking and insights
+
+### Implementation Methodology
+
+**Approach:**
+- **Incremental Delivery:** Each phase builds upon the previous
+- **Testing Focus:** Comprehensive testing at each phase
+- **Backward Compatibility:** Maintain existing functionality
+- **User-Centric:** Each phase improves specific user workflows
+
+**Quality Assurance:**
+- Jest unit testing for backend APIs
+- Playwright end-to-end testing
+- Manual testing with debug guides
+- Production verification before next phase
+
+**Documentation:**
+- Phase-specific debug guides
+- Updated technical documentation
+- Migration scripts and procedures
+- User acceptance criteria
+
+---
+
+## 10. Recent Updates
+
+### Phase 1: Email-based Authentication Implementation (August 2025)
+
+#### Complete Database Migration and Schema Restructure
+**Completed:** Phase 1 of 6-phase role-based enhancement plan successfully implemented
+
+**Major Changes:**
+- ✅ **Database Migration:** Complete data reset with clean slate approach
+- ✅ **Email Authentication:** Primary login identifier changed from username to email
+- ✅ **Schema Updates:** Users table restructured for three-tier role system
+- ✅ **Default Accounts:** Three test accounts created with known credentials
+- ✅ **Backward Compatibility:** Username login still supported for transition
+
+**Database Schema Discoveries:**
+During Phase 1 implementation, we discovered the actual database structure differed from initial documentation:
+
+**Existing Tables Found:**
+- `classes`, `interviewees`, `password_reset_tokens`, `schools`, `story_ideas`
+- `story_interviewees`, `story_tags`, `tags`, `teacher_requests`, `user_classes`, `users`
+
+**Users Table Actual Structure:**
+```sql
+-- As discovered during migration
+id: integer NOT NULL
+username: character varying NOT NULL (made nullable in Phase 1)
+password: character varying NOT NULL  
+email: character varying NOT NULL (unique constraint added in Phase 1)
+name: character varying NULL
+student_id: character varying NULL (utilized in Phase 1)
+teacher_id: integer NULL
+school_id: integer NULL
+school: character varying NULL (legacy field)
+role: character varying NULL (constraint added in Phase 1)
+created_at: timestamp without time zone NULL
+```
+
+**Migration Challenges Resolved:**
+- **Foreign Key Dependencies:** Circular references between users and schools tables
+- **Constraint Conflicts:** Username uniqueness constraint had to be dropped
+- **Data Clearing Strategy:** Used TRUNCATE CASCADE to handle complex relationships
+- **Sequence Reset:** All auto-increment sequences reset to start fresh
+
+**New Default Test Accounts:**
+```
+admin@vidpod.com   / rumi&amaml (amitrace_admin)
+teacher@vidpod.com / rumi&amaml (teacher) 
+student@vidpod.com / rumi&amaml (student)
+```
+
+**Technical Implementation:**
+- **Authentication API:** Updated to support both email and username (backward compatible)
+- **Frontend Updates:** Login form changed to email field with role-based redirects
+- **JWT Tokens:** Enhanced to include email as primary identifier
+- **Testing:** Comprehensive Jest test suite (15+ test cases) created and passing
+
+**Files Modified:**
+- `backend/migrations/009_phase1_user_email_migration.sql` - Complete migration script
+- `backend/routes/auth.js` - Email-based authentication endpoints
+- `frontend/index.html` - Login form updated for email input
+- `frontend/js/auth.js` - Role-based redirects and email handling
+- `backend/tests/auth-email.test.js` - Comprehensive test suite
+- `debug-phase1.md` - Complete implementation guide
+
+**System Status:** 
+- ✅ **Production Ready:** All changes deployed and tested
+- ✅ **API Verified:** Email authentication endpoints working correctly
+- ✅ **Frontend Updated:** Login form accepts email addresses
+- ✅ **Role-based Flow:** Users redirect to appropriate dashboards
+- 🚀 **Ready for Phase 2:** Story approval system implementation
 
 ### Critical Admin Page Fixes (August 2025)
 
