@@ -14,10 +14,12 @@ const pool = new Pool({
 // Configure multer for CSV uploads
 const upload = multer({ dest: 'uploads/' });
 
-// Get all stories with filters
+// Get all stories with filters (Phase 2: Approval-aware)
 router.get('/', verifyToken, async (req, res) => {
   try {
-    const { search, tags, startDate, endDate, interviewee } = req.query;
+    const { search, tags, startDate, endDate, interviewee, status } = req.query;
+    const userRole = req.user.role;
+    const userId = req.user.id;
     
     let query = `
       SELECT 
@@ -35,6 +37,20 @@ router.get('/', verifyToken, async (req, res) => {
       LEFT JOIN interviewees i ON si.interviewee_id = i.id
       WHERE 1=1
     `;
+    
+    // Phase 2: Apply approval status filtering based on user role
+    if (userRole === 'amitrace_admin') {
+      // Admins can see all stories, optionally filter by status
+      if (status) {
+        query += ` AND s.approval_status = '${status}'`;
+      }
+    } else if (userRole === 'teacher') {
+      // Teachers can see approved stories + their own stories
+      query += ` AND (s.approval_status = 'approved' OR s.uploaded_by = ${userId})`;
+    } else {
+      // Students can only see approved stories + their own stories
+      query += ` AND (s.approval_status = 'approved' OR s.uploaded_by = ${userId})`;
+    }
     
     const params = [];
     let paramCounter = 1;
@@ -417,6 +433,284 @@ router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
         client.release();
       }
     });
+});
+
+// ==============================================================================
+// PHASE 2: STORY APPROVAL ENDPOINTS (Admin only)
+// ==============================================================================
+
+// Get stories by approval status (admin/teacher view)
+router.get('/admin/pending', verifyToken, isAdmin, async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        s.*, 
+        u.username as uploaded_by_name,
+        u.email as uploaded_by_email,
+        u.name as uploaded_by_fullname,
+        array_agg(DISTINCT t.tag_name) as tags,
+        array_agg(DISTINCT i.name) as interviewees
+      FROM story_ideas s
+      LEFT JOIN users u ON s.uploaded_by = u.id
+      LEFT JOIN story_tags st ON s.id = st.story_id
+      LEFT JOIN tags t ON st.tag_id = t.id
+      LEFT JOIN story_interviewees si ON s.id = si.story_id
+      LEFT JOIN interviewees i ON si.interviewee_id = i.id
+      WHERE s.approval_status = 'pending'
+      GROUP BY s.id, u.username, u.email, u.name
+      ORDER BY s.submitted_at ASC
+    `;
+    
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching pending stories:', error);
+    res.status(500).json({ error: 'Failed to fetch pending stories' });
+  }
+});
+
+// Get stories by status for admin dashboard
+router.get('/admin/by-status/:status', verifyToken, isAdmin, async (req, res) => {
+  try {
+    const { status } = req.params;
+    const validStatuses = ['draft', 'pending', 'approved', 'rejected'];
+    
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status. Must be one of: ' + validStatuses.join(', ') });
+    }
+    
+    const query = `
+      SELECT 
+        s.*, 
+        u.username as uploaded_by_name,
+        u.email as uploaded_by_email,
+        u.name as uploaded_by_fullname,
+        approver.username as approved_by_name,
+        approver.name as approved_by_fullname,
+        array_agg(DISTINCT t.tag_name) as tags,
+        array_agg(DISTINCT i.name) as interviewees
+      FROM story_ideas s
+      LEFT JOIN users u ON s.uploaded_by = u.id
+      LEFT JOIN users approver ON s.approved_by = approver.id
+      LEFT JOIN story_tags st ON s.id = st.story_id
+      LEFT JOIN tags t ON st.tag_id = t.id
+      LEFT JOIN story_interviewees si ON s.id = si.story_id
+      LEFT JOIN interviewees i ON si.interviewee_id = i.id
+      WHERE s.approval_status = $1
+      GROUP BY s.id, u.username, u.email, u.name, approver.username, approver.name
+      ORDER BY s.uploaded_date DESC
+    `;
+    
+    const result = await pool.query(query, [status]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching stories by status:', error);
+    res.status(500).json({ error: 'Failed to fetch stories by status' });
+  }
+});
+
+// Submit story for approval (user action)
+router.patch('/:id/submit', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    
+    // Check if user owns the story or is admin
+    const storyCheck = await pool.query(
+      'SELECT uploaded_by, approval_status FROM story_ideas WHERE id = $1',
+      [id]
+    );
+    
+    if (storyCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Story not found' });
+    }
+    
+    const story = storyCheck.rows[0];
+    if (story.uploaded_by !== userId && req.user.role !== 'amitrace_admin') {
+      return res.status(403).json({ error: 'Access denied. You can only submit your own stories.' });
+    }
+    
+    if (story.approval_status !== 'draft') {
+      return res.status(400).json({ error: 'Story can only be submitted from draft status' });
+    }
+    
+    // Update status to pending
+    const result = await pool.query(
+      `UPDATE story_ideas 
+       SET approval_status = 'pending', submitted_at = CURRENT_TIMESTAMP 
+       WHERE id = $1 
+       RETURNING *`,
+      [id]
+    );
+    
+    res.json({
+      message: 'Story submitted for approval',
+      story: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error submitting story for approval:', error);
+    res.status(500).json({ error: 'Failed to submit story for approval' });
+  }
+});
+
+// Approve story (admin only)
+router.patch('/:id/approve', verifyToken, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { notes } = req.body;
+    const adminId = req.user.id;
+    
+    // Check if story exists and is in pending status
+    const storyCheck = await pool.query(
+      'SELECT approval_status FROM story_ideas WHERE id = $1',
+      [id]
+    );
+    
+    if (storyCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Story not found' });
+    }
+    
+    if (storyCheck.rows[0].approval_status !== 'pending') {
+      return res.status(400).json({ error: 'Story must be in pending status to approve' });
+    }
+    
+    // Update story to approved
+    const result = await pool.query(
+      `UPDATE story_ideas 
+       SET approval_status = 'approved', 
+           approved_by = $1, 
+           approved_at = CURRENT_TIMESTAMP,
+           approval_notes = $2
+       WHERE id = $3 
+       RETURNING *`,
+      [adminId, notes || null, id]
+    );
+    
+    res.json({
+      message: 'Story approved successfully',
+      story: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error approving story:', error);
+    res.status(500).json({ error: 'Failed to approve story' });
+  }
+});
+
+// Reject story (admin only)
+router.patch('/:id/reject', verifyToken, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { notes } = req.body;
+    const adminId = req.user.id;
+    
+    if (!notes) {
+      return res.status(400).json({ error: 'Rejection notes are required' });
+    }
+    
+    // Check if story exists and is in pending status
+    const storyCheck = await pool.query(
+      'SELECT approval_status FROM story_ideas WHERE id = $1',
+      [id]
+    );
+    
+    if (storyCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Story not found' });
+    }
+    
+    if (storyCheck.rows[0].approval_status !== 'pending') {
+      return res.status(400).json({ error: 'Story must be in pending status to reject' });
+    }
+    
+    // Update story to rejected
+    const result = await pool.query(
+      `UPDATE story_ideas 
+       SET approval_status = 'rejected', 
+           approved_by = $1, 
+           approved_at = CURRENT_TIMESTAMP,
+           approval_notes = $2
+       WHERE id = $3 
+       RETURNING *`,
+      [adminId, notes, id]
+    );
+    
+    res.json({
+      message: 'Story rejected',
+      story: result.rows[0],
+      notes: notes
+    });
+  } catch (error) {
+    console.error('Error rejecting story:', error);
+    res.status(500).json({ error: 'Failed to reject story' });
+  }
+});
+
+// Get approval history for a story (admin only)
+router.get('/:id/approval-history', verifyToken, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const query = `
+      SELECT 
+        ah.*,
+        u.username as changed_by_name,
+        u.name as changed_by_fullname
+      FROM story_approval_history ah
+      LEFT JOIN users u ON ah.changed_by = u.id
+      WHERE ah.story_id = $1
+      ORDER BY ah.changed_at DESC
+    `;
+    
+    const result = await pool.query(query, [id]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching approval history:', error);
+    res.status(500).json({ error: 'Failed to fetch approval history' });
+  }
+});
+
+// Get approval statistics (admin dashboard)
+router.get('/admin/stats', verifyToken, isAdmin, async (req, res) => {
+  try {
+    const statsQuery = `
+      SELECT 
+        approval_status,
+        COUNT(*) as count
+      FROM story_ideas 
+      GROUP BY approval_status
+      
+      UNION ALL
+      
+      SELECT 
+        'total' as approval_status,
+        COUNT(*) as count
+      FROM story_ideas
+    `;
+    
+    const recentQuery = `
+      SELECT 
+        COUNT(*) as count
+      FROM story_ideas 
+      WHERE approval_status = 'pending' 
+      AND submitted_at > NOW() - INTERVAL '7 days'
+    `;
+    
+    const [statsResult, recentResult] = await Promise.all([
+      pool.query(statsQuery),
+      pool.query(recentQuery)
+    ]);
+    
+    const stats = {};
+    statsResult.rows.forEach(row => {
+      stats[row.approval_status] = parseInt(row.count);
+    });
+    
+    stats.pending_this_week = parseInt(recentResult.rows[0].count);
+    
+    res.json(stats);
+  } catch (error) {
+    console.error('Error fetching approval stats:', error);
+    res.status(500).json({ error: 'Failed to fetch approval statistics' });
+  }
 });
 
 module.exports = router;
