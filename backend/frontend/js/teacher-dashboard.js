@@ -1,5 +1,6 @@
-// API base URL
-const API_URL = 'https://podcast-stories-production.up.railway.app/api';
+// API base URL - use global API_URL from auth.js with fallback
+window.API_URL = window.API_URL || 'https://podcast-stories-production.up.railway.app/api';
+const API_URL = window.API_URL;
 
 // Global variables
 let currentUser = null;
@@ -26,6 +27,24 @@ function checkAuth() {
         return false;
     }
     
+    // Check if token is expired
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Math.floor(Date.now() / 1000);
+        
+        if (payload.exp && currentTime >= payload.exp) {
+            console.log('Token expired, redirecting to login');
+            localStorage.clear();
+            window.location.href = '/index.html';
+            return false;
+        }
+    } catch (error) {
+        console.error('Invalid token format:', error);
+        localStorage.clear();
+        window.location.href = '/index.html';
+        return false;
+    }
+    
     // Check if user is a teacher
     if (user.role !== 'teacher' && user.role !== 'admin' && user.role !== 'amitrace_admin') {
         window.location.href = '/dashboard.html';
@@ -35,13 +54,47 @@ function checkAuth() {
     return true;
 }
 
+async function makeAuthenticatedRequest(url, options = {}) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        throw new Error('No authentication token');
+    }
+    
+    const defaultOptions = {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    };
+    
+    const finalOptions = { ...defaultOptions, ...options };
+    
+    try {
+        const response = await fetch(url, finalOptions);
+        
+        // Handle token expiration
+        if (response.status === 401) {
+            console.log('Authentication failed, clearing token and redirecting');
+            localStorage.clear();
+            window.location.href = '/index.html';
+            throw new Error('Authentication failed');
+        }
+        
+        return response;
+    } catch (error) {
+        console.error('Authenticated request failed:', error);
+        throw error;
+    }
+}
+
 async function loadUserInfo() {
     try {
         const user = JSON.parse(localStorage.getItem('user'));
         currentUser = user;
         
-        document.getElementById('userInfo').textContent = `${user.username}`;
-        document.getElementById('teacherName').textContent = user.name || user.username;
+        document.getElementById('userInfo').textContent = user.name || user.email;
+        document.getElementById('teacherName').textContent = user.name || user.email;
         
         // If user has a school, display it
         if (user.school) {
@@ -54,11 +107,7 @@ async function loadUserInfo() {
 
 async function loadClasses() {
     try {
-        const response = await fetch(`${API_URL}/classes`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
+        const response = await makeAuthenticatedRequest(`${API_URL}/classes`);
         
         if (response.ok) {
             myClasses = await response.json();
@@ -153,12 +202,8 @@ async function createClass(e) {
     
     try {
         console.log('Making API request to create class...');
-        const response = await fetch(`${API_URL}/classes`, {
+        const response = await makeAuthenticatedRequest(`${API_URL}/classes`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
             body: JSON.stringify({
                 class_name: className,
                 subject: subject || null,
@@ -195,11 +240,7 @@ async function viewClassDetails(classId) {
     currentClassId = classId;
     
     try {
-        const response = await fetch(`${API_URL}/classes/${classId}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
+        const response = await makeAuthenticatedRequest(`${API_URL}/classes/${classId}`);
         
         if (response.ok) {
             currentClassData = await response.json();
