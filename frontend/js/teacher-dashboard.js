@@ -136,35 +136,51 @@ function displayClasses() {
     }
     
     classesGrid.innerHTML = myClasses.map(classItem => `
-        <div class="class-card">
-            <div class="class-header">
-                <h3>${classItem.class_name}</h3>
+        <div class="class-card-new">
+            <div class="class-card-header">
+                <h2 class="class-title">${classItem.class_name}</h2>
+                <div class="class-code-pill" onclick="copyCode('${classItem.class_code}')" title="Click to copy class code">Code: ${classItem.class_code}</div>
             </div>
-            <div class="class-code-section">
-                <div class="class-code-display">
-                    <span class="class-code-label">Class Code:</span>
-                    <span class="class-code-large">${classItem.class_code}</span>
-                    <button class="btn btn-outline btn-tiny" onclick="copyCode('${classItem.class_code}')" title="Copy class code">
-                        📋
-                    </button>
+            
+            <div class="class-info-grid">
+                ${classItem.subject ? `
+                <div class="info-row">
+                    <span class="info-label">Subject:</span>
+                    <span class="info-value">${classItem.subject}</span>
+                </div>
+                ` : ''}
+                
+                <div class="info-row">
+                    <span class="info-label">Teacher:</span>
+                    <span class="info-value">${currentUser ? (currentUser.name || currentUser.email) : 'You'}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">School:</span>
+                    <span class="info-value">${classItem.school_name || 'VidPOD Default School'}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Students:</span>
+                    <span class="info-value">${classItem.student_count || 0}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Joined:</span>
+                    <span class="info-value">${formatDate(classItem.created_at)}</span>
                 </div>
             </div>
-            <div class="class-details">
-                ${classItem.subject ? `<p><strong>📚 Subject:</strong> <span>${classItem.subject}</span></p>` : ''}
-                ${classItem.description ? `<div class="class-description"><strong>📝 Description:</strong><br>${classItem.description}</div>` : ''}
-                <p><strong>👥 Students:</strong> <span>${classItem.student_count || 0}</span></p>
-                <p><strong>🏫 School:</strong> <span>${classItem.school_name}</span></p>
-                <p><strong>📅 Created:</strong> <span>${formatDate(classItem.created_at)}</span></p>
+            
+            ${classItem.description ? `
+            <div class="class-description-new">
+                <strong>Description:</strong><br>
+                ${classItem.description}
             </div>
-            <div class="class-actions">
-                <button class="btn btn-primary" onclick="viewClassDetails(${classItem.id})">
-                    👀 View Details
-                </button>
-                <button class="btn btn-secondary" onclick="copyCode('${classItem.class_code}')">
-                    📋 Copy Code
-                </button>
-                <button class="btn btn-outline" onclick="shareClassCode('${classItem.class_code}', '${classItem.class_name}')">
-                    📤 Share
+            ` : ''}
+            
+            <div class="class-actions-new">
+                <button class="btn-leave" onclick="viewClassDetails(${classItem.id})">
+                    View Details
                 </button>
             </div>
         </div>
