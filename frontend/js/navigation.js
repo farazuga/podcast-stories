@@ -141,30 +141,97 @@ const VidPODNav = {
      * Update role-based visibility of navigation elements
      */
     updateRoleVisibility() {
-        if (!this.currentUser?.role) return;
+        if (!this.currentUser?.role) {
+            console.warn('No user role found, hiding all role-specific elements');
+            // Hide all role-specific elements if no role
+            document.querySelectorAll('[data-role]').forEach(element => {
+                element.style.display = 'none';
+            });
+            return;
+        }
 
-        const userRole = this.currentUser.role;
+        const userRole = this.currentUser.role.toLowerCase().trim();
+        console.log(`Updating navigation visibility for role: ${userRole}`);
 
         // Handle elements with data-role attribute
         document.querySelectorAll('[data-role]').forEach(element => {
-            const allowedRoles = element.getAttribute('data-role').split(',');
-            if (allowedRoles.includes(userRole)) {
-                element.style.display = '';
-            } else {
-                element.style.display = 'none';
-            }
+            const allowedRoles = element.getAttribute('data-role')
+                .toLowerCase()
+                .split(',')
+                .map(role => role.trim());
+            
+            const shouldShow = allowedRoles.includes(userRole);
+            element.style.display = shouldShow ? '' : 'none';
+            
+            // Debug logging
+            const elementDesc = element.textContent?.trim() || element.getAttribute('href') || 'unnamed element';
+            console.log(`Element "${elementDesc}": roles=${allowedRoles.join(',')}, userRole=${userRole}, visible=${shouldShow}`);
         });
 
-        // Handle legacy role-based visibility
-        const adminLinks = document.querySelectorAll('#adminLink, [href*="admin"]');
-        const teacherLinks = document.querySelectorAll('#teacherLink, [href*="teacher-dashboard"]');
+        // Handle legacy role-based visibility (for backward compatibility)
+        const adminLinks = document.querySelectorAll('#adminLink, [href*="admin"]:not([data-role])');
+        const teacherLinks = document.querySelectorAll('#teacherLink, [href*="teacher-dashboard"]:not([data-role])');
 
         adminLinks.forEach(link => {
-            link.style.display = userRole === 'admin' ? '' : 'none';
+            const shouldShow = userRole === 'admin';
+            link.style.display = shouldShow ? '' : 'none';
+            console.log(`Legacy admin link: visible=${shouldShow}`);
         });
 
         teacherLinks.forEach(link => {
-            link.style.display = ['teacher', 'admin'].includes(userRole) ? '' : 'none';
+            const shouldShow = ['teacher', 'admin'].includes(userRole);
+            link.style.display = shouldShow ? '' : 'none';
+            console.log(`Legacy teacher link: visible=${shouldShow}`);
+        });
+
+        // Specific role-based validation
+        this.validateRoleBasedAccess(userRole);
+    },
+
+    /**
+     * Validate that role-based access is working correctly
+     * @param {string} userRole - Current user role
+     */
+    validateRoleBasedAccess(userRole) {
+        const expectations = {
+            'student': {
+                visible: ['dashboard', 'stories', 'add-story'],
+                hidden: ['teacher-dashboard', 'admin', 'csv-import']
+            },
+            'teacher': {
+                visible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard', 'csv-import'],
+                hidden: ['admin']
+            },
+            'admin': {
+                visible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard', 'admin', 'csv-import'],
+                hidden: []
+            }
+        };
+
+        const expected = expectations[userRole];
+        if (!expected) {
+            console.warn(`Unknown user role: ${userRole}`);
+            return;
+        }
+
+        // Check visible items
+        expected.visible.forEach(item => {
+            const elements = document.querySelectorAll(`[data-page="${item}"], [data-role*="${userRole}"]`);
+            elements.forEach(el => {
+                if (el.style.display === 'none') {
+                    console.error(`❌ ${item} should be visible for ${userRole} but is hidden`);
+                }
+            });
+        });
+
+        // Check hidden items
+        expected.hidden.forEach(item => {
+            const elements = document.querySelectorAll(`[data-page="${item}"]`);
+            elements.forEach(el => {
+                if (el.style.display !== 'none') {
+                    console.error(`❌ ${item} should be hidden for ${userRole} but is visible`);
+                }
+            });
         });
     },
 
