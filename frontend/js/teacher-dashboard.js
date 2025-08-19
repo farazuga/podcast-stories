@@ -150,11 +150,11 @@ function displayClasses() {
                 </div>
             </div>
             <div class="class-details">
-                ${classItem.subject ? `<p><strong>📚 Subject:</strong> ${classItem.subject}</p>` : ''}
-                ${classItem.description ? `<p class="class-description"><strong>📝 Description:</strong> ${classItem.description}</p>` : ''}
-                <p><strong>👥 Students:</strong> ${classItem.student_count || 0}</p>
-                <p><strong>🏫 School:</strong> ${classItem.school_name}</p>
-                <p><strong>📅 Created:</strong> ${formatDate(classItem.created_at)}</p>
+                ${classItem.subject ? `<p><strong>📚 Subject:</strong> <span>${classItem.subject}</span></p>` : ''}
+                ${classItem.description ? `<div class="class-description"><strong>📝 Description:</strong><br>${classItem.description}</div>` : ''}
+                <p><strong>👥 Students:</strong> <span>${classItem.student_count || 0}</span></p>
+                <p><strong>🏫 School:</strong> <span>${classItem.school_name}</span></p>
+                <p><strong>📅 Created:</strong> <span>${formatDate(classItem.created_at)}</span></p>
             </div>
             <div class="class-actions">
                 <button class="btn btn-primary" onclick="viewClassDetails(${classItem.id})">
