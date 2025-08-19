@@ -39,8 +39,9 @@ async function loadUserInfo() {
         const user = JSON.parse(localStorage.getItem('user'));
         currentUser = user;
         
-        // Display user info
-        document.getElementById('userInfo').textContent = user.name || user.username;
+        // Display user info - handle Phase 1 user data structure
+        const displayName = user.name || user.email || user.username || 'User';
+        document.getElementById('userInfo').textContent = displayName;
         
         // Display role badge
         const roleBadge = document.getElementById('userRoleBadge');

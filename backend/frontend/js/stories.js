@@ -108,7 +108,8 @@ async function loadUserInfo() {
 function updateUserDisplay() {
     const userInfo = document.getElementById('userInfo');
     if (userInfo && currentUser) {
-        userInfo.textContent = `${currentUser.name || currentUser.username}`;
+        const displayName = currentUser.name || currentUser.email || currentUser.username || 'User';
+        userInfo.textContent = displayName;
     }
     
     // Update UI elements based on user role

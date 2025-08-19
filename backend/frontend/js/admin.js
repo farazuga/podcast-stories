@@ -75,7 +75,8 @@ async function loadUserInfo() {
             id: user.id
         });
         
-        document.getElementById('userInfo').textContent = `${user.username} (${user.role})`;
+        const displayName = user.name || user.email || user.username || 'User';
+        document.getElementById('userInfo').textContent = `${displayName} (${user.role})`;
         
         // Verify admin permissions with backend
         const token = localStorage.getItem('token');

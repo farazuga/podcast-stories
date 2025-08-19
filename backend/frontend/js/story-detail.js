@@ -37,7 +37,8 @@ async function loadUserInfo() {
         const user = JSON.parse(localStorage.getItem('user'));
         currentUser = user;
         
-        document.getElementById('userInfo').textContent = `${user.username} (${user.role})`;
+        const displayName = user.name || user.email || user.username || 'User';
+        document.getElementById('userInfo').textContent = `${displayName} (${user.role})`;
         
         // Show admin link if user is admin
         if (user.role === 'admin') {

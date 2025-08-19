@@ -234,7 +234,8 @@ async function loadUserInfo() {
         // Update UI
         const userInfoElement = document.getElementById('userInfo');
         if (userInfoElement) {
-            userInfoElement.textContent = `${user.username} (${user.role})`;
+            const displayName = user.name || user.email || user.username || 'User';
+            userInfoElement.textContent = `${displayName} (${user.role})`;
             debugLog('User info UI updated');
         } else {
             debugError('userInfo element not found');
