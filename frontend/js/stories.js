@@ -7,7 +7,7 @@ let filteredStories = [];
 let currentUser = null;
 let allTags = [];
 let currentPage = 0;
-let storiesPerPage = 12;
+let storiesPerPage = 50;
 let currentViewMode = 'grid';
 let selectedStories = new Set();
 let selectionMode = false;
@@ -113,7 +113,7 @@ function displayStories() {
     
     const startIndex = currentPage * storiesPerPage;
     const endIndex = startIndex + storiesPerPage;
-    const storiesToShow = filteredStories.slice(0, endIndex);
+    const storiesToShow = filteredStories.slice(startIndex, endIndex);
     
     if (storiesToShow.length === 0) {
         showNoResults();
@@ -127,16 +127,8 @@ function displayStories() {
     container.className = currentViewMode === 'grid' ? 'stories-grid' : 'stories-list';
     container.innerHTML = storiesToShow.map(story => renderStoryCard(story)).join('');
     
-    // Show/hide load more button
-    const loadMoreSection = document.getElementById('loadMoreSection');
-    const loadMoreBtn = document.getElementById('loadMoreBtn');
-    
-    if (filteredStories.length > storiesToShow.length) {
-        loadMoreSection.style.display = 'block';
-        loadMoreBtn.textContent = `📚 Load More Stories (${filteredStories.length - storiesToShow.length} remaining)`;
-    } else {
-        loadMoreSection.style.display = 'none';
-    }
+    // Show/hide pagination
+    updatePaginationControls();
 }
 
 function renderStoryCard(story) {
@@ -239,9 +231,59 @@ function updateResultsCount() {
     const countElement = document.getElementById('resultsCount');
     if (countElement) {
         const total = filteredStories.length;
-        const shown = Math.min(filteredStories.length, (currentPage + 1) * storiesPerPage);
-        countElement.textContent = `Showing ${shown} of ${total} stories`;
+        const startIndex = currentPage * storiesPerPage;
+        const endIndex = Math.min(startIndex + storiesPerPage, total);
+        const shown = Math.max(0, endIndex - startIndex);
+        
+        if (total === 0) {
+            countElement.textContent = 'No stories found';
+        } else {
+            countElement.textContent = `Showing ${startIndex + 1}-${endIndex} of ${total} stories`;
+        }
     }
+}
+
+function updatePaginationControls() {
+    const total = filteredStories.length;
+    const totalPages = Math.ceil(total / storiesPerPage);
+    const paginationElement = document.getElementById('paginationControls');
+    
+    if (!paginationElement) return;
+    
+    if (totalPages <= 1) {
+        paginationElement.style.display = 'none';
+        return;
+    }
+    
+    paginationElement.style.display = 'flex';
+    paginationElement.innerHTML = `
+        <button class="btn btn-outline" 
+                onclick="goToPage(${currentPage - 1})" 
+                ${currentPage === 0 ? 'disabled' : ''}>
+            ← Previous
+        </button>
+        <span class="pagination-info">
+            Page ${currentPage + 1} of ${totalPages}
+        </span>
+        <button class="btn btn-outline" 
+                onclick="goToPage(${currentPage + 1})" 
+                ${currentPage >= totalPages - 1 ? 'disabled' : ''}>
+            Next →
+        </button>
+    `;
+}
+
+function goToPage(page) {
+    const totalPages = Math.ceil(filteredStories.length / storiesPerPage);
+    
+    if (page < 0 || page >= totalPages) return;
+    
+    currentPage = page;
+    displayStories();
+    updateResultsCount();
+    
+    // Scroll to top of stories
+    document.getElementById('storiesContainer')?.scrollIntoView({ behavior: 'smooth' });
 }
 
 // View mode functions
@@ -330,11 +372,12 @@ function sortStories() {
     displayStories();
 }
 
-function loadMoreStories() {
-    currentPage++;
-    displayStories();
-    updateResultsCount();
-}
+// Remove loadMoreStories function as we now use pagination
+// function loadMoreStories() {
+//     currentPage++;
+//     displayStories();
+//     updateResultsCount();
+// }
 
 // Star rating system
 function renderStarRating(storyId, userRating, averageRating, ratingCount) {
@@ -910,7 +953,7 @@ window.setViewMode = setViewMode;
 window.applyFilters = applyFilters;
 window.clearFilters = clearFilters;
 window.sortStories = sortStories;
-window.loadMoreStories = loadMoreStories;
+window.goToPage = goToPage;
 window.viewStory = viewStory;
 window.editStory = editStory;
 window.toggleStorySelection = toggleStorySelection;
