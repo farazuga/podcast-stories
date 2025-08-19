@@ -535,8 +535,8 @@ function updateSearchStats() {
     }
 }
 
-// View mode functions (called by HTML buttons)
-window.setViewMode = function(mode) {
+// View mode functions (called by HTML buttons) - defined immediately for global access
+function setViewMode(mode) {
     currentViewMode = mode;
     
     // Update button states
@@ -552,10 +552,13 @@ window.setViewMode = function(mode) {
     displayStories();
     
     console.log(`View mode changed to: ${mode}`);
-};
+}
+
+// Make globally available
+window.setViewMode = setViewMode;
 
 // Selection functions (called by HTML buttons)
-window.toggleSelectAll = function() {
+function toggleSelectAll() {
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
     const storyCheckboxes = document.querySelectorAll('.story-checkbox');
     
@@ -576,9 +579,11 @@ window.toggleSelectAll = function() {
     }
     
     updateSelectionUI();
-};
+}
 
-window.updateSelection = function() {
+window.toggleSelectAll = toggleSelectAll;
+
+function updateSelection() {
     const storyCheckboxes = document.querySelectorAll('.story-checkbox');
     selectedStories.clear();
     
@@ -590,7 +595,9 @@ window.updateSelection = function() {
     
     selectionMode = selectedStories.size > 0;
     updateSelectionUI();
-};
+}
+
+window.updateSelection = updateSelection;
 
 function updateSelectionUI() {
     const selectionInfo = document.getElementById('selectionInfo');
@@ -638,7 +645,7 @@ function updateSelectionUI() {
 }
 
 // Search and filter functions (called by HTML)
-window.clearFilters = function() {
+function clearFilters() {
     // Clear all filter inputs
     const inputs = ['searchKeywords', 'searchTags', 'searchStartDate', 'searchEndDate', 'searchInterviewee'];
     inputs.forEach(id => {
@@ -657,9 +664,11 @@ window.clearFilters = function() {
     displayStories();
     
     console.log('Filters cleared');
-};
+}
 
-window.sortStories = function() {
+window.clearFilters = clearFilters;
+
+function sortStories() {
     const sortBy = document.getElementById('sortBy');
     if (!sortBy) return;
     
@@ -682,26 +691,28 @@ window.sortStories = function() {
     
     displayStories();
     console.log(`Stories sorted by: ${sortValue}`);
-};
+}
+
+window.sortStories = sortStories;
 
 // Bulk action functions (called by HTML buttons)
-window.bulkFavorite = function() {
+function bulkFavorite() {
     if (selectedStories.size === 0) return;
     
     console.log(`Adding ${selectedStories.size} stories to favorites`);
     // TODO: Implement bulk favorite functionality
     alert(`Adding ${selectedStories.size} stories to favorites (Feature coming soon)`);
-};
+}
 
-window.bulkExport = function() {
+function bulkExport() {
     if (selectedStories.size === 0) return;
     
     console.log(`Exporting ${selectedStories.size} stories`);
     // TODO: Implement bulk export functionality
     alert(`Exporting ${selectedStories.size} stories (Feature coming soon)`);
-};
+}
 
-window.bulkDelete = function() {
+function bulkDelete() {
     if (selectedStories.size === 0) return;
     
     if (confirm(`Are you sure you want to delete ${selectedStories.size} selected stories? This action cannot be undone.`)) {
@@ -709,9 +720,9 @@ window.bulkDelete = function() {
         // TODO: Implement bulk delete functionality
         alert(`Deleting ${selectedStories.size} stories (Feature coming soon)`);
     }
-};
+}
 
-window.clearSelection = function() {
+function clearSelection() {
     selectedStories.clear();
     selectionMode = false;
     
@@ -721,14 +732,22 @@ window.clearSelection = function() {
     
     updateSelectionUI();
     console.log('Selection cleared');
-};
+}
+
+// Make bulk functions globally available
+window.bulkFavorite = bulkFavorite;
+window.bulkExport = bulkExport;
+window.bulkDelete = bulkDelete;
+window.clearSelection = clearSelection;
 
 // Favorite functionality (placeholder)
-window.toggleFavorite = function(storyId) {
+function toggleFavorite(storyId) {
     console.log(`Toggle favorite for story ${storyId}`);
     // TODO: Implement favorite functionality
     alert('Favorite functionality coming soon!');
-};
+}
+
+window.toggleFavorite = toggleFavorite;
 
 // Make logout available globally
 window.logout = function() {
