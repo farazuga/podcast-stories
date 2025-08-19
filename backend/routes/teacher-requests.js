@@ -26,7 +26,7 @@ router.get('/', verifyToken, isAmitraceAdmin, async (req, res) => {
         tr.approved_at,
         s.school_name,
         s.id as school_id,
-        approved_by_user.username as approved_by_username
+        COALESCE(approved_by_user.name, approved_by_user.email) as approved_by_name
       FROM teacher_requests tr
       JOIN schools s ON tr.school_id = s.id
       LEFT JOIN users approved_by_user ON tr.approved_by = approved_by_user.id
@@ -75,7 +75,7 @@ router.get('/:id', verifyToken, isAmitraceAdmin, async (req, res) => {
         tr.approved_at,
         s.school_name,
         s.id as school_id,
-        approved_by_user.username as approved_by_username
+        COALESCE(approved_by_user.name, approved_by_user.email) as approved_by_name
       FROM teacher_requests tr
       JOIN schools s ON tr.school_id = s.id
       LEFT JOIN users approved_by_user ON tr.approved_by = approved_by_user.id
@@ -153,14 +153,14 @@ router.post('/', async (req, res) => {
 router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { username, password } = req.body;
+    const { password } = req.body;
     
-    console.log('Approving teacher request:', id, 'with username:', username);
+    console.log('Approving teacher request:', id);
     
     // Validate required fields
-    if (!username || !password) {
+    if (!password) {
       return res.status(400).json({ 
-        error: 'Username and password are required for teacher account creation' 
+        error: 'Password is required for teacher account creation' 
       });
     }
     
@@ -208,10 +208,10 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
       // Create user account
       console.log('Attempting to create user account...');
       const userResult = await pool.query(`
-        INSERT INTO users (username, email, password, role, name, school_id) 
-        VALUES ($1, $2, $3, $4, $5, $6) 
-        RETURNING id, username, email, role, name, school_id
-      `, [username, request.email, hashedPassword, 'teacher', request.name, request.school_id]);
+        INSERT INTO users (email, password, role, name, school_id) 
+        VALUES ($1, $2, $3, $4, $5) 
+        RETURNING id, email, role, name, school_id
+      `, [request.email, hashedPassword, 'teacher', request.name, request.school_id]);
       
       console.log('User account created successfully:', userResult.rows[0]);
       
@@ -233,7 +233,7 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
       let emailResult = await gmailService.sendTeacherApprovalEmail(
         request.email,
         request.name,
-        username,
+        request.email, // Use email as login
         password
       );
       
@@ -243,7 +243,7 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
         emailResult = await emailService.sendTeacherApprovalEmail(
           request.email,
           request.name,
-          username,
+          request.email, // Use email as login
           password
         );
       }

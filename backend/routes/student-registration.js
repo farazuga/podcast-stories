@@ -12,12 +12,12 @@ const pool = new Pool({
 // Student registration endpoint
 router.post('/register', async (req, res) => {
   try {
-    const { username, password, email, name, student_id, school_id } = req.body;
+    const { password, email, name, student_id, school_id } = req.body;
 
     // Validate required fields
-    if (!username || !password || !email || !name) {
+    if (!password || !email || !name) {
       return res.status(400).json({ 
-        error: 'Username, password, email, and name are required' 
+        error: 'Password, email, and name are required' 
       });
     }
 
@@ -29,13 +29,13 @@ router.post('/register', async (req, res) => {
 
     // Check if user already exists
     const userExists = await pool.query(
-      'SELECT * FROM users WHERE username = $1 OR email = $2',
-      [username, email]
+      'SELECT * FROM users WHERE email = $1',
+      [email]
     );
 
     if (userExists.rows.length > 0) {
       return res.status(400).json({ 
-        error: 'Username or email already exists' 
+        error: 'Email already exists' 
       });
     }
 
@@ -52,11 +52,10 @@ router.post('/register', async (req, res) => {
 
     // Create student user
     const newUser = await pool.query(`
-      INSERT INTO users (username, password, email, name, student_id, school_id, role) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7) 
-      RETURNING id, username, email, name, student_id, school_id, role
+      INSERT INTO users (password, email, name, student_id, school_id, role) 
+      VALUES ($1, $2, $3, $4, $5, $6) 
+      RETURNING id, email, name, student_id, school_id, role
     `, [
-      username, 
       hashedPassword, 
       email, 
       name,
@@ -69,7 +68,7 @@ router.post('/register', async (req, res) => {
     const token = jwt.sign(
       { 
         id: newUser.rows[0].id, 
-        username: newUser.rows[0].username,
+        email: newUser.rows[0].email,
         role: newUser.rows[0].role 
       },
       process.env.JWT_SECRET,
@@ -81,7 +80,6 @@ router.post('/register', async (req, res) => {
       token,
       user: {
         id: newUser.rows[0].id,
-        username: newUser.rows[0].username,
         email: newUser.rows[0].email,
         name: newUser.rows[0].name,
         student_id: newUser.rows[0].student_id,
