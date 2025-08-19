@@ -265,14 +265,12 @@ function renderStoryCard(story, viewMode) {
     if (viewMode === 'list') {
         return `
             <div class="${cardClass} card" data-story-id="${story.id}">
-                ${selectionMode ? `
-                    <div class="story-selection">
-                        <label class="checkbox-container">
-                            <input type="checkbox" class="story-checkbox" value="${story.id}" onchange="updateSelection()">
-                            <span class="checkmark"></span>
-                        </label>
-                    </div>
-                ` : ''}
+                <div class="story-selection">
+                    <label class="checkbox-container">
+                        <input type="checkbox" class="story-checkbox" value="${story.id}" onchange="updateSelection()">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
                 
                 <div class="story-header">
                     <h3>${story.idea_title || story.title}</h3>
@@ -320,14 +318,12 @@ function renderStoryCard(story, viewMode) {
         // Grid view (existing implementation with selection checkbox added)
         return `
             <div class="${cardClass}" data-story-id="${story.id}">
-                ${selectionMode ? `
-                    <div class="story-selection">
-                        <label class="checkbox-container">
-                            <input type="checkbox" class="story-checkbox" value="${story.id}" onchange="updateSelection()">
-                            <span class="checkmark"></span>
-                        </label>
-                    </div>
-                ` : ''}
+                <div class="story-selection">
+                    <label class="checkbox-container">
+                        <input type="checkbox" class="story-checkbox" value="${story.id}" onchange="updateSelection()">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
                 
                 <h3>${story.idea_title || story.title}</h3>
                 <p class="story-description">${story.idea_description || story.description || 'No description available'}</p>
