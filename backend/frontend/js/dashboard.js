@@ -1,5 +1,5 @@
-// API base URL - uses window.window.API_URL from config.js
-// const window.API_URL is now provided by config.js
+// API base URL - uses window.API_URL from config.js
+// const API_URL is now provided by config.js
 
 // Global variables
 let allStories = [];
@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!checkAuth()) return;
     
     await loadUserInfo();
+    await loadDashboardStats();
+    await loadRecentActivity();
     
     // Load different content based on user role
     if (currentUser && currentUser.role === 'student') {
@@ -794,4 +796,208 @@ function showEnhancedJoinMessage(message, type, classData = null) {
 // Keep backward compatibility
 function showJoinMessage(message, type) {
     showEnhancedJoinMessage(message, type);
+}
+
+// Dashboard Statistics Functions
+async function loadDashboardStats() {
+    try {
+        console.log('Loading dashboard statistics...');
+        
+        // Load user's stories count
+        await loadMyStoriesCount();
+        
+        // Load user's favorites count
+        await loadMyFavoritesCount();
+        
+        // Load total available stories
+        await loadTotalStoriesCount();
+        
+        // Load class count for teachers/students
+        if (currentUser && (currentUser.role === 'teacher' || currentUser.role === 'student')) {
+            await loadMyClassesCount();
+        }
+        
+    } catch (error) {
+        console.error('Error loading dashboard stats:', error);
+    }
+}
+
+async function loadMyStoriesCount() {
+    try {
+        const response = await fetch(`${window.API_URL}/stories?uploaded_by=${currentUser.id}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            const stories = await response.json();
+            const count = stories.length;
+            document.getElementById('myStoriesCount').textContent = count;
+            console.log(`My Stories count: ${count}`);
+        }
+    } catch (error) {
+        console.error('Error loading my stories count:', error);
+        document.getElementById('myStoriesCount').textContent = '0';
+    }
+}
+
+async function loadMyFavoritesCount() {
+    try {
+        const response = await fetch(`${window.API_URL}/favorites`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            const favorites = await response.json();
+            const count = favorites.length;
+            document.getElementById('myFavoritesCount').textContent = count;
+            console.log(`My Favorites count: ${count}`);
+        }
+    } catch (error) {
+        console.error('Error loading my favorites count:', error);
+        document.getElementById('myFavoritesCount').textContent = '0';
+    }
+}
+
+async function loadTotalStoriesCount() {
+    try {
+        const response = await fetch(`${window.API_URL}/stories`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            const stories = await response.json();
+            const count = stories.length;
+            document.getElementById('totalStoriesCount').textContent = count;
+            console.log(`Total Stories count: ${count}`);
+        }
+    } catch (error) {
+        console.error('Error loading total stories count:', error);
+        document.getElementById('totalStoriesCount').textContent = '0';
+    }
+}
+
+async function loadMyClassesCount() {
+    try {
+        const response = await fetch(`${window.API_URL}/classes`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            const classes = await response.json();
+            const count = classes.length;
+            document.getElementById('myClassesCount').textContent = count;
+            
+            // Show the classes stat card for teachers/students
+            const classStatsCard = document.getElementById('classStatsCard');
+            if (classStatsCard) {
+                classStatsCard.style.display = 'block';
+            }
+            
+            console.log(`My Classes count: ${count}`);
+        }
+    } catch (error) {
+        console.error('Error loading my classes count:', error);
+        document.getElementById('myClassesCount').textContent = '0';
+    }
+}
+
+async function loadRecentActivity() {
+    try {
+        console.log('Loading recent activity...');
+        
+        // Load recent stories by current user
+        await loadMyRecentStories();
+        
+        // Load recent favorites
+        await loadRecentFavorites();
+        
+    } catch (error) {
+        console.error('Error loading recent activity:', error);
+    }
+}
+
+async function loadMyRecentStories() {
+    try {
+        const response = await fetch(`${window.API_URL}/stories?uploaded_by=${currentUser.id}&limit=5`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            const stories = await response.json();
+            const container = document.getElementById('myRecentStories');
+            
+            if (stories.length === 0) {
+                container.innerHTML = '<div class="no-activity">No stories created yet. <a href="/add-story.html">Create your first story</a></div>';
+            } else {
+                container.innerHTML = stories.slice(0, 5).map(story => `
+                    <div class="activity-item">
+                        <h4><a href="/story-detail.html?id=${story.id}">${story.idea_title}</a></h4>
+                        <p class="activity-meta">Created ${formatDate(story.uploaded_date)}</p>
+                    </div>
+                `).join('');
+            }
+        }
+    } catch (error) {
+        console.error('Error loading recent stories:', error);
+        document.getElementById('myRecentStories').innerHTML = '<div class="error">Unable to load recent stories</div>';
+    }
+}
+
+async function loadRecentFavorites() {
+    try {
+        const response = await fetch(`${window.API_URL}/favorites?limit=5`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            const favorites = await response.json();
+            const container = document.getElementById('recentFavorites');
+            
+            if (favorites.length === 0) {
+                container.innerHTML = '<div class="no-activity">No favorites yet. Browse stories to add some favorites!</div>';
+            } else {
+                container.innerHTML = favorites.slice(0, 5).map(story => `
+                    <div class="activity-item">
+                        <h4><a href="/story-detail.html?id=${story.id}">${story.idea_title}</a></h4>
+                        <p class="activity-meta">Favorited ${formatDate(story.favorited_at || story.created_at)}</p>
+                    </div>
+                `).join('');
+            }
+        }
+    } catch (error) {
+        console.error('Error loading recent favorites:', error);
+        document.getElementById('recentFavorites').innerHTML = '<div class="error">Unable to load recent favorites</div>';
+    }
+}
+
+// Quick action functions
+function viewMyStories() {
+    // Filter to show only user's stories
+    const searchParams = new URLSearchParams();
+    searchParams.append('uploaded_by', currentUser.id);
+    
+    // If there's a stories section on this page, filter it
+    if (typeof loadStories === 'function') {
+        loadStories({ uploaded_by: currentUser.id });
+    } else {
+        // Navigate to a stories page with filter
+        window.location.href = `/stories.html?${searchParams.toString()}`;
+    }
+}
+
+function viewFavorites() {
+    // Navigate to favorites or show favorites section
+    window.location.href = '/favorites.html';
 }
