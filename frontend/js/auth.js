@@ -73,8 +73,8 @@ if (document.getElementById('registerForm')) {
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const username = document.getElementById('username').value;
         const email = document.getElementById('email').value;
+        const name = document.getElementById('name').value;
         const school = document.getElementById('school').value;
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
@@ -90,7 +90,7 @@ if (document.getElementById('registerForm')) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ username, email, school, password })
+                body: JSON.stringify({ email, name, school, password })
             });
             
             const data = await response.json();

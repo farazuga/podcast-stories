@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Mockup 1: Adaptive Horizontal Bar</title>
+    <style>
+        :root {
+            --primary-color: #f79b5b;
+            --primary-hover: #e58a4b;
+            --secondary-color: #04362a;
+            --text-color: #333333;
+            --text-light: #666;
+            --bg-color: #f5f7fa;
+            --white: #ffffff;
+            --border-color: #e0e0e0;
+            --shadow: 0 2px 4px rgba(0,0,0,0.1);
+            --shadow-hover: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        /* MOCKUP 1: ADAPTIVE HORIZONTAL BAR */
+        .navbar-adaptive {
+            background: var(--white);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            align-items: center;
+            min-height: 64px;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .nav-brand .logo-emoji {
+            font-size: 1.8rem;
+        }
+
+        .nav-main {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 2rem;
+            flex: 1;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            text-decoration: none;
+            color: var(--text-light);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .nav-link:hover {
+            background: #f8f9fa;
+            color: var(--text-color);
+        }
+
+        .nav-link.active {
+            background: #fff5f0;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .nav-link .icon {
+            font-size: 1.1rem;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-left: auto;
+        }
+
+        .nav-secondary-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-action {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            color: var(--text-light);
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-action:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-action.primary {
+            background: var(--primary-color);
+            color: var(--white);
+            border-color: var(--primary-color);
+        }
+
+        .btn-action.primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .nav-user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            color: var(--text-color);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .user-role.student {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .user-role.teacher {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .user-role.admin {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .btn-logout {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            color: var(--text-light);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-logout:hover {
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
+        /* Mobile Menu */
+        .mobile-menu-toggle {
+            display: none;
+            padding: 0.5rem;
+            border: none;
+            background: none;
+            color: var(--text-color);
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .mobile-menu-toggle:hover {
+            background: #f8f9fa;
+        }
+
+        .mobile-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            box-shadow: var(--shadow);
+            border-top: 1px solid var(--border-color);
+            z-index: 1000;
+        }
+
+        .mobile-menu.active {
+            display: block;
+        }
+
+        .mobile-nav-section {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .mobile-nav-section:last-child {
+            border-bottom: none;
+        }
+
+        .mobile-nav-section h4 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .mobile-nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .mobile-nav-links .nav-link {
+            margin: 0;
+            padding: 0.75rem;
+            border-radius: 6px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-main {
+                display: none;
+            }
+
+            .nav-actions .nav-secondary-actions {
+                display: none;
+            }
+
+            .mobile-menu-toggle {
+                display: flex;
+            }
+
+            .user-name {
+                display: none;
+            }
+
+            .navbar-content {
+                padding: 0 1rem;
+                position: relative;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-brand {
+                font-size: 1.3rem;
+            }
+
+            .nav-brand .logo-emoji {
+                font-size: 1.5rem;
+            }
+
+            .user-details {
+                display: none;
+            }
+        }
+
+        /* Demo Content */
+        .demo-content {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .demo-section {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .feature-card {
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: #fafbfc;
+        }
+
+        .feature-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .feature-list li {
+            padding: 0.25rem 0;
+            color: var(--text-light);
+        }
+
+        .feature-list li:before {
+            content: "✓ ";
+            color: #4caf50;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- MOCKUP 1: ADAPTIVE HORIZONTAL BAR -->
+    <nav class="navbar-adaptive">
+        <div class="navbar-content">
+            <!-- Brand -->
+            <a href="#" class="nav-brand">
+                <span class="logo-emoji">📻</span>
+                <span>VidPOD</span>
+            </a>
+
+            <!-- Main Navigation -->
+            <div class="nav-main">
+                <a href="#" class="nav-link active">
+                    <span class="icon">🏠</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <span class="icon">📚</span>
+                    <span>Browse Stories</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <span class="icon">✏️</span>
+                    <span>Add Story</span>
+                </a>
+                <!-- Teacher/Admin only -->
+                <a href="#" class="nav-link" data-role="teacher,admin">
+                    <span class="icon">🎓</span>
+                    <span>My Classes</span>
+                </a>
+                <!-- Admin only -->
+                <a href="#" class="nav-link" data-role="admin">
+                    <span class="icon">⚙️</span>
+                    <span>Admin Panel</span>
+                </a>
+            </div>
+
+            <!-- Actions & User Info -->
+            <div class="nav-actions">
+                <!-- Secondary Actions -->
+                <div class="nav-secondary-actions">
+                    <a href="#" class="btn-action" data-role="teacher,admin">
+                        <span>📄</span>
+                        <span>Import CSV</span>
+                    </a>
+                    <a href="#" class="btn-action primary">
+                        <span>➕</span>
+                        <span>Quick Add</span>
+                    </a>
+                </div>
+
+                <!-- User Info -->
+                <div class="nav-user-info">
+                    <div class="user-avatar">JD</div>
+                    <div class="user-details">
+                        <div class="user-name">John Doe</div>
+                        <div class="user-role teacher">Teacher</div>
+                    </div>
+                </div>
+
+                <!-- Logout -->
+                <button class="btn-logout" title="Logout">
+                    <span>🚪</span>
+                </button>
+
+                <!-- Mobile Menu Toggle -->
+                <button class="mobile-menu-toggle">
+                    <span>☰</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="mobile-menu" id="mobileMenu">
+            <div class="mobile-nav-section">
+                <h4>Navigation</h4>
+                <div class="mobile-nav-links">
+                    <a href="#" class="nav-link active">
+                        <span class="icon">🏠</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#" class="nav-link">
+                        <span class="icon">📚</span>
+                        <span>Browse Stories</span>
+                    </a>
+                    <a href="#" class="nav-link">
+                        <span class="icon">✏️</span>
+                        <span>Add Story</span>
+                    </a>
+                    <a href="#" class="nav-link">
+                        <span class="icon">🎓</span>
+                        <span>My Classes</span>
+                    </a>
+                    <a href="#" class="nav-link">
+                        <span class="icon">⚙️</span>
+                        <span>Admin Panel</span>
+                    </a>
+                </div>
+            </div>
+            <div class="mobile-nav-section">
+                <h4>Actions</h4>
+                <div class="mobile-nav-links">
+                    <a href="#" class="nav-link">
+                        <span class="icon">📄</span>
+                        <span>Import CSV</span>
+                    </a>
+                    <a href="#" class="nav-link">
+                        <span class="icon">🚪</span>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Demo Content -->
+    <div class="demo-content">
+        <div class="demo-section">
+            <h2>Mockup 1: Adaptive Horizontal Bar Navigation</h2>
+            <p>This design maintains the familiar horizontal navigation while adding consistency and mobile responsiveness.</p>
+            
+            <div class="demo-grid">
+                <div class="feature-card">
+                    <h4>🎯 Key Features</h4>
+                    <ul class="feature-list">
+                        <li>Consistent branding across all pages</li>
+                        <li>Role-based navigation visibility</li>
+                        <li>Unified user information display</li>
+                        <li>Mobile-responsive hamburger menu</li>
+                        <li>Contextual action buttons</li>
+                        <li>Clean, professional appearance</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h4>📱 Responsive Design</h4>
+                    <ul class="feature-list">
+                        <li>Desktop: Full horizontal navigation</li>
+                        <li>Tablet: Condensed with essential items</li>
+                        <li>Mobile: Hamburger menu with sections</li>
+                        <li>Touch-friendly interaction areas</li>
+                        <li>Optimized for all screen sizes</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h4>👥 User Roles</h4>
+                    <ul class="feature-list">
+                        <li>Student: Dashboard, Browse, Add Story</li>
+                        <li>Teacher: + My Classes, Import CSV</li>
+                        <li>Admin: + Admin Panel, All actions</li>
+                        <li>Dynamic role badge styling</li>
+                        <li>Context-aware permissions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Demo mobile menu functionality
+        document.querySelector('.mobile-menu-toggle').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('active');
+        });
+
+        // Demo role switching for testing
+        const roles = ['student', 'teacher', 'admin'];
+        const roleNames = ['Student', 'Teacher', 'Admin'];
+        let currentRoleIndex = 1; // Start with teacher
+
+        document.querySelector('.user-role').addEventListener('click', function() {
+            currentRoleIndex = (currentRoleIndex + 1) % roles.length;
+            const newRole = roles[currentRoleIndex];
+            const newRoleName = roleNames[currentRoleIndex];
+            
+            // Update role badge
+            this.className = `user-role ${newRole}`;
+            this.textContent = newRoleName;
+            
+            // Update avatar
+            document.querySelector('.user-avatar').textContent = newRoleName.substring(0, 2);
+            
+            // Show/hide role-specific navigation items
+            document.querySelectorAll('[data-role]').forEach(el => {
+                const allowedRoles = el.getAttribute('data-role').split(',');
+                el.style.display = allowedRoles.includes(newRole) ? 'flex' : 'none';
+            });
+        });
+    </script>
+</body>
+</html>

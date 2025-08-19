@@ -8,6 +8,10 @@ let allSchools = [];
 let teacherRequests = [];
 let currentRequestId = null;
 
+// Story approval filtering variables
+let allStoriesForApproval = [];
+let filteredStoriesForApproval = [];
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Admin page loading...');
@@ -140,6 +144,7 @@ window.showTab = function(tabName) {
                 break;
             case 'stories':
                 loadStoryApprovalStats();
+                setupStorySearchFilters();
                 window.loadStoriesForApproval('pending');
                 break;
             case 'tags':
@@ -875,21 +880,88 @@ async function loadStoryOverviewStats() {
     }
 }
 
-// Make function globally available - Load stories for approval
+// Setup story search filters
+function setupStorySearchFilters() {
+    // Populate tags dropdown for story search
+    if (allTags.length > 0) {
+        StoryFilters.setupTagsDropdown('searchTags', allTags, 'All Tags');
+    }
+    
+    // Setup event listeners for story search form
+    StoryFilters.setupFilterEventListeners('storySearchForm', applyStoryFilters, clearStoryFilters);
+}
+
+// Apply story filters using shared filter components
+function applyStoryFilters() {
+    if (allStoriesForApproval.length === 0) {
+        console.log('No stories loaded yet for filtering');
+        return;
+    }
+    
+    // Build filters from form using shared component
+    const filters = StoryFilters.buildFiltersFromForm('stories-tab');
+    
+    console.log('Applying story filters:', filters);
+    
+    // Apply all filters using shared component
+    filteredStoriesForApproval = StoryFilters.applyAllFilters(allStoriesForApproval, filters);
+    
+    // Display filtered results
+    displayStoriesForApproval(filteredStoriesForApproval);
+    
+    // Update results count
+    StoryFilters.updateResultsCount('storyResultsCount', filteredStoriesForApproval.length, allStoriesForApproval.length, 'stories');
+}
+
+// Clear story filters
+function clearStoryFilters() {
+    // Reset to show all stories
+    filteredStoriesForApproval = [...allStoriesForApproval];
+    displayStoriesForApproval(filteredStoriesForApproval);
+    
+    // Update results count
+    StoryFilters.updateResultsCount('storyResultsCount', filteredStoriesForApproval.length, allStoriesForApproval.length, 'stories');
+}
+
+// Make function globally available for onclick handlers
+window.clearStoryFilters = clearStoryFilters;
+
+// Make function globally available - Load stories for approval with enhanced filtering
 window.loadStoriesForApproval = async function(status = null) {
     try {
-        const filterStatus = status || document.getElementById('storyStatusFilter')?.value || 'pending';
-        const url = filterStatus ? 
-            `${window.API_URL}/stories/admin/by-status/${filterStatus}` : 
-            `${window.API_URL}/stories`;
+        console.log('Loading stories for approval with status:', status);
+        
+        // Determine which endpoint to use based on status
+        let url;
+        if (status && status !== '') {
+            url = `${window.API_URL}/stories/admin/by-status/${status}`;
+        } else {
+            // Load all stories if no status specified
+            url = `${window.API_URL}/stories`;
+        }
             
         const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
         if (response.ok) {
-            const stories = await response.json();
-            displayStoriesForApproval(stories);
+            allStoriesForApproval = await response.json();
+            filteredStoriesForApproval = [...allStoriesForApproval];
+            
+            console.log(`Loaded ${allStoriesForApproval.length} stories for approval`);
+            
+            // Apply any existing filters
+            if (document.getElementById('searchKeywords')?.value || 
+                document.getElementById('searchAuthor')?.value ||
+                document.getElementById('searchStatus')?.value) {
+                applyStoryFilters();
+            } else {
+                displayStoriesForApproval(filteredStoriesForApproval);
+                StoryFilters.updateResultsCount('storyResultsCount', filteredStoriesForApproval.length, allStoriesForApproval.length, 'stories');
+            }
+        } else {
+            console.error('Failed to load stories:', response.status);
+            showError('Failed to load stories');
         }
     } catch (error) {
         console.error('Error loading stories for approval:', error);
@@ -900,6 +972,11 @@ window.loadStoriesForApproval = async function(status = null) {
 function displayStoriesForApproval(stories) {
     const table = document.getElementById('storiesApprovalTable');
     if (!table) return;
+    
+    if (stories.length === 0) {
+        table.innerHTML = '<tr><td colspan="7" class="no-results-row">No stories found matching the current filters.</td></tr>';
+        return;
+    }
     
     table.innerHTML = stories.map(story => `
         <tr>
@@ -916,8 +993,8 @@ function displayStoriesForApproval(stories) {
                 </div>
             </td>
             <td>
-                <span class="status-badge status-${story.approval_status}">
-                    ${story.approval_status}
+                <span class="status-badge status-${story.approval_status || 'draft'}">
+                    ${story.approval_status || 'draft'}
                 </span>
             </td>
             <td>${formatDate(story.submitted_at || story.uploaded_date)}</td>
@@ -930,6 +1007,14 @@ function displayStoriesForApproval(stories) {
                         : 'No description'}
                 </div>
             </td>
+            <td>
+                <div class="story-tags-cell">
+                    ${story.tags && story.tags.length > 0 ? 
+                        story.tags.filter(tag => tag).slice(0, 3)
+                            .map(tag => `<span class="tag-small">${tag}</span>`).join(' ')
+                        : '<em>No tags</em>'}
+                </div>
+            </td>
             <td class="table-actions">
                 <button class="btn btn-small btn-secondary" onclick="viewStoryDetails(${story.id})">View</button>
                 ${story.approval_status === 'pending' ? `
@@ -939,6 +1024,8 @@ function displayStoriesForApproval(stories) {
                     <button class="btn btn-small btn-success" onclick="showStoryApprovalModal(${story.id})">Approve</button>
                 ` : story.approval_status === 'approved' ? `
                     <button class="btn btn-small btn-warning" onclick="showStoryRejectionModal(${story.id})">Reject</button>
+                ` : story.approval_status === 'draft' ? `
+                    <button class="btn btn-small btn-success" onclick="showStoryApprovalModal(${story.id})">Approve</button>
                 ` : ''}
             </td>
         </tr>
@@ -1083,7 +1170,12 @@ async function approveStory(e) {
         if (response.ok) {
             showSuccess('Story approved successfully!');
             closeStoryModal();
-            await loadStoriesForApproval();
+            
+            // Reload stories maintaining current filters
+            const currentStatus = document.getElementById('searchStatus')?.value || '';
+            await loadStoriesForApproval(currentStatus);
+            applyStoryFilters(); // Reapply current filters
+            
             await loadStoryApprovalStats();
             await loadStoryOverviewStats();
         } else {
@@ -1121,7 +1213,12 @@ async function rejectStory(e) {
         if (response.ok) {
             showSuccess('Story rejected');
             closeStoryModal();
-            await loadStoriesForApproval();
+            
+            // Reload stories maintaining current filters
+            const currentStatus = document.getElementById('searchStatus')?.value || '';
+            await loadStoriesForApproval(currentStatus);
+            applyStoryFilters(); // Reapply current filters
+            
             await loadStoryApprovalStats();
             await loadStoryOverviewStats();
         } else {

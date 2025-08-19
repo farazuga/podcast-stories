@@ -81,16 +81,8 @@ async function loadTags() {
 }
 
 function populateTagsDropdown() {
-    const select = document.getElementById('searchTags');
-    if (!select) return;
-    
-    select.innerHTML = '<option value="">All Tags</option>';
-    allTags.forEach(tag => {
-        const option = document.createElement('option');
-        option.value = tag.tag_name;
-        option.textContent = tag.tag_name;
-        select.appendChild(option);
-    });
+    // Use shared tags dropdown setup
+    StoryFilters.setupTagsDropdown('searchTags', allTags, 'All Tags');
 }
 
 async function loadStories() {
@@ -305,47 +297,13 @@ function setupEventListeners() {
 }
 
 function applyFilters() {
-    const keywords = document.getElementById('searchKeywords').value.toLowerCase();
-    const selectedTags = Array.from(document.getElementById('searchTags').selectedOptions).map(opt => opt.value);
-    const startDate = document.getElementById('searchStartDate').value;
-    const endDate = document.getElementById('searchEndDate').value;
-    const interviewee = document.getElementById('searchInterviewee').value.toLowerCase();
+    // Build filters from form using shared component
+    const filters = StoryFilters.buildFiltersFromForm('searchForm');
     
-    filteredStories = allStories.filter(story => {
-        // Keywords filter
-        if (keywords && !(
-            story.idea_title.toLowerCase().includes(keywords) ||
-            (story.idea_description && story.idea_description.toLowerCase().includes(keywords))
-        )) {
-            return false;
-        }
-        
-        // Tags filter
-        if (selectedTags.length > 0 && !selectedTags.some(tag => 
-            story.tags && story.tags.includes(tag)
-        )) {
-            return false;
-        }
-        
-        // Date filters
-        if (startDate && story.coverage_start_date && story.coverage_start_date < startDate) {
-            return false;
-        }
-        if (endDate && story.coverage_start_date && story.coverage_start_date > endDate) {
-            return false;
-        }
-        
-        // Interviewee filter
-        if (interviewee && !(
-            story.interviewees && story.interviewees.some(person =>
-                person.toLowerCase().includes(interviewee)
-            )
-        )) {
-            return false;
-        }
-        
-        return true;
-    });
+    console.log('Applying story filters:', filters);
+    
+    // Apply all filters using shared component
+    filteredStories = StoryFilters.applyAllFilters(allStories, filters);
     
     currentPage = 0;
     displayStories();
@@ -353,12 +311,8 @@ function applyFilters() {
 }
 
 function clearFilters() {
-    document.getElementById('searchKeywords').value = '';
-    document.getElementById('searchTags').selectedIndex = 0;
-    document.getElementById('searchStartDate').value = '';
-    document.getElementById('searchEndDate').value = '';
-    document.getElementById('searchInterviewee').value = '';
-    document.getElementById('sortBy').value = 'newest';
+    // Clear all filter inputs using shared component
+    StoryFilters.clearAllFilters('searchForm');
     
     filteredStories = [...allStories];
     currentPage = 0;
@@ -369,19 +323,8 @@ function clearFilters() {
 function sortStories() {
     const sortBy = document.getElementById('sortBy').value;
     
-    filteredStories.sort((a, b) => {
-        switch (sortBy) {
-            case 'oldest':
-                return new Date(a.uploaded_date) - new Date(b.uploaded_date);
-            case 'title':
-                return a.idea_title.localeCompare(b.idea_title);
-            case 'author':
-                return (a.uploaded_by_name || '').localeCompare(b.uploaded_by_name || '');
-            case 'newest':
-            default:
-                return new Date(b.uploaded_date) - new Date(a.uploaded_date);
-        }
-    });
+    // Use shared sorting functionality
+    filteredStories = StoryFilters.applySorting(filteredStories, sortBy);
     
     currentPage = 0;
     displayStories();

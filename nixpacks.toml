@@ -2,10 +2,10 @@
 nixPkgs = ['nodejs', 'npm']
 
 [phases.install]
-cmds = ['cd backend && npm ci']
+cmds = ['npm ci']
 
 [phases.build]
-cmds = ['cd backend && npm run build 2>/dev/null || echo "No build script, skipping"']
+cmds = ['npm run build 2>/dev/null || echo "No build script, skipping"']
 
 [start]
-cmd = 'cd backend && npm start'
+cmd = 'npm start'

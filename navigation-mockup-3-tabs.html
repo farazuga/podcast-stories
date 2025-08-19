@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Mockup 3: Tab-Based Navigation</title>
+    <style>
+        :root {
+            --primary-color: #f79b5b;
+            --primary-hover: #e58a4b;
+            --secondary-color: #04362a;
+            --text-color: #333333;
+            --text-light: #666;
+            --bg-color: #f5f7fa;
+            --white: #ffffff;
+            --border-color: #e0e0e0;
+            --shadow: 0 2px 4px rgba(0,0,0,0.1);
+            --shadow-hover: 0 4px 8px rgba(0,0,0,0.15);
+            --tab-active-bg: #fff5f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        /* MOCKUP 3: TAB-BASED NAVIGATION */
+        .app-header {
+            background: var(--white);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-top {
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .app-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.4rem;
+        }
+
+        .app-logo .logo-emoji {
+            font-size: 1.8rem;
+        }
+
+        .brand-tagline {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-left: 1rem;
+            padding-left: 1rem;
+            border-left: 1px solid var(--border-color);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            border: none;
+            background: none;
+            outline: none;
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .search-box .search-icon {
+            color: var(--text-light);
+            margin-right: 0.5rem;
+        }
+
+        .quick-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .quick-action {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            border-radius: 6px;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+        }
+
+        .quick-action:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .quick-action.primary {
+            background: var(--primary-color);
+            color: var(--white);
+            border-color: var(--primary-color);
+        }
+
+        .quick-action.primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .user-card:hover {
+            background: #e9ecef;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .user-role.student {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .user-role.teacher {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .user-role.admin {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        /* Tab Navigation */
+        .tab-navigation {
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+            background: var(--white);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .tab-navigation::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-tabs {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            flex: 1;
+        }
+
+        .nav-tab {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 1.5rem;
+            text-decoration: none;
+            color: var(--text-light);
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .nav-tab:hover {
+            color: var(--text-color);
+            background: #f8f9fa;
+        }
+
+        .nav-tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+            background: var(--tab-active-bg);
+        }
+
+        .nav-tab .icon {
+            font-size: 1.1rem;
+        }
+
+        .nav-tab .badge {
+            background: var(--primary-color);
+            color: var(--white);
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            margin-left: 0.25rem;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .nav-tab .new-indicator {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            width: 8px;
+            height: 8px;
+            background: #ff4444;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .tab-overflow {
+            display: flex;
+            align-items: center;
+            margin-left: auto;
+            gap: 0.5rem;
+        }
+
+        .tab-scroll-btn {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            border-radius: 4px;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-scroll-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .more-tabs {
+            position: relative;
+        }
+
+        .more-tabs-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            border-radius: 6px;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .more-tabs-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .more-tabs-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--white);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            padding: 0.5rem 0;
+            margin-top: 0.5rem;
+            min-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .more-tabs.open .more-tabs-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-tab {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--text-color);
+            text-decoration: none;
+            transition: background 0.2s ease;
+        }
+
+        .dropdown-tab:hover {
+            background: #f8f9fa;
+        }
+
+        .dropdown-tab.active {
+            background: var(--tab-active-bg);
+            color: var(--primary-color);
+        }
+
+        /* Sub Tab Navigation */
+        .sub-tab-navigation {
+            background: #fafbfc;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 2rem;
+        }
+
+        .sub-tabs {
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+
+        .sub-tab {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            text-decoration: none;
+            color: var(--text-light);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .sub-tab:hover {
+            color: var(--text-color);
+        }
+
+        .sub-tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        /* Page Content */
+        .page-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Mobile Tab Navigation */
+        .mobile-tab-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-tab-menu.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .mobile-tab-panel {
+            background: var(--white);
+            height: 100%;
+            width: 100%;
+            max-width: 100%;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mobile-tab-menu.active .mobile-tab-panel {
+            transform: translateY(0);
+        }
+
+        .mobile-tab-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .mobile-tab-close {
+            padding: 0.5rem;
+            border: none;
+            background: none;
+            color: var(--text-light);
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .mobile-tab-close:hover {
+            background: #f8f9fa;
+        }
+
+        .mobile-tab-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .mobile-tab-section {
+            margin-bottom: 2rem;
+        }
+
+        .mobile-tab-section h4 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            letter-spacing: 0.5px;
+        }
+
+        .mobile-tab-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .mobile-tab-links .nav-tab {
+            margin: 0;
+            padding: 1rem;
+            border-radius: 8px;
+            border-bottom: none;
+            background: none;
+        }
+
+        .mobile-tab-links .nav-tab:hover {
+            background: #f8f9fa;
+        }
+
+        .mobile-tab-links .nav-tab.active {
+            background: var(--tab-active-bg);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-top {
+                padding: 1rem;
+            }
+
+            .brand-tagline {
+                display: none;
+            }
+
+            .search-box {
+                min-width: 200px;
+            }
+
+            .user-info {
+                display: none;
+            }
+
+            .tab-navigation {
+                padding: 0 1rem;
+                position: relative;
+            }
+
+            .nav-tabs {
+                overflow-x: auto;
+                scrollbar-width: none;
+            }
+
+            .nav-tabs::-webkit-scrollbar {
+                display: none;
+            }
+
+            .nav-tab {
+                padding: 1rem;
+                flex-shrink: 0;
+            }
+
+            .tab-overflow {
+                position: absolute;
+                right: 1rem;
+                background: var(--white);
+                box-shadow: -10px 0 10px var(--white);
+            }
+
+            .sub-tab-navigation {
+                padding: 0 1rem;
+            }
+
+            .page-content {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-top {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .search-box {
+                order: 3;
+                flex: 1;
+                min-width: auto;
+            }
+
+            .quick-actions {
+                display: none;
+            }
+
+            .nav-tab .text {
+                display: none;
+            }
+
+            .nav-tab {
+                padding: 1rem 0.75rem;
+                min-width: 50px;
+                justify-content: center;
+            }
+        }
+
+        /* Demo Content */
+        .demo-section {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .feature-card {
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: #fafbfc;
+        }
+
+        .feature-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .feature-list li {
+            padding: 0.25rem 0;
+            color: var(--text-light);
+        }
+
+        .feature-list li:before {
+            content: "✓ ";
+            color: #4caf50;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- MOCKUP 3: TAB-BASED NAVIGATION -->
+    <header class="app-header">
+        <!-- Top Header -->
+        <div class="header-top">
+            <div class="brand-section">
+                <a href="#" class="app-logo">
+                    <span class="logo-emoji">📻</span>
+                    <span>VidPOD</span>
+                </a>
+                <span class="brand-tagline">Story Ideas Database</span>
+            </div>
+
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" placeholder="Search stories, people, topics...">
+                </div>
+
+                <div class="quick-actions">
+                    <button class="quick-action" title="Notifications">
+                        <span>🔔</span>
+                    </button>
+                    <button class="quick-action" title="Favorites">
+                        <span>⭐</span>
+                    </button>
+                    <button class="quick-action primary" title="Quick Add">
+                        <span>➕</span>
+                    </button>
+                </div>
+
+                <div class="user-section">
+                    <div class="user-card" id="userCard">
+                        <div class="user-avatar">JD</div>
+                        <div class="user-info">
+                            <div class="user-name">John Doe</div>
+                            <div class="user-role teacher">Teacher</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Tab Navigation -->
+        <nav class="tab-navigation">
+            <div class="nav-tabs" id="mainTabs">
+                <a href="#" class="nav-tab active">
+                    <span class="icon">🏠</span>
+                    <span class="text">Dashboard</span>
+                </a>
+                <a href="#" class="nav-tab">
+                    <span class="icon">📚</span>
+                    <span class="text">Browse Stories</span>
+                    <span class="badge">12</span>
+                </a>
+                <a href="#" class="nav-tab">
+                    <span class="icon">✏️</span>
+                    <span class="text">Add Story</span>
+                </a>
+                <a href="#" class="nav-tab" data-role="teacher,admin">
+                    <span class="icon">🎓</span>
+                    <span class="text">My Classes</span>
+                    <span class="badge">3</span>
+                </a>
+                <a href="#" class="nav-tab" data-role="teacher,admin">
+                    <span class="icon">👥</span>
+                    <span class="text">Students</span>
+                </a>
+                <a href="#" class="nav-tab" data-role="teacher,admin">
+                    <span class="icon">📊</span>
+                    <span class="text">Analytics</span>
+                </a>
+                <a href="#" class="nav-tab" data-role="admin">
+                    <span class="icon">⚙️</span>
+                    <span class="text">Admin Panel</span>
+                    <span class="new-indicator"></span>
+                </a>
+                <a href="#" class="nav-tab" data-role="admin">
+                    <span class="icon">🏫</span>
+                    <span class="text">Schools</span>
+                </a>
+            </div>
+
+            <div class="tab-overflow">
+                <button class="tab-scroll-btn" id="scrollLeft">‹</button>
+                <button class="tab-scroll-btn" id="scrollRight">›</button>
+                <div class="more-tabs" id="moreTabs">
+                    <button class="more-tabs-btn">
+                        <span>More</span>
+                        <span>▼</span>
+                    </button>
+                    <div class="more-tabs-dropdown">
+                        <a href="#" class="dropdown-tab" data-role="admin">
+                            <span>👨‍🏫</span>
+                            <span>Teacher Requests</span>
+                        </a>
+                        <a href="#" class="dropdown-tab">
+                            <span>❓</span>
+                            <span>Help & Support</span>
+                        </a>
+                        <a href="#" class="dropdown-tab">
+                            <span>⚙️</span>
+                            <span>Settings</span>
+                        </a>
+                        <hr style="margin: 0.5rem 0; border: none; border-top: 1px solid var(--border-color);">
+                        <a href="#" class="dropdown-tab">
+                            <span>🚪</span>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Sub Tab Navigation (contextual) -->
+        <nav class="sub-tab-navigation" id="subTabNav">
+            <div class="sub-tabs">
+                <a href="#" class="sub-tab active">
+                    <span>📈</span>
+                    <span>Overview</span>
+                </a>
+                <a href="#" class="sub-tab">
+                    <span>📊</span>
+                    <span>Recent Activity</span>
+                </a>
+                <a href="#" class="sub-tab">
+                    <span>⭐</span>
+                    <span>My Favorites</span>
+                </a>
+                <a href="#" class="sub-tab" data-role="teacher,admin">
+                    <span>👥</span>
+                    <span>Class Overview</span>
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Mobile Tab Menu -->
+    <div class="mobile-tab-menu" id="mobileTabMenu">
+        <div class="mobile-tab-panel">
+            <div class="mobile-tab-header">
+                <h3>Navigation</h3>
+                <button class="mobile-tab-close" id="mobileTabClose">✕</button>
+            </div>
+            <div class="mobile-tab-content">
+                <div class="mobile-tab-section">
+                    <h4>Main Navigation</h4>
+                    <div class="mobile-tab-links">
+                        <a href="#" class="nav-tab active">
+                            <span class="icon">🏠</span>
+                            <span class="text">Dashboard</span>
+                        </a>
+                        <a href="#" class="nav-tab">
+                            <span class="icon">📚</span>
+                            <span class="text">Browse Stories</span>
+                            <span class="badge">12</span>
+                        </a>
+                        <a href="#" class="nav-tab">
+                            <span class="icon">✏️</span>
+                            <span class="text">Add Story</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mobile-tab-section" data-role="teacher,admin">
+                    <h4>Teaching</h4>
+                    <div class="mobile-tab-links">
+                        <a href="#" class="nav-tab">
+                            <span class="icon">🎓</span>
+                            <span class="text">My Classes</span>
+                            <span class="badge">3</span>
+                        </a>
+                        <a href="#" class="nav-tab">
+                            <span class="icon">👥</span>
+                            <span class="text">Students</span>
+                        </a>
+                        <a href="#" class="nav-tab">
+                            <span class="icon">📊</span>
+                            <span class="text">Analytics</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mobile-tab-section" data-role="admin">
+                    <h4>Administration</h4>
+                    <div class="mobile-tab-links">
+                        <a href="#" class="nav-tab">
+                            <span class="icon">⚙️</span>
+                            <span class="text">Admin Panel</span>
+                        </a>
+                        <a href="#" class="nav-tab">
+                            <span class="icon">🏫</span>
+                            <span class="text">Schools</span>
+                        </a>
+                        <a href="#" class="nav-tab">
+                            <span class="icon">👨‍🏫</span>
+                            <span class="text">Teacher Requests</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page Content -->
+    <main class="page-content">
+        <div class="demo-section">
+            <h2>Mockup 3: Tab-Based Navigation</h2>
+            <p>This design organizes navigation into clear, browsable tabs with contextual sub-navigation and powerful search capabilities.</p>
+            
+            <div class="demo-grid">
+                <div class="feature-card">
+                    <h4>📑 Tab Organization</h4>
+                    <ul class="feature-list">
+                        <li>Main tabs for primary navigation</li>
+                        <li>Sub-tabs for contextual sections</li>
+                        <li>Overflow handling for many tabs</li>
+                        <li>Visual indicators for new content</li>
+                        <li>Logical grouping by functionality</li>
+                        <li>Easy tab reordering and customization</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h4>🔍 Enhanced Discovery</h4>
+                    <ul class="feature-list">
+                        <li>Prominent global search bar</li>
+                        <li>Quick action buttons for efficiency</li>
+                        <li>Notification and favorite access</li>
+                        <li>More menu for additional options</li>
+                        <li>Contextual sub-navigation</li>
+                        <li>Badge counters for pending items</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h4>📱 Mobile Optimization</h4>
+                    <ul class="feature-list">
+                        <li>Horizontal scrolling for tab overflow</li>
+                        <li>Full-screen mobile tab menu</li>
+                        <li>Touch-optimized interaction areas</li>
+                        <li>Organized mobile navigation sections</li>
+                        <li>Responsive header layout</li>
+                        <li>Icon-only mode for narrow screens</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Tab scrolling functionality
+        const mainTabs = document.getElementById('mainTabs');
+        const scrollLeft = document.getElementById('scrollLeft');
+        const scrollRight = document.getElementById('scrollRight');
+
+        scrollLeft.addEventListener('click', () => {
+            mainTabs.scrollBy({ left: -200, behavior: 'smooth' });
+        });
+
+        scrollRight.addEventListener('click', () => {
+            mainTabs.scrollBy({ left: 200, behavior: 'smooth' });
+        });
+
+        // More tabs dropdown
+        const moreTabs = document.getElementById('moreTabs');
+        const moreTabsBtn = moreTabs.querySelector('.more-tabs-btn');
+
+        moreTabsBtn.addEventListener('click', () => {
+            moreTabs.classList.toggle('open');
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!moreTabs.contains(event.target)) {
+                moreTabs.classList.remove('open');
+            }
+        });
+
+        // Mobile tab menu
+        const mobileTabMenu = document.getElementById('mobileTabMenu');
+        const mobileTabClose = document.getElementById('mobileTabClose');
+
+        // Add mobile menu trigger (can be added to header)
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Tab' && event.altKey) {
+                event.preventDefault();
+                mobileTabMenu.classList.toggle('active');
+            }
+        });
+
+        mobileTabClose.addEventListener('click', () => {
+            mobileTabMenu.classList.remove('active');
+        });
+
+        mobileTabMenu.addEventListener('click', (event) => {
+            if (event.target === mobileTabMenu) {
+                mobileTabMenu.classList.remove('active');
+            }
+        });
+
+        // Tab switching
+        document.addEventListener('click', (event) => {
+            if (event.target.closest('.nav-tab')) {
+                event.preventDefault();
+                
+                // Remove active class from all tabs
+                document.querySelectorAll('.nav-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // Add active class to clicked tab
+                event.target.closest('.nav-tab').classList.add('active');
+            }
+            
+            if (event.target.closest('.sub-tab')) {
+                event.preventDefault();
+                
+                // Remove active class from all sub-tabs
+                document.querySelectorAll('.sub-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // Add active class to clicked sub-tab
+                event.target.closest('.sub-tab').classList.add('active');
+            }
+        });
+
+        // Demo role switching
+        const roles = ['student', 'teacher', 'admin'];
+        const roleNames = ['Student', 'Teacher', 'Admin'];
+        let currentRoleIndex = 1; // Start with teacher
+
+        document.querySelector('.user-role').addEventListener('click', function() {
+            currentRoleIndex = (currentRoleIndex + 1) % roles.length;
+            const newRole = roles[currentRoleIndex];
+            const newRoleName = roleNames[currentRoleIndex];
+            
+            // Update role badge
+            this.className = `user-role ${newRole}`;
+            this.textContent = newRoleName;
+            
+            // Update avatar
+            document.querySelector('.user-avatar').textContent = newRoleName.substring(0, 2);
+            
+            // Show/hide role-specific tabs
+            document.querySelectorAll('[data-role]').forEach(el => {
+                const allowedRoles = el.getAttribute('data-role').split(',');
+                el.style.display = allowedRoles.includes(newRole) ? 'flex' : 'none';
+            });
+        });
+
+        // Search functionality demo
+        const searchInput = document.querySelector('.search-box input');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.style.borderColor = 'var(--primary-color)';
+        });
+
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.style.borderColor = 'var(--border-color)';
+        });
+
+        // Responsive tab overflow handling
+        function checkTabOverflow() {
+            const tabs = mainTabs;
+            const scrollWidth = tabs.scrollWidth;
+            const clientWidth = tabs.clientWidth;
+            
+            scrollLeft.style.opacity = tabs.scrollLeft > 0 ? '1' : '0.5';
+            scrollRight.style.opacity = tabs.scrollLeft < scrollWidth - clientWidth ? '1' : '0.5';
+        }
+
+        mainTabs.addEventListener('scroll', checkTabOverflow);
+        window.addEventListener('resize', checkTabOverflow);
+        checkTabOverflow();
+    </script>
+</body>
+</html>

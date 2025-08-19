@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Mockup 2: Sidebar + Top Bar Hybrid</title>
+    <style>
+        :root {
+            --primary-color: #f79b5b;
+            --primary-hover: #e58a4b;
+            --secondary-color: #04362a;
+            --text-color: #333333;
+            --text-light: #666;
+            --bg-color: #f5f7fa;
+            --white: #ffffff;
+            --border-color: #e0e0e0;
+            --shadow: 0 2px 4px rgba(0,0,0,0.1);
+            --shadow-hover: 0 4px 8px rgba(0,0,0,0.15);
+            --sidebar-width: 280px;
+            --sidebar-collapsed: 70px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        /* MOCKUP 2: SIDEBAR + TOP BAR HYBRID */
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--white);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            transition: width 0.3s ease;
+            z-index: 100;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            overflow: hidden;
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed);
+        }
+
+        .sidebar-header {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+
+        .sidebar-logo .logo-emoji {
+            font-size: 1.8rem;
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo .logo-text {
+            white-space: nowrap;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-logo .logo-text {
+            opacity: 0;
+        }
+
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            padding: 0.5rem;
+            cursor: pointer;
+            border-radius: 4px;
+            color: var(--text-light);
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .sidebar-toggle:hover {
+            background: #f8f9fa;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-section-title {
+            padding: 0 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .nav-section-title {
+            opacity: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.875rem 1rem;
+            text-decoration: none;
+            color: var(--text-light);
+            transition: all 0.2s ease;
+            position: relative;
+            border-radius: 0;
+        }
+
+        .nav-link:hover {
+            background: #f8f9fa;
+            color: var(--text-color);
+        }
+
+        .nav-link.active {
+            background: #fff5f0;
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        .nav-link .icon {
+            font-size: 1.3rem;
+            flex-shrink: 0;
+            width: 24px;
+            text-align: center;
+        }
+
+        .nav-link .text {
+            white-space: nowrap;
+            transition: opacity 0.3s ease;
+            font-weight: 500;
+        }
+
+        .sidebar.collapsed .nav-link .text {
+            opacity: 0;
+        }
+
+        .nav-link .badge {
+            background: var(--primary-color);
+            color: var(--white);
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            margin-left: auto;
+            min-width: 20px;
+            text-align: center;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .nav-link .badge {
+            opacity: 0;
+        }
+
+        /* Tooltip for collapsed sidebar */
+        .nav-link .tooltip {
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--text-color);
+            color: var(--white);
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            margin-left: 0.5rem;
+            z-index: 1000;
+        }
+
+        .sidebar.collapsed .nav-link:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Top Bar */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            transition: margin-left 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content.collapsed {
+            margin-left: var(--sidebar-collapsed);
+        }
+
+        .top-bar {
+            background: var(--white);
+            box-shadow: var(--shadow);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .breadcrumb-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .breadcrumb-item:not(:last-child)::after {
+            content: "›";
+            margin-left: 0.5rem;
+            color: var(--border-color);
+        }
+
+        .breadcrumb-item.current {
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .action-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            color: var(--text-color);
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .action-button:hover {
+            border-color: var(--primary-color);
+            background: #fff5f0;
+        }
+
+        .action-button.primary {
+            background: var(--primary-color);
+            color: var(--white);
+            border-color: var(--primary-color);
+        }
+
+        .action-button.primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .user-menu {
+            position: relative;
+        }
+
+        .user-trigger {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .user-trigger:hover {
+            border-color: var(--border-color);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .user-role.student {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .user-role.teacher {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .user-role.admin {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .dropdown-arrow {
+            margin-left: 0.5rem;
+            color: var(--text-light);
+            transition: transform 0.2s ease;
+        }
+
+        .user-menu.open .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--white);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            padding: 0.5rem 0;
+            margin-top: 0.5rem;
+            min-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .user-menu.open .user-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--text-color);
+            text-decoration: none;
+            transition: background 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background: #f8f9fa;
+        }
+
+        .dropdown-item.danger {
+            color: #ff4444;
+        }
+
+        .dropdown-item.danger:hover {
+            background: #fff5f5;
+        }
+
+        /* Page Content */
+        .page-content {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        /* Mobile Overlay */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .main-content.collapsed {
+                margin-left: 0;
+            }
+
+            .top-bar {
+                padding: 1rem;
+            }
+
+            .top-bar-actions {
+                gap: 0.5rem;
+            }
+
+            .action-button .text {
+                display: none;
+            }
+
+            .user-info {
+                display: none;
+            }
+
+            .breadcrumb {
+                display: none;
+            }
+        }
+
+        /* Demo Content */
+        .demo-section {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .feature-card {
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: #fafbfc;
+        }
+
+        .feature-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .feature-list li {
+            padding: 0.25rem 0;
+            color: var(--text-light);
+        }
+
+        .feature-list li:before {
+            content: "✓ ";
+            color: #4caf50;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- MOCKUP 2: SIDEBAR + TOP BAR HYBRID -->
+    <div class="app-layout">
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="sidebar-logo">
+                    <span class="logo-emoji">📻</span>
+                    <span class="logo-text">VidPOD</span>
+                </a>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <span>‹</span>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Primary Navigation -->
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <div class="nav-links">
+                        <a href="#" class="nav-link active">
+                            <span class="icon">🏠</span>
+                            <span class="text">Dashboard</span>
+                            <span class="tooltip">Dashboard</span>
+                        </a>
+                        <a href="#" class="nav-link">
+                            <span class="icon">📚</span>
+                            <span class="text">Browse Stories</span>
+                            <span class="badge">8</span>
+                            <span class="tooltip">Browse Stories</span>
+                        </a>
+                        <a href="#" class="nav-link">
+                            <span class="icon">✏️</span>
+                            <span class="text">Add Story</span>
+                            <span class="tooltip">Add Story</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Teacher Section -->
+                <div class="nav-section" data-role="teacher,admin">
+                    <div class="nav-section-title">Teaching</div>
+                    <div class="nav-links">
+                        <a href="#" class="nav-link">
+                            <span class="icon">🎓</span>
+                            <span class="text">My Classes</span>
+                            <span class="badge">3</span>
+                            <span class="tooltip">My Classes</span>
+                        </a>
+                        <a href="#" class="nav-link">
+                            <span class="icon">👥</span>
+                            <span class="text">Students</span>
+                            <span class="tooltip">Students</span>
+                        </a>
+                        <a href="#" class="nav-link">
+                            <span class="icon">📊</span>
+                            <span class="text">Analytics</span>
+                            <span class="tooltip">Analytics</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Admin Section -->
+                <div class="nav-section" data-role="admin">
+                    <div class="nav-section-title">Administration</div>
+                    <div class="nav-links">
+                        <a href="#" class="nav-link">
+                            <span class="icon">⚙️</span>
+                            <span class="text">Settings</span>
+                            <span class="tooltip">Settings</span>
+                        </a>
+                        <a href="#" class="nav-link">
+                            <span class="icon">🏫</span>
+                            <span class="text">Schools</span>
+                            <span class="tooltip">Schools</span>
+                        </a>
+                        <a href="#" class="nav-link">
+                            <span class="icon">👨‍🏫</span>
+                            <span class="text">Teacher Requests</span>
+                            <span class="badge">2</span>
+                            <span class="tooltip">Teacher Requests</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <nav class="breadcrumb">
+                    <div class="breadcrumb-item">
+                        <span class="icon">🏠</span>
+                        <span>Dashboard</span>
+                    </div>
+                    <div class="breadcrumb-item current">
+                        <span>Overview</span>
+                    </div>
+                </nav>
+
+                <div class="top-bar-actions">
+                    <!-- Context Actions -->
+                    <button class="action-button" data-role="teacher,admin">
+                        <span>📄</span>
+                        <span class="text">Import CSV</span>
+                    </button>
+                    <button class="action-button primary">
+                        <span>➕</span>
+                        <span class="text">Quick Add</span>
+                    </button>
+
+                    <!-- User Menu -->
+                    <div class="user-menu" id="userMenu">
+                        <div class="user-trigger">
+                            <div class="user-avatar">JD</div>
+                            <div class="user-info">
+                                <div class="user-name">John Doe</div>
+                                <div class="user-role teacher">Teacher</div>
+                            </div>
+                            <span class="dropdown-arrow">▼</span>
+                        </div>
+                        <div class="user-dropdown">
+                            <a href="#" class="dropdown-item">
+                                <span>👤</span>
+                                <span>Profile</span>
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <span>⚙️</span>
+                                <span>Settings</span>
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <span>❓</span>
+                                <span>Help</span>
+                            </a>
+                            <hr style="margin: 0.5rem 0; border: none; border-top: 1px solid var(--border-color);">
+                            <a href="#" class="dropdown-item danger">
+                                <span>🚪</span>
+                                <span>Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <div class="demo-section">
+                    <h2>Mockup 2: Sidebar + Top Bar Hybrid Navigation</h2>
+                    <p>This design provides a more app-like experience with dedicated spaces for navigation and actions.</p>
+                    
+                    <div class="demo-grid">
+                        <div class="feature-card">
+                            <h4>🏗️ Structure Benefits</h4>
+                            <ul class="feature-list">
+                                <li>Clear separation of navigation and content</li>
+                                <li>Persistent sidebar for easy access</li>
+                                <li>Collapsible sidebar saves space</li>
+                                <li>Top bar for contextual actions</li>
+                                <li>Breadcrumb navigation for deep pages</li>
+                                <li>Professional app-like appearance</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <h4>📱 Mobile Experience</h4>
+                            <ul class="feature-list">
+                                <li>Sidebar slides in from left</li>
+                                <li>Touch-friendly interaction areas</li>
+                                <li>Overlay prevents background interaction</li>
+                                <li>Simplified top bar for mobile</li>
+                                <li>Swipe gestures (can be added)</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <h4>🎨 Visual Hierarchy</h4>
+                            <ul class="feature-list">
+                                <li>Grouped navigation by function</li>
+                                <li>Role-based section visibility</li>
+                                <li>Visual badges for notifications</li>
+                                <li>Consistent iconography</li>
+                                <li>Tooltips for collapsed state</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Sidebar functionality
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        sidebarToggle.addEventListener('click', function() {
+            if (window.innerWidth > 768) {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('collapsed');
+                sidebarToggle.innerHTML = sidebar.classList.contains('collapsed') ? '›' : '‹';
+            } else {
+                sidebar.classList.toggle('mobile-open');
+                sidebarOverlay.classList.toggle('active');
+            }
+        });
+
+        sidebarOverlay.addEventListener('click', function() {
+            sidebar.classList.remove('mobile-open');
+            sidebarOverlay.classList.remove('active');
+        });
+
+        // User menu functionality
+        const userMenu = document.getElementById('userMenu');
+        const userTrigger = userMenu.querySelector('.user-trigger');
+
+        userTrigger.addEventListener('click', function() {
+            userMenu.classList.toggle('open');
+        });
+
+        document.addEventListener('click', function(event) {
+            if (!userMenu.contains(event.target)) {
+                userMenu.classList.remove('open');
+            }
+        });
+
+        // Demo role switching
+        const roles = ['student', 'teacher', 'admin'];
+        const roleNames = ['Student', 'Teacher', 'Admin'];
+        let currentRoleIndex = 1; // Start with teacher
+
+        document.querySelector('.user-role').addEventListener('click', function() {
+            currentRoleIndex = (currentRoleIndex + 1) % roles.length;
+            const newRole = roles[currentRoleIndex];
+            const newRoleName = roleNames[currentRoleIndex];
+            
+            // Update role badge
+            this.className = `user-role ${newRole}`;
+            this.textContent = newRoleName;
+            
+            // Update avatar
+            document.querySelector('.user-avatar').textContent = newRoleName.substring(0, 2);
+            
+            // Show/hide role-specific sections
+            document.querySelectorAll('[data-role]').forEach(el => {
+                const allowedRoles = el.getAttribute('data-role').split(',');
+                el.style.display = allowedRoles.includes(newRole) ? 'block' : 'none';
+            });
+        });
+
+        // Mobile menu toggle for small screens
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('mobile-open');
+                sidebarOverlay.classList.remove('active');
+                sidebarToggle.innerHTML = sidebar.classList.contains('collapsed') ? '›' : '‹';
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('collapsed');
+                sidebarToggle.innerHTML = '☰';
+            }
+        });
+    </script>
+</body>
+</html>

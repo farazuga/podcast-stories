@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD - Role-Based Navigation Test</title>
+    <link rel="stylesheet" href="frontend/css/styles.css">
+    <link rel="stylesheet" href="frontend/css/navigation.css">
+    <style>
+        .test-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .role-switcher {
+            display: flex;
+            gap: 1rem;
+            margin: 2rem 0;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .role-btn {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .role-btn.active {
+            background: #f79b5b;
+            color: white;
+            border-color: #f79b5b;
+        }
+        .role-btn:hover {
+            border-color: #f79b5b;
+        }
+        .expected-items {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #e8f5e8;
+            border-radius: 6px;
+        }
+        .test-results {
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 6px;
+        }
+        .test-results.pass {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .test-results.fail {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .hidden-item {
+            opacity: 0.3;
+            text-decoration: line-through;
+        }
+        .visible-item {
+            opacity: 1;
+            font-weight: 600;
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+
+    <div class="test-container">
+        <h1>🧪 VidPOD Role-Based Navigation Test</h1>
+        <p>This page tests that the correct navigation items appear for each user role.</p>
+
+        <div class="role-switcher">
+            <h3>Switch User Role:</h3>
+            <button class="role-btn active" onclick="switchRole('student')">👨‍🎓 Student</button>
+            <button class="role-btn" onclick="switchRole('teacher')">👨‍🏫 Teacher</button>
+            <button class="role-btn" onclick="switchRole('admin')">👨‍💼 Admin</button>
+        </div>
+
+        <div id="currentRoleInfo">
+            <h3>Current Role: <span id="currentRoleDisplay">Student</span></h3>
+        </div>
+
+        <div class="expected-items">
+            <h4>Expected Navigation Items:</h4>
+            <ul id="expectedItems">
+                <li>🏠 Dashboard (Always visible)</li>
+                <li>📚 Browse Stories (Always visible)</li>
+                <li>✏️ Add Story (Always visible)</li>
+                <li class="hidden-item">🎓 My Classes (Teachers & Admins only)</li>
+                <li class="hidden-item">⚙️ Admin Panel (Admins only)</li>
+                <li class="hidden-item">📄 Import CSV (Teachers & Admins only)</li>
+            </ul>
+        </div>
+
+        <div class="test-results" id="testResults">
+            <h4>Test Results:</h4>
+            <div id="resultsContent">Ready to test...</div>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <button onclick="runNavigationTest()" style="padding: 1rem 2rem; background: #f79b5b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem;">
+                🧪 Run Navigation Test
+            </button>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <h3>📋 Manual Verification Checklist:</h3>
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px;">
+                <h4>Student Role:</h4>
+                <ul>
+                    <li>✅ Should see: Dashboard, Browse Stories, Add Story, Quick Add</li>
+                    <li>❌ Should NOT see: My Classes, Admin Panel, Import CSV</li>
+                </ul>
+                
+                <h4>Teacher Role:</h4>
+                <ul>
+                    <li>✅ Should see: Dashboard, Browse Stories, Add Story, My Classes, Import CSV, Quick Add</li>
+                    <li>❌ Should NOT see: Admin Panel</li>
+                </ul>
+                
+                <h4>Admin Role:</h4>
+                <ul>
+                    <li>✅ Should see: All items (Dashboard, Browse Stories, Add Story, My Classes, Admin Panel, Import CSV, Quick Add)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="frontend/js/navigation.js"></script>
+    <script src="frontend/js/include-navigation.js"></script>
+    <script>
+        let currentTestRole = 'student';
+
+        // Test user objects for each role
+        const testUsers = {
+            student: {
+                id: 1,
+                name: 'Test Student',
+                username: 'student',
+                email: 'student@test.com',
+                role: 'student'
+            },
+            teacher: {
+                id: 2,
+                name: 'Test Teacher',
+                username: 'teacher',
+                email: 'teacher@test.com',
+                role: 'teacher'
+            },
+            admin: {
+                id: 3,
+                name: 'Test Admin',
+                username: 'admin',
+                email: 'admin@test.com',
+                role: 'admin'
+            }
+        };
+
+        function switchRole(role) {
+            currentTestRole = role;
+            
+            // Update UI
+            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('currentRoleDisplay').textContent = role.charAt(0).toUpperCase() + role.slice(1);
+            
+            // Update localStorage to simulate real user
+            localStorage.setItem('user', JSON.stringify(testUsers[role]));
+            
+            // Update navigation if it exists
+            if (window.VidPODNav) {
+                VidPODNav.updateUser(testUsers[role]);
+            }
+            
+            // Update expected items display
+            updateExpectedItems(role);
+            
+            // Run test automatically
+            setTimeout(runNavigationTest, 500);
+        }
+
+        function updateExpectedItems(role) {
+            const items = document.querySelectorAll('#expectedItems li');
+            
+            // Reset all items
+            items.forEach(item => {
+                item.className = '';
+            });
+            
+            // Always visible items (first 3)
+            for (let i = 0; i < 3; i++) {
+                items[i].className = 'visible-item';
+            }
+            
+            // Role-specific items
+            if (role === 'teacher' || role === 'admin') {
+                items[3].className = 'visible-item'; // My Classes
+                items[5].className = 'visible-item'; // Import CSV
+            } else {
+                items[3].className = 'hidden-item';
+                items[5].className = 'hidden-item';
+            }
+            
+            if (role === 'admin') {
+                items[4].className = 'visible-item'; // Admin Panel
+            } else {
+                items[4].className = 'hidden-item';
+            }
+        }
+
+        function runNavigationTest() {
+            const results = [];
+            let passed = 0;
+            let total = 0;
+
+            // Test navigation items visibility
+            const navItems = [
+                { selector: '[data-page="dashboard"]', name: 'Dashboard', alwaysVisible: true },
+                { selector: '[data-page="stories"]', name: 'Browse Stories', alwaysVisible: true },
+                { selector: '[data-page="add-story"]', name: 'Add Story', alwaysVisible: true },
+                { selector: '[data-page="teacher-dashboard"]', name: 'My Classes', roles: ['teacher', 'admin'] },
+                { selector: '[data-page="admin"]', name: 'Admin Panel', roles: ['admin'] },
+                { selector: '[data-role="teacher,admin"]', name: 'Import CSV', roles: ['teacher', 'admin'] }
+            ];
+
+            navItems.forEach(item => {
+                const element = document.querySelector(item.selector);
+                const shouldBeVisible = item.alwaysVisible || (item.roles && item.roles.includes(currentTestRole));
+                
+                if (element) {
+                    const isVisible = element.style.display !== 'none';
+                    const testPassed = shouldBeVisible === isVisible;
+                    
+                    results.push({
+                        name: item.name,
+                        expected: shouldBeVisible ? 'Visible' : 'Hidden',
+                        actual: isVisible ? 'Visible' : 'Hidden',
+                        passed: testPassed
+                    });
+                    
+                    if (testPassed) passed++;
+                } else {
+                    results.push({
+                        name: item.name,
+                        expected: shouldBeVisible ? 'Visible' : 'Hidden',
+                        actual: 'Element not found',
+                        passed: false
+                    });
+                }
+                total++;
+            });
+
+            // Display results
+            const resultsDiv = document.getElementById('testResults');
+            const resultsContent = document.getElementById('resultsContent');
+            
+            const overallPass = passed === total;
+            resultsDiv.className = `test-results ${overallPass ? 'pass' : 'fail'}`;
+            
+            let html = `<strong>Test Results: ${passed}/${total} passed</strong><br><br>`;
+            
+            results.forEach(result => {
+                const icon = result.passed ? '✅' : '❌';
+                html += `${icon} <strong>${result.name}:</strong> Expected ${result.expected}, Got ${result.actual}<br>`;
+            });
+            
+            if (overallPass) {
+                html += '<br><strong>🎉 All tests passed! Role-based navigation is working correctly.</strong>';
+            } else {
+                html += '<br><strong>⚠️ Some tests failed. Check the navigation implementation.</strong>';
+            }
+            
+            resultsContent.innerHTML = html;
+        }
+
+        // Initialize test on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set initial test user
+            localStorage.setItem('user', JSON.stringify(testUsers.student));
+            updateExpectedItems('student');
+            
+            // Run test once navigation is loaded
+            setTimeout(() => {
+                if (document.getElementById('vidpodNavbar')) {
+                    runNavigationTest();
+                }
+            }, 1000);
+        });
+
+        // Override the auto-detection to use test page
+        window.autoLoadNavigation = false;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof NavigationLoader !== 'undefined') {
+                NavigationLoader.loadNavigation('body', 'test-page');
+            }
+        });
+    </script>
+</body>
+</html>

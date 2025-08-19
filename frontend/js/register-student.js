@@ -62,7 +62,6 @@ async function handleRegistration(e) {
     e.preventDefault();
     
     const name = document.getElementById('name').value.trim();
-    const username = document.getElementById('username').value.trim();
     const email = document.getElementById('email').value.trim();
     const studentId = document.getElementById('studentId').value.trim();
     const schoolId = document.getElementById('school').value;
@@ -96,7 +95,6 @@ async function handleRegistration(e) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                username,
                 email,
                 password,
                 name,

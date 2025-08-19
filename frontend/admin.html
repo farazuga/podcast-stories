@@ -222,20 +222,79 @@
                     </div>
                 </div>
 
+                <!-- Story Search & Filter Section -->
+                <div class="admin-card full-width">
+                    <h2>🔍 Search & Filter Stories</h2>
+                    <form id="storySearchForm">
+                        <div class="search-grid">
+                            <div class="form-group">
+                                <label>Search Keywords</label>
+                                <input type="text" id="searchKeywords" placeholder="Search titles and descriptions...">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Author</label>
+                                <input type="text" id="searchAuthor" placeholder="Search by author name or email...">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Tags</label>
+                                <select id="searchTags" multiple></select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select id="searchStatus">
+                                    <option value="">All Statuses</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                    <option value="draft">Draft</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Coverage Start Date</label>
+                                <input type="date" id="searchStartDate">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Coverage End Date</label>
+                                <input type="date" id="searchEndDate">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Interviewee</label>
+                                <input type="text" id="searchInterviewee" placeholder="Search by interviewee name...">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Sort by</label>
+                                <select id="sortBy">
+                                    <option value="submitted_newest">Newest Submitted</option>
+                                    <option value="submitted_oldest">Oldest Submitted</option>
+                                    <option value="newest">Newest Created</option>
+                                    <option value="oldest">Oldest Created</option>
+                                    <option value="title">Title A-Z</option>
+                                    <option value="author">Author A-Z</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="search-actions">
+                            <button type="submit" class="btn btn-primary">🔍 Apply Filters</button>
+                            <button type="button" class="btn btn-secondary" onclick="clearStoryFilters()" data-action="clear-filters">🗑️ Clear All</button>
+                            <button type="button" class="btn btn-outline" onclick="loadStoriesForApproval('pending')">📋 Show Pending Only</button>
+                            <div class="search-stats" id="storySearchStats">
+                                <span id="storyResultsCount">Loading stories...</span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
                 <!-- Story Approval Actions -->
                 <div class="admin-card full-width">
                     <h2>Story Approval Management</h2>
-                    <div class="filter-controls">
-                        <select id="storyStatusFilter">
-                            <option value="pending">Pending Stories</option>
-                            <option value="approved">Approved Stories</option>
-                            <option value="rejected">Rejected Stories</option>
-                            <option value="draft">Draft Stories</option>
-                            <option value="">All Stories</option>
-                        </select>
-                        <button onclick="loadStoriesForApproval()" class="btn btn-secondary">Filter</button>
-                        <button onclick="loadStoriesForApproval('pending')" class="btn btn-primary">Show Pending</button>
-                    </div>
                     <div class="table-responsive">
                         <table class="admin-table">
                             <thead>
@@ -245,6 +304,7 @@
                                     <th>Status</th>
                                     <th>Submitted</th>
                                     <th>Description</th>
+                                    <th>Tags</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -384,6 +444,7 @@
     </div>
 
     <script src="js/auth.js"></script>
+    <script src="js/shared-filters.js"></script>
     <script src="js/admin.js"></script>
     
     <!-- Debug Script -->

@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD - Unified Navigation Component</title>
+    <style>
+        :root {
+            --primary-color: #f79b5b;
+            --primary-hover: #e58a4b;
+            --secondary-color: #04362a;
+            --text-color: #333333;
+            --text-light: #666;
+            --bg-color: #f5f7fa;
+            --white: #ffffff;
+            --border-color: #e0e0e0;
+            --shadow: 0 2px 4px rgba(0,0,0,0.1);
+            --shadow-hover: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        /* UNIFIED NAVIGATION COMPONENT */
+        .vidpod-navbar {
+            background: var(--white);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            align-items: center;
+            min-height: 64px;
+        }
+
+        /* Brand Section */
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+            margin-right: 2rem;
+        }
+
+        .navbar-brand .logo-emoji {
+            font-size: 1.8rem;
+        }
+
+        /* Main Navigation */
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            text-decoration: none;
+            color: var(--text-light);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .nav-item:hover {
+            background: #f8f9fa;
+            color: var(--text-color);
+        }
+
+        .nav-item.active {
+            background: #fff5f0;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .nav-item .icon {
+            font-size: 1.1rem;
+        }
+
+        .nav-item .badge {
+            background: var(--primary-color);
+            color: var(--white);
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            margin-left: 0.25rem;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* Right Actions */
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-left: auto;
+        }
+
+        .navbar-secondary {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            color: var(--text-light);
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .action-btn.primary {
+            background: var(--primary-color);
+            color: var(--white);
+            border-color: var(--primary-color);
+        }
+
+        .action-btn.primary:hover {
+            background: var(--primary-hover);
+        }
+
+        /* User Section */
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            color: var(--text-color);
+            position: relative;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .user-role.student {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .user-role.teacher {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .user-role.admin {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .logout-btn {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            color: var(--text-light);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logout-btn:hover {
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
+        /* Mobile Menu */
+        .mobile-toggle {
+            display: none;
+            padding: 0.5rem;
+            border: none;
+            background: none;
+            color: var(--text-color);
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .mobile-toggle:hover {
+            background: #f8f9fa;
+        }
+
+        .mobile-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            box-shadow: var(--shadow);
+            border-top: 1px solid var(--border-color);
+            z-index: 1000;
+        }
+
+        .mobile-menu.active {
+            display: block;
+        }
+
+        .mobile-section {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .mobile-section:last-child {
+            border-bottom: none;
+        }
+
+        .mobile-section h4 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .mobile-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .mobile-nav .nav-item {
+            margin: 0;
+            padding: 0.75rem;
+            border-radius: 6px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+
+            .navbar-secondary {
+                display: none;
+            }
+
+            .mobile-toggle {
+                display: flex;
+            }
+
+            .user-name {
+                display: none;
+            }
+
+            .navbar-container {
+                position: relative;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar-brand {
+                font-size: 1.3rem;
+                margin-right: 1rem;
+            }
+
+            .navbar-brand .logo-emoji {
+                font-size: 1.5rem;
+            }
+
+            .user-info {
+                display: none;
+            }
+        }
+
+        /* Demo Content Styles */
+        .demo-content {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .implementation-guide {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        .code-block pre {
+            margin: 0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: var(--primary-color);
+            color: var(--white);
+            border-radius: 50%;
+            font-weight: 600;
+            font-size: 0.8rem;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- UNIFIED NAVIGATION COMPONENT -->
+    <nav class="vidpod-navbar" id="vidpodNavbar">
+        <div class="navbar-container">
+            <!-- Brand -->
+            <a href="/" class="navbar-brand">
+                <span class="logo-emoji">📻</span>
+                <span>VidPOD</span>
+            </a>
+
+            <!-- Main Navigation -->
+            <div class="navbar-nav" id="mainNav">
+                <a href="/dashboard.html" class="nav-item active" data-page="dashboard">
+                    <span class="icon">🏠</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/stories.html" class="nav-item" data-page="stories">
+                    <span class="icon">📚</span>
+                    <span>Browse Stories</span>
+                </a>
+                <a href="/add-story.html" class="nav-item" data-page="add-story">
+                    <span class="icon">✏️</span>
+                    <span>Add Story</span>
+                </a>
+                <!-- Teacher/Admin only -->
+                <a href="/teacher-dashboard.html" class="nav-item" data-page="teacher-dashboard" data-role="teacher,admin">
+                    <span class="icon">🎓</span>
+                    <span>My Classes</span>
+                    <span class="badge" id="classBadge">3</span>
+                </a>
+                <!-- Admin only -->
+                <a href="/admin.html" class="nav-item" data-page="admin" data-role="admin">
+                    <span class="icon">⚙️</span>
+                    <span>Admin Panel</span>
+                </a>
+            </div>
+
+            <!-- Actions & User Info -->
+            <div class="navbar-actions">
+                <!-- Secondary Actions -->
+                <div class="navbar-secondary">
+                    <button class="action-btn" data-role="teacher,admin" onclick="importCSV()">
+                        <span>📄</span>
+                        <span>Import CSV</span>
+                    </button>
+                    <a href="/add-story.html" class="action-btn primary">
+                        <span>➕</span>
+                        <span>Quick Add</span>
+                    </a>
+                </div>
+
+                <!-- User Info -->
+                <div class="navbar-user" id="userSection">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">User</div>
+                        <div class="user-role student" id="userRole">Student</div>
+                    </div>
+                </div>
+
+                <!-- Logout -->
+                <button class="logout-btn" onclick="logout()" title="Logout">
+                    <span>🚪</span>
+                </button>
+
+                <!-- Mobile Menu Toggle -->
+                <button class="mobile-toggle" id="mobileToggle">
+                    <span>☰</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="mobile-menu" id="mobileMenu">
+            <div class="mobile-section">
+                <h4>Navigation</h4>
+                <div class="mobile-nav">
+                    <a href="/dashboard.html" class="nav-item active">
+                        <span class="icon">🏠</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/stories.html" class="nav-item">
+                        <span class="icon">📚</span>
+                        <span>Browse Stories</span>
+                    </a>
+                    <a href="/add-story.html" class="nav-item">
+                        <span class="icon">✏️</span>
+                        <span>Add Story</span>
+                    </a>
+                    <a href="/teacher-dashboard.html" class="nav-item" data-role="teacher,admin">
+                        <span class="icon">🎓</span>
+                        <span>My Classes</span>
+                    </a>
+                    <a href="/admin.html" class="nav-item" data-role="admin">
+                        <span class="icon">⚙️</span>
+                        <span>Admin Panel</span>
+                    </a>
+                </div>
+            </div>
+            <div class="mobile-section">
+                <h4>Actions</h4>
+                <div class="mobile-nav">
+                    <a href="#" class="nav-item" data-role="teacher,admin" onclick="importCSV()">
+                        <span class="icon">📄</span>
+                        <span>Import CSV</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="logout()">
+                        <span class="icon">🚪</span>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Demo Implementation Guide -->
+    <div class="demo-content">
+        <div class="implementation-guide">
+            <h2>🚀 VidPOD Unified Navigation Component</h2>
+            <p>This is a production-ready navigation component that combines the best features from all three mockups. It's designed to be easily integrated into the existing VidPOD application.</p>
+
+            <h3><span class="step-number">1</span>Copy the Navigation HTML</h3>
+            <p>Replace the existing navbar in each HTML file with this unified component:</p>
+            <div class="code-block">
+                <pre>&lt;nav class="vidpod-navbar" id="vidpodNavbar"&gt;
+    &lt;div class="navbar-container"&gt;
+        &lt;!-- Brand --&gt;
+        &lt;a href="/" class="navbar-brand"&gt;
+            &lt;span class="logo-emoji"&gt;📻&lt;/span&gt;
+            &lt;span&gt;VidPOD&lt;/span&gt;
+        &lt;/a&gt;
+        
+        &lt;!-- Main Navigation --&gt;
+        &lt;div class="navbar-nav" id="mainNav"&gt;
+            &lt;!-- Navigation items here --&gt;
+        &lt;/div&gt;
+        
+        &lt;!-- Actions &amp; User Info --&gt;
+        &lt;div class="navbar-actions"&gt;
+            &lt;!-- User section and actions here --&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/nav&gt;</pre>
+            </div>
+
+            <h3><span class="step-number">2</span>Add the CSS Styles</h3>
+            <p>Add the navigation styles to your main CSS file or create a separate navigation.css file:</p>
+            <div class="code-block">
+                <pre>/* Copy all the CSS from the &lt;style&gt; section above */
+/* Or include the separate navigation.css file */
+&lt;link rel="stylesheet" href="css/navigation.css"&gt;</pre>
+            </div>
+
+            <h3><span class="step-number">3</span>Include the JavaScript</h3>
+            <p>Add the navigation JavaScript functionality to handle user state and interactions:</p>
+            <div class="code-block">
+                <pre>&lt;script src="js/navigation.js"&gt;&lt;/script&gt;</pre>
+            </div>
+
+            <h3><span class="step-number">4</span>Initialize with User Data</h3>
+            <p>Call the navigation initialization function after the DOM loads:</p>
+            <div class="code-block">
+                <pre>document.addEventListener('DOMContentLoaded', function() {
+    VidPODNavigation.init({
+        currentPage: 'dashboard', // Current page identifier
+        user: getUserFromLocalStorage(), // Your user object
+        onLogout: handleLogout // Your logout function
+    });
+});</pre>
+            </div>
+
+            <h3><span class="step-number">5</span>Update Each Page</h3>
+            <p>For each HTML file, update the navigation:</p>
+            <ul style="margin: 1rem 0; padding-left: 2rem;">
+                <li><strong>dashboard.html:</strong> Set currentPage to 'dashboard'</li>
+                <li><strong>stories.html:</strong> Set currentPage to 'stories'</li>
+                <li><strong>add-story.html:</strong> Set currentPage to 'add-story'</li>
+                <li><strong>teacher-dashboard.html:</strong> Set currentPage to 'teacher-dashboard'</li>
+                <li><strong>admin.html:</strong> Set currentPage to 'admin'</li>
+            </ul>
+
+            <h3>✨ Key Features</h3>
+            <ul style="margin: 1rem 0; padding-left: 2rem;">
+                <li><strong>Unified Branding:</strong> Consistent VidPOD branding across all pages</li>
+                <li><strong>Role-based Navigation:</strong> Automatic show/hide based on user role</li>
+                <li><strong>Mobile Responsive:</strong> Hamburger menu for mobile devices</li>
+                <li><strong>Active State Management:</strong> Highlights current page automatically</li>
+                <li><strong>Badge Support:</strong> Shows counts for notifications and updates</li>
+                <li><strong>Easy Integration:</strong> Drop-in replacement for existing navigation</li>
+            </ul>
+
+            <h3>📱 Responsive Behavior</h3>
+            <ul style="margin: 1rem 0; padding-left: 2rem;">
+                <li><strong>Desktop:</strong> Full horizontal navigation with all features</li>
+                <li><strong>Tablet:</strong> Condensed navigation with essential items</li>
+                <li><strong>Mobile:</strong> Hamburger menu with organized sections</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // VidPOD Navigation JavaScript Module
+        const VidPODNavigation = {
+            currentUser: null,
+            currentPage: null,
+
+            init(config) {
+                this.currentUser = config.user;
+                this.currentPage = config.currentPage;
+                this.onLogout = config.onLogout;
+
+                this.setupEventListeners();
+                this.updateUserDisplay();
+                this.updateActiveState();
+                this.updateRoleVisibility();
+            },
+
+            setupEventListeners() {
+                // Mobile menu toggle
+                const mobileToggle = document.getElementById('mobileToggle');
+                const mobileMenu = document.getElementById('mobileMenu');
+
+                mobileToggle?.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('active');
+                });
+
+                // Close mobile menu when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.vidpod-navbar')) {
+                        mobileMenu?.classList.remove('active');
+                    }
+                });
+
+                // Close mobile menu when clicking nav links
+                document.querySelectorAll('.mobile-nav .nav-item').forEach(link => {
+                    link.addEventListener('click', () => {
+                        mobileMenu?.classList.remove('active');
+                    });
+                });
+            },
+
+            updateUserDisplay() {
+                if (!this.currentUser) return;
+
+                const userName = document.getElementById('userName');
+                const userRole = document.getElementById('userRole');
+                const userAvatar = document.getElementById('userAvatar');
+
+                if (userName) userName.textContent = this.currentUser.name || this.currentUser.username;
+                if (userRole) {
+                    userRole.textContent = this.currentUser.role;
+                    userRole.className = `user-role ${this.currentUser.role}`;
+                }
+                if (userAvatar) {
+                    const name = this.currentUser.name || this.currentUser.username;
+                    userAvatar.textContent = name.substring(0, 2).toUpperCase();
+                }
+            },
+
+            updateActiveState() {
+                if (!this.currentPage) return;
+
+                // Remove active class from all nav items
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+
+                // Add active class to current page
+                document.querySelectorAll(`[data-page="${this.currentPage}"]`).forEach(item => {
+                    item.classList.add('active');
+                });
+            },
+
+            updateRoleVisibility() {
+                if (!this.currentUser?.role) return;
+
+                const userRole = this.currentUser.role;
+
+                document.querySelectorAll('[data-role]').forEach(element => {
+                    const allowedRoles = element.getAttribute('data-role').split(',');
+                    if (allowedRoles.includes(userRole)) {
+                        element.style.display = '';
+                    } else {
+                        element.style.display = 'none';
+                    }
+                });
+            },
+
+            setBadgeCount(badgeId, count) {
+                const badge = document.getElementById(badgeId);
+                if (badge) {
+                    if (count > 0) {
+                        badge.textContent = count;
+                        badge.style.display = 'inline-block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            }
+        };
+
+        // Demo functionality
+        function getUserFromLocalStorage() {
+            const user = localStorage.getItem('user');
+            return user ? JSON.parse(user) : {
+                name: 'John Doe',
+                username: 'johndoe',
+                role: 'teacher'
+            };
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/index.html';
+            }
+        }
+
+        function importCSV() {
+            alert('CSV Import functionality would be triggered here');
+        }
+
+        // Initialize navigation
+        document.addEventListener('DOMContentLoaded', function() {
+            VidPODNavigation.init({
+                currentPage: 'dashboard',
+                user: getUserFromLocalStorage(),
+                onLogout: logout
+            });
+
+            // Demo: Update class badge count
+            VidPODNavigation.setBadgeCount('classBadge', 3);
+        });
+
+        // Demo role switching (click on role badge)
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'userRole') {
+                const roles = ['student', 'teacher', 'admin'];
+                const currentRole = e.target.textContent.toLowerCase();
+                const currentIndex = roles.indexOf(currentRole);
+                const newIndex = (currentIndex + 1) % roles.length;
+                const newRole = roles[newIndex];
+
+                // Update user object
+                VidPODNavigation.currentUser.role = newRole;
+                
+                // Re-initialize to update display
+                VidPODNavigation.updateUserDisplay();
+                VidPODNavigation.updateRoleVisibility();
+            }
+        });
+    </script>
+</body>
+</html>
