@@ -2293,12 +2293,26 @@ body {
     align-items: center;
     justify-content: center;
     backdrop-filter: blur(5px);
+    cursor: pointer;
+    position: relative;
+}
+
+.story-selection .checkbox-container input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 24px;
+    width: 24px;
+    margin: 0;
+    padding: 0;
 }
 
 .story-selection .checkmark {
     position: static;
     transform: none;
     margin: 0;
+    width: 16px;
+    height: 16px;
 }
 
 /* Legacy support for old class name */
