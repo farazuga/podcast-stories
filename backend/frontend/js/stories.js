@@ -1102,84 +1102,172 @@ window.clearSelection = clearSelection;
 
 // Favorite functionality (fully implemented)
 async function toggleFavorite(storyId) {
-    console.log(`Toggle favorite for story ${storyId}`);
+    console.log(`🔄 Toggle favorite for story ${storyId}`);
     
     try {
+        // Validate inputs
+        if (!storyId || storyId <= 0) {
+            throw new Error('Invalid story ID');
+        }
+        
+        // Check if API_URL is defined
+        if (typeof window.API_URL === 'undefined') {
+            throw new Error('API_URL not defined - config.js may not be loaded');
+        }
+        
+        // Check authentication
+        const token = localStorage.getItem('token');
+        if (!token) {
+            showNotification('Please log in to add favorites', 'error');
+            return;
+        }
+        
+        // Check if userFavorites is initialized
+        if (typeof userFavorites === 'undefined') {
+            console.error('userFavorites not initialized, creating new Set');
+            userFavorites = new Set();
+        }
+        
         const isFavorited = userFavorites.has(storyId);
         const method = isFavorited ? 'DELETE' : 'POST';
         const url = `${window.API_URL}/favorites/${storyId}`;
         
-        // Show loading state on button
-        const favoriteBtn = document.querySelector(`[data-story-id="${storyId}"] .favorite-btn`);
-        const heartIcon = favoriteBtn ? favoriteBtn.querySelector('.heart-icon') : null;
+        console.log(`📡 ${method} ${url}`);
         
+        // Find favorite button - try multiple selector strategies
+        let favoriteBtn = document.querySelector(`[data-story-id="${storyId}"] .favorite-btn`);
+        if (!favoriteBtn) {
+            favoriteBtn = document.querySelector(`[onclick="toggleFavorite(${storyId})"]`);
+        }
+        if (!favoriteBtn) {
+            favoriteBtn = document.querySelector(`button[onclick*="toggleFavorite(${storyId})"]`);
+        }
+        
+        // Show loading state
         if (favoriteBtn) {
             favoriteBtn.disabled = true;
             favoriteBtn.classList.add('loading');
+            console.log('✅ Found favorite button, showing loading state');
+        } else {
+            console.warn('⚠️  Could not find favorite button for story', storyId);
         }
         
-        const response = await makeAuthenticatedRequest(url, {
-            method: method
-        });
+        const response = await makeAuthenticatedRequest(url, { method });
         
         if (response.ok) {
             const result = await response.json();
+            console.log('✅ API response:', result);
             
             // Update local state
             if (isFavorited) {
                 userFavorites.delete(storyId);
+                console.log(`➖ Removed story ${storyId} from favorites`);
             } else {
                 userFavorites.add(storyId);
+                console.log(`➕ Added story ${storyId} to favorites`);
             }
             
-            // Update UI immediately
+            // Update UI
             updateFavoriteUI(storyId, !isFavorited, result.total_favorites);
             
             // Show success message
-            showNotification(result.message, 'success');
+            showNotification(result.message || `Story ${isFavorited ? 'removed from' : 'added to'} favorites`, 'success');
             
-            console.log(`Story ${storyId} ${isFavorited ? 'removed from' : 'added to'} favorites`);
         } else {
-            const error = await response.json();
+            const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+            console.error('❌ API error:', response.status, error);
             showNotification(error.error || 'Failed to update favorite', 'error');
-            console.error('Favorite API error:', error);
         }
+        
     } catch (error) {
-        console.error('Error toggling favorite:', error);
-        showNotification('Network error. Please try again.', 'error');
+        console.error('❌ toggleFavorite error:', error);
+        
+        // Provide specific error messages
+        if (error.message.includes('API_URL')) {
+            showNotification('Configuration error. Please refresh the page.', 'error');
+        } else if (error.message.includes('authentication')) {
+            showNotification('Please log in to use favorites.', 'error');
+        } else if (error.message.includes('Network')) {
+            showNotification('Network error. Please check your connection.', 'error');
+        } else {
+            showNotification('Error updating favorite. Please try again.', 'error');
+        }
     } finally {
-        // Remove loading state
-        const favoriteBtn = document.querySelector(`[data-story-id="${storyId}"] .favorite-btn`);
+        // Remove loading state - use same selector strategy
+        let favoriteBtn = document.querySelector(`[data-story-id="${storyId}"] .favorite-btn`);
+        if (!favoriteBtn) {
+            favoriteBtn = document.querySelector(`[onclick="toggleFavorite(${storyId})"]`);
+        }
+        if (!favoriteBtn) {
+            favoriteBtn = document.querySelector(`button[onclick*="toggleFavorite(${storyId})"]`);
+        }
+        
         if (favoriteBtn) {
             favoriteBtn.disabled = false;
             favoriteBtn.classList.remove('loading');
+            console.log('✅ Removed loading state from favorite button');
         }
     }
 }
 
 function updateFavoriteUI(storyId, isFavorited, totalFavorites) {
-    // Find all favorite buttons for this story (could be multiple if story appears in different views)
-    const favoriteButtons = document.querySelectorAll(`[data-story-id="${storyId}"] .favorite-btn`);
+    console.log(`🎨 Updating favorite UI for story ${storyId}: ${isFavorited ? 'favorited' : 'not favorited'}, count: ${totalFavorites}`);
+    
+    // Try multiple selector strategies to find favorite buttons
+    const selectors = [
+        `[data-story-id="${storyId}"] .favorite-btn`,
+        `[onclick="toggleFavorite(${storyId})"]`,
+        `button[onclick*="toggleFavorite(${storyId})"]`
+    ];
+    
+    let favoriteButtons = [];
+    for (const selector of selectors) {
+        const buttons = document.querySelectorAll(selector);
+        if (buttons.length > 0) {
+            favoriteButtons = Array.from(buttons);
+            console.log(`✅ Found ${buttons.length} favorite buttons using selector: ${selector}`);
+            break;
+        }
+    }
+    
+    if (favoriteButtons.length === 0) {
+        console.warn(`⚠️  No favorite buttons found for story ${storyId}`);
+        return;
+    }
     
     favoriteButtons.forEach(btn => {
-        const heartIcon = btn.querySelector('.heart-icon');
-        const favoriteCount = btn.querySelector('.favorite-count');
-        
-        if (heartIcon) {
-            heartIcon.textContent = isFavorited ? '♥' : '♡';
-            heartIcon.style.color = isFavorited ? '#ff6b35' : '#ccc';
+        try {
+            const heartIcon = btn.querySelector('.heart-icon');
+            const favoriteCount = btn.querySelector('.favorite-count');
+            
+            // Update heart icon
+            if (heartIcon) {
+                heartIcon.textContent = isFavorited ? '♥' : '♡';
+                heartIcon.style.color = isFavorited ? '#ff6b35' : '#ccc';
+                console.log(`✅ Updated heart icon: ${heartIcon.textContent}`);
+            } else {
+                console.warn('⚠️  Heart icon not found in button');
+            }
+            
+            // Update favorite count
+            if (favoriteCount && totalFavorites !== undefined) {
+                favoriteCount.textContent = totalFavorites;
+                console.log(`✅ Updated favorite count: ${totalFavorites}`);
+            } else if (!favoriteCount) {
+                console.warn('⚠️  Favorite count element not found in button');
+            }
+            
+            // Update button class and title
+            btn.classList.toggle('favorited', isFavorited);
+            btn.title = isFavorited ? 'Remove from favorites' : 'Add to favorites';
+            
+            // Add animation
+            btn.classList.add('favorite-pulse');
+            setTimeout(() => btn.classList.remove('favorite-pulse'), 300);
+            
+        } catch (btnError) {
+            console.error('❌ Error updating favorite button:', btnError);
         }
-        
-        if (favoriteCount && totalFavorites !== undefined) {
-            favoriteCount.textContent = totalFavorites;
-        }
-        
-        // Update button class
-        btn.classList.toggle('favorited', isFavorited);
-        
-        // Add animation
-        btn.classList.add('favorite-pulse');
-        setTimeout(() => btn.classList.remove('favorite-pulse'), 300);
     });
 }
 
