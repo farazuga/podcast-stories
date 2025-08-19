@@ -699,6 +699,69 @@ app.use('/api/analytics', verifyToken, requireTeacherOrAdmin, analyticsRoutes);
 
 ## 6. Frontend Components
 
+### Unified Navigation System
+
+#### Navigation Component Architecture
+VidPOD features a unified, reusable navigation component system that provides consistent navigation across all pages with role-based access control.
+
+**Component Structure:**
+- `frontend/includes/navigation.html` - Reusable HTML component
+- `frontend/js/navigation.js` - Core navigation functionality  
+- `frontend/js/include-navigation.js` - Auto-include system
+- `frontend/css/navigation.css` - Navigation-specific styles
+
+**Auto-Include Integration:**
+```html
+<!-- Required in all pages -->
+<link rel="stylesheet" href="css/navigation.css">
+<script src="js/navigation.js"></script>
+<script src="js/include-navigation.js"></script>
+```
+
+**Navigation Features:**
+- **📻 VidPOD Brand Logo** - Links to dashboard
+- **Role-based Navigation Links** - Dynamically shown based on user role
+- **Action Buttons** - CSV Import (admin-only), Quick Add, Logout
+- **User Information Display** - Avatar, name, role badge
+- **Mobile Responsive Design** - Hamburger menu for smaller screens
+
+**Role-Based Access Control:**
+```javascript
+// Admin users see all navigation elements
+'admin': {
+    visible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard', 'admin', 'csv-import'],
+    hidden: []
+},
+// Teacher users see class management but no CSV import
+'teacher': {
+    visible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard'],
+    hidden: ['admin', 'csv-import']
+},
+// Student users see basic navigation only
+'student': {
+    visible: ['dashboard', 'stories', 'add-story'],
+    hidden: ['teacher-dashboard', 'admin', 'csv-import']
+}
+```
+
+**CSV Import Access Control:**
+Per user requirements, CSV import functionality is restricted to admin users only:
+```html
+<button data-role="admin" onclick="VidPODNav.handleCSVImport()">
+    📄 Import CSV
+</button>
+```
+
+#### Navigation Testing and Validation
+Comprehensive MCP (Puppeteer) testing suite validates:
+- ✅ Navigation consistency across all 6 pages for all 3 user roles
+- ✅ Role-based visibility working correctly  
+- ✅ CSV import restricted to admin-only access
+- ✅ Authentication protection for sensitive pages
+- ✅ Mobile responsiveness and functionality
+
+**Test Coverage:** 18 scenarios (3 roles × 6 pages) with 100% pass rate
+
 ### Page Structure and Navigation
 
 #### Login System (`index.html`)
@@ -1969,6 +2032,65 @@ student@vidpod.com / rumi&amaml (student)
 - ✅ **Frontend Updated:** Login form accepts email addresses
 - ✅ **Role-based Flow:** Users redirect to appropriate dashboards
 - 🚀 **Ready for Phase 2:** Story approval system implementation
+
+### Unified Navigation System Implementation (August 2025)
+
+#### Comprehensive Navigation Consistency and Testing
+**Completed:** Complete navigation system overhaul with unified component architecture
+
+**Major Achievements:**
+- ✅ **Unified Navigation Component:** Single reusable HTML component across all pages
+- ✅ **Auto-Include System:** JavaScript-based dynamic navigation loading
+- ✅ **Role-Based Access Control:** Proper visibility rules for all user roles
+- ✅ **CSV Import Restriction:** Admin-only access as requested by user
+- ✅ **MCP Testing Suite:** Comprehensive Puppeteer-based testing framework
+- ✅ **Mobile Responsive Design:** Hamburger menu and touch-friendly interface
+
+**Navigation Component Architecture:**
+```
+Navigation System/
+├── frontend/includes/navigation.html     # Reusable HTML component
+├── frontend/js/navigation.js            # Core navigation functionality
+├── frontend/js/include-navigation.js    # Auto-include system
+└── frontend/css/navigation.css          # Navigation-specific styles
+```
+
+**Role-Based Access Implementation:**
+- **Admin Users:** Full access including CSV import and admin panel
+- **Teacher Users:** Class management access, CSV import hidden (per user requirement)
+- **Student Users:** Basic navigation with appropriate restrictions
+
+**Testing and Validation:**
+- **MCP Test Suite:** `test-navigation-all-pages-mcp.js` with 18 test scenarios
+- **Test Coverage:** 3 user roles × 6 pages = 100% navigation consistency
+- **Authentication Testing:** Verified proper page protection and redirects
+- **CSV Access Testing:** Confirmed admin-only restriction working correctly
+
+**User Requirements Fulfilled:**
+- ✅ **"csv upload should be available in admin mode"** - Verified working
+- ✅ **"it should not be available to teachers"** - Confirmed hidden from teachers
+- ✅ **Consistent navigation across all pages** - Achieved with unified component
+- ✅ **Role-based visibility** - Working correctly for all user types
+
+**Technical Implementation:**
+- Auto-include system loads navigation dynamically on all pages
+- VidPODNav JavaScript module handles user state and role-based visibility
+- CSS custom properties ensure consistent VidPOD branding
+- Mobile-first responsive design with hamburger menu
+
+**Files Modified:**
+- `frontend/includes/navigation.html` - Unified navigation component
+- `frontend/js/navigation.js` - Core navigation functionality with role validation
+- `frontend/js/include-navigation.js` - Auto-include system
+- `frontend/css/navigation.css` - Navigation styling and responsive design
+- All main pages updated to use unified navigation system
+
+**System Status:**
+- ✅ **Production Deployed:** All navigation changes live and tested
+- ✅ **Cross-Page Consistency:** Unified experience across all pages
+- ✅ **Role-Based Security:** Proper access control implemented
+- ✅ **User Requirements Met:** CSV admin-only access confirmed
+- ✅ **Testing Complete:** 100% pass rate on comprehensive test suite
 
 ### Admin Panel Debug Resolution (August 2025)
 
