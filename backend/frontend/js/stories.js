@@ -14,6 +14,7 @@ let storiesPerPage = 12;
 let currentViewMode = 'grid';
 let selectedStories = new Set();
 let selectionMode = false;
+let userFavorites = new Set(); // Store user's favorited story IDs
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', async () => {
@@ -21,6 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     await loadUserInfo();
     await loadTags();
+    await loadUserFavorites(); // Load user's favorites
     
     // Check if this is add-story page
     if (window.location.pathname.includes('add-story.html')) {
@@ -72,6 +74,29 @@ async function loadTags() {
         }
     } catch (error) {
         console.error('Error loading tags:', error);
+    }
+}
+
+async function loadUserFavorites() {
+    try {
+        const response = await fetch(`${window.API_URL}/favorites`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (response.ok) {
+            const favorites = await response.json();
+            userFavorites.clear();
+            favorites.forEach(story => {
+                userFavorites.add(story.id);
+            });
+            console.log(`Loaded ${userFavorites.size} user favorites`);
+        } else {
+            console.log('No favorites found or error loading favorites');
+        }
+    } catch (error) {
+        console.error('Error loading user favorites:', error);
     }
 }
 
@@ -152,7 +177,7 @@ function renderListView() {
 
 function renderStoryCard(story, viewMode) {
     const cardClass = viewMode === 'list' ? 'story-card-list' : 'story-card';
-    const isFavorited = false; // TODO: Check if story is favorited by current user
+    const isFavorited = userFavorites.has(story.id);
     
     if (viewMode === 'list') {
         return `
@@ -196,8 +221,9 @@ function renderStoryCard(story, viewMode) {
                 
                 <div class="story-actions">
                     <button class="btn btn-sm btn-outline favorite-btn ${isFavorited ? 'favorited' : ''}" 
-                            onclick="toggleFavorite(${story.id})" title="Add to favorites">
+                            onclick="toggleFavorite(${story.id})" title="${isFavorited ? 'Remove from favorites' : 'Add to favorites'}">
                         <span class="heart-icon">${isFavorited ? '♥' : '♡'}</span>
+                        <span class="favorite-count">${story.favorite_count || 0}</span>
                     </button>
                     <button class="btn btn-sm btn-primary" onclick="viewStory(${story.id})">View</button>
                     ${currentUser && (currentUser.role !== 'student' || story.uploaded_by === currentUser.id) ? 
@@ -234,8 +260,9 @@ function renderStoryCard(story, viewMode) {
                 </div>
                 <div class="story-actions">
                     <button class="btn btn-sm btn-outline favorite-btn ${isFavorited ? 'favorited' : ''}" 
-                            onclick="toggleFavorite(${story.id})" title="Add to favorites">
-                        <span class="heart-icon">${isFavorited ? '♡' : '♥'}</span>
+                            onclick="toggleFavorite(${story.id})" title="${isFavorited ? 'Remove from favorites' : 'Add to favorites'}">
+                        <span class="heart-icon">${isFavorited ? '♥' : '♡'}</span>
+                        <span class="favorite-count">${story.favorite_count || 0}</span>
                     </button>
                     <button class="btn btn-sm btn-primary" onclick="viewStory(${story.id})">View Details</button>
                     ${currentUser && (currentUser.role !== 'student' || story.uploaded_by === currentUser.id) ? 
@@ -696,12 +723,80 @@ function sortStories() {
 window.sortStories = sortStories;
 
 // Bulk action functions (called by HTML buttons)
-function bulkFavorite() {
+async function bulkFavorite() {
     if (selectedStories.size === 0) return;
     
-    console.log(`Adding ${selectedStories.size} stories to favorites`);
-    // TODO: Implement bulk favorite functionality
-    alert(`Adding ${selectedStories.size} stories to favorites (Feature coming soon)`);
+    const storyIds = Array.from(selectedStories);
+    console.log(`Adding ${storyIds.length} stories to favorites:`, storyIds);
+    
+    // Show loading state
+    const bulkFavoriteBtn = document.querySelector('[onclick="bulkFavorite()"]');
+    if (bulkFavoriteBtn) {
+        bulkFavoriteBtn.disabled = true;
+        bulkFavoriteBtn.textContent = 'Adding to Favorites...';
+    }
+    
+    let successCount = 0;
+    let errorCount = 0;
+    
+    try {
+        // Process favorites in parallel for better performance
+        const promises = storyIds.map(async (storyId) => {
+            try {
+                // Only add if not already favorited
+                if (!userFavorites.has(storyId)) {
+                    const response = await fetch(`${window.API_URL}/favorites/${storyId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        userFavorites.add(storyId);
+                        updateFavoriteUI(storyId, true, result.total_favorites);
+                        successCount++;
+                    } else {
+                        errorCount++;
+                    }
+                } else {
+                    // Already favorited, count as success
+                    successCount++;
+                }
+            } catch (error) {
+                console.error(`Error favoriting story ${storyId}:`, error);
+                errorCount++;
+            }
+        });
+        
+        await Promise.all(promises);
+        
+        // Show results
+        if (errorCount === 0) {
+            showNotification(`Successfully added ${successCount} stories to favorites!`, 'success');
+        } else if (successCount > 0) {
+            showNotification(`Added ${successCount} stories to favorites. ${errorCount} failed.`, 'warning');
+        } else {
+            showNotification(`Failed to add stories to favorites. Please try again.`, 'error');
+        }
+        
+        // Clear selection after successful operation
+        if (successCount > 0) {
+            clearSelection();
+        }
+        
+    } catch (error) {
+        console.error('Bulk favorite error:', error);
+        showNotification('Network error during bulk favorite operation.', 'error');
+    } finally {
+        // Restore button state
+        if (bulkFavoriteBtn) {
+            bulkFavoriteBtn.disabled = false;
+            bulkFavoriteBtn.textContent = 'Add to Favorites';
+        }
+    }
 }
 
 function bulkExport() {
@@ -740,11 +835,137 @@ window.bulkExport = bulkExport;
 window.bulkDelete = bulkDelete;
 window.clearSelection = clearSelection;
 
-// Favorite functionality (placeholder)
-function toggleFavorite(storyId) {
+// Favorite functionality (fully implemented)
+async function toggleFavorite(storyId) {
     console.log(`Toggle favorite for story ${storyId}`);
-    // TODO: Implement favorite functionality
-    alert('Favorite functionality coming soon!');
+    
+    try {
+        const isFavorited = userFavorites.has(storyId);
+        const method = isFavorited ? 'DELETE' : 'POST';
+        const url = `${window.API_URL}/favorites/${storyId}`;
+        
+        // Show loading state on button
+        const favoriteBtn = document.querySelector(`[data-story-id="${storyId}"] .favorite-btn`);
+        const heartIcon = favoriteBtn ? favoriteBtn.querySelector('.heart-icon') : null;
+        
+        if (favoriteBtn) {
+            favoriteBtn.disabled = true;
+            favoriteBtn.classList.add('loading');
+        }
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            
+            // Update local state
+            if (isFavorited) {
+                userFavorites.delete(storyId);
+            } else {
+                userFavorites.add(storyId);
+            }
+            
+            // Update UI immediately
+            updateFavoriteUI(storyId, !isFavorited, result.total_favorites);
+            
+            // Show success message
+            showNotification(result.message, 'success');
+            
+            console.log(`Story ${storyId} ${isFavorited ? 'removed from' : 'added to'} favorites`);
+        } else {
+            const error = await response.json();
+            showNotification(error.error || 'Failed to update favorite', 'error');
+            console.error('Favorite API error:', error);
+        }
+    } catch (error) {
+        console.error('Error toggling favorite:', error);
+        showNotification('Network error. Please try again.', 'error');
+    } finally {
+        // Remove loading state
+        const favoriteBtn = document.querySelector(`[data-story-id="${storyId}"] .favorite-btn`);
+        if (favoriteBtn) {
+            favoriteBtn.disabled = false;
+            favoriteBtn.classList.remove('loading');
+        }
+    }
+}
+
+function updateFavoriteUI(storyId, isFavorited, totalFavorites) {
+    // Find all favorite buttons for this story (could be multiple if story appears in different views)
+    const favoriteButtons = document.querySelectorAll(`[data-story-id="${storyId}"] .favorite-btn`);
+    
+    favoriteButtons.forEach(btn => {
+        const heartIcon = btn.querySelector('.heart-icon');
+        const favoriteCount = btn.querySelector('.favorite-count');
+        
+        if (heartIcon) {
+            heartIcon.textContent = isFavorited ? '♥' : '♡';
+            heartIcon.style.color = isFavorited ? '#ff6b35' : '#ccc';
+        }
+        
+        if (favoriteCount && totalFavorites !== undefined) {
+            favoriteCount.textContent = totalFavorites;
+        }
+        
+        // Update button class
+        btn.classList.toggle('favorited', isFavorited);
+        
+        // Add animation
+        btn.classList.add('favorite-pulse');
+        setTimeout(() => btn.classList.remove('favorite-pulse'), 300);
+    });
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 6px;
+        color: white;
+        font-weight: 500;
+        z-index: 1000;
+        max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+    `;
+    
+    // Set background color based on type
+    const colors = {
+        success: '#4CAF50',
+        error: '#f44336',
+        info: '#2196F3',
+        warning: '#ff9800'
+    };
+    notification.style.backgroundColor = colors[type] || colors.info;
+    
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Auto remove after 4 seconds
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 4000);
 }
 
 window.toggleFavorite = toggleFavorite;

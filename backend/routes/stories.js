@@ -28,13 +28,15 @@ router.get('/', verifyToken, async (req, res) => {
         u.email as uploaded_by_email,
         u.school as uploaded_by_school,
         array_agg(DISTINCT t.tag_name) as tags,
-        array_agg(DISTINCT i.name) as interviewees
+        array_agg(DISTINCT i.name) as interviewees,
+        COUNT(DISTINCT uf.id) as favorite_count
       FROM story_ideas s
       LEFT JOIN users u ON s.uploaded_by = u.id
       LEFT JOIN story_tags st ON s.id = st.story_id
       LEFT JOIN tags t ON st.tag_id = t.id
       LEFT JOIN story_interviewees si ON s.id = si.story_id
       LEFT JOIN interviewees i ON si.interviewee_id = i.id
+      LEFT JOIN user_favorites uf ON s.id = uf.story_id
       WHERE 1=1
     `;
     
