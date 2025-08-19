@@ -99,6 +99,26 @@
             </div>
         </div>
 
+        <!-- Multi-select Bulk Actions Bar -->
+        <div id="dashboardBulkActions" class="bulk-actions-bar" style="display: none;">
+            <div class="bulk-actions-content">
+                <span class="selection-count">
+                    <span id="dashboardSelectedCount">0</span> stories selected
+                </span>
+                <div class="bulk-actions">
+                    <button id="dashboardSelectAllBtn" onclick="toggleDashboardSelectAll()" class="btn btn-secondary">
+                        Select All
+                    </button>
+                    <button onclick="dashboardBulkFavorite()" class="btn btn-primary">
+                        Add to Favorites
+                    </button>
+                    <button onclick="dashboardBulkDelete()" class="btn btn-danger" id="dashboardBulkDeleteBtn" style="display: none;">
+                        Delete Selected
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Recent Activity -->
         <div class="recent-activity">
             <h2>📈 Recent Activity</h2>

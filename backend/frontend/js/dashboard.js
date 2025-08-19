@@ -6,6 +6,10 @@ let allStories = [];
 let currentUser = null;
 let allTags = [];
 
+// Multi-select functionality
+let selectedStories = new Set();
+let selectionMode = false;
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', async () => {
     if (!checkAuth()) return;
@@ -62,6 +66,16 @@ async function loadUserInfo() {
         if (user.role === 'student') {
             const csvBtn = document.getElementById('csvImportBtn');
             if (csvBtn) csvBtn.style.display = 'none';
+        }
+        
+        // Show bulk delete button only for admins
+        const bulkDeleteBtn = document.getElementById('dashboardBulkDeleteBtn');
+        if (bulkDeleteBtn) {
+            if (user.role === 'admin' || user.role === 'amitrace_admin') {
+                bulkDeleteBtn.style.display = 'inline-block';
+            } else {
+                bulkDeleteBtn.style.display = 'none';
+            }
         }
     } catch (error) {
         console.error('Error loading user info:', error);
@@ -157,7 +171,13 @@ function createStoryCard(story) {
         `<button class="btn btn-delete" onclick="deleteStory(${story.id})">Delete</button>` : '';
     
     return `
-        <div class="story-card">
+        <div class="story-card" data-story-id="${story.id}">
+            <div class="story-selection">
+                <label class="checkbox-container">
+                    <input type="checkbox" class="story-checkbox" value="${story.id}" onchange="updateDashboardSelection()">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
             <div class="story-header">
                 <h3 class="story-title">${story.idea_title}</h3>
                 <div class="story-meta">
@@ -441,6 +461,181 @@ function truncateText(text, maxLength) {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
 }
+
+// Multi-select functionality for dashboard
+function updateDashboardSelection() {
+    const storyCheckboxes = document.querySelectorAll('.story-checkbox');
+    selectedStories.clear();
+    
+    storyCheckboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+            selectedStories.add(parseInt(checkbox.value));
+        }
+    });
+    
+    selectionMode = selectedStories.size > 0;
+    updateDashboardSelectionUI();
+}
+
+function updateDashboardSelectionUI() {
+    // Show/hide bulk actions bar
+    const bulkActionsBar = document.getElementById('dashboardBulkActions');
+    if (bulkActionsBar) {
+        if (selectedStories.size > 0) {
+            bulkActionsBar.style.display = 'flex';
+            const selectedCount = document.getElementById('dashboardSelectedCount');
+            if (selectedCount) {
+                selectedCount.textContent = selectedStories.size;
+            }
+        } else {
+            bulkActionsBar.style.display = 'none';
+        }
+    }
+}
+
+function toggleDashboardSelectAll() {
+    const storyCheckboxes = document.querySelectorAll('.story-checkbox');
+    const selectAllBtn = document.getElementById('dashboardSelectAllBtn');
+    
+    if (selectedStories.size === 0 || selectedStories.size < storyCheckboxes.length) {
+        // Select all
+        storyCheckboxes.forEach(checkbox => {
+            checkbox.checked = true;
+            selectedStories.add(parseInt(checkbox.value));
+        });
+        if (selectAllBtn) selectAllBtn.textContent = 'Deselect All';
+    } else {
+        // Deselect all
+        storyCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        selectedStories.clear();
+        if (selectAllBtn) selectAllBtn.textContent = 'Select All';
+    }
+    
+    selectionMode = selectedStories.size > 0;
+    updateDashboardSelectionUI();
+}
+
+async function dashboardBulkFavorite() {
+    if (selectedStories.size === 0) return;
+    
+    const storyIds = Array.from(selectedStories);
+    const bulkFavoriteBtn = document.querySelector('[onclick="dashboardBulkFavorite()"]');
+    
+    if (bulkFavoriteBtn) {
+        bulkFavoriteBtn.disabled = true;
+        bulkFavoriteBtn.textContent = 'Adding to Favorites...';
+    }
+    
+    try {
+        let successCount = 0;
+        const promises = storyIds.map(async (storyId) => {
+            try {
+                const response = await fetch(`${window.API_URL}/favorites/${storyId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                if (response.ok) successCount++;
+                return response.ok;
+            } catch (error) {
+                console.error(`Failed to favorite story ${storyId}:`, error);
+                return false;
+            }
+        });
+        
+        await Promise.all(promises);
+        
+        if (successCount > 0) {
+            showNotification(`Added ${successCount} stories to favorites`, 'success');
+        }
+        
+        // Clear selection
+        selectedStories.clear();
+        const checkboxes = document.querySelectorAll('.story-checkbox');
+        checkboxes.forEach(checkbox => checkbox.checked = false);
+        updateDashboardSelectionUI();
+        
+    } catch (error) {
+        console.error('Bulk favorite failed:', error);
+        showNotification('Failed to add stories to favorites', 'error');
+    } finally {
+        if (bulkFavoriteBtn) {
+            bulkFavoriteBtn.disabled = false;
+            bulkFavoriteBtn.textContent = 'Add to Favorites';
+        }
+    }
+}
+
+async function dashboardBulkDelete() {
+    if (selectedStories.size === 0) return;
+    if (currentUser.role !== 'admin') {
+        showNotification('Only admins can delete stories', 'error');
+        return;
+    }
+    
+    const storyIds = Array.from(selectedStories);
+    
+    if (!confirm(`Are you sure you want to delete ${storyIds.length} selected stories? This action cannot be undone.`)) {
+        return;
+    }
+    
+    const bulkDeleteBtn = document.querySelector('[onclick="dashboardBulkDelete()"]');
+    if (bulkDeleteBtn) {
+        bulkDeleteBtn.disabled = true;
+        bulkDeleteBtn.textContent = 'Deleting...';
+    }
+    
+    try {
+        let successCount = 0;
+        const promises = storyIds.map(async (storyId) => {
+            try {
+                const response = await fetch(`${window.API_URL}/stories/${storyId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                if (response.ok) successCount++;
+                return response.ok;
+            } catch (error) {
+                console.error(`Failed to delete story ${storyId}:`, error);
+                return false;
+            }
+        });
+        
+        await Promise.all(promises);
+        
+        if (successCount > 0) {
+            showNotification(`Deleted ${successCount} stories successfully`, 'success');
+            // Reload recent stories to reflect changes
+            loadRecentActivity();
+        }
+        
+        // Clear selection
+        selectedStories.clear();
+        const checkboxes = document.querySelectorAll('.story-checkbox');
+        checkboxes.forEach(checkbox => checkbox.checked = false);
+        updateDashboardSelectionUI();
+        
+    } catch (error) {
+        console.error('Bulk delete failed:', error);
+        showNotification('Failed to delete stories', 'error');
+    } finally {
+        if (bulkDeleteBtn) {
+            bulkDeleteBtn.disabled = false;
+            bulkDeleteBtn.textContent = 'Delete Selected';
+        }
+    }
+}
+
+// Make functions globally available
+window.updateDashboardSelection = updateDashboardSelection;
+window.toggleDashboardSelectAll = toggleDashboardSelectAll;
+window.dashboardBulkFavorite = dashboardBulkFavorite;
+window.dashboardBulkDelete = dashboardBulkDelete;
 
 function logout() {
     localStorage.removeItem('token');

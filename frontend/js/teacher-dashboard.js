@@ -139,14 +139,14 @@ function displayClasses() {
         <div class="class-card">
             <div class="class-header">
                 <h3>${classItem.class_name}</h3>
-                <div class="class-code-section">
-                    <div class="class-code-display">
-                        <span class="class-code-label">Class Code:</span>
-                        <span class="class-code-large">${classItem.class_code}</span>
-                        <button class="btn btn-outline btn-tiny" onclick="copyCode('${classItem.class_code}')" title="Copy class code">
-                            📋
-                        </button>
-                    </div>
+            </div>
+            <div class="class-code-section">
+                <div class="class-code-display">
+                    <span class="class-code-label">Class Code:</span>
+                    <span class="class-code-large">${classItem.class_code}</span>
+                    <button class="btn btn-outline btn-tiny" onclick="copyCode('${classItem.class_code}')" title="Copy class code">
+                        📋
+                    </button>
                 </div>
             </div>
             <div class="class-details">

@@ -1180,14 +1180,14 @@ body {
 }
 
 .class-header {
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
     border-bottom: 2px solid #f0f0f0;
 }
 
 .class-header h3 {
     color: var(--text-color);
-    margin: 0 0 1rem 0;
+    margin: 0;
     font-size: 1.3rem;
     line-height: 1.4;
     word-wrap: break-word;
@@ -2407,6 +2407,12 @@ body {
 }
 
 /* Enhanced Class Code Display Styles */
+.class-code-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
 .new-class-alert {
     background: linear-gradient(135deg, #f79b5b, #e58a4b);
     color: white;
@@ -2508,9 +2514,6 @@ body {
 }
 
 /* Enhanced Class Card Styles */
-.class-code-section {
-    margin-top: 1rem;
-}
 
 .class-code-display {
     display: flex;
