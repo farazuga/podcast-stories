@@ -199,8 +199,8 @@ const VidPODNav = {
                 hidden: ['teacher-dashboard', 'admin', 'csv-import']
             },
             'teacher': {
-                visible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard', 'csv-import'],
-                hidden: ['admin']
+                visible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard'],
+                hidden: ['admin', 'csv-import']
             },
             'admin': {
                 visible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard', 'admin', 'csv-import'],
@@ -316,9 +316,9 @@ const VidPODNav = {
      * Handle CSV import action
      */
     handleCSVImport() {
-        // Check if user has permission
-        if (!['teacher', 'admin'].includes(this.currentUser?.role)) {
-            alert('You do not have permission to import CSV files.');
+        // Check if user has permission (admin only)
+        if (this.currentUser?.role !== 'admin') {
+            alert('You do not have permission to import CSV files. Admin access required.');
             return;
         }
 
