@@ -27,8 +27,8 @@ router.get('/', verifyToken, async (req, res) => {
         COALESCE(u.name, u.email) as uploaded_by_name,
         u.email as uploaded_by_email,
         u.school as uploaded_by_school,
-        array_agg(DISTINCT t.tag_name) as tags,
-        array_agg(DISTINCT i.name) as interviewees,
+        COALESCE(array_agg(DISTINCT t.tag_name) FILTER (WHERE t.tag_name IS NOT NULL), '{}') as tags,
+        COALESCE(array_agg(DISTINCT i.name) FILTER (WHERE i.name IS NOT NULL), '{}') as interviewees,
         COUNT(DISTINCT uf.id) as favorite_count
       FROM story_ideas s
       LEFT JOIN users u ON s.uploaded_by = u.id
