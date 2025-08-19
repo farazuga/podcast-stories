@@ -8,6 +8,10 @@ let allSchools = [];
 let teacherRequests = [];
 let currentRequestId = null;
 
+// Admin story multi-select functionality
+let selectedAdminStories = new Set();
+let adminStoriesForBulkAction = [];
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Admin page loading...');
@@ -1017,7 +1021,13 @@ function displayStoriesForApproval(stories) {
     }
     
     table.innerHTML = stories.map(story => `
-        <tr>
+        <tr data-story-id="${story.id}">
+            <td class="checkbox-column">
+                <label class="checkbox-container">
+                    <input type="checkbox" class="story-approval-checkbox" value="${story.id}" onchange="updateAdminStorySelection()">
+                    <span class="checkmark"></span>
+                </label>
+            </td>
             <td>
                 <div class="story-title-cell">
                     <strong>${story.idea_title}</strong>
@@ -1058,6 +1068,9 @@ function displayStoriesForApproval(stories) {
             </td>
         </tr>
     `).join('');
+    
+    // Store stories data for bulk actions
+    adminStoriesForBulkAction = stories;
     
     console.log('✅ Stories displayed successfully');
 }
@@ -1249,4 +1262,248 @@ async function rejectStory(e) {
         console.error('Error rejecting story:', error);
         showError('Network error. Please try again.');
     }
-}// Force cache refresh - Sun Aug 17 23:52:52 CDT 2025
+}
+
+// Admin Multi-select Functionality
+function updateAdminStorySelection() {
+    const storyCheckboxes = document.querySelectorAll('.story-approval-checkbox');
+    selectedAdminStories.clear();
+    
+    storyCheckboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+            selectedAdminStories.add(parseInt(checkbox.value));
+        }
+    });
+    
+    updateAdminSelectionUI();
+}
+
+function updateAdminSelectionUI() {
+    const bulkActionsBar = document.getElementById('adminBulkActions');
+    const selectedCount = document.getElementById('adminSelectedCount');
+    
+    if (selectedAdminStories.size > 0) {
+        if (bulkActionsBar) bulkActionsBar.style.display = 'flex';
+        if (selectedCount) selectedCount.textContent = selectedAdminStories.size;
+    } else {
+        if (bulkActionsBar) bulkActionsBar.style.display = 'none';
+    }
+    
+    // Update select all checkbox state
+    const selectAllCheckbox = document.getElementById('adminSelectAllStories');
+    const storyCheckboxes = document.querySelectorAll('.story-approval-checkbox');
+    
+    if (selectAllCheckbox && storyCheckboxes.length > 0) {
+        const checkedCount = selectedAdminStories.size;
+        const totalCount = storyCheckboxes.length;
+        
+        selectAllCheckbox.checked = checkedCount === totalCount;
+        selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < totalCount;
+    }
+}
+
+function toggleAdminSelectAllStories() {
+    const selectAllCheckbox = document.getElementById('adminSelectAllStories');
+    const storyCheckboxes = document.querySelectorAll('.story-approval-checkbox');
+    
+    if (selectAllCheckbox.checked) {
+        // Select all
+        storyCheckboxes.forEach(checkbox => {
+            checkbox.checked = true;
+            selectedAdminStories.add(parseInt(checkbox.value));
+        });
+    } else {
+        // Deselect all
+        storyCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        selectedAdminStories.clear();
+    }
+    
+    updateAdminSelectionUI();
+}
+
+async function adminBulkApprove() {
+    if (selectedAdminStories.size === 0) return;
+    
+    const storyIds = Array.from(selectedAdminStories);
+    const confirmMessage = `Are you sure you want to approve ${storyIds.length} selected stories?`;
+    
+    if (!confirm(confirmMessage)) return;
+    
+    const bulkApproveBtn = document.querySelector('[onclick="adminBulkApprove()"]');
+    if (bulkApproveBtn) {
+        bulkApproveBtn.disabled = true;
+        bulkApproveBtn.textContent = 'Approving...';
+    }
+    
+    try {
+        let successCount = 0;
+        const promises = storyIds.map(async (storyId) => {
+            try {
+                const response = await fetch(`${window.API_URL}/stories/${storyId}/approve`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        notes: 'Bulk approved by admin'
+                    })
+                });
+                if (response.ok) successCount++;
+                return response.ok;
+            } catch (error) {
+                console.error(`Failed to approve story ${storyId}:`, error);
+                return false;
+            }
+        });
+        
+        await Promise.all(promises);
+        
+        if (successCount > 0) {
+            showSuccess(`Successfully approved ${successCount} stories`);
+            await loadStoriesForApproval();
+            await loadStoryApprovalStats();
+        }
+        
+        // Clear selection
+        selectedAdminStories.clear();
+        updateAdminSelectionUI();
+        
+    } catch (error) {
+        console.error('Bulk approve failed:', error);
+        showError('Failed to approve stories');
+    } finally {
+        if (bulkApproveBtn) {
+            bulkApproveBtn.disabled = false;
+            bulkApproveBtn.textContent = 'Approve Selected';
+        }
+    }
+}
+
+async function adminBulkReject() {
+    if (selectedAdminStories.size === 0) return;
+    
+    const storyIds = Array.from(selectedAdminStories);
+    const rejectReason = prompt(`Enter rejection reason for ${storyIds.length} selected stories:`);
+    
+    if (!rejectReason || rejectReason.trim() === '') {
+        showError('Rejection reason is required');
+        return;
+    }
+    
+    const bulkRejectBtn = document.querySelector('[onclick="adminBulkReject()"]');
+    if (bulkRejectBtn) {
+        bulkRejectBtn.disabled = true;
+        bulkRejectBtn.textContent = 'Rejecting...';
+    }
+    
+    try {
+        let successCount = 0;
+        const promises = storyIds.map(async (storyId) => {
+            try {
+                const response = await fetch(`${window.API_URL}/stories/${storyId}/reject`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        notes: rejectReason.trim()
+                    })
+                });
+                if (response.ok) successCount++;
+                return response.ok;
+            } catch (error) {
+                console.error(`Failed to reject story ${storyId}:`, error);
+                return false;
+            }
+        });
+        
+        await Promise.all(promises);
+        
+        if (successCount > 0) {
+            showSuccess(`Successfully rejected ${successCount} stories`);
+            await loadStoriesForApproval();
+            await loadStoryApprovalStats();
+        }
+        
+        // Clear selection
+        selectedAdminStories.clear();
+        updateAdminSelectionUI();
+        
+    } catch (error) {
+        console.error('Bulk reject failed:', error);
+        showError('Failed to reject stories');
+    } finally {
+        if (bulkRejectBtn) {
+            bulkRejectBtn.disabled = false;
+            bulkRejectBtn.textContent = 'Reject Selected';
+        }
+    }
+}
+
+async function adminBulkDelete() {
+    if (selectedAdminStories.size === 0) return;
+    
+    const storyIds = Array.from(selectedAdminStories);
+    const confirmMessage = `Are you sure you want to permanently delete ${storyIds.length} selected stories? This action cannot be undone.`;
+    
+    if (!confirm(confirmMessage)) return;
+    
+    const bulkDeleteBtn = document.querySelector('[onclick="adminBulkDelete()"]');
+    if (bulkDeleteBtn) {
+        bulkDeleteBtn.disabled = true;
+        bulkDeleteBtn.textContent = 'Deleting...';
+    }
+    
+    try {
+        let successCount = 0;
+        const promises = storyIds.map(async (storyId) => {
+            try {
+                const response = await fetch(`${window.API_URL}/stories/${storyId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                if (response.ok) successCount++;
+                return response.ok;
+            } catch (error) {
+                console.error(`Failed to delete story ${storyId}:`, error);
+                return false;
+            }
+        });
+        
+        await Promise.all(promises);
+        
+        if (successCount > 0) {
+            showSuccess(`Successfully deleted ${successCount} stories`);
+            await loadStoriesForApproval();
+            await loadStoryApprovalStats();
+        }
+        
+        // Clear selection
+        selectedAdminStories.clear();
+        updateAdminSelectionUI();
+        
+    } catch (error) {
+        console.error('Bulk delete failed:', error);
+        showError('Failed to delete stories');
+    } finally {
+        if (bulkDeleteBtn) {
+            bulkDeleteBtn.disabled = false;
+            bulkDeleteBtn.textContent = 'Delete Selected';
+        }
+    }
+}
+
+// Make admin functions globally available
+window.updateAdminStorySelection = updateAdminStorySelection;
+window.toggleAdminSelectAllStories = toggleAdminSelectAllStories;
+window.adminBulkApprove = adminBulkApprove;
+window.adminBulkReject = adminBulkReject;
+window.adminBulkDelete = adminBulkDelete;
+
+// Force cache refresh - Sun Aug 17 23:52:52 CDT 2025

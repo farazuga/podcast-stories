@@ -250,10 +250,36 @@
                         <button onclick="loadStoriesForApproval()" class="btn btn-secondary">Filter</button>
                         <button onclick="loadStoriesForApproval('pending')" class="btn btn-primary">Show Pending</button>
                     </div>
+                    
+                    <!-- Admin Bulk Actions Bar -->
+                    <div id="adminBulkActions" class="bulk-actions-bar" style="display: none;">
+                        <div class="bulk-actions-content">
+                            <span class="selection-count">
+                                <span id="adminSelectedCount">0</span> stories selected
+                            </span>
+                            <div class="bulk-actions">
+                                <button onclick="adminBulkApprove()" class="btn btn-success">
+                                    Approve Selected
+                                </button>
+                                <button onclick="adminBulkReject()" class="btn btn-danger">
+                                    Reject Selected
+                                </button>
+                                <button onclick="adminBulkDelete()" class="btn btn-danger-outline">
+                                    Delete Selected
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="table-responsive">
                         <table class="admin-table">
                             <thead>
                                 <tr>
+                                    <th class="checkbox-column">
+                                        <label class="checkbox-container">
+                                            <input type="checkbox" id="adminSelectAllStories" onchange="toggleAdminSelectAllStories()">
+                                            <span class="checkmark"></span>
+                                        </label>
+                                    </th>
                                     <th>Title</th>
                                     <th>Author</th>
                                     <th>Status</th>
