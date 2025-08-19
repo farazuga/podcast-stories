@@ -419,7 +419,7 @@ router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
                 row.coverage_start_date || row.start_date || null,
                 row.coverage_end_date || row.end_date || null,
                 req.user.id, 
-                'draft' // Default approval status for imports
+                'approved' // Auto-approve CSV imports by admin users
               ];
             } else {
               // Basic schema without approval_status
@@ -533,6 +533,10 @@ router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
         await client.query('COMMIT');
         console.log(`CSV import completed: ${successCount} stories imported, ${errors.length} errors`);
         
+        if (hasApprovalStatus) {
+          console.log(`✅ Auto-approved ${successCount} stories from CSV import by admin ${req.user.email || req.user.username}`);
+        }
+        
         // Clean up uploaded file
         try {
           fs.unlinkSync(req.file.path);
@@ -545,7 +549,9 @@ router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
           imported: successCount,
           total: results.length,
           errors: errors.length > 0 ? errors : null,
-          schemaInfo: hasApprovalStatus ? 'Phase 2 schema detected' : 'Basic schema detected'
+          schemaInfo: hasApprovalStatus ? 'Phase 2 schema detected' : 'Basic schema detected',
+          approval_status: hasApprovalStatus ? 'auto-approved' : 'no approval system',
+          auto_approved_count: hasApprovalStatus ? successCount : 0
         });
         
       } catch (error) {
