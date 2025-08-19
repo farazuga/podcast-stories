@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD - Admin Panel (Debug Version)</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Debug-specific styles */
+        .debug-banner {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 9999;
+            max-width: 300px;
+        }
+        .error-state {
+            color: #dc3545;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+        .no-data {
+            color: #6c757d;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-approved { background: #d4edda; color: #155724; }
+        .status-rejected { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <!-- Debug Banner -->
+    <div class="debug-banner">
+        🔧 DEBUG MODE ACTIVE - Enhanced Error Reporting & Logging Enabled
+    </div>
+    
+    <!-- Debug Info Panel -->
+    <div class="debug-info" id="debugInfo">
+        <strong>Debug Status:</strong><br>
+        Page: Loading...<br>
+        Auth: Checking...<br>
+        API: Not tested<br>
+        <small>Check console (F12) for detailed logs</small>
+    </div>
+
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>📻 VidPOD - Admin (Debug)</h1>
+        </div>
+        <div class="nav-menu">
+            <a href="/dashboard.html">Dashboard</a>
+            <a href="/add-story.html">Add Story</a>
+            <a href="/admin.html" class="active">Admin Panel</a>
+        </div>
+        <div class="nav-user">
+            <span id="userInfo">Loading...</span>
+            <span class="admin-badge">ADMIN</span>
+            <button class="btn btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Admin Panel Navigation Tabs -->
+        <div class="admin-tabs">
+            <button class="tab-btn active" onclick="showTab('overview')">Overview</button>
+            <button class="tab-btn" onclick="showTab('schools')">Schools</button>
+            <button class="tab-btn" onclick="showTab('teachers')">Teacher Requests</button>
+            <button class="tab-btn" onclick="showTab('stories')">Story Approval</button>
+            <button class="tab-btn" onclick="showTab('tags')">Tags</button>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="overview-tab" class="tab-content active">
+            <div class="admin-grid">
+                <!-- Statistics Section -->
+                <div class="admin-card">
+                    <h2>System Statistics</h2>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalStories">...</div>
+                            <div class="stat-label">Total Stories</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalUsers">...</div>
+                            <div class="stat-label">Total Users</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalSchools">...</div>
+                            <div class="stat-label">Total Schools</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalTags">...</div>
+                            <div class="stat-label">Total Tags</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="pendingStories">...</div>
+                            <div class="stat-label">Pending Stories</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="approvedStories">...</div>
+                            <div class="stat-label">Approved Stories</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Debug Controls -->
+                <div class="admin-card">
+                    <h2>Debug Controls</h2>
+                    <div style="margin-bottom: 10px;">
+                        <button class="btn btn-primary" onclick="testTagsAPI()">Test Tags API</button>
+                        <button class="btn btn-primary" onclick="testStoriesAPI()">Test Stories API</button>
+                        <button class="btn btn-secondary" onclick="refreshAllData()">Refresh All Data</button>
+                    </div>
+                    <div id="debugOutput" style="background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; height: 200px; overflow-y: auto;">
+                        Debug output will appear here...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schools Tab -->
+        <div id="schools-tab" class="tab-content">
+            <div class="admin-card">
+                <h2>Schools Management</h2>
+                <p>Schools functionality placeholder</p>
+            </div>
+        </div>
+
+        <!-- Teacher Requests Tab -->
+        <div id="teachers-tab" class="tab-content">
+            <div class="admin-card">
+                <h2>Teacher Requests</h2>
+                <p>Teacher requests functionality placeholder</p>
+            </div>
+        </div>
+
+        <!-- Story Approval Tab -->
+        <div id="stories-tab" class="tab-content">
+            <div class="admin-grid">
+                <!-- Story Approval Actions -->
+                <div class="admin-card full-width">
+                    <h2>Story Approval Management</h2>
+                    <div class="filter-controls">
+                        <select id="storyStatusFilter">
+                            <option value="pending">Pending Stories</option>
+                            <option value="approved">Approved Stories</option>
+                            <option value="rejected">Rejected Stories</option>
+                            <option value="draft">Draft Stories</option>
+                            <option value="">All Stories</option>
+                        </select>
+                        <button onclick="loadStoriesForApproval()" class="btn btn-secondary">Filter</button>
+                        <button onclick="loadStoriesForApproval('pending')" class="btn btn-primary">Show Pending</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Author</th>
+                                    <th>Status</th>
+                                    <th>Submitted</th>
+                                    <th>Description</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="storiesApprovalTable">
+                                <tr><td colspan="6" class="no-data">Loading stories...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tags Tab -->
+        <div id="tags-tab" class="tab-content">
+            <div class="admin-grid">
+                <!-- Tag Management Section -->
+                <div class="admin-card">
+                    <h2>Tag Management</h2>
+                    
+                    <div class="tag-form">
+                        <h3>Add New Tag</h3>
+                        <form id="addTagForm">
+                            <div class="form-group">
+                                <input type="text" id="newTagName" placeholder="Enter tag name" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add Tag</button>
+                        </form>
+                    </div>
+
+                    <div class="existing-tags">
+                        <h3>Existing Tags</h3>
+                        <div id="tagsList" class="tags-list">
+                            <div class="no-data">Loading tags...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error/Success Messages -->
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+        <div id="successMessage" class="success-message" style="display: none;"></div>
+    </div>
+
+    <!-- Load Scripts -->
+    <script src="js/auth.js"></script>
+    <script src="js/admin-enhanced.js"></script>
+    
+    <!-- Debug Enhancement Script -->
+    <script>
+        // Debug UI updates
+        function updateDebugInfo(status) {
+            const debugInfo = document.getElementById('debugInfo');
+            if (debugInfo) {
+                debugInfo.innerHTML = `
+                    <strong>Debug Status:</strong><br>
+                    ${status}<br>
+                    <small>Check console (F12) for detailed logs</small>
+                `;
+            }
+        }
+
+        // Debug output functions
+        function debugToUI(message) {
+            const debugOutput = document.getElementById('debugOutput');
+            if (debugOutput) {
+                const timestamp = new Date().toLocaleTimeString();
+                debugOutput.innerHTML += `[${timestamp}] ${message}\n`;
+                debugOutput.scrollTop = debugOutput.scrollHeight;
+            }
+        }
+
+        // Test functions for debug UI
+        window.testTagsAPI = async function() {
+            debugToUI('Testing Tags API...');
+            updateDebugInfo('Testing Tags API...');
+            
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    debugToUI('ERROR: No auth token found');
+                    return;
+                }
+                
+                const response = await fetch(`${window.API_URL}/tags`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                debugToUI(`Tags API Response: ${response.status}`);
+                
+                if (response.ok) {
+                    const tags = await response.json();
+                    debugToUI(`SUCCESS: Found ${tags.length} tags`);
+                    debugToUI(`Tags: ${JSON.stringify(tags.slice(0, 3))}${tags.length > 3 ? '...' : ''}`);
+                    updateDebugInfo('Tags API: ✅ Working');
+                } else {
+                    const errorText = await response.text();
+                    debugToUI(`ERROR: ${response.status} - ${errorText}`);
+                    updateDebugInfo('Tags API: ❌ Failed');
+                }
+            } catch (error) {
+                debugToUI(`ERROR: ${error.message}`);
+                updateDebugInfo('Tags API: ❌ Network Error');
+            }
+        };
+
+        window.testStoriesAPI = async function() {
+            debugToUI('Testing Stories API...');
+            updateDebugInfo('Testing Stories API...');
+            
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    debugToUI('ERROR: No auth token found');
+                    return;
+                }
+                
+                const response = await fetch(`${window.API_URL}/stories/admin/by-status/pending`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                debugToUI(`Stories API Response: ${response.status}`);
+                
+                if (response.ok) {
+                    const stories = await response.json();
+                    debugToUI(`SUCCESS: Found ${stories.length} pending stories`);
+                    debugToUI(`Stories: ${JSON.stringify(stories.slice(0, 2))}${stories.length > 2 ? '...' : ''}`);
+                    updateDebugInfo('Stories API: ✅ Working');
+                } else {
+                    const errorText = await response.text();
+                    debugToUI(`ERROR: ${response.status} - ${errorText}`);
+                    updateDebugInfo('Stories API: ❌ Failed');
+                }
+            } catch (error) {
+                debugToUI(`ERROR: ${error.message}`);
+                updateDebugInfo('Stories API: ❌ Network Error');
+            }
+        };
+
+        window.refreshAllData = async function() {
+            debugToUI('Refreshing all data...');
+            updateDebugInfo('Refreshing data...');
+            
+            try {
+                await loadInitialDataEnhanced();
+                debugToUI('SUCCESS: All data refreshed');
+                updateDebugInfo('Data: ✅ Refreshed');
+            } catch (error) {
+                debugToUI(`ERROR: ${error.message}`);
+                updateDebugInfo('Data: ❌ Refresh Failed');
+            }
+        };
+
+        // Initialize debug UI
+        window.addEventListener('load', function() {
+            debugToUI('Debug page loaded');
+            updateDebugInfo('Page: ✅ Loaded');
+        });
+
+        // Enhanced error capture for UI
+        const originalError = console.error;
+        console.error = function(...args) {
+            debugToUI(`ERROR: ${args.join(' ')}`);
+            originalError.apply(console, args);
+        };
+
+        const originalLog = console.log;
+        console.log = function(...args) {
+            const message = args.join(' ');
+            if (message.includes('[ADMIN-DEBUG]') || message.includes('🔍')) {
+                debugToUI(message.replace(/🔍|\[ADMIN-DEBUG\]/g, '').trim());
+            }
+            originalLog.apply(console, args);
+        };
+    </script>
+</body>
+</html>

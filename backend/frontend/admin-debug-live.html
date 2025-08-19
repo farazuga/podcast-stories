@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD Admin Debug - Live Testing</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .debug-section { 
+            background: white; 
+            margin: 20px 0; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn { 
+            padding: 10px 15px; 
+            margin: 5px; 
+            border: none; 
+            background: #007bff; 
+            color: white; 
+            cursor: pointer; 
+            border-radius: 4px;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn.success { background: #28a745; }
+        .btn.danger { background: #dc3545; }
+        .error { color: #dc3545; background: #f8d7da; padding: 10px; border-radius: 4px; }
+        .success { color: #155724; background: #d4edda; padding: 10px; border-radius: 4px; }
+        .info { color: #0c5460; background: #bee5eb; padding: 10px; border-radius: 4px; }
+        .log { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-left: 4px solid #007bff; 
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-ok { background: #28a745; }
+        .status-error { background: #dc3545; }
+        .status-warning { background: #ffc107; }
+        h2 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 VidPOD Admin Panel Debug Tool</h1>
+    <p>This tool helps diagnose issues with the admin panel JavaScript and API connectivity.</p>
+
+    <!-- Authentication Test -->
+    <div class="debug-section">
+        <h2>1. Authentication Status</h2>
+        <p>Check current authentication state and admin privileges:</p>
+        <button class="btn" onclick="checkAuthStatus()">Check Auth Status</button>
+        <button class="btn danger" onclick="clearAuth()">Clear Auth</button>
+        <button class="btn success" onclick="loginAsAdmin()">Login as Admin</button>
+        <div id="authResult"></div>
+    </div>
+
+    <!-- API Connectivity Test -->
+    <div class="debug-section">
+        <h2>2. API Connectivity Test</h2>
+        <p>Test direct API calls with current authentication:</p>
+        <button class="btn" onclick="testTagsAPI()">Test Tags API</button>
+        <button class="btn" onclick="testStoriesAPI()">Test Stories API</button>
+        <button class="btn" onclick="testPendingStoriesAPI()">Test Pending Stories API</button>
+        <div id="apiResult"></div>
+    </div>
+
+    <!-- DOM Elements Test -->
+    <div class="debug-section">
+        <h2>3. DOM Elements Check</h2>
+        <p>Verify that required HTML elements exist for data display:</p>
+        <button class="btn" onclick="checkDOMElements()">Check DOM Elements</button>
+        <div id="domResult"></div>
+    </div>
+
+    <!-- JavaScript Functions Test -->
+    <div class="debug-section">
+        <h2>4. JavaScript Functions Test</h2>
+        <p>Test core admin panel functions:</p>
+        <button class="btn" onclick="testShowTab()">Test showTab Function</button>
+        <button class="btn" onclick="testLoadTags()">Test loadTags Function</button>
+        <button class="btn" onclick="testLoadStories()">Test loadStoriesForApproval</button>
+        <div id="jsResult"></div>
+    </div>
+
+    <!-- Manual Data Injection -->
+    <div class="debug-section">
+        <h2>5. Manual Data Injection Test</h2>
+        <p>Manually inject test data to verify display functions work:</p>
+        <button class="btn" onclick="injectTestTags()">Inject Test Tags</button>
+        <button class="btn" onclick="injectTestStories()">Inject Test Stories</button>
+        <div id="injectResult"></div>
+    </div>
+
+    <!-- Live Admin Panel Test -->
+    <div class="debug-section">
+        <h2>6. Live Admin Panel Test</h2>
+        <p>Open actual admin panel and run diagnostics:</p>
+        <button class="btn success" onclick="openAdminPanel()">Open Admin Panel</button>
+        <button class="btn" onclick="testLivePanel()">Test Live Panel Functions</button>
+        <div id="liveResult"></div>
+    </div>
+
+    <script>
+        // Constants
+        const API_URL = 'https://podcast-stories-production.up.railway.app/api';
+        
+        // Utility functions
+        function log(message, type = 'info') {
+            console.log(`[ADMIN-DEBUG] ${message}`);
+            return `<div class="${type}">${message}</div>`;
+        }
+
+        function logToDiv(elementId, content) {
+            document.getElementById(elementId).innerHTML = content;
+        }
+
+        function appendToDiv(elementId, content) {
+            const element = document.getElementById(elementId);
+            element.innerHTML += content;
+        }
+
+        // 1. Authentication Status Check
+        async function checkAuthStatus() {
+            const result = document.getElementById('authResult');
+            result.innerHTML = '<div class="info">Checking authentication...</div>';
+            
+            try {
+                const token = localStorage.getItem('token');
+                const user = localStorage.getItem('user');
+                
+                let html = '';
+                
+                if (!token) {
+                    html += '<div class="error"><span class="status-indicator status-error"></span>No token found in localStorage</div>';
+                } else {
+                    html += `<div class="success"><span class="status-indicator status-ok"></span>Token found: ${token.substring(0, 30)}...</div>`;
+                    
+                    // Test token validity
+                    try {
+                        const response = await fetch(`${API_URL}/auth/verify`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        
+                        if (response.ok) {
+                            html += '<div class="success"><span class="status-indicator status-ok"></span>Token is valid</div>';
+                        } else {
+                            html += `<div class="error"><span class="status-indicator status-error"></span>Token invalid: ${response.status}</div>`;
+                        }
+                    } catch (e) {
+                        html += `<div class="error"><span class="status-indicator status-error"></span>Token verification failed: ${e.message}</div>`;
+                    }
+                }
+                
+                if (!user) {
+                    html += '<div class="error"><span class="status-indicator status-error"></span>No user data in localStorage</div>';
+                } else {
+                    const userData = JSON.parse(user);
+                    html += `<div class="log">User Data:\n${JSON.stringify(userData, null, 2)}</div>`;
+                    
+                    if (userData.role === 'admin' || userData.role === 'amitrace_admin') {
+                        html += '<div class="success"><span class="status-indicator status-ok"></span>User has admin privileges</div>';
+                    } else {
+                        html += `<div class="error"><span class="status-indicator status-error"></span>User role "${userData.role}" does not have admin privileges</div>`;
+                    }
+                }
+                
+                result.innerHTML = html;
+                
+            } catch (error) {
+                result.innerHTML = log(`Authentication check failed: ${error.message}`, 'error');
+            }
+        }
+
+        function clearAuth() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            logToDiv('authResult', log('Authentication cleared', 'success'));
+        }
+
+        function loginAsAdmin() {
+            // Simulate admin login for testing
+            const adminUser = {
+                id: 1,
+                username: 'admin',
+                email: 'admin@vidpod.com',
+                role: 'amitrace_admin'
+            };
+            
+            localStorage.setItem('user', JSON.stringify(adminUser));
+            localStorage.setItem('token', 'test-admin-token-for-debugging');
+            
+            logToDiv('authResult', log('Test admin credentials set (use real login for actual API calls)', 'success'));
+        }
+
+        // 2. API Connectivity Tests
+        async function testTagsAPI() {
+            const result = document.getElementById('apiResult');
+            result.innerHTML = '<div class="info">Testing Tags API...</div>';
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                result.innerHTML = log('No authentication token found. Please login first.', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/tags`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const responseText = await response.text();
+                let html = `<div class="log">Tags API Response (${response.status}):\n${responseText}</div>`;
+                
+                if (response.ok) {
+                    try {
+                        const tags = JSON.parse(responseText);
+                        html += `<div class="success"><span class="status-indicator status-ok"></span>Tags API working! Found ${tags.length} tags</div>`;
+                        html += `<div class="log">Tags Data:\n${JSON.stringify(tags, null, 2)}</div>`;
+                    } catch (e) {
+                        html += log('API returned non-JSON response', 'error');
+                    }
+                } else {
+                    html += log(`Tags API failed with status ${response.status}`, 'error');
+                }
+                
+                result.innerHTML = html;
+                
+            } catch (error) {
+                result.innerHTML = log(`Tags API error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testStoriesAPI() {
+            const result = document.getElementById('apiResult');
+            result.innerHTML = '<div class="info">Testing Stories API...</div>';
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                result.innerHTML = log('No authentication token found. Please login first.', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/stories`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const responseText = await response.text();
+                let html = `<div class="log">Stories API Response (${response.status}):\n${responseText.substring(0, 500)}${responseText.length > 500 ? '...' : ''}</div>`;
+                
+                if (response.ok) {
+                    try {
+                        const stories = JSON.parse(responseText);
+                        html += `<div class="success"><span class="status-indicator status-ok"></span>Stories API working! Found ${stories.length} stories</div>`;
+                    } catch (e) {
+                        html += log('API returned non-JSON response', 'error');
+                    }
+                } else {
+                    html += log(`Stories API failed with status ${response.status}`, 'error');
+                }
+                
+                result.innerHTML = html;
+                
+            } catch (error) {
+                result.innerHTML = log(`Stories API error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testPendingStoriesAPI() {
+            const result = document.getElementById('apiResult');
+            result.innerHTML = '<div class="info">Testing Pending Stories API...</div>';
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                result.innerHTML = log('No authentication token found. Please login first.', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/stories/admin/by-status/pending`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const responseText = await response.text();
+                let html = `<div class="log">Pending Stories API Response (${response.status}):\n${responseText}</div>`;
+                
+                if (response.ok) {
+                    try {
+                        const stories = JSON.parse(responseText);
+                        html += `<div class="success"><span class="status-indicator status-ok"></span>Pending Stories API working! Found ${stories.length} pending stories</div>`;
+                        html += `<div class="log">Pending Stories Data:\n${JSON.stringify(stories, null, 2)}</div>`;
+                    } catch (e) {
+                        html += log('API returned non-JSON response', 'error');
+                    }
+                } else {
+                    html += log(`Pending Stories API failed with status ${response.status}`, 'error');
+                }
+                
+                result.innerHTML = html;
+                
+            } catch (error) {
+                result.innerHTML = log(`Pending Stories API error: ${error.message}`, 'error');
+            }
+        }
+
+        // 3. DOM Elements Check
+        function checkDOMElements() {
+            const result = document.getElementById('domResult');
+            const requiredElements = [
+                'tagsList',
+                'storiesApprovalTable', 
+                'totalTags',
+                'pendingStories',
+                'approvedStories'
+            ];
+            
+            let html = '<h3>Checking required DOM elements in admin panel:</h3>';
+            
+            // Since we're not on the admin page, we'll simulate the check
+            html += '<div class="info">Note: This test should be run on the actual admin panel page. Here we\'ll check if elements would exist.</div>';
+            
+            requiredElements.forEach(elementId => {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    html += `<div class="success"><span class="status-indicator status-ok"></span>${elementId}: Found</div>`;
+                } else {
+                    html += `<div class="error"><span class="status-indicator status-error"></span>${elementId}: Missing</div>`;
+                }
+            });
+            
+            result.innerHTML = html;
+        }
+
+        // 4. JavaScript Functions Test
+        function testShowTab() {
+            const result = document.getElementById('jsResult');
+            
+            try {
+                if (typeof window.showTab === 'function') {
+                    result.innerHTML = '<div class="success"><span class="status-indicator status-ok"></span>showTab function exists</div>';
+                } else {
+                    result.innerHTML = '<div class="error"><span class="status-indicator status-error"></span>showTab function not found - this indicates the admin.js script may not be loading properly</div>';
+                }
+            } catch (error) {
+                result.innerHTML = log(`showTab test error: ${error.message}`, 'error');
+            }
+        }
+
+        function testLoadTags() {
+            const result = document.getElementById('jsResult');
+            
+            try {
+                if (typeof window.loadTags === 'function') {
+                    result.innerHTML = '<div class="success"><span class="status-indicator status-ok"></span>loadTags function exists</div>';
+                } else {
+                    result.innerHTML = '<div class="error"><span class="status-indicator status-error"></span>loadTags function not found - this indicates the admin.js script may not be loading properly</div>';
+                }
+            } catch (error) {
+                result.innerHTML = log(`loadTags test error: ${error.message}`, 'error');
+            }
+        }
+
+        function testLoadStories() {
+            const result = document.getElementById('jsResult');
+            
+            try {
+                if (typeof window.loadStoriesForApproval === 'function') {
+                    result.innerHTML = '<div class="success"><span class="status-indicator status-ok"></span>loadStoriesForApproval function exists</div>';
+                } else {
+                    result.innerHTML = '<div class="error"><span class="status-indicator status-error"></span>loadStoriesForApproval function not found - this indicates the admin.js script may not be loading properly</div>';
+                }
+            } catch (error) {
+                result.innerHTML = log(`loadStoriesForApproval test error: ${error.message}`, 'error');
+            }
+        }
+
+        // 5. Manual Data Injection
+        function injectTestTags() {
+            const result = document.getElementById('injectResult');
+            
+            const testTags = [
+                { id: 1, tag_name: 'Technology' },
+                { id: 2, tag_name: 'Science' },
+                { id: 3, tag_name: 'Sports' }
+            ];
+            
+            // Try to find tags list element
+            const tagsElement = document.getElementById('tagsList');
+            if (tagsElement) {
+                const tagsHTML = testTags.map(tag => 
+                    `<div class="tag-item"><span>${tag.tag_name}</span><button onclick="alert('Delete ${tag.tag_name}')">×</button></div>`
+                ).join('');
+                
+                tagsElement.innerHTML = tagsHTML;
+                result.innerHTML = '<div class="success"><span class="status-indicator status-ok"></span>Test tags injected successfully!</div>';
+            } else {
+                result.innerHTML = '<div class="error"><span class="status-indicator status-error"></span>tagsList element not found. This test should be run on the admin panel page.</div>';
+            }
+        }
+
+        function injectTestStories() {
+            const result = document.getElementById('injectResult');
+            
+            const testStories = [
+                { id: 1, idea_title: 'Test Story 1', uploaded_by_name: 'John Doe', approval_status: 'pending' },
+                { id: 2, idea_title: 'Test Story 2', uploaded_by_name: 'Jane Smith', approval_status: 'pending' }
+            ];
+            
+            const storiesElement = document.getElementById('storiesApprovalTable');
+            if (storiesElement) {
+                const storiesHTML = testStories.map(story => 
+                    `<tr>
+                        <td>${story.idea_title}</td>
+                        <td>${story.uploaded_by_name}</td>
+                        <td><span class="status-${story.approval_status}">${story.approval_status}</span></td>
+                        <td>2024-01-01</td>
+                        <td>Test description</td>
+                        <td><button onclick="alert('Approve ${story.idea_title}')">Approve</button></td>
+                    </tr>`
+                ).join('');
+                
+                storiesElement.innerHTML = storiesHTML;
+                result.innerHTML = '<div class="success"><span class="status-indicator status-ok"></span>Test stories injected successfully!</div>';
+            } else {
+                result.innerHTML = '<div class="error"><span class="status-indicator status-error"></span>storiesApprovalTable element not found. This test should be run on the admin panel page.</div>';
+            }
+        }
+
+        // 6. Live Panel Test
+        function openAdminPanel() {
+            window.open('/admin.html', '_blank');
+            logToDiv('liveResult', log('Admin panel opened in new tab', 'success'));
+        }
+
+        function testLivePanel() {
+            const result = document.getElementById('liveResult');
+            result.innerHTML = '<div class="info">To test the live panel:<br>1. Open the admin panel using the button above<br>2. Open browser developer tools (F12)<br>3. Go to Console tab<br>4. Look for debug messages starting with "🔍 Admin Debug"<br>5. Check for any JavaScript errors</div>';
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 Admin Debug Tool Loaded');
+            console.log('🔗 API URL:', API_URL);
+            
+            // Check if we're on the admin panel page
+            if (window.location.pathname.includes('admin.html')) {
+                document.body.style.background = '#fff3cd';
+                const notice = document.createElement('div');
+                notice.innerHTML = '<div class="info" style="position: fixed; top: 10px; right: 10px; z-index: 9999;"><strong>DEBUG MODE ACTIVE</strong><br>Check console for detailed logs</div>';
+                document.body.appendChild(notice);
+            }
+        });
+
+        // Error handling
+        window.addEventListener('error', function(e) {
+            console.error('🚨 JavaScript Error Detected:', {
+                message: e.message,
+                source: e.filename,
+                line: e.lineno,
+                column: e.colno,
+                error: e.error
+            });
+        });
+
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('🚨 Unhandled Promise Rejection:', e.reason);
+        });
+    </script>
+</body>
+</html>

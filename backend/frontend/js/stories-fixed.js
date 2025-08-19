@@ -1,8 +1,5 @@
 // Fixed version of stories.js - no duplicate API_URL declaration
-// This file uses window.API_URL set by auth.js, with fallback
-if (!window.API_URL) {
-    window.API_URL = 'https://podcast-stories-production.up.railway.app/api';
-}
+// This file uses window.API_URL set by auth.js
 
 // Global variables
 let allStories = [];
@@ -21,14 +18,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     await loadUserInfo();
     await loadTags();
-    
-    // Check if this is add-story page
-    if (window.location.pathname.includes('add-story.html')) {
-        setupAddStoryPage();
-    } else {
-        await loadStories();
-        setupEventListeners();
-    }
+    await loadStories();
+    setupEventListeners();
 });
 
 function checkAuth() {
@@ -65,13 +56,7 @@ async function loadTags() {
 
         if (response.ok) {
             allTags = await response.json();
-            console.log(`Loaded ${allTags.length} tags`);
-            
-            // Populate tag filter for stories page
             populateTagFilter();
-            
-            // Populate tag select for add-story page
-            populateAddStoryTags();
         }
     } catch (error) {
         console.error('Error loading tags:', error);
@@ -244,139 +229,6 @@ function showError(message) {
     if (container) {
         container.insertBefore(errorDiv, container.firstChild);
         setTimeout(() => errorDiv.remove(), 5000);
-    }
-}
-
-// Add story page functions
-function setupAddStoryPage() {
-    console.log('Setting up add-story page...');
-    
-    // Setup form submission
-    const form = document.getElementById('storyForm');
-    if (form) {
-        form.addEventListener('submit', handleAddStorySubmit);
-        console.log('Form submission handler attached');
-    }
-}
-
-function populateAddStoryTags() {
-    const tagsSelect = document.getElementById('tags');
-    if (tagsSelect && allTags.length > 0) {
-        // Clear existing options
-        tagsSelect.innerHTML = '';
-        
-        // Add tags as options
-        allTags.forEach(tag => {
-            const option = document.createElement('option');
-            option.value = tag.tag_name;
-            option.textContent = tag.tag_name;
-            tagsSelect.appendChild(option);
-        });
-        
-        console.log(`Populated ${allTags.length} tags in add-story select`);
-    }
-}
-
-async function handleAddStorySubmit(e) {
-    e.preventDefault();
-    console.log('Add story form submitted');
-    
-    // Collect form data
-    const formData = {
-        idea_title: document.getElementById('idea_title')?.value,
-        idea_description: document.getElementById('idea_description')?.value,
-        coverage_start_date: document.getElementById('coverage_start_date')?.value,
-        coverage_end_date: document.getElementById('coverage_end_date')?.value,
-        question_1: document.getElementById('question_1')?.value || '',
-        question_2: document.getElementById('question_2')?.value || '',
-        question_3: document.getElementById('question_3')?.value || '',
-        question_4: document.getElementById('question_4')?.value || '',
-        question_5: document.getElementById('question_5')?.value || '',
-        question_6: document.getElementById('question_6')?.value || ''
-    };
-    
-    // Get selected tags
-    const tagsSelect = document.getElementById('tags');
-    if (tagsSelect) {
-        const selectedTags = Array.from(tagsSelect.selectedOptions).map(opt => opt.value);
-        formData.tags = selectedTags;
-        console.log('Selected tags:', selectedTags);
-    }
-    
-    // Get interviewees if field exists
-    const intervieweesField = document.getElementById('interviewees');
-    if (intervieweesField && intervieweesField.value) {
-        formData.interviewees = intervieweesField.value.split(',').map(name => name.trim());
-    }
-    
-    console.log('Form data:', formData);
-    
-    // Submit to API
-    await saveNewStory(formData);
-}
-
-async function saveNewStory(storyData) {
-    console.log('Saving new story...', storyData);
-    
-    // Show loading state
-    const submitBtn = document.querySelector('button[type="submit"]');
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Saving...';
-    }
-    
-    try {
-        const response = await fetch(`${window.API_URL}/stories`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify(storyData)
-        });
-
-        if (response.ok) {
-            const result = await response.json();
-            console.log('Story saved successfully:', result);
-            showSuccess('Story saved successfully!');
-            
-            // Redirect to dashboard after 2 seconds
-            setTimeout(() => {
-                window.location.href = '/dashboard.html';
-            }, 2000);
-        } else {
-            const error = await response.json();
-            console.error('Failed to save story:', error);
-            showError(error.message || 'Failed to save story. Please try again.');
-            
-            // Re-enable submit button
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Save Story';
-            }
-        }
-    } catch (error) {
-        console.error('Error saving story:', error);
-        showError('Network error. Please check your connection and try again.');
-        
-        // Re-enable submit button
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Save Story';
-        }
-    }
-}
-
-function showSuccess(message) {
-    const alert = document.createElement('div');
-    alert.className = 'alert alert-success';
-    alert.style.cssText = 'background: #d4edda; color: #155724; padding: 10px; margin: 10px 0; border-radius: 4px; border: 1px solid #c3e6cb;';
-    alert.textContent = message;
-    
-    const container = document.querySelector('.container');
-    if (container) {
-        container.insertBefore(alert, container.firstChild);
-        setTimeout(() => alert.remove(), 5000);
     }
 }
 
