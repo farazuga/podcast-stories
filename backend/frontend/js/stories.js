@@ -67,9 +67,6 @@ async function loadTags() {
             allTags = await response.json();
             console.log(`Loaded ${allTags.length} tags`);
             
-            // Populate tag filter for stories page
-            populateTagFilter();
-            
             // Populate tag select for add-story page
             populateAddStoryTags();
         }
@@ -78,18 +75,7 @@ async function loadTags() {
     }
 }
 
-function populateTagFilter() {
-    const tagFilter = document.getElementById('tagFilter');
-    if (tagFilter) {
-        tagFilter.innerHTML = '<option value="">All Tags</option>';
-        allTags.forEach(tag => {
-            const option = document.createElement('option');
-            option.value = tag.tag_name;
-            option.textContent = tag.tag_name;
-            tagFilter.appendChild(option);
-        });
-    }
-}
+// Legacy function - removed in favor of populateSearchTagsFilter
 
 async function loadStories() {
     try {
@@ -118,8 +104,12 @@ async function loadStories() {
 }
 
 function displayStories() {
+    const storiesContainer = document.getElementById('storiesContainer');
     const storiesGrid = document.getElementById('storiesGrid');
-    if (!storiesGrid) return;
+    if (!storiesGrid || !storiesContainer) return;
+
+    // Update search stats
+    updateSearchStats();
 
     if (filteredStories.length === 0) {
         storiesGrid.innerHTML = `
@@ -130,29 +120,132 @@ function displayStories() {
         return;
     }
 
-    storiesGrid.innerHTML = filteredStories.map(story => `
-        <div class="story-card" data-story-id="${story.id}">
-            <h3>${story.idea_title || story.title}</h3>
-            <p class="story-description">${story.idea_description || story.description || 'No description available'}</p>
-            <div class="story-meta">
-                <span class="story-author">By: ${story.uploaded_by_name || story.author || 'Unknown'}</span>
-                <span class="story-date">${formatDate(story.uploaded_date || story.created_at)}</span>
+    // Apply current view mode
+    if (currentViewMode === 'list') {
+        renderListView();
+    } else {
+        renderGridView();
+    }
+}
+
+function renderGridView() {
+    const storiesGrid = document.getElementById('storiesGrid');
+    const storiesContainer = document.getElementById('storiesContainer');
+    
+    // Set grid view classes
+    storiesContainer.className = 'stories-container';
+    storiesGrid.className = 'stories-grid';
+
+    storiesGrid.innerHTML = filteredStories.map(story => renderStoryCard(story, 'grid')).join('');
+}
+
+function renderListView() {
+    const storiesGrid = document.getElementById('storiesGrid');
+    const storiesContainer = document.getElementById('storiesContainer');
+    
+    // Set list view classes
+    storiesContainer.className = 'stories-container';
+    storiesGrid.className = 'stories-list';
+
+    storiesGrid.innerHTML = filteredStories.map(story => renderStoryCard(story, 'list')).join('');
+}
+
+function renderStoryCard(story, viewMode) {
+    const cardClass = viewMode === 'list' ? 'story-card-list' : 'story-card';
+    const isFavorited = false; // TODO: Check if story is favorited by current user
+    
+    if (viewMode === 'list') {
+        return `
+            <div class="${cardClass} card" data-story-id="${story.id}">
+                ${selectionMode ? `
+                    <div class="story-selection">
+                        <label class="checkbox-container">
+                            <input type="checkbox" class="story-checkbox" value="${story.id}" onchange="updateSelection()">
+                            <span class="checkmark"></span>
+                        </label>
+                    </div>
+                ` : ''}
+                
+                <div class="story-header">
+                    <h3>${story.idea_title || story.title}</h3>
+                    <div class="story-meta">
+                        <span class="story-author">By: ${story.uploaded_by_name || story.author || 'Unknown'}</span>
+                        <span class="story-date">${formatDate(story.uploaded_date || story.created_at)}</span>
+                    </div>
+                </div>
+                
+                <div class="story-description">
+                    <p>${truncateText(story.idea_description || story.description || 'No description available', 150)}</p>
+                </div>
+                
+                <div class="story-tags">
+                    ${story.tags && story.tags.length > 0 ? 
+                        story.tags.slice(0, 3).map(tag => `<span class="tag">${tag}</span>`).join('') + 
+                        (story.tags.length > 3 ? ` <span class="tag-count">+${story.tags.length - 3}</span>` : '') :
+                        '<span class="no-tags">No tags</span>'
+                    }
+                </div>
+                
+                <div class="story-interviewees">
+                    ${story.interviewees && story.interviewees.length > 0 ?
+                        story.interviewees.slice(0, 2).join(', ') + 
+                        (story.interviewees.length > 2 ? ` +${story.interviewees.length - 2}` : '') :
+                        'No interviewees'
+                    }
+                </div>
+                
+                <div class="story-actions">
+                    <button class="btn btn-sm btn-outline favorite-btn ${isFavorited ? 'favorited' : ''}" 
+                            onclick="toggleFavorite(${story.id})" title="Add to favorites">
+                        <span class="heart-icon">${isFavorited ? '♥' : '♡'}</span>
+                    </button>
+                    <button class="btn btn-sm btn-primary" onclick="viewStory(${story.id})">View</button>
+                    ${currentUser && (currentUser.role !== 'student' || story.uploaded_by === currentUser.id) ? 
+                        `<button class="btn btn-sm btn-secondary" onclick="editStory(${story.id})">Edit</button>` : 
+                        ''
+                    }
+                </div>
             </div>
-            <div class="story-tags">
-                ${story.tags && story.tags.length > 0 ? 
-                    story.tags.map(tag => `<span class="tag">${tag}</span>`).join('') : 
-                    '<span class="no-tags">No tags</span>'
-                }
+        `;
+    } else {
+        // Grid view (existing implementation with selection checkbox added)
+        return `
+            <div class="${cardClass}" data-story-id="${story.id}">
+                ${selectionMode ? `
+                    <div class="story-selection">
+                        <label class="checkbox-container">
+                            <input type="checkbox" class="story-checkbox" value="${story.id}" onchange="updateSelection()">
+                            <span class="checkmark"></span>
+                        </label>
+                    </div>
+                ` : ''}
+                
+                <h3>${story.idea_title || story.title}</h3>
+                <p class="story-description">${story.idea_description || story.description || 'No description available'}</p>
+                <div class="story-meta">
+                    <span class="story-author">By: ${story.uploaded_by_name || story.author || 'Unknown'}</span>
+                    <span class="story-date">${formatDate(story.uploaded_date || story.created_at)}</span>
+                </div>
+                <div class="story-tags">
+                    ${story.tags && story.tags.length > 0 ? 
+                        story.tags.map(tag => `<span class="tag">${tag}</span>`).join('') : 
+                        '<span class="no-tags">No tags</span>'
+                    }
+                </div>
+                <div class="story-actions">
+                    <button class="btn btn-sm btn-outline favorite-btn ${isFavorited ? 'favorited' : ''}" 
+                            onclick="toggleFavorite(${story.id})" title="Add to favorites">
+                        <span class="heart-icon">${isFavorited ? '♡' : '♥'}</span>
+                    </button>
+                    <button class="btn btn-sm btn-primary" onclick="viewStory(${story.id})">View Details</button>
+                    ${currentUser && (currentUser.role !== 'student' || story.uploaded_by === currentUser.id) ? 
+                        `<button class="btn btn-sm btn-secondary" onclick="editStory(${story.id})">Edit</button>` : 
+                        ''
+                    }
+                </div>
             </div>
-            <div class="story-actions">
-                <button class="btn btn-sm btn-primary" onclick="viewStory(${story.id})">View Details</button>
-                ${currentUser && currentUser.role !== 'student' ? 
-                    `<button class="btn btn-sm btn-secondary" onclick="editStory(${story.id})">Edit</button>` : 
-                    ''
-                }
-            </div>
-        </div>
-    `).join('');
+        `;
+    }
 }
 
 function formatDate(dateString) {
@@ -174,46 +267,74 @@ function editStory(storyId) {
 }
 
 function setupEventListeners() {
-    // Search functionality
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', debounce(filterStories, 300));
+    // Search form submission
+    const searchForm = document.getElementById('searchForm');
+    if (searchForm) {
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            applyFilters();
+        });
     }
 
-    // Filter listeners
-    const filters = ['tagFilter', 'startDateFilter', 'endDateFilter'];
+    // Search functionality (for live search)
+    const searchInput = document.getElementById('searchKeywords');
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(applyFilters, 300));
+    }
+
+    // Filter listeners - using the correct IDs from stories.html
+    const filters = ['searchTags', 'searchStartDate', 'searchEndDate', 'searchInterviewee'];
     filters.forEach(filterId => {
         const element = document.getElementById(filterId);
         if (element) {
-            element.addEventListener('change', filterStories);
+            element.addEventListener('change', applyFilters);
         }
     });
+
+    // Populate tags in search filter
+    populateSearchTagsFilter();
 }
 
-function filterStories() {
-    const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
-    const selectedTag = document.getElementById('tagFilter')?.value || '';
-    const startDate = document.getElementById('startDateFilter')?.value || '';
-    const endDate = document.getElementById('endDateFilter')?.value || '';
+function applyFilters() {
+    const searchTerm = document.getElementById('searchKeywords')?.value.toLowerCase() || '';
+    const searchTags = document.getElementById('searchTags');
+    const selectedTags = searchTags ? Array.from(searchTags.selectedOptions).map(opt => opt.value) : [];
+    const startDate = document.getElementById('searchStartDate')?.value || '';
+    const endDate = document.getElementById('searchEndDate')?.value || '';
+    const interviewee = document.getElementById('searchInterviewee')?.value.toLowerCase() || '';
 
     filteredStories = allStories.filter(story => {
-        // Search filter
+        // Search filter (title and description)
         if (searchTerm && 
             !story.idea_title?.toLowerCase().includes(searchTerm) &&
             !story.idea_description?.toLowerCase().includes(searchTerm)) {
             return false;
         }
 
-        // Tag filter
-        if (selectedTag && (!story.tags || !story.tags.includes(selectedTag))) {
-            return false;
+        // Tag filter (multiple tags)
+        if (selectedTags.length > 0) {
+            const storyTags = story.tags || [];
+            const hasMatchingTag = selectedTags.some(tag => storyTags.includes(tag));
+            if (!hasMatchingTag) {
+                return false;
+            }
+        }
+
+        // Interviewee filter
+        if (interviewee && story.interviewees) {
+            const storyInterviewees = Array.isArray(story.interviewees) ? 
+                story.interviewees.join(' ').toLowerCase() : 
+                story.interviewees.toLowerCase();
+            if (!storyInterviewees.includes(interviewee)) {
+                return false;
+            }
         }
 
         // Date filters
-        if (startDate && new Date(story.coverage_start_date) < new Date(startDate)) {
+        if (startDate && story.coverage_start_date && new Date(story.coverage_start_date) < new Date(startDate)) {
             return false;
         }
-        if (endDate && new Date(story.coverage_end_date) > new Date(endDate)) {
+        if (endDate && story.coverage_end_date && new Date(story.coverage_end_date) > new Date(endDate)) {
             return false;
         }
 
@@ -221,6 +342,21 @@ function filterStories() {
     });
 
     displayStories();
+    console.log(`Filtered ${filteredStories.length} stories from ${allStories.length} total`);
+}
+
+function populateSearchTagsFilter() {
+    const searchTags = document.getElementById('searchTags');
+    if (searchTags && allTags.length > 0) {
+        searchTags.innerHTML = '';
+        allTags.forEach(tag => {
+            const option = document.createElement('option');
+            option.value = tag.tag_name;
+            option.textContent = tag.tag_name;
+            searchTags.appendChild(option);
+        });
+        console.log(`Populated ${allTags.length} tags in search filter`);
+    }
 }
 
 function debounce(func, wait) {
@@ -379,6 +515,220 @@ function showSuccess(message) {
         setTimeout(() => alert.remove(), 5000);
     }
 }
+
+// Utility functions
+function truncateText(text, maxLength) {
+    if (!text) return '';
+    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+}
+
+function updateSearchStats() {
+    const resultsCount = document.getElementById('resultsCount');
+    if (resultsCount) {
+        const total = allStories.length;
+        const showing = filteredStories.length;
+        if (showing === total) {
+            resultsCount.textContent = `Showing all ${total} stories`;
+        } else {
+            resultsCount.textContent = `Showing ${showing} of ${total} stories`;
+        }
+    }
+}
+
+// View mode functions (called by HTML buttons)
+window.setViewMode = function(mode) {
+    currentViewMode = mode;
+    
+    // Update button states
+    const gridBtn = document.getElementById('gridViewBtn');
+    const listBtn = document.getElementById('listViewBtn');
+    
+    if (gridBtn && listBtn) {
+        gridBtn.classList.toggle('active', mode === 'grid');
+        listBtn.classList.toggle('active', mode === 'list');
+    }
+    
+    // Re-render stories with new view mode
+    displayStories();
+    
+    console.log(`View mode changed to: ${mode}`);
+};
+
+// Selection functions (called by HTML buttons)
+window.toggleSelectAll = function() {
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const storyCheckboxes = document.querySelectorAll('.story-checkbox');
+    
+    if (selectAllCheckbox.checked) {
+        // Select all
+        storyCheckboxes.forEach(checkbox => {
+            checkbox.checked = true;
+            selectedStories.add(parseInt(checkbox.value));
+        });
+        selectionMode = true;
+    } else {
+        // Deselect all
+        storyCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        selectedStories.clear();
+        selectionMode = selectedStories.size > 0;
+    }
+    
+    updateSelectionUI();
+};
+
+window.updateSelection = function() {
+    const storyCheckboxes = document.querySelectorAll('.story-checkbox');
+    selectedStories.clear();
+    
+    storyCheckboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+            selectedStories.add(parseInt(checkbox.value));
+        }
+    });
+    
+    selectionMode = selectedStories.size > 0;
+    updateSelectionUI();
+};
+
+function updateSelectionUI() {
+    const selectionInfo = document.getElementById('selectionInfo');
+    const selectedCount = document.getElementById('selectedCount');
+    const bulkActionsBar = document.getElementById('bulkActionsBar');
+    const bulkSelectedCount = document.getElementById('bulkSelectedCount');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    
+    // Update selection info
+    if (selectionInfo && selectedCount) {
+        if (selectedStories.size > 0) {
+            selectionInfo.style.display = 'block';
+            selectedCount.textContent = selectedStories.size;
+        } else {
+            selectionInfo.style.display = 'none';
+        }
+    }
+    
+    // Update bulk actions bar
+    if (bulkActionsBar && bulkSelectedCount) {
+        if (selectedStories.size > 0) {
+            bulkActionsBar.style.display = 'block';
+            bulkSelectedCount.textContent = selectedStories.size;
+        } else {
+            bulkActionsBar.style.display = 'none';
+        }
+    }
+    
+    // Update select all checkbox state
+    if (selectAllCheckbox) {
+        const storyCheckboxes = document.querySelectorAll('.story-checkbox');
+        const checkedCount = document.querySelectorAll('.story-checkbox:checked').length;
+        
+        if (checkedCount === 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedCount === storyCheckboxes.length) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        }
+    }
+}
+
+// Search and filter functions (called by HTML)
+window.clearFilters = function() {
+    // Clear all filter inputs
+    const inputs = ['searchKeywords', 'searchTags', 'searchStartDate', 'searchEndDate', 'searchInterviewee'];
+    inputs.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            if (element.type === 'select-multiple') {
+                Array.from(element.options).forEach(option => option.selected = false);
+            } else {
+                element.value = '';
+            }
+        }
+    });
+    
+    // Reset filtered stories and redisplay
+    filteredStories = [...allStories];
+    displayStories();
+    
+    console.log('Filters cleared');
+};
+
+window.sortStories = function() {
+    const sortBy = document.getElementById('sortBy');
+    if (!sortBy) return;
+    
+    const sortValue = sortBy.value;
+    
+    filteredStories.sort((a, b) => {
+        switch (sortValue) {
+            case 'newest':
+                return new Date(b.uploaded_date || b.created_at) - new Date(a.uploaded_date || a.created_at);
+            case 'oldest':
+                return new Date(a.uploaded_date || a.created_at) - new Date(b.uploaded_date || b.created_at);
+            case 'title':
+                return (a.idea_title || a.title || '').localeCompare(b.idea_title || b.title || '');
+            case 'author':
+                return (a.uploaded_by_name || a.author || '').localeCompare(b.uploaded_by_name || b.author || '');
+            default:
+                return 0;
+        }
+    });
+    
+    displayStories();
+    console.log(`Stories sorted by: ${sortValue}`);
+};
+
+// Bulk action functions (called by HTML buttons)
+window.bulkFavorite = function() {
+    if (selectedStories.size === 0) return;
+    
+    console.log(`Adding ${selectedStories.size} stories to favorites`);
+    // TODO: Implement bulk favorite functionality
+    alert(`Adding ${selectedStories.size} stories to favorites (Feature coming soon)`);
+};
+
+window.bulkExport = function() {
+    if (selectedStories.size === 0) return;
+    
+    console.log(`Exporting ${selectedStories.size} stories`);
+    // TODO: Implement bulk export functionality
+    alert(`Exporting ${selectedStories.size} stories (Feature coming soon)`);
+};
+
+window.bulkDelete = function() {
+    if (selectedStories.size === 0) return;
+    
+    if (confirm(`Are you sure you want to delete ${selectedStories.size} selected stories? This action cannot be undone.`)) {
+        console.log(`Deleting ${selectedStories.size} stories`);
+        // TODO: Implement bulk delete functionality
+        alert(`Deleting ${selectedStories.size} stories (Feature coming soon)`);
+    }
+};
+
+window.clearSelection = function() {
+    selectedStories.clear();
+    selectionMode = false;
+    
+    // Uncheck all checkboxes
+    const checkboxes = document.querySelectorAll('.story-checkbox, #selectAllCheckbox');
+    checkboxes.forEach(checkbox => checkbox.checked = false);
+    
+    updateSelectionUI();
+    console.log('Selection cleared');
+};
+
+// Favorite functionality (placeholder)
+window.toggleFavorite = function(storyId) {
+    console.log(`Toggle favorite for story ${storyId}`);
+    // TODO: Implement favorite functionality
+    alert('Favorite functionality coming soon!');
+};
 
 // Make logout available globally
 window.logout = function() {
