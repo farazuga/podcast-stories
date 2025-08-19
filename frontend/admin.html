@@ -5,23 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VidPOD - Admin Panel</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/navigation.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-brand">
-            <h1>📻 VidPOD - Admin</h1>
-        </div>
-        <div class="nav-menu">
-            <a href="/dashboard.html">Dashboard</a>
-            <a href="/add-story.html">Add Story</a>
-            <a href="/admin.html" class="active">Admin Panel</a>
-        </div>
-        <div class="nav-user">
-            <span id="userInfo"></span>
-            <span class="admin-badge">ADMIN</span>
-            <button class="btn btn-logout" onclick="logout()">Logout</button>
-        </div>
-    </nav>
+    <!-- Navigation will auto-load here -->
 
     <div class="container">
         <!-- Admin Panel Navigation Tabs -->
@@ -307,10 +294,7 @@
                 <div class="modal-body">
                     <form id="approveTeacherForm">
                         <input type="hidden" id="requestId" />
-                        <div class="form-group">
-                            <label for="teacherUsername">Username</label>
-                            <input type="text" id="teacherUsername" required placeholder="Enter username for new teacher account">
-                        </div>
+                        <!-- Username field removed - will use email as login -->
                         <div class="form-group">
                             <label for="teacherPassword">Password</label>
                             <input type="password" id="teacherPassword" required placeholder="Enter password for new teacher account">
@@ -448,5 +432,7 @@
             console.log('🔍 Debug setup complete');
         });
     </script>
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
 </body>
 </html>

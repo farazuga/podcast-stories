@@ -5,22 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VidPOD - Story Details</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/navigation.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-brand">
-            <h1>📻 VidPOD</h1>
-        </div>
-        <div class="nav-menu">
-            <a href="/dashboard.html">Dashboard</a>
-            <a href="/add-story.html">Add Story</a>
-            <a href="/admin.html" id="adminLink" style="display: none;">Admin Panel</a>
-        </div>
-        <div class="nav-user">
-            <span id="userInfo"></span>
-            <button class="btn btn-logout" onclick="logout()">Logout</button>
-        </div>
-    </nav>
+    <!-- Navigation will auto-load here -->
 
     <div class="container">
         <div class="breadcrumb">
@@ -77,5 +65,7 @@
     </div>
 
     <script src="js/story-detail.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
 </body>
 </html>
