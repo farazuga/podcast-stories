@@ -1,8 +1,6 @@
-// Fixed version of stories.js - no duplicate API_URL declaration
-// This file uses window.API_URL set by auth.js, with fallback
-if (!window.API_URL) {
-    window.API_URL = 'https://podcast-stories-production.up.railway.app/api';
-}
+// Stories.js - uses window.API_URL set by auth.js
+// Fallback only if window.API_URL is not already set
+window.API_URL = window.API_URL || 'https://podcast-stories-production.up.railway.app/api';
 
 // Global variables
 let allStories = [];
@@ -40,7 +38,60 @@ function checkAuth() {
         window.location.href = '/index.html';
         return false;
     }
+    
+    // Check if token is expired
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Math.floor(Date.now() / 1000);
+        
+        if (payload.exp && currentTime >= payload.exp) {
+            console.log('Token expired, redirecting to login');
+            localStorage.clear();
+            window.location.href = '/index.html';
+            return false;
+        }
+    } catch (error) {
+        console.error('Invalid token format:', error);
+        localStorage.clear();
+        window.location.href = '/index.html';
+        return false;
+    }
+    
     return true;
+}
+
+async function makeAuthenticatedRequest(url, options = {}) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        throw new Error('No authentication token');
+    }
+    
+    const defaultOptions = {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    };
+    
+    const finalOptions = { ...defaultOptions, ...options };
+    
+    try {
+        const response = await fetch(url, finalOptions);
+        
+        // Handle token expiration
+        if (response.status === 401) {
+            console.log('Authentication failed, clearing token and redirecting');
+            localStorage.clear();
+            window.location.href = '/index.html';
+            throw new Error('Authentication failed');
+        }
+        
+        return response;
+    } catch (error) {
+        console.error('Authenticated request failed:', error);
+        throw error;
+    }
 }
 
 async function loadUserInfo() {
@@ -97,11 +148,7 @@ function updateUIForUserRole() {
 
 async function loadTags() {
     try {
-        const response = await fetch(`${window.API_URL}/tags`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
+        const response = await makeAuthenticatedRequest(`${window.API_URL}/tags`);
 
         if (response.ok) {
             allTags = await response.json();
@@ -109,6 +156,8 @@ async function loadTags() {
             
             // Populate tag select for add-story page
             populateAddStoryTags();
+        } else {
+            console.error('Failed to load tags:', response.status);
         }
     } catch (error) {
         console.error('Error loading tags:', error);
@@ -117,11 +166,7 @@ async function loadTags() {
 
 async function loadUserFavorites() {
     try {
-        const response = await fetch(`${window.API_URL}/favorites`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
+        const response = await makeAuthenticatedRequest(`${window.API_URL}/favorites`);
 
         if (response.ok) {
             const favorites = await response.json();
@@ -142,11 +187,7 @@ async function loadUserFavorites() {
 
 async function loadStories() {
     try {
-        const response = await fetch(`${window.API_URL}/stories`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
+        const response = await makeAuthenticatedRequest(`${window.API_URL}/stories`);
 
         if (response.ok) {
             allStories = await response.json();
@@ -1073,12 +1114,8 @@ async function toggleFavorite(storyId) {
             favoriteBtn.classList.add('loading');
         }
         
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                'Content-Type': 'application/json'
-            }
+        const response = await makeAuthenticatedRequest(url, {
+            method: method
         });
         
         if (response.ok) {
@@ -1142,50 +1179,121 @@ function updateFavoriteUI(storyId, isFavorited, totalFavorites) {
     });
 }
 
-function showNotification(message, type = 'info') {
+function showNotification(message, type = 'info', duration = 4000) {
+    // Remove any existing notifications of the same type to prevent stacking
+    const existingNotifications = document.querySelectorAll(`.notification.${type}`);
+    existingNotifications.forEach(notification => {
+        if (notification.parentNode) {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }
+    });
+    
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
     notification.style.cssText = `
         position: fixed;
         top: 20px;
         right: 20px;
-        padding: 12px 20px;
-        border-radius: 6px;
+        padding: 15px 25px;
+        border-radius: 8px;
         color: white;
         font-weight: 500;
-        z-index: 1000;
-        max-width: 300px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        max-width: 350px;
+        min-width: 250px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
         transform: translateX(100%);
-        transition: transform 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 14px;
+        line-height: 1.4;
+        border-left: 4px solid rgba(255,255,255,0.3);
     `;
     
-    // Set background color based on type
-    const colors = {
-        success: '#4CAF50',
-        error: '#f44336',
-        info: '#2196F3',
-        warning: '#ff9800'
+    // Set background color and icon based on type
+    const configs = {
+        success: { color: '#4CAF50', icon: '✅' },
+        error: { color: '#f44336', icon: '❌' },
+        info: { color: '#2196F3', icon: 'ℹ️' },
+        warning: { color: '#ff9800', icon: '⚠️' }
     };
-    notification.style.backgroundColor = colors[type] || colors.info;
     
-    notification.textContent = message;
+    const config = configs[type] || configs.info;
+    notification.style.backgroundColor = config.color;
+    
+    // Add icon and message
+    const content = document.createElement('div');
+    content.style.cssText = 'display: flex; align-items: center; gap: 8px;';
+    content.innerHTML = `
+        <span style="font-size: 16px;">${config.icon}</span>
+        <span>${message}</span>
+    `;
+    notification.appendChild(content);
+    
+    // Add close button
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+        position: absolute;
+        top: 5px;
+        right: 8px;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        padding: 0;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+    `;
+    closeBtn.onmouseover = () => closeBtn.style.opacity = '1';
+    closeBtn.onmouseout = () => closeBtn.style.opacity = '0.7';
+    closeBtn.onclick = () => removeNotification(notification);
+    
+    notification.appendChild(closeBtn);
     document.body.appendChild(notification);
     
-    // Animate in
-    setTimeout(() => {
-        notification.style.transform = 'translateX(0)';
-    }, 100);
-    
-    // Auto remove after 4 seconds
-    setTimeout(() => {
-        notification.style.transform = 'translateX(100%)';
+    // Animate in after a brief delay to ensure proper rendering
+    requestAnimationFrame(() => {
         setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 300);
-    }, 4000);
+            notification.style.transform = 'translateX(0)';
+        }, 50);
+    });
+    
+    // Auto remove after specified duration
+    const autoRemoveTimer = setTimeout(() => {
+        removeNotification(notification);
+    }, duration);
+    
+    // Store timer on element so we can clear it if manually closed
+    notification.autoRemoveTimer = autoRemoveTimer;
+    
+    return notification;
+}
+
+function removeNotification(notification) {
+    if (notification.autoRemoveTimer) {
+        clearTimeout(notification.autoRemoveTimer);
+    }
+    
+    notification.style.transform = 'translateX(100%)';
+    notification.style.opacity = '0';
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 300);
 }
 
 window.toggleFavorite = toggleFavorite;
