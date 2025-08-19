@@ -864,4 +864,61 @@ router.get('/admin/stats', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
+// Bulk approve all draft/pending stories (admin utility)
+router.post('/admin/bulk-approve', verifyToken, isAdmin, async (req, res) => {
+  try {
+    const { status_filter = 'draft' } = req.body; // Default to approving draft stories
+    const adminId = req.user.id;
+    
+    console.log(`Admin ${adminId} performing bulk approval for ${status_filter} stories`);
+    
+    // Get count first
+    const countQuery = await pool.query(
+      `SELECT COUNT(*) as count FROM story_ideas WHERE approval_status = $1`,
+      [status_filter]
+    );
+    
+    const storyCount = parseInt(countQuery.rows[0].count);
+    
+    if (storyCount === 0) {
+      return res.json({
+        message: `No ${status_filter} stories found to approve`,
+        approved: 0,
+        total: storyCount
+      });
+    }
+    
+    // Bulk approve all stories with the specified status
+    const result = await pool.query(
+      `UPDATE story_ideas 
+       SET approval_status = 'approved', 
+           approved_by = $1, 
+           approved_at = CURRENT_TIMESTAMP,
+           approval_notes = $2
+       WHERE approval_status = $3 
+       RETURNING id, idea_title`,
+      [
+        adminId, 
+        `Bulk approved by admin on ${new Date().toISOString()}`, 
+        status_filter
+      ]
+    );
+    
+    console.log(`Bulk approval completed: ${result.rows.length} stories approved`);
+    
+    res.json({
+      message: `Successfully approved ${result.rows.length} ${status_filter} stories`,
+      approved: result.rows.length,
+      total: storyCount,
+      approved_stories: result.rows.map(row => ({
+        id: row.id,
+        title: row.idea_title
+      }))
+    });
+  } catch (error) {
+    console.error('Error in bulk approve:', error);
+    res.status(500).json({ error: 'Failed to bulk approve stories' });
+  }
+});
+
 module.exports = router;
