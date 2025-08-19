@@ -2007,9 +2007,9 @@ created_at: timestamp without time zone NULL
 
 **New Default Test Accounts:**
 ```
-admin@vidpod.com   / rumi&amaml (amitrace_admin)
-teacher@vidpod.com / rumi&amaml (teacher) 
-student@vidpod.com / rumi&amaml (student)
+admin@vidpod.com   / vidpod (amitrace_admin)
+teacher@vidpod.com / vidpod (teacher) 
+student@vidpod.com / vidpod (student)
 ```
 
 **Technical Implementation:**
