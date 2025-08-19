@@ -24,7 +24,7 @@ router.get('/', verifyToken, async (req, res) => {
     let query = `
       SELECT 
         s.*, 
-        u.username as uploaded_by_name,
+        COALESCE(u.name, u.email) as uploaded_by_name,
         u.email as uploaded_by_email,
         u.school as uploaded_by_school,
         array_agg(DISTINCT t.tag_name) as tags,
@@ -76,7 +76,7 @@ router.get('/', verifyToken, async (req, res) => {
       paramCounter++;
     }
 
-    query += ` GROUP BY s.id, u.username, u.email, u.school ORDER BY s.uploaded_date DESC`;
+    query += ` GROUP BY s.id, u.name, u.email, u.school ORDER BY s.uploaded_date DESC`;
 
     const result = await pool.query(query, params);
 
@@ -113,7 +113,7 @@ router.get('/:id', verifyToken, async (req, res) => {
     const storyQuery = await pool.query(`
       SELECT 
         s.*, 
-        u.username as uploaded_by_name,
+        COALESCE(u.name, u.email) as uploaded_by_name,
         u.email as uploaded_by_email,
         u.school as uploaded_by_school,
         array_agg(DISTINCT t.tag_name) as tags,
@@ -125,7 +125,7 @@ router.get('/:id', verifyToken, async (req, res) => {
       LEFT JOIN story_interviewees si ON s.id = si.story_id
       LEFT JOIN interviewees i ON si.interviewee_id = i.id
       WHERE s.id = $1
-      GROUP BY s.id, u.username, u.email, u.school
+      GROUP BY s.id, u.name, u.email, u.school
     `, [id]);
 
     if (storyQuery.rows.length === 0) {
@@ -447,7 +447,7 @@ router.get('/admin/pending', verifyToken, isAdmin, async (req, res) => {
     const query = `
       SELECT 
         s.*, 
-        u.username as uploaded_by_name,
+        COALESCE(u.name, u.email) as uploaded_by_name,
         u.email as uploaded_by_email,
         u.name as uploaded_by_fullname,
         array_agg(DISTINCT t.tag_name) as tags,
@@ -459,7 +459,7 @@ router.get('/admin/pending', verifyToken, isAdmin, async (req, res) => {
       LEFT JOIN story_interviewees si ON s.id = si.story_id
       LEFT JOIN interviewees i ON si.interviewee_id = i.id
       WHERE s.approval_status = 'pending'
-      GROUP BY s.id, u.username, u.email, u.name
+      GROUP BY s.id, u.name, u.email
       ORDER BY s.submitted_at ASC
     `;
     
@@ -484,10 +484,10 @@ router.get('/admin/by-status/:status', verifyToken, isAdmin, async (req, res) =>
     const query = `
       SELECT 
         s.*, 
-        u.username as uploaded_by_name,
+        COALESCE(u.name, u.email) as uploaded_by_name,
         u.email as uploaded_by_email,
         u.name as uploaded_by_fullname,
-        approver.username as approved_by_name,
+        COALESCE(approver.name, approver.email) as approved_by_name,
         approver.name as approved_by_fullname,
         array_agg(DISTINCT t.tag_name) as tags,
         array_agg(DISTINCT i.name) as interviewees
@@ -499,7 +499,7 @@ router.get('/admin/by-status/:status', verifyToken, isAdmin, async (req, res) =>
       LEFT JOIN story_interviewees si ON s.id = si.story_id
       LEFT JOIN interviewees i ON si.interviewee_id = i.id
       WHERE s.approval_status = $1
-      GROUP BY s.id, u.username, u.email, u.name, approver.username, approver.name
+      GROUP BY s.id, u.name, u.email, approver.name, approver.email
       ORDER BY s.uploaded_date DESC
     `;
     
@@ -654,7 +654,7 @@ router.get('/:id/approval-history', verifyToken, isAdmin, async (req, res) => {
     const query = `
       SELECT 
         ah.*,
-        u.username as changed_by_name,
+        COALESCE(u.name, u.email) as changed_by_name,
         u.name as changed_by_fullname
       FROM story_approval_history ah
       LEFT JOIN users u ON ah.changed_by = u.id

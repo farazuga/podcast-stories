@@ -236,7 +236,7 @@ router.get('/class/:classId', authenticateToken, requireTeacherOrAdmin, async (r
         COUNT(DISTINCT ca.id) FILTER (WHERE ca.activity_type = 'story_view') as total_story_views,
         COUNT(DISTINCT ca.id) FILTER (WHERE ca.activity_type = 'favorite') as total_favorites,
         COUNT(DISTINCT ca.story_id) as unique_stories_viewed,
-        u.username as teacher_username
+        COALESCE(u.name, u.email) as teacher_name
       FROM classes c
       JOIN users u ON c.teacher_id = u.id
       LEFT JOIN enrollments e ON c.id = e.class_id

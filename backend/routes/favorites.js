@@ -16,7 +16,7 @@ router.get('/', authenticateToken, async (req, res) => {
     const query = `
       SELECT 
         s.*,
-        u.username as uploaded_by_username,
+        COALESCE(u.name, u.email) as uploaded_by_username,
         uf.created_at as favorited_at,
         COUNT(uf2.id) as total_favorites
       FROM user_favorites uf
@@ -24,7 +24,7 @@ router.get('/', authenticateToken, async (req, res) => {
       JOIN users u ON s.uploaded_by = u.id
       LEFT JOIN user_favorites uf2 ON s.id = uf2.story_id
       WHERE uf.user_id = $1
-      GROUP BY s.id, s.idea_title, s.idea_description, s.uploaded_by, s.uploaded_date, u.username, uf.created_at
+      GROUP BY s.id, s.idea_title, s.idea_description, s.uploaded_by, s.uploaded_date, u.name, u.email, uf.created_at
       ORDER BY uf.created_at DESC
     `;
     
@@ -132,12 +132,12 @@ router.get('/popular', async (req, res) => {
     const query = `
       SELECT 
         s.*,
-        u.username as uploaded_by_username,
+        COALESCE(u.name, u.email) as uploaded_by_username,
         COUNT(uf.id) as favorite_count
       FROM story_ideas s
       JOIN users u ON s.uploaded_by = u.id
       LEFT JOIN user_favorites uf ON s.id = uf.story_id
-      GROUP BY s.id, s.idea_title, s.idea_description, s.uploaded_by, s.uploaded_date, u.username
+      GROUP BY s.id, s.idea_title, s.idea_description, s.uploaded_by, s.uploaded_date, u.name, u.email
       ORDER BY favorite_count DESC, s.uploaded_date DESC
       LIMIT $1 OFFSET $2
     `;
@@ -185,7 +185,7 @@ router.get('/stats', authenticateToken, async (req, res) => {
         s.id,
         s.idea_title,
         COUNT(uf.id) as favorite_count,
-        ARRAY_AGG(DISTINCT u.username) FILTER (WHERE u.username IS NOT NULL) as favorited_by
+        ARRAY_AGG(DISTINCT COALESCE(u.name, u.email)) FILTER (WHERE u.email IS NOT NULL) as favorited_by
       FROM story_ideas s
       LEFT JOIN user_favorites uf ON s.id = uf.story_id
       LEFT JOIN users u ON uf.user_id = u.id

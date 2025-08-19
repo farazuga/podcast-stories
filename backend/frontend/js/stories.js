@@ -94,6 +94,9 @@ async function makeAuthenticatedRequest(url, options = {}) {
     }
 }
 
+// Make function globally available for testing
+window.makeAuthenticatedRequest = makeAuthenticatedRequest;
+
 async function loadUserInfo() {
     const user = localStorage.getItem('user');
     if (user) {

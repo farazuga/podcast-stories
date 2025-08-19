@@ -12,21 +12,21 @@ const pool = new Pool({
 // Register new user
 router.post('/register', async (req, res) => {
   try {
-    const { username, password, email, school } = req.body;
+    const { password, email, name, school } = req.body;
 
     // Validate input
-    if (!username || !password || !email) {
-      return res.status(400).json({ error: 'Username, password, and email are required' });
+    if (!password || !email) {
+      return res.status(400).json({ error: 'Email and password are required' });
     }
 
     // Check if user already exists
     const userExists = await pool.query(
-      'SELECT * FROM users WHERE username = $1 OR email = $2',
-      [username, email]
+      'SELECT * FROM users WHERE email = $1',
+      [email]
     );
 
     if (userExists.rows.length > 0) {
-      return res.status(400).json({ error: 'Username or email already exists' });
+      return res.status(400).json({ error: 'Email already exists' });
     }
 
     // Hash password
@@ -34,15 +34,15 @@ router.post('/register', async (req, res) => {
 
     // Create user
     const newUser = await pool.query(
-      'INSERT INTO users (username, password, email, school, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, email, school, role',
-      [username, hashedPassword, email, school || null, 'user']
+      'INSERT INTO users (password, email, name, school, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, name, school, role',
+      [hashedPassword, email, name || null, school || null, 'user']
     );
 
     // Create token
     const token = jwt.sign(
       { 
         id: newUser.rows[0].id, 
-        username: newUser.rows[0].username,
+        email: newUser.rows[0].email,
         role: newUser.rows[0].role 
       },
       process.env.JWT_SECRET,
@@ -54,8 +54,8 @@ router.post('/register', async (req, res) => {
       token,
       user: {
         id: newUser.rows[0].id,
-        username: newUser.rows[0].username,
         email: newUser.rows[0].email,
+        name: newUser.rows[0].name,
         school: newUser.rows[0].school,
         role: newUser.rows[0].role
       }
@@ -66,34 +66,23 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Login - Updated to support both email and username (with email preference)
+// Login - Email-based authentication only
 router.post('/login', async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-    const loginIdentifier = email || username; // Prefer email if provided
+    const { email, password } = req.body;
 
     // Validate input
-    if (!loginIdentifier || !password) {
+    if (!email || !password) {
       return res.status(400).json({ 
-        error: 'Email (or username) and password are required' 
+        error: 'Email and password are required' 
       });
     }
 
-    // Find user by email first, then fallback to username for backward compatibility
-    let user;
-    if (loginIdentifier.includes('@')) {
-      // Login identifier contains @, treat as email
-      user = await pool.query(
-        'SELECT u.*, s.school_name FROM users u LEFT JOIN schools s ON u.school_id = s.id WHERE u.email = $1',
-        [loginIdentifier]
-      );
-    } else {
-      // No @, treat as username (backward compatibility)
-      user = await pool.query(
-        'SELECT u.*, s.school_name FROM users u LEFT JOIN schools s ON u.school_id = s.id WHERE u.username = $1',
-        [loginIdentifier]
-      );
-    }
+    // Find user by email
+    const user = await pool.query(
+      'SELECT u.*, s.school_name FROM users u LEFT JOIN schools s ON u.school_id = s.id WHERE u.email = $1',
+      [email]
+    );
 
     if (user.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -112,7 +101,6 @@ router.post('/login', async (req, res) => {
       { 
         id: userData.id, 
         email: userData.email,
-        username: userData.username, // Keep for backward compatibility
         role: userData.role 
       },
       process.env.JWT_SECRET,
@@ -124,7 +112,6 @@ router.post('/login', async (req, res) => {
       token,
       user: {
         id: userData.id,
-        username: userData.username,
         email: userData.email,
         name: userData.name,
         school: userData.school_name,
@@ -151,7 +138,7 @@ router.get('/verify', async (req, res) => {
     
     // Get fresh user data with school information
     const user = await pool.query(
-      'SELECT u.id, u.username, u.email, u.name, u.role, u.student_id, s.school_name FROM users u LEFT JOIN schools s ON u.school_id = s.id WHERE u.id = $1',
+      'SELECT u.id, u.email, u.name, u.role, u.student_id, s.school_name FROM users u LEFT JOIN schools s ON u.school_id = s.id WHERE u.id = $1',
       [verified.id]
     );
 
@@ -165,7 +152,6 @@ router.get('/verify', async (req, res) => {
       valid: true,
       user: {
         id: userData.id,
-        username: userData.username,
         email: userData.email,
         name: userData.name,
         school: userData.school_name,
