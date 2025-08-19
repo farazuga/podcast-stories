@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
         await loadStories();
         setupEventListeners();
+        setupCSVImport();
     }
 });
 
@@ -54,6 +55,43 @@ function updateUserDisplay() {
     const userInfo = document.getElementById('userInfo');
     if (userInfo && currentUser) {
         userInfo.textContent = `${currentUser.name || currentUser.username}`;
+    }
+    
+    // Update UI elements based on user role
+    updateUIForUserRole();
+}
+
+function updateUIForUserRole() {
+    if (!currentUser) return;
+    
+    // Show/hide delete button based on role
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    if (bulkDeleteBtn) {
+        // Show delete button for teachers and admins
+        if (currentUser.role === 'teacher' || currentUser.role === 'amitrace_admin') {
+            bulkDeleteBtn.style.display = 'inline-block';
+        } else {
+            bulkDeleteBtn.style.display = 'none';
+        }
+    }
+    
+    // Show/hide teacher and admin links
+    const teacherLink = document.getElementById('teacherLink');
+    const adminLink = document.getElementById('adminLink');
+    
+    if (teacherLink && (currentUser.role === 'teacher' || currentUser.role === 'amitrace_admin')) {
+        teacherLink.style.display = 'inline-block';
+    }
+    
+    if (adminLink && currentUser.role === 'amitrace_admin') {
+        adminLink.style.display = 'inline-block';
+    }
+    
+    // Update role badge if it exists
+    const roleBadge = document.getElementById('userRoleBadge');
+    if (roleBadge) {
+        roleBadge.textContent = currentUser.role;
+        roleBadge.className = `role-badge ${currentUser.role}`;
     }
 }
 
@@ -549,6 +587,22 @@ function truncateText(text, maxLength) {
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
 }
 
+function escapeCSV(text) {
+    if (!text) return '';
+    const str = String(text);
+    // If string contains comma, newline, or quote, wrap in quotes and escape internal quotes
+    if (str.includes(',') || str.includes('\n') || str.includes('"')) {
+        return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+}
+
+function formatDateForCSV(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+}
+
 function updateSearchStats() {
     const resultsCount = document.getElementById('resultsCount');
     if (resultsCount) {
@@ -802,18 +856,184 @@ async function bulkFavorite() {
 function bulkExport() {
     if (selectedStories.size === 0) return;
     
-    console.log(`Exporting ${selectedStories.size} stories`);
-    // TODO: Implement bulk export functionality
-    alert(`Exporting ${selectedStories.size} stories (Feature coming soon)`);
+    const storyIds = Array.from(selectedStories);
+    console.log(`Exporting ${storyIds.length} stories:`, storyIds);
+    
+    // Show loading state
+    const bulkExportBtn = document.querySelector('[onclick="bulkExport()"]');
+    if (bulkExportBtn) {
+        bulkExportBtn.disabled = true;
+        bulkExportBtn.textContent = 'Exporting...';
+    }
+    
+    try {
+        // Get selected stories data
+        const selectedStoriesData = filteredStories.filter(story => selectedStories.has(story.id));
+        
+        if (selectedStoriesData.length === 0) {
+            showNotification('No stories found to export.', 'warning');
+            return;
+        }
+        
+        // Create CSV content
+        const csvHeaders = [
+            'idea_title', 'enhanced_description', 'question_1', 'question_2', 'question_3', 
+            'question_4', 'question_5', 'question_6', 'coverage_start_date', 'coverage_end_date', 
+            'auto_tags', 'interviewees'
+        ];
+        
+        const csvRows = selectedStoriesData.map(story => {
+            return [
+                escapeCSV(story.idea_title || story.title || ''),
+                escapeCSV(story.idea_description || story.description || ''),
+                escapeCSV(story.question_1 || ''),
+                escapeCSV(story.question_2 || ''),
+                escapeCSV(story.question_3 || ''),
+                escapeCSV(story.question_4 || ''),
+                escapeCSV(story.question_5 || ''),
+                escapeCSV(story.question_6 || ''),
+                formatDateForCSV(story.coverage_start_date),
+                formatDateForCSV(story.coverage_end_date),
+                escapeCSV(Array.isArray(story.tags) ? story.tags.join(', ') : ''),
+                escapeCSV(Array.isArray(story.interviewees) ? story.interviewees.join(', ') : '')
+            ];
+        });
+        
+        // Combine headers and rows
+        const csvContent = [csvHeaders, ...csvRows]
+            .map(row => row.join(','))
+            .join('\n');
+        
+        // Create and download file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        
+        // Generate filename with timestamp
+        const timestamp = new Date().toISOString().split('T')[0];
+        const filename = `vidpod-stories-export-${timestamp}.csv`;
+        link.setAttribute('download', filename);
+        
+        // Trigger download
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        showNotification(`Successfully exported ${selectedStoriesData.length} stories to ${filename}`, 'success');
+        
+        // Clear selection after successful export
+        clearSelection();
+        
+    } catch (error) {
+        console.error('Bulk export error:', error);
+        showNotification('Error during export. Please try again.', 'error');
+    } finally {
+        // Restore button state
+        if (bulkExportBtn) {
+            bulkExportBtn.disabled = false;
+            bulkExportBtn.textContent = 'Export CSV';
+        }
+    }
 }
 
-function bulkDelete() {
+async function bulkDelete() {
     if (selectedStories.size === 0) return;
     
-    if (confirm(`Are you sure you want to delete ${selectedStories.size} selected stories? This action cannot be undone.`)) {
-        console.log(`Deleting ${selectedStories.size} stories`);
-        // TODO: Implement bulk delete functionality
-        alert(`Deleting ${selectedStories.size} stories (Feature coming soon)`);
+    const storyIds = Array.from(selectedStories);
+    console.log(`Attempting to delete ${storyIds.length} stories:`, storyIds);
+    
+    // Check authorization - only allow admins or story owners
+    if (currentUser.role === 'student') {
+        // Students can only delete their own stories
+        const selectedStoriesData = filteredStories.filter(story => selectedStories.has(story.id));
+        const unauthorizedStories = selectedStoriesData.filter(story => story.uploaded_by !== currentUser.id);
+        
+        if (unauthorizedStories.length > 0) {
+            showNotification(`You can only delete your own stories. ${unauthorizedStories.length} selected stories cannot be deleted.`, 'error');
+            return;
+        }
+    }
+    
+    // Confirm deletion
+    const confirmMessage = `Are you sure you want to delete ${storyIds.length} selected stories?\n\nThis action cannot be undone.`;
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    // Show loading state
+    const bulkDeleteBtn = document.querySelector('[onclick="bulkDelete()"]');
+    if (bulkDeleteBtn) {
+        bulkDeleteBtn.disabled = true;
+        bulkDeleteBtn.textContent = 'Deleting...';
+    }
+    
+    let successCount = 0;
+    let errorCount = 0;
+    const errors = [];
+    
+    try {
+        // Process deletions sequentially to avoid overwhelming the server
+        for (const storyId of storyIds) {
+            try {
+                const response = await fetch(`${window.API_URL}/stories/${storyId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    successCount++;
+                    // Remove from local arrays
+                    allStories = allStories.filter(story => story.id !== storyId);
+                    filteredStories = filteredStories.filter(story => story.id !== storyId);
+                    userFavorites.delete(storyId);
+                } else {
+                    const error = await response.json();
+                    errorCount++;
+                    errors.push(`Story ${storyId}: ${error.message || 'Delete failed'}`);
+                }
+            } catch (error) {
+                console.error(`Error deleting story ${storyId}:`, error);
+                errorCount++;
+                errors.push(`Story ${storyId}: Network error`);
+            }
+        }
+        
+        // Show results
+        if (errorCount === 0) {
+            showNotification(`Successfully deleted ${successCount} stories!`, 'success');
+        } else if (successCount > 0) {
+            showNotification(`Deleted ${successCount} stories. ${errorCount} failed.`, 'warning');
+            if (errors.length > 0) {
+                console.warn('Delete errors:', errors);
+            }
+        } else {
+            showNotification(`Failed to delete stories. Please check your permissions and try again.`, 'error');
+            if (errors.length > 0) {
+                console.error('Delete errors:', errors);
+            }
+        }
+        
+        // Refresh display and clear selection
+        if (successCount > 0) {
+            displayStories();
+            clearSelection();
+        }
+        
+    } catch (error) {
+        console.error('Bulk delete error:', error);
+        showNotification('Network error during bulk delete operation.', 'error');
+    } finally {
+        // Restore button state
+        if (bulkDeleteBtn) {
+            bulkDeleteBtn.disabled = false;
+            bulkDeleteBtn.textContent = 'Delete Selected';
+        }
     }
 }
 
@@ -975,3 +1195,100 @@ window.logout = function() {
     localStorage.clear();
     window.location.href = '/index.html';
 };
+
+// CSV Import functionality
+function setupCSVImport() {
+    const csvImportBtn = document.getElementById('csvImportBtn');
+    const csvModal = document.getElementById('csvModal');
+    const csvForm = document.getElementById('csvForm');
+    const closeModal = document.querySelector('.close');
+    
+    if (csvImportBtn && csvModal) {
+        // Show modal on button click
+        csvImportBtn.addEventListener('click', () => {
+            csvModal.style.display = 'block';
+        });
+        
+        // Close modal events
+        if (closeModal) {
+            closeModal.addEventListener('click', () => {
+                csvModal.style.display = 'none';
+            });
+        }
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', (event) => {
+            if (event.target === csvModal) {
+                csvModal.style.display = 'none';
+            }
+        });
+        
+        // Handle form submission
+        if (csvForm) {
+            csvForm.addEventListener('submit', handleCSVImport);
+        }
+    }
+}
+
+async function handleCSVImport(e) {
+    e.preventDefault();
+    
+    const fileInput = document.getElementById('csvFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showNotification('Please select a CSV file', 'error');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Uploading...';
+    
+    try {
+        const formData = new FormData();
+        formData.append('csvFile', file);
+        
+        const response = await fetch(`${window.API_URL}/stories/import`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: formData
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            showNotification(
+                `Successfully imported ${result.imported || 0} stories!`, 
+                'success'
+            );
+            
+            // Close modal and refresh stories
+            const csvModal = document.getElementById('csvModal');
+            if (csvModal) {
+                csvModal.style.display = 'none';
+            }
+            
+            // Reset form
+            e.target.reset();
+            
+            // Reload stories to show imported ones
+            await loadStories();
+            
+        } else {
+            const error = await response.json();
+            showNotification(`Import failed: ${error.message || 'Unknown error'}`, 'error');
+        }
+        
+    } catch (error) {
+        console.error('CSV import error:', error);
+        showNotification('Network error during import. Please try again.', 'error');
+    } finally {
+        // Restore button state
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+}
