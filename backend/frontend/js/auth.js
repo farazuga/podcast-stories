@@ -1,7 +1,5 @@
-// API base URL - change this to your backend URL
-const API_URL = 'https://podcast-stories-production.up.railway.app/api';
-// Make it globally available for other scripts
-window.API_URL = API_URL;
+// API base URL - now provided by config.js
+// window.window.API_URL is set by config.js loaded before this script
 
 // Debug logging
 console.log('Auth.js loaded, current path:', window.location.pathname);
@@ -10,7 +8,7 @@ console.log('Existing token:', localStorage.getItem('token'));
 // Check if user is already logged in - only redirect if token is valid
 if (localStorage.getItem('token') && (window.location.pathname === '/' || window.location.pathname.includes('index.html'))) {
     // Verify token before redirecting
-    fetch(`${API_URL}/auth/verify`, {
+    fetch(`${window.API_URL}/auth/verify`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     }).then(response => {
         if (response.ok) {
@@ -37,11 +35,11 @@ if (document.getElementById('loginForm')) {
         const password = document.getElementById('password').value;
         
         console.log('Login attempt starting...');
-        console.log('API URL:', `${API_URL}/auth/login`);
+        console.log('API URL:', `${window.API_URL}/auth/login`);
         console.log('Attempting login for:', email);
         
         try {
-            const response = await fetch(`${API_URL}/auth/login`, {
+            const response = await fetch(`${window.API_URL}/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -85,7 +83,7 @@ if (document.getElementById('registerForm')) {
         }
         
         try {
-            const response = await fetch(`${API_URL}/auth/register`, {
+            const response = await fetch(`${window.API_URL}/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

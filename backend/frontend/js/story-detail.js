@@ -1,5 +1,5 @@
-// API base URL
-const API_URL = 'https://podcast-stories-production.up.railway.app/api';
+// API base URL - uses window.window.API_URL from config.js
+// const window.API_URL is now provided by config.js
 
 // Global variables
 let currentUser = null;
@@ -54,7 +54,7 @@ async function loadUserInfo() {
 
 async function loadStory() {
     try {
-        const response = await fetch(`${API_URL}/stories/${storyId}`, {
+        const response = await fetch(`${window.API_URL}/stories/${storyId}`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -153,7 +153,7 @@ async function deleteStory() {
     }
     
     try {
-        const response = await fetch(`${API_URL}/stories/${storyId}`, {
+        const response = await fetch(`${window.API_URL}/stories/${storyId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`

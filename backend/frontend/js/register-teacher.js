@@ -1,5 +1,5 @@
-// API base URL
-const API_URL = 'https://podcast-stories-production.up.railway.app/api';
+// API base URL - uses window.window.API_URL from config.js
+// const window.API_URL is now provided by config.js
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
@@ -17,7 +17,7 @@ async function loadSchools() {
         // Teacher requests endpoint doesn't require authentication
         // We need to get schools list - this might need a public endpoint
         // For now, we'll use a hardcoded list or try to fetch
-        const response = await fetch(`${API_URL}/schools`);
+        const response = await fetch(`${window.API_URL}/schools`);
         
         if (response.ok) {
             const schools = await response.json();
@@ -74,7 +74,7 @@ async function handleTeacherRequest(e) {
     }
     
     try {
-        const response = await fetch(`${API_URL}/teacher-requests`, {
+        const response = await fetch(`${window.API_URL}/teacher-requests`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

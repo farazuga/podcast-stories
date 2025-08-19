@@ -1,5 +1,5 @@
-// API base URL
-const API_URL = 'https://podcast-stories-production.up.railway.app/api';
+// API base URL - uses window.window.API_URL from config.js
+// const window.API_URL is now provided by config.js
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
@@ -29,7 +29,7 @@ function setupEventListeners() {
 
 async function loadSchools() {
     try {
-        const response = await fetch(`${API_URL}/students/schools`);
+        const response = await fetch(`${window.API_URL}/students/schools`);
         
         if (response.ok) {
             const schools = await response.json();
@@ -90,7 +90,7 @@ async function handleRegistration(e) {
         submitButton.disabled = true;
         
         // Step 1: Register the student account using dedicated student endpoint
-        const registerResponse = await fetch(`${API_URL}/students/register`, {
+        const registerResponse = await fetch(`${window.API_URL}/students/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -123,7 +123,7 @@ async function handleRegistration(e) {
         submitButton.textContent = 'Joining class...';
         
         // Step 2: Join the class using the code
-        const joinResponse = await fetch(`${API_URL}/classes/join`, {
+        const joinResponse = await fetch(`${window.API_URL}/classes/join`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -1,5 +1,5 @@
-// API base URL
-const API_URL = 'https://podcast-stories-production.up.railway.app/api';
+// API base URL - uses window.window.API_URL from config.js
+// const window.API_URL is now provided by config.js
 
 // Global variables
 let allStories = [];
@@ -68,7 +68,7 @@ async function loadUserInfo() {
 
 async function loadTags() {
     try {
-        const response = await fetch(`${API_URL}/tags`, {
+        const response = await fetch(`${window.API_URL}/tags`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -109,7 +109,7 @@ async function loadStories(filters = {}) {
             filters.tags.forEach(tag => queryParams.append('tags', tag));
         }
         
-        const response = await fetch(`${API_URL}/stories?${queryParams}`, {
+        const response = await fetch(`${window.API_URL}/stories?${queryParams}`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -233,17 +233,56 @@ async function handleCSVUpload(e) {
     
     const fileInput = document.getElementById('csvFile');
     const file = fileInput.files[0];
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn?.textContent;
     
+    // Validation
     if (!file) {
-        alert('Please select a CSV file');
+        document.getElementById('csvResult').innerHTML = `
+            <div class="error-message" style="display: block;">
+                Please select a CSV file
+            </div>
+        `;
         return;
     }
+    
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+        document.getElementById('csvResult').innerHTML = `
+            <div class="error-message" style="display: block;">
+                Please select a valid CSV file
+            </div>
+        `;
+        return;
+    }
+    
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        document.getElementById('csvResult').innerHTML = `
+            <div class="error-message" style="display: block;">
+                File too large. Please select a file smaller than 10MB
+            </div>
+        `;
+        return;
+    }
+    
+    // Show loading state
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '📤 Uploading...';
+    }
+    
+    document.getElementById('csvResult').innerHTML = `
+        <div class="info-message" style="display: block;">
+            Uploading and processing CSV file...
+        </div>
+    `;
     
     const formData = new FormData();
     formData.append('csv', file);
     
     try {
-        const response = await fetch(`${API_URL}/stories/import`, {
+        console.log(`Starting CSV upload: ${file.name} (${file.size} bytes)`);
+        
+        const response = await fetch(`${window.API_URL}/stories/import`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -251,18 +290,37 @@ async function handleCSVUpload(e) {
             body: formData
         });
         
-        const result = await response.json();
+        console.log(`CSV upload response: ${response.status} ${response.statusText}`);
         
         if (response.ok) {
+            const result = await response.json();
+            console.log('CSV import result:', result);
+            
+            let message = `Import completed! ${result.imported} stories imported`;
+            if (result.total && result.total !== result.imported) {
+                message += ` out of ${result.total} rows`;
+            }
+            message += '.';
+            
+            if (result.errors && result.errors.length > 0) {
+                message += ` ${result.errors.length} rows had errors.`;
+                console.warn('Import errors:', result.errors);
+            }
+            
+            if (result.schemaInfo) {
+                console.log(`Schema info: ${result.schemaInfo}`);
+            }
+            
             document.getElementById('csvResult').innerHTML = `
                 <div class="success-message" style="display: block;">
-                    Import completed! ${result.imported} stories imported.
-                    ${result.errors.length > 0 ? `${result.errors.length} errors occurred.` : ''}
+                    ${message}
                 </div>
             `;
             
             // Refresh stories list
-            await loadStories();
+            if (typeof loadStories === 'function') {
+                await loadStories();
+            }
             
             // Close modal after 3 seconds
             setTimeout(() => {
@@ -271,18 +329,65 @@ async function handleCSVUpload(e) {
                 document.getElementById('csvResult').innerHTML = '';
             }, 3000);
         } else {
+            let errorMessage = 'Import failed';
+            
+            try {
+                const error = await response.json();
+                console.error('CSV import error response:', error);
+                
+                if (error.message) {
+                    errorMessage += `: ${error.message}`;
+                } else if (error.error) {
+                    errorMessage += `: ${error.error}`;
+                }
+                
+                if (error.details) {
+                    console.error('Error details:', error.details);
+                }
+                
+                if (error.imported && error.imported > 0) {
+                    errorMessage += ` (${error.imported} stories were imported before the error)`;
+                }
+                
+            } catch (parseError) {
+                console.error('Failed to parse error response');
+                
+                if (response.status === 401) {
+                    errorMessage = 'Import failed: Please log in again';
+                } else if (response.status === 403) {
+                    errorMessage = 'Import failed: Permission denied';
+                } else if (response.status === 413) {
+                    errorMessage = 'Import failed: File too large';
+                } else {
+                    errorMessage += `: Server error (${response.status})`;
+                }
+            }
+            
             document.getElementById('csvResult').innerHTML = `
                 <div class="error-message" style="display: block;">
-                    Import failed: ${result.error}
+                    ${errorMessage}
                 </div>
             `;
         }
     } catch (error) {
+        console.error('CSV import network error:', error);
+        
+        let errorMessage = 'Network error during upload';
+        if (error.message.includes('fetch')) {
+            errorMessage += ' - Please check your internet connection';
+        }
+        
         document.getElementById('csvResult').innerHTML = `
             <div class="error-message" style="display: block;">
-                Network error during upload
+                ${errorMessage}
             </div>
         `;
+    } finally {
+        // Reset button state
+        if (submitBtn && originalBtnText) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+        }
     }
 }
 
@@ -296,7 +401,7 @@ async function deleteStory(storyId) {
     }
     
     try {
-        const response = await fetch(`${API_URL}/stories/${storyId}`, {
+        const response = await fetch(`${window.API_URL}/stories/${storyId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -334,7 +439,7 @@ function logout() {
 // Student-specific functions
 async function loadStudentClasses() {
     try {
-        const response = await fetch(`${API_URL}/classes`, {
+        const response = await fetch(`${window.API_URL}/classes`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -580,7 +685,7 @@ async function handleJoinClass(e) {
     submitButton.classList.add('loading');
     
     try {
-        const response = await fetch(`${API_URL}/classes/join`, {
+        const response = await fetch(`${window.API_URL}/classes/join`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -630,7 +735,7 @@ async function leaveClass(classId) {
     }
     
     try {
-        const response = await fetch(`${API_URL}/classes/${classId}/leave`, {
+        const response = await fetch(`${window.API_URL}/classes/${classId}/leave`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
