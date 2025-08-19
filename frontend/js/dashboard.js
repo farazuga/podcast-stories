@@ -38,7 +38,7 @@ async function loadUserInfo() {
         currentUser = user;
         
         // Display user info
-        document.getElementById('userInfo').textContent = user.name || user.username;
+        document.getElementById('userInfo').textContent = user.name || user.email;
         
         // Display role badge
         const roleBadge = document.getElementById('userRoleBadge');

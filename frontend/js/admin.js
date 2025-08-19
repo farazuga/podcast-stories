@@ -68,7 +68,7 @@ async function loadUserInfo() {
         const user = JSON.parse(localStorage.getItem('user'));
         currentUser = user;
         
-        document.getElementById('userInfo').textContent = `${user.username} (${user.role})`;
+        document.getElementById('userInfo').textContent = `${user.name || user.email} (${user.role})`;
     } catch (error) {
         console.error('Error loading user info:', error);
         logout();
@@ -424,7 +424,6 @@ window.showApprovalModal = function(requestId) {
     modal.style.display = 'block';
     
     // Clear form
-    document.getElementById('teacherUsername').value = '';
     document.getElementById('teacherPassword').value = '';
     document.getElementById('requestId').value = requestId;
 }
@@ -439,7 +438,6 @@ window.closeApprovalModal = function() {
 async function approveTeacherRequest(e) {
     e.preventDefault();
     
-    const username = document.getElementById('teacherUsername').value.trim();
     const password = document.getElementById('teacherPassword').value;
     const requestId = currentRequestId;
     
@@ -455,7 +453,7 @@ async function approveTeacherRequest(e) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ password })
         });
         
         const result = await response.json();

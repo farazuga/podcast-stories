@@ -37,7 +37,7 @@ async function loadUserInfo() {
         currentUser = user;
         
         // Display user info
-        document.getElementById('userInfo').textContent = user.name || user.username;
+        document.getElementById('userInfo').textContent = user.name || user.email;
         
         // Display role badge
         const roleBadge = document.getElementById('userRoleBadge');
@@ -538,40 +538,140 @@ async function toggleFavorite(storyId) {
     }
 }
 
-// CSV Upload function
+// CSV Upload function - Enhanced with better user feedback
 async function handleCSVUpload(e) {
     e.preventDefault();
     
     const fileInput = document.getElementById('csvFile');
     const file = fileInput.files[0];
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.textContent;
     
+    // Validation
     if (!file) {
-        alert('Please select a CSV file');
+        showNotification('Please select a CSV file', 'error');
         return;
     }
+    
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+        showNotification('Please select a valid CSV file', 'error');
+        return;
+    }
+    
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        showNotification('File too large. Please select a file smaller than 10MB', 'error');
+        return;
+    }
+    
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.textContent = '📤 Uploading...';
     
     const formData = new FormData();
     formData.append('csv', file);
     
     try {
+        console.log(`Starting CSV upload: ${file.name} (${file.size} bytes)`);
+        
         const response = await fetch(`${API_URL}/stories/import`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+            headers: { 
+                'Authorization': `Bearer ${localStorage.getItem('token')}` 
+                // Note: Don't set Content-Type header - let browser set it with boundary for FormData
+            },
             body: formData
         });
         
+        console.log(`CSV upload response: ${response.status} ${response.statusText}`);
+        
         if (response.ok) {
             const result = await response.json();
-            alert(`Successfully imported ${result.imported} stories!`);
+            console.log('CSV import result:', result);
+            
+            // Prepare success message
+            let message = `Successfully imported ${result.imported}`;
+            if (result.total && result.total !== result.imported) {
+                message += ` of ${result.total}`;
+            }
+            message += ` stories!`;
+            
+            // Add schema info if available
+            if (result.schemaInfo) {
+                console.log(`Schema info: ${result.schemaInfo}`);
+            }
+            
+            // Show errors if any
+            if (result.errors && result.errors.length > 0) {
+                console.warn('Import had errors:', result.errors);
+                message += `\n\nNote: ${result.errors.length} rows had errors. Check console for details.`;
+                
+                // Log detailed errors
+                result.errors.forEach((error, index) => {
+                    console.error(`Import error ${index + 1}:`, error);
+                });
+            }
+            
+            showNotification(message, 'success');
+            
+            // Close modal and reload
             document.getElementById('csvModal').style.display = 'none';
-            await loadStories(); // Reload stories
+            fileInput.value = ''; // Clear file input
+            await loadStories(); // Reload stories to show new imports
+            
         } else {
-            const error = await response.json();
-            alert(`Import failed: ${error.message}`);
+            // Handle error responses
+            let errorMessage = 'Import failed';
+            
+            try {
+                const error = await response.json();
+                console.error('CSV import error response:', error);
+                
+                if (error.message) {
+                    errorMessage += `: ${error.message}`;
+                } else if (error.error) {
+                    errorMessage += `: ${error.error}`;
+                }
+                
+                if (error.details) {
+                    console.error('Error details:', error.details);
+                    errorMessage += `\nDetails: ${error.details}`;
+                }
+                
+                // Show partial success info if available
+                if (error.imported && error.imported > 0) {
+                    errorMessage += `\n\nPartial success: ${error.imported} stories were imported before the error occurred.`;
+                }
+                
+            } catch (parseError) {
+                const errorText = await response.text();
+                console.error('Failed to parse error response:', errorText);
+                errorMessage += `: Server error (${response.status})`;
+                
+                if (response.status === 401) {
+                    errorMessage = 'Import failed: Please log in again';
+                } else if (response.status === 403) {
+                    errorMessage = 'Import failed: You do not have permission to import stories';
+                } else if (response.status === 413) {
+                    errorMessage = 'Import failed: File too large';
+                }
+            }
+            
+            showNotification(errorMessage, 'error');
         }
+        
     } catch (error) {
-        console.error('CSV import error:', error);
-        alert('Import failed: Network error');
+        console.error('CSV import network error:', error);
+        
+        let errorMessage = 'Import failed: Network error';
+        if (error.message.includes('fetch')) {
+            errorMessage += ' - Please check your internet connection';
+        }
+        
+        showNotification(errorMessage, 'error');
+    } finally {
+        // Reset button state
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
     }
 }
 
