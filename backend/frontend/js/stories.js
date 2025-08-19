@@ -1361,7 +1361,7 @@ async function handleCSVImport(e) {
     
     try {
         const formData = new FormData();
-        formData.append('csvFile', file);
+        formData.append('csv', file);
         
         const response = await fetch(`${window.API_URL}/stories/import`, {
             method: 'POST',
