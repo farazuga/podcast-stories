@@ -1,26 +1,23 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
+const path = require('path');
 
+// Load environment variables
 dotenv.config();
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+// Import centralized configuration
+const config = require('./config/environment');
+const db = require('./config/database');
 
-// Database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+const app = express();
+const PORT = config.PORT;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-const path = require('path');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -89,7 +86,7 @@ app.use((err, req, res, next) => {
 async function initializeDatabase() {
   try {
     // Check if admin user exists
-    const adminCheck = await pool.query(
+    const adminCheck = await db.query(
       'SELECT * FROM users WHERE username = $1',
       [process.env.ADMIN_USERNAME || 'admin']
     );
@@ -99,16 +96,16 @@ async function initializeDatabase() {
       const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'admin123', 10);
       
       // First ensure a default school exists
-      const schoolResult = await pool.query(
+      const schoolResult = await db.query(
         'INSERT INTO schools (school_name, created_by) VALUES ($1, NULL) ON CONFLICT (school_name) DO NOTHING RETURNING id',
         [process.env.ADMIN_SCHOOL || 'Podcast Central HS']
       );
       
       // Get school id
-      const school = await pool.query('SELECT id FROM schools WHERE school_name = $1', [process.env.ADMIN_SCHOOL || 'Podcast Central HS']);
+      const school = await db.query('SELECT id FROM schools WHERE school_name = $1', [process.env.ADMIN_SCHOOL || 'Podcast Central HS']);
       const schoolId = school.rows[0]?.id;
       
-      const userResult = await pool.query(
+      const userResult = await db.query(
         'INSERT INTO users (username, password, email, role, name, school_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
         [
           process.env.ADMIN_USERNAME || 'admin',
@@ -122,7 +119,7 @@ async function initializeDatabase() {
       
       // Update school to have the admin as creator
       if (schoolId) {
-        await pool.query('UPDATE schools SET created_by = $1 WHERE id = $2', [userResult.rows[0].id, schoolId]);
+        await db.query('UPDATE schools SET created_by = $1 WHERE id = $2', [userResult.rows[0].id, schoolId]);
       }
       
       console.log('Admin user created successfully');
@@ -132,12 +129,12 @@ async function initializeDatabase() {
     const defaultTags = ['Health', 'Education', 'Politics', 'Technology', 'Environment', 
                          'Community', 'Sports', 'Business', 'Arts & Culture', 'Safety'];
     
-    const adminUser = await pool.query('SELECT id FROM users WHERE role IN ($1, $2) LIMIT 1', ['admin', 'amitrace_admin']);
+    const adminUser = await db.query('SELECT id FROM users WHERE role IN ($1, $2) LIMIT 1', ['admin', 'amitrace_admin']);
     if (adminUser.rows.length > 0) {
       const adminId = adminUser.rows[0].id;
       
       for (const tag of defaultTags) {
-        await pool.query(
+        await db.query(
           'INSERT INTO tags (tag_name, created_by) VALUES ($1, $2) ON CONFLICT (tag_name) DO NOTHING',
           [tag, adminId]
         );
@@ -155,4 +152,4 @@ app.listen(PORT, async () => {
   await initializeDatabase();
 });
 
-module.exports = { pool };
+module.exports = { db };
