@@ -338,102 +338,251 @@ router.delete('/:id', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-// CSV Import
+// CSV Import - Improved with better error handling and schema compatibility
 router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
+  console.log(`CSV import started by user ${req.user.id} (${req.user.email || req.user.username})`);
+  console.log(`File: ${req.file.originalname}, Size: ${req.file.size} bytes`);
+
   const results = [];
   const errors = [];
+  let hasApprovalStatus = false;
+  let successCount = 0;
   
+  // Check if approval_status column exists (Phase 2 feature)
+  const client = await pool.connect();
+  try {
+    const schemaCheck = await client.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'story_ideas' AND column_name = 'approval_status'
+    `);
+    hasApprovalStatus = schemaCheck.rows.length > 0;
+    console.log(`Database schema check: approval_status field ${hasApprovalStatus ? 'exists' : 'not found'}`);
+  } catch (error) {
+    console.log('Schema check failed, assuming basic schema');
+  } finally {
+    client.release();
+  }
+
   fs.createReadStream(req.file.path)
     .pipe(csv())
-    .on('data', (data) => results.push(data))
+    .on('data', (data) => {
+      // Skip empty rows
+      if (data.idea_title || data.title) {
+        results.push(data);
+      }
+    })
     .on('end', async () => {
+      console.log(`Parsed ${results.length} rows from CSV`);
+      
       const client = await pool.connect();
       
       try {
         await client.query('BEGIN');
         
-        for (const row of results) {
+        for (let i = 0; i < results.length; i++) {
+          const row = results[i];
+          const rowNumber = i + 2; // +2 because CSV row 1 is header, and we're 0-indexed
+          
           try {
-            // Insert story with draft status
-            const storyResult = await client.query(
-              `INSERT INTO story_ideas (
+            // Validate required fields
+            const title = row.idea_title || row.title;
+            if (!title || title.trim() === '') {
+              errors.push({ 
+                row: rowNumber, 
+                title: 'Empty row', 
+                error: 'Story title is required' 
+              });
+              continue;
+            }
+
+            // Prepare the base insert query and values
+            let insertQuery, insertValues;
+            
+            if (hasApprovalStatus) {
+              // Phase 2 schema with approval_status
+              insertQuery = `INSERT INTO story_ideas (
                 idea_title, idea_description,
                 question_1, question_2, question_3, question_4, question_5, question_6,
                 coverage_start_date, coverage_end_date, uploaded_by, approval_status
-              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
-              [
-                row.idea_title || row.title,
-                row.idea_description || row.description,
-                row.question_1, row.question_2, row.question_3,
-                row.question_4, row.question_5, row.question_6,
-                row.coverage_start_date || row.start_date,
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`;
+              
+              insertValues = [
+                title.trim(),
+                (row.idea_description || row.description || '').trim(),
+                row.question_1 || null, row.question_2 || null, row.question_3 || null,
+                row.question_4 || null, row.question_5 || null, row.question_6 || null,
+                row.coverage_start_date || row.start_date || null,
                 row.coverage_end_date || row.end_date || null,
-                req.user.id, 'draft'
-              ]
-            );
+                req.user.id, 
+                'draft' // Default approval status for imports
+              ];
+            } else {
+              // Basic schema without approval_status
+              insertQuery = `INSERT INTO story_ideas (
+                idea_title, idea_description,
+                question_1, question_2, question_3, question_4, question_5, question_6,
+                coverage_start_date, coverage_end_date, uploaded_by
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`;
+              
+              insertValues = [
+                title.trim(),
+                (row.idea_description || row.description || '').trim(),
+                row.question_1 || null, row.question_2 || null, row.question_3 || null,
+                row.question_4 || null, row.question_5 || null, row.question_6 || null,
+                row.coverage_start_date || row.start_date || null,
+                row.coverage_end_date || row.end_date || null,
+                req.user.id
+              ];
+            }
 
+            // Insert the story
+            const storyResult = await client.query(insertQuery, insertValues);
             const storyId = storyResult.rows[0].id;
+            console.log(`Imported story ${successCount + 1}: "${title}" (ID: ${storyId})`);
 
             // Handle tags if present
-            if (row.tags) {
-              const tags = row.tags.split(',').map(t => t.trim());
+            if (row.tags && row.tags.trim()) {
+              const tags = row.tags.split(',').map(t => t.trim()).filter(t => t);
+              let tagsAdded = 0;
+              
               for (const tagName of tags) {
-                const tagResult = await client.query(
-                  'SELECT id FROM tags WHERE tag_name = $1',
-                  [tagName]
-                );
-                
-                if (tagResult.rows.length > 0) {
-                  await client.query(
-                    'INSERT INTO story_tags (story_id, tag_id) VALUES ($1, $2)',
-                    [storyId, tagResult.rows[0].id]
+                try {
+                  // First try to find existing tag
+                  let tagResult = await client.query(
+                    'SELECT id FROM tags WHERE tag_name = $1',
+                    [tagName]
                   );
+                  
+                  let tagId;
+                  if (tagResult.rows.length > 0) {
+                    tagId = tagResult.rows[0].id;
+                  } else {
+                    // Create new tag if it doesn't exist
+                    const newTagResult = await client.query(
+                      'INSERT INTO tags (tag_name, created_by) VALUES ($1, $2) RETURNING id',
+                      [tagName, req.user.id]
+                    );
+                    tagId = newTagResult.rows[0].id;
+                    console.log(`Created new tag: "${tagName}"`);
+                  }
+                  
+                  // Link tag to story
+                  await client.query(
+                    'INSERT INTO story_tags (story_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+                    [storyId, tagId]
+                  );
+                  tagsAdded++;
+                } catch (tagError) {
+                  console.log(`Warning: Failed to add tag "${tagName}" to story ${storyId}: ${tagError.message}`);
                 }
+              }
+              
+              if (tagsAdded > 0) {
+                console.log(`  Added ${tagsAdded} tags to story ${storyId}`);
               }
             }
 
             // Handle interviewees if present
-            if (row.interviewees || row.people_to_interview) {
-              const people = (row.interviewees || row.people_to_interview).split(',').map(p => p.trim());
+            if ((row.interviewees || row.people_to_interview) && (row.interviewees || row.people_to_interview).trim()) {
+              const people = (row.interviewees || row.people_to_interview)
+                .split(',')
+                .map(p => p.trim())
+                .filter(p => p);
+              
+              let intervieweesAdded = 0;
+              
               for (const person of people) {
-                const intervieweeResult = await client.query(
-                  'INSERT INTO interviewees (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET name = $1 RETURNING id',
-                  [person]
-                );
-                
-                await client.query(
-                  'INSERT INTO story_interviewees (story_id, interviewee_id) VALUES ($1, $2)',
-                  [storyId, intervieweeResult.rows[0].id]
-                );
+                try {
+                  const intervieweeResult = await client.query(
+                    'INSERT INTO interviewees (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET name = $1 RETURNING id',
+                    [person]
+                  );
+                  
+                  await client.query(
+                    'INSERT INTO story_interviewees (story_id, interviewee_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+                    [storyId, intervieweeResult.rows[0].id]
+                  );
+                  intervieweesAdded++;
+                } catch (intervieweeError) {
+                  console.log(`Warning: Failed to add interviewee "${person}" to story ${storyId}: ${intervieweeError.message}`);
+                }
+              }
+              
+              if (intervieweesAdded > 0) {
+                console.log(`  Added ${intervieweesAdded} interviewees to story ${storyId}`);
               }
             }
+
+            successCount++;
+            
           } catch (rowError) {
-            errors.push({ row: row.idea_title || row.title, error: rowError.message });
+            console.error(`Error processing row ${rowNumber}:`, rowError.message);
+            errors.push({ 
+              row: rowNumber, 
+              title: row.idea_title || row.title || 'Unknown', 
+              error: rowError.message 
+            });
           }
         }
 
         await client.query('COMMIT');
+        console.log(`CSV import completed: ${successCount} stories imported, ${errors.length} errors`);
         
         // Clean up uploaded file
-        fs.unlinkSync(req.file.path);
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (unlinkError) {
+          console.error('Warning: Failed to clean up uploaded file:', unlinkError.message);
+        }
         
         res.json({
-          message: 'CSV import completed',
-          imported: results.length - errors.length,
-          errors: errors
+          message: 'CSV import completed successfully',
+          imported: successCount,
+          total: results.length,
+          errors: errors.length > 0 ? errors : null,
+          schemaInfo: hasApprovalStatus ? 'Phase 2 schema detected' : 'Basic schema detected'
         });
+        
       } catch (error) {
         await client.query('ROLLBACK');
-        fs.unlinkSync(req.file.path);
-        console.error('CSV import error:', error);
-        res.status(500).json({ error: 'Failed to import CSV' });
+        
+        // Clean up uploaded file
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (unlinkError) {
+          console.error('Warning: Failed to clean up uploaded file during error:', unlinkError.message);
+        }
+        
+        console.error('CSV import transaction error:', error);
+        res.status(500).json({ 
+          error: 'Failed to import CSV', 
+          details: error.message,
+          imported: successCount,
+          total: results.length
+        });
       } finally {
         client.release();
       }
+    })
+    .on('error', (streamError) => {
+      console.error('CSV parsing error:', streamError);
+      
+      // Clean up uploaded file
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (unlinkError) {
+        console.error('Warning: Failed to clean up uploaded file during stream error:', unlinkError.message);
+      }
+      
+      res.status(400).json({ 
+        error: 'Failed to parse CSV file', 
+        details: streamError.message 
+      });
     });
 });
 
