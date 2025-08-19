@@ -89,7 +89,7 @@ function displayStory() {
     // Coverage dates
     document.getElementById('startDate').textContent = formatDate(currentStory.coverage_start_date);
     document.getElementById('endDate').textContent = currentStory.coverage_end_date ? 
-        formatDate(currentStory.coverage_end_date) : 'Single day coverage';
+        formatDate(currentStory.coverage_end_date) : formatSingleDayCoverage(currentStory.coverage_start_date);
     
     // Tags
     const tagsContainer = document.getElementById('storyTags');
@@ -178,6 +178,14 @@ function formatDate(dateString) {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {
         year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+}
+
+function formatSingleDayCoverage(dateString) {
+    if (!dateString) return 'Single Day: Date not specified';
+    return 'Single Day: ' + new Date(dateString).toLocaleDateString('en-US', {
         month: 'long',
         day: 'numeric'
     });

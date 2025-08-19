@@ -814,6 +814,22 @@ function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString();
 }
 
+function formatSingleDayCoverage(dateString) {
+    if (!dateString) return 'Single Day: Date not specified';
+    return 'Single Day: ' + new Date(dateString).toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric'
+    });
+}
+
+function formatCoverageDisplay(startDate, endDate) {
+    if (!startDate) return 'No coverage date specified';
+    if (endDate) {
+        return `${formatDate(startDate)} to ${formatDate(endDate)}`;
+    }
+    return formatSingleDayCoverage(startDate);
+}
+
 function showError(message) {
     const errorDiv = document.getElementById('errorMessage');
     if (errorDiv) {
@@ -1118,7 +1134,7 @@ window.viewStoryDetails = async function(storyId) {
                         <p><strong>Uploaded:</strong> ${formatDate(story.uploaded_date)}</p>
                         ${story.submitted_at ? `<p><strong>Submitted:</strong> ${formatDate(story.submitted_at)}</p>` : ''}
                         ${story.approved_at ? `<p><strong>Approved/Rejected:</strong> ${formatDate(story.approved_at)}</p>` : ''}
-                        ${story.coverage_start_date ? `<p><strong>Coverage:</strong> ${story.coverage_start_date} ${story.coverage_end_date ? `to ${story.coverage_end_date}` : ''}</p>` : ''}
+                        ${story.coverage_start_date ? `<p><strong>Coverage:</strong> ${formatCoverageDisplay(story.coverage_start_date, story.coverage_end_date)}</p>` : ''}
                     </div>
                     
                     <div class="story-content">

@@ -149,8 +149,9 @@ function createStoryCard(story) {
         `<span class="person-tag">${person}</span>`
     ).join('') : '';
     
-    const endDate = story.coverage_end_date ? 
-        ` - ${formatDate(story.coverage_end_date)}` : '';
+    const coverageDateDisplay = story.coverage_end_date ? 
+        `${formatDate(story.coverage_start_date)} - ${formatDate(story.coverage_end_date)}` : 
+        formatSingleDayCoverage(story.coverage_start_date);
     
     const deleteButton = currentUser && currentUser.role === 'admin' ? 
         `<button class="btn btn-delete" onclick="deleteStory(${story.id})">Delete</button>` : '';
@@ -171,7 +172,7 @@ function createStoryCard(story) {
             <div class="story-tags">${tags}</div>
             
             <div class="story-dates">
-                📆 Coverage: ${formatDate(story.coverage_start_date)}${endDate}
+                📆 Coverage: ${coverageDateDisplay}
             </div>
             
             ${interviewees ? `
@@ -425,6 +426,14 @@ async function deleteStory(storyId) {
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString();
+}
+
+function formatSingleDayCoverage(dateString) {
+    if (!dateString) return 'Single Day: Date not specified';
+    return 'Single Day: ' + new Date(dateString).toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric'
+    });
 }
 
 function truncateText(text, maxLength) {
