@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD - User Management</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/user-management.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>📻 VidPOD - User Management</h1>
+        </div>
+        <div class="nav-menu">
+            <a href="/dashboard.html">Dashboard</a>
+            <a href="/add-story.html">Add Story</a>
+            <a href="/admin.html">Admin Panel</a>
+            <a href="/user-management.html" class="active">User Management</a>
+        </div>
+        <div class="nav-user">
+            <span id="userInfo"></span>
+            <span id="userRoleBadge" class="role-badge"></span>
+            <button class="btn btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>👥 User Management</h1>
+            <p>Manage teachers and administrators in the VidPOD system</p>
+            <div class="header-stats" id="headerStats">
+                <div class="stat-item">
+                    <span class="stat-value" id="totalTeachers">0</span>
+                    <span class="stat-label">Teachers</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="totalAdmins">0</span>
+                    <span class="stat-label">Admins</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="totalManageable">0</span>
+                    <span class="stat-label">Total Users</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Management Tabs -->
+        <div class="user-tabs">
+            <button class="tab-btn active" onclick="showUserTab('teachers')">👩‍🏫 Teachers</button>
+            <button class="tab-btn" id="adminTabBtn" onclick="showUserTab('admins')">👑 Administrators</button>
+        </div>
+
+        <!-- Teachers Management Tab -->
+        <div id="teachers-tab" class="tab-content active">
+            <div class="section-header">
+                <h2>Teacher Management</h2>
+                <div class="section-actions">
+                    <button class="btn btn-danger" id="bulkDeleteTeachersBtn" onclick="bulkDeleteTeachers()" style="display: none;">
+                        🗑️ Delete Selected (<span id="selectedTeachersCount">0</span>)
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshTeachers()">🔄 Refresh</button>
+                </div>
+            </div>
+
+            <!-- Teachers List -->
+            <div class="user-management-section">
+                <div class="table-controls">
+                    <div class="selection-controls">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="selectAllTeachers" onchange="toggleSelectAllTeachers()">
+                            <span class="checkmark"></span>
+                            Select All
+                        </label>
+                        <span class="selection-info" id="teacherSelectionInfo">0 teachers selected</span>
+                    </div>
+                    <div class="search-controls">
+                        <input type="text" id="teacherSearch" placeholder="Search teachers..." onkeyup="filterTeachers()">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="user-table">
+                        <thead>
+                            <tr>
+                                <th width="40">
+                                    <input type="checkbox" id="selectAllTeachersHeader" onchange="toggleSelectAllTeachers()">
+                                </th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>School</th>
+                                <th>Classes</th>
+                                <th>Students</th>
+                                <th>Stories</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teachersTable">
+                            <tr>
+                                <td colspan="9" class="loading-row">
+                                    <div class="loading-spinner"></div>
+                                    Loading teachers...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Administrators Management Tab -->
+        <div id="admins-tab" class="tab-content">
+            <div class="section-header">
+                <h2>Administrator Management</h2>
+                <div class="section-actions">
+                    <button class="btn btn-primary" id="addAdminBtn" onclick="showAddAdminModal()" style="display: none;">
+                        ➕ Add Administrator
+                    </button>
+                    <button class="btn btn-danger" id="bulkDeleteAdminsBtn" onclick="bulkDeleteAdmins()" style="display: none;">
+                        🗑️ Delete Selected (<span id="selectedAdminsCount">0</span>)
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshAdmins()">🔄 Refresh</button>
+                </div>
+            </div>
+
+            <!-- Admins List -->
+            <div class="user-management-section">
+                <div class="table-controls">
+                    <div class="selection-controls">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="selectAllAdmins" onchange="toggleSelectAllAdmins()">
+                            <span class="checkmark"></span>
+                            Select All
+                        </label>
+                        <span class="selection-info" id="adminSelectionInfo">0 admins selected</span>
+                    </div>
+                    <div class="search-controls">
+                        <input type="text" id="adminSearch" placeholder="Search administrators..." onkeyup="filterAdmins()">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="user-table">
+                        <thead>
+                            <tr>
+                                <th width="40">
+                                    <input type="checkbox" id="selectAllAdminsHeader" onchange="toggleSelectAllAdmins()">
+                                </th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Stories</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminsTable">
+                            <tr>
+                                <td colspan="7" class="loading-row">
+                                    <div class="loading-spinner"></div>
+                                    Loading administrators...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Admin Modal -->
+        <div id="addAdminModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>➕ Add New Administrator</h2>
+                    <span class="close" onclick="closeAddAdminModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="addAdminForm">
+                        <div class="form-group">
+                            <label for="adminEmail">Email Address *</label>
+                            <input type="email" id="adminEmail" required placeholder="admin@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="adminName">Full Name *</label>
+                            <input type="text" id="adminName" required placeholder="Administrator Name">
+                        </div>
+                        <div class="form-group">
+                            <label for="adminPassword">Password *</label>
+                            <input type="password" id="adminPassword" required placeholder="Enter secure password">
+                        </div>
+                        <div class="form-group">
+                            <label for="adminRole">Administrator Role *</label>
+                            <select id="adminRole" required>
+                                <option value="">Select Role</option>
+                                <option value="amitrace_admin">Regular Admin</option>
+                                <option value="super_admin">Super Administrator</option>
+                            </select>
+                            <small class="form-help">Super Administrators can manage other admins</small>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closeAddAdminModal()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Create Administrator</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div id="deleteConfirmModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🗑️ Confirm Deletion</h2>
+                    <span class="close" onclick="closeDeleteConfirmModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div id="deleteConfirmContent">
+                        <!-- Content will be populated dynamically -->
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeDeleteConfirmModal()">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Delete Confirmation Modal -->
+        <div id="bulkDeleteConfirmModal" class="modal">
+            <div class="modal-content large-modal">
+                <div class="modal-header">
+                    <h2>🗑️ Confirm Bulk Deletion</h2>
+                    <span class="close" onclick="closeBulkDeleteConfirmModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div id="bulkDeleteConfirmContent">
+                        <!-- Content will be populated dynamically -->
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeBulkDeleteConfirmModal()">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="confirmBulkDeleteBtn">Delete All Selected</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Super Admin Warning Modal -->
+        <div id="superAdminWarningModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>⚠️ Access Restricted</h2>
+                    <span class="close" onclick="closeSuperAdminWarningModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p>This feature requires <strong>Super Administrator</strong> privileges.</p>
+                    <p>Only Super Administrators can manage other administrators.</p>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-primary" onclick="closeSuperAdminWarningModal()">Understood</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+            <div class="loading-content">
+                <div class="loading-spinner large"></div>
+                <p id="loadingMessage">Processing...</p>
+            </div>
+        </div>
+
+        <!-- Error/Success Messages -->
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/user-management.js"></script>
+</body>
+</html>
