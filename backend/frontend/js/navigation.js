@@ -199,6 +199,10 @@ const VidPODNav = {
             'admin': {
                 visible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard', 'admin', 'admin-browse-stories'],
                 hidden: []
+            },
+            'amitrace_admin': {
+                visible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard', 'admin', 'admin-browse-stories'],
+                hidden: []
             }
         };
 
