@@ -137,7 +137,7 @@ class TeacherComprehensiveTestEnhanced extends VidPODTestSuite {
         // Simulate extended session
         await new Promise(resolve => setTimeout(resolve, 5000));
         
-        const tokenPersisted = await page.evaluate(() => localStorage.getItem('token') === arguments[0], initialToken);
+        const tokenPersisted = await page.evaluate((token) => localStorage.getItem('token') === token, initialToken);
         await this.recordTeacherTestResult('authentication', 'Session Persistence', tokenPersisted);
     }
 

@@ -730,6 +730,71 @@ async function bulkFavorite() {
     clearSelection();
 }
 
+// Bulk export function for selected stories
+async function bulkExport() {
+    if (selectedStories.size === 0) {
+        alert('Please select stories to export');
+        return;
+    }
+    
+    try {
+        const selectedArray = Array.from(selectedStories);
+        console.log('Exporting stories:', selectedArray);
+        
+        // Get story data for selected stories
+        const storiesToExport = allStories.filter(story => selectedArray.includes(story.id));
+        
+        if (storiesToExport.length === 0) {
+            alert('No valid stories found for export');
+            return;
+        }
+        
+        // Create CSV content
+        const csvHeaders = ['Title', 'Description', 'Question 1', 'Question 2', 'Question 3', 'Question 4', 'Question 5', 'Question 6', 'Start Date', 'End Date', 'Tags', 'Interviewees', 'Author'];
+        const csvRows = storiesToExport.map(story => [
+            `"${(story.idea_title || '').replace(/"/g, '""')}"`,
+            `"${(story.idea_description || '').replace(/"/g, '""')}"`,
+            `"${(story.question_1 || '').replace(/"/g, '""')}"`,
+            `"${(story.question_2 || '').replace(/"/g, '""')}"`,
+            `"${(story.question_3 || '').replace(/"/g, '""')}"`,
+            `"${(story.question_4 || '').replace(/"/g, '""')}"`,
+            `"${(story.question_5 || '').replace(/"/g, '""')}"`,
+            `"${(story.question_6 || '').replace(/"/g, '""')}"`,
+            `"${story.coverage_start_date || ''}"`,
+            `"${story.coverage_end_date || ''}"`,
+            `"${(story.tags || []).join(', ')}"`,
+            `"${(story.interviewees || []).join(', ')}"`,
+            `"${story.uploaded_by_name || ''}"`
+        ]);
+        
+        const csvContent = [csvHeaders.join(','), ...csvRows.map(row => row.join(','))].join('\n');
+        
+        // Create and download file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        
+        if (link.download !== undefined) {
+            const filename = `stories_export_${new Date().toISOString().split('T')[0]}.csv`;
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification(`Exported ${storiesToExport.length} stories to ${filename}`, 'success');
+            clearSelection();
+        } else {
+            alert('CSV export not supported in this browser');
+        }
+        
+    } catch (error) {
+        console.error('Export error:', error);
+        showNotification('Export failed. Please try again.', 'error');
+    }
+}
+
 async function bulkDelete() {
     if (selectedStories.size === 0) {
         alert('Please select stories to delete');

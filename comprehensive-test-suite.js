@@ -221,7 +221,10 @@ class VidPODTestSuite {
 
             // Check if redirected correctly
             const correctRedirect = loginResult.currentURL.includes(expectedRedirect);
-            const correctRole = loginResult.userRole === userType;
+            
+            // Map test userType to actual system role names
+            const expectedRole = userType === 'admin' ? 'amitrace_admin' : userType;
+            const correctRole = loginResult.userRole === expectedRole;
 
             if (!loginResult.hasToken) {
                 this.bugTracker.trackBug(
@@ -257,7 +260,7 @@ class VidPODTestSuite {
                     `${userType} login - Incorrect user role after login`,
                     {
                         actual: `User role: ${loginResult.userRole}`,
-                        expected: `User role: ${userType}`,
+                        expected: `User role: ${expectedRole}`,
                         reproductionSteps: [`Login as ${userType}`, 'Check user data in localStorage']
                     }
                 );

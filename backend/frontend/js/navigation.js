@@ -167,13 +167,13 @@ const VidPODNav = {
         const teacherLinks = document.querySelectorAll('#teacherLink, [href*="teacher-dashboard"]:not([data-role])');
 
         adminLinks.forEach(link => {
-            const shouldShow = userRole === 'admin';
+            const shouldShow = ['admin', 'amitrace_admin'].includes(userRole);
             link.style.display = shouldShow ? '' : 'none';
             console.log(`Legacy admin link: visible=${shouldShow}`);
         });
 
         teacherLinks.forEach(link => {
-            const shouldShow = ['teacher', 'admin'].includes(userRole);
+            const shouldShow = ['teacher', 'admin', 'amitrace_admin'].includes(userRole);
             link.style.display = shouldShow ? '' : 'none';
             console.log(`Legacy teacher link: visible=${shouldShow}`);
         });

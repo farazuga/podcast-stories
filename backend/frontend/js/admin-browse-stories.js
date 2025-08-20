@@ -886,4 +886,15 @@ function showError(message) {
     }, 5000);
 }
 
+// Make functions globally available for HTML onclick handlers
+window.bulkExport = bulkExport;
+window.exportAllStories = exportAllStories;
+window.bulkFavorite = bulkFavorite;
+window.bulkDelete = bulkDelete;
+window.bulkApprove = bulkApprove;
+window.bulkRejectSelected = bulkRejectSelected;
+window.clearSelection = clearSelection;
+window.toggleSelectAll = toggleSelectAll;
+window.toggleStorySelection = toggleStorySelection;
+
 console.log('Admin Browse Stories JavaScript loaded successfully');

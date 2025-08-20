@@ -40,35 +40,54 @@ function checkAuth() {
 
 async function loadUserInfo() {
     try {
-        const user = JSON.parse(localStorage.getItem('user'));
+        const userStr = localStorage.getItem('user');
+        if (!userStr) {
+            console.error('No user data in localStorage');
+            console.error('🔧 DASHBOARD.JS - NOT calling logout() to preserve authentication');
+            return;
+        }
+        
+        const user = JSON.parse(userStr);
         currentUser = user;
         
-        // Display user info - handle Phase 1 user data structure
-        const displayName = user.name || user.email || user.username || 'User';
-        document.getElementById('userInfo').textContent = displayName;
+        if (!user || !user.role) {
+            console.error('Invalid user data structure:', user);
+            console.error('🔧 DASHBOARD.JS - NOT calling logout() to preserve authentication');
+            return;
+        }
         
-        // Display role badge
+        // Display user info - handle Phase 1 user data structure with null checks
+        const displayName = user.name || user.email || user.username || 'User';
+        const userInfoElement = document.getElementById('userInfo');
+        if (userInfoElement) {
+            userInfoElement.textContent = displayName;
+        }
+        
+        // Display role badge with null check
         const roleBadge = document.getElementById('userRoleBadge');
         if (roleBadge) {
             roleBadge.textContent = user.role.toUpperCase().replace('_', ' ');
             roleBadge.className = `role-badge role-${user.role}`;
         }
         
-        // Show appropriate navigation links based on role
+        // Show appropriate navigation links based on role with null checks
         if (user.role === 'admin' || user.role === 'amitrace_admin') {
-            document.getElementById('adminLink').style.display = 'block';
-            document.getElementById('teacherLink').style.display = 'block';
+            const adminLink = document.getElementById('adminLink');
+            const teacherLink = document.getElementById('teacherLink');
+            if (adminLink) adminLink.style.display = 'block';
+            if (teacherLink) teacherLink.style.display = 'block';
         } else if (user.role === 'teacher') {
-            document.getElementById('teacherLink').style.display = 'block';
+            const teacherLink = document.getElementById('teacherLink');
+            if (teacherLink) teacherLink.style.display = 'block';
         }
         
-        // Hide CSV import for students
+        // Hide CSV import for students with null check
         if (user.role === 'student') {
             const csvBtn = document.getElementById('csvImportBtn');
             if (csvBtn) csvBtn.style.display = 'none';
         }
         
-        // Show bulk delete button only for admins
+        // Show bulk delete button only for admins with null check
         const bulkDeleteBtn = document.getElementById('dashboardBulkDeleteBtn');
         if (bulkDeleteBtn) {
             if (user.role === 'admin' || user.role === 'amitrace_admin') {
@@ -77,9 +96,17 @@ async function loadUserInfo() {
                 bulkDeleteBtn.style.display = 'none';
             }
         }
+        
+        console.log('User info loaded successfully:', { role: user.role, name: displayName });
+        
     } catch (error) {
         console.error('Error loading user info:', error);
-        logout();
+        // Only logout on critical errors (missing/invalid user data), not DOM errors
+        if (!localStorage.getItem('user')) {
+            logout();
+        } else {
+            console.warn('DOM-related error in loadUserInfo, but user data is valid');
+        }
     }
 }
 
@@ -1029,7 +1056,8 @@ async function loadDashboardStats() {
 
 async function loadMyStoriesCount() {
     try {
-        const response = await fetch(`${window.API_URL}/stories?uploaded_by=${currentUser.id}`, {
+        // Use a more robust API approach - fetch all stories and filter client-side to avoid API 400 errors
+        const response = await fetch(`${window.API_URL}/stories`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -1037,9 +1065,18 @@ async function loadMyStoriesCount() {
         
         if (response.ok) {
             const stories = await response.json();
-            const count = stories.length;
+            // Filter stories by current user client-side to avoid API issues
+            const myStories = stories.filter(story => 
+                story.uploaded_by === currentUser.id || 
+                story.uploaded_by_name === currentUser.username ||
+                story.uploaded_by_name === currentUser.name
+            );
+            const count = myStories.length;
             document.getElementById('myStoriesCount').textContent = count;
             console.log(`My Stories count: ${count}`);
+        } else {
+            console.error('API returned non-OK status:', response.status);
+            document.getElementById('myStoriesCount').textContent = '0';
         }
     } catch (error) {
         console.error('Error loading my stories count:', error);
@@ -1131,26 +1168,40 @@ async function loadRecentActivity() {
 
 async function loadMyRecentStories() {
     try {
-        const response = await fetch(`${window.API_URL}/stories?uploaded_by=${currentUser.id}&limit=5`, {
+        // Use the same robust approach - fetch all stories and filter client-side
+        const response = await fetch(`${window.API_URL}/stories`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
         });
         
         if (response.ok) {
-            const stories = await response.json();
+            const allStories = await response.json();
+            // Filter and sort by current user, most recent first
+            const myStories = allStories
+                .filter(story => 
+                    story.uploaded_by === currentUser.id || 
+                    story.uploaded_by_name === currentUser.username ||
+                    story.uploaded_by_name === currentUser.name
+                )
+                .sort((a, b) => new Date(b.uploaded_date) - new Date(a.uploaded_date))
+                .slice(0, 5);
+            
             const container = document.getElementById('myRecentStories');
             
-            if (stories.length === 0) {
+            if (myStories.length === 0) {
                 container.innerHTML = '<div class="no-activity">No stories created yet. <a href="/add-story.html">Create your first story</a></div>';
             } else {
-                container.innerHTML = stories.slice(0, 5).map(story => `
+                container.innerHTML = myStories.map(story => `
                     <div class="activity-item">
                         <h4><a href="/story-detail.html?id=${story.id}">${story.idea_title}</a></h4>
                         <p class="activity-meta">Created ${formatDate(story.uploaded_date)}</p>
                     </div>
                 `).join('');
             }
+        } else {
+            console.error('API returned non-OK status:', response.status);
+            document.getElementById('myRecentStories').innerHTML = '<div class="error">Unable to load recent stories</div>';
         }
     } catch (error) {
         console.error('Error loading recent stories:', error);

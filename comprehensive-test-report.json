@@ -1,0 +1,141 @@
+{
+  "metadata": {
+    "timestamp": "2025-08-20T20:32:26.983Z",
+    "duration": "18.2s",
+    "testSuite": "VidPOD Comprehensive Multi-Role Testing"
+  },
+  "summary": {
+    "totalTests": 11,
+    "passed": 8,
+    "failed": 3,
+    "successRate": "72.7%",
+    "totalBugs": 3
+  },
+  "roleResults": {
+    "admin": {
+      "passed": 4,
+      "failed": 1,
+      "total": 5,
+      "bugs": []
+    },
+    "teacher": {
+      "passed": 4,
+      "failed": 1,
+      "total": 5,
+      "bugs": []
+    },
+    "student": {
+      "passed": 0,
+      "failed": 1,
+      "total": 1,
+      "bugs": []
+    },
+    "security": {
+      "passed": 0,
+      "failed": 0,
+      "total": 0,
+      "bugs": []
+    },
+    "performance": {
+      "passed": 0,
+      "failed": 0,
+      "total": 0,
+      "bugs": []
+    }
+  },
+  "bugAnalysis": {
+    "summary": {
+      "total": 3,
+      "bySeverity": {
+        "CRITICAL": 1,
+        "HIGH": 2,
+        "MEDIUM": 0,
+        "LOW": 0
+      },
+      "byCategory": {
+        "AUTHENTICATION": 1,
+        "UI_UX": 0,
+        "PERFORMANCE": 0,
+        "FUNCTIONAL": 2
+      }
+    },
+    "bugs": [
+      {
+        "id": "BUG_1755721946973_xwu18",
+        "category": "AUTHENTICATION",
+        "severity": "CRITICAL",
+        "description": "student login completely failed: Execution context was destroyed, most likely because of a navigation.",
+        "context": {
+          "actual": "Execution context was destroyed, most likely because of a navigation.",
+          "expected": "Successful login and redirect",
+          "reproductionSteps": [
+            "Navigate to login page",
+            "Enter student credentials",
+            "Submit form"
+          ]
+        },
+        "timestamp": "2025-08-20T20:32:26.973Z",
+        "reproductionSteps": [
+          "Navigate to login page",
+          "Enter student credentials",
+          "Submit form"
+        ],
+        "expectedBehavior": "Successful login and redirect",
+        "actualBehavior": "Execution context was destroyed, most likely because of a navigation.",
+        "fixPlan": "Immediate security audit and token handling review",
+        "status": "OPEN"
+      },
+      {
+        "id": "BUG_1755721930498_qwoao",
+        "category": "FUNCTIONAL",
+        "severity": "HIGH",
+        "description": "Page JavaScript Error: bulkExport is not defined",
+        "context": {
+          "actual": "bulkExport is not defined",
+          "expected": "No JavaScript errors",
+          "reproductionSteps": [
+            "Navigate to page",
+            "Check console for errors"
+          ]
+        },
+        "timestamp": "2025-08-20T20:32:10.498Z",
+        "reproductionSteps": [
+          "Navigate to page",
+          "Check console for errors"
+        ],
+        "expectedBehavior": "No JavaScript errors",
+        "actualBehavior": "bulkExport is not defined",
+        "fixPlan": "Functionality review and error handling",
+        "status": "OPEN"
+      },
+      {
+        "id": "BUG_1755721939140_rxteg",
+        "category": "FUNCTIONAL",
+        "severity": "HIGH",
+        "description": "Page JavaScript Error: bulkExport is not defined",
+        "context": {
+          "actual": "bulkExport is not defined",
+          "expected": "No JavaScript errors",
+          "reproductionSteps": [
+            "Navigate to page",
+            "Check console for errors"
+          ]
+        },
+        "timestamp": "2025-08-20T20:32:19.140Z",
+        "reproductionSteps": [
+          "Navigate to page",
+          "Check console for errors"
+        ],
+        "expectedBehavior": "No JavaScript errors",
+        "actualBehavior": "bulkExport is not defined",
+        "fixPlan": "Functionality review and error handling",
+        "status": "OPEN"
+      }
+    ]
+  },
+  "recommendations": [
+    "🚨 IMMEDIATE ACTION REQUIRED: Critical bugs found that block core functionality",
+    "📈 Focus on improving test pass rate - target 95%+ for production readiness",
+    "🔒 Security review recommended - authentication issues detected"
+  ]
+}
