@@ -25,17 +25,20 @@ class BugTracker {
         };
     }
 
-    trackBug(category, severity, description, context) {
+    trackBug(category, severity, description, context = {}) {
+        // Ensure context is an object
+        const contextObj = typeof context === 'string' ? { actual: context } : context;
+        
         const bug = {
             id: `BUG_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
             category,
             severity,
             description,
-            context,
+            context: contextObj,
             timestamp: new Date().toISOString(),
-            reproductionSteps: context.reproductionSteps || [],
-            expectedBehavior: context.expected || '',
-            actualBehavior: context.actual || '',
+            reproductionSteps: contextObj.reproductionSteps || [],
+            expectedBehavior: contextObj.expected || '',
+            actualBehavior: contextObj.actual || '',
             fixPlan: this.generateFixPlan(category, severity, description),
             status: 'OPEN'
         };
