@@ -413,7 +413,7 @@ router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
               
               insertValues = [
                 title.trim(),
-                (row.idea_description || row.description || '').trim(),
+                (row.idea_description || row.enhanced_description || row.description || '').trim(),
                 row.question_1 || null, row.question_2 || null, row.question_3 || null,
                 row.question_4 || null, row.question_5 || null, row.question_6 || null,
                 row.coverage_start_date || row.start_date || null,
@@ -431,7 +431,7 @@ router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
               
               insertValues = [
                 title.trim(),
-                (row.idea_description || row.description || '').trim(),
+                (row.idea_description || row.enhanced_description || row.description || '').trim(),
                 row.question_1 || null, row.question_2 || null, row.question_3 || null,
                 row.question_4 || null, row.question_5 || null, row.question_6 || null,
                 row.coverage_start_date || row.start_date || null,
@@ -445,9 +445,10 @@ router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
             const storyId = storyResult.rows[0].id;
             console.log(`Imported story ${successCount + 1}: "${title}" (ID: ${storyId})`);
 
-            // Handle tags if present
-            if (row.tags && row.tags.trim()) {
-              const tags = row.tags.split(',').map(t => t.trim()).filter(t => t);
+            // Handle tags if present (check multiple possible column names)
+            const tagsValue = row.tags || row.auto_tags || row.tag;
+            if (tagsValue && tagsValue.trim()) {
+              const tags = tagsValue.split(',').map(t => t.trim()).filter(t => t);
               let tagsAdded = 0;
               
               for (const tagName of tags) {
@@ -487,13 +488,25 @@ router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
               }
             }
 
-            // Handle interviewees if present
-            if ((row.interviewees || row.people_to_interview) && (row.interviewees || row.people_to_interview).trim()) {
-              const people = (row.interviewees || row.people_to_interview)
-                .split(',')
-                .map(p => p.trim())
-                .filter(p => p);
-              
+            // Handle interviewees if present (support multiple column formats)
+            const people = [];
+            
+            // Check for single interviewees column
+            if (row.interviewees && row.interviewees.trim()) {
+              people.push(...row.interviewees.split(',').map(p => p.trim()).filter(p => p));
+            }
+            if (row.people_to_interview && row.people_to_interview.trim()) {
+              people.push(...row.people_to_interview.split(',').map(p => p.trim()).filter(p => p));
+            }
+            
+            // Check for numbered interviewee columns (interviewees 1, interviewees 2, etc.)
+            Object.keys(row).forEach(key => {
+              if (key.match(/^interviewees?\s*\d+$/i) && row[key] && row[key].trim()) {
+                people.push(row[key].trim());
+              }
+            });
+            
+            if (people.length > 0) {
               let intervieweesAdded = 0;
               
               for (const person of people) {
