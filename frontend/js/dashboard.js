@@ -74,6 +74,13 @@ async function loadUserInfo() {
 
 async function loadTags() {
     try {
+        // Show loading indicator for tags
+        const tagsSelect = document.getElementById('searchTags');
+        if (tagsSelect) {
+            tagsSelect.innerHTML = '<option>Loading tags...</option>';
+            tagsSelect.disabled = true;
+        }
+
         const response = await fetch(`${API_URL}/tags`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -83,9 +90,22 @@ async function loadTags() {
         if (response.ok) {
             allTags = await response.json();
             populateTagsSelect();
+        } else {
+            if (tagsSelect) {
+                tagsSelect.innerHTML = '<option>Failed to load tags</option>';
+            }
         }
     } catch (error) {
         console.error('Error loading tags:', error);
+        const tagsSelect = document.getElementById('searchTags');
+        if (tagsSelect) {
+            tagsSelect.innerHTML = '<option>Error loading tags</option>';
+        }
+    } finally {
+        const tagsSelect = document.getElementById('searchTags');
+        if (tagsSelect) {
+            tagsSelect.disabled = false;
+        }
     }
 }
 
@@ -105,6 +125,17 @@ function populateTagsSelect() {
 
 async function loadStories(filters = {}) {
     try {
+        // Show loading indicator
+        const storiesGrid = document.getElementById('storiesGrid');
+        if (storiesGrid) {
+            storiesGrid.innerHTML = `
+                <div class="content-loading">
+                    <div class="spinner"></div>
+                    <span>Loading stories...</span>
+                </div>
+            `;
+        }
+
         const queryParams = new URLSearchParams();
         
         if (filters.search) queryParams.append('search', filters.search);
@@ -128,9 +159,24 @@ async function loadStories(filters = {}) {
             displayStories(allStories);
         } else {
             console.error('Failed to load stories');
+            if (storiesGrid) {
+                storiesGrid.innerHTML = `
+                    <div class="content-loading" style="color: var(--danger-color);">
+                        <span>Failed to load stories. Please try again.</span>
+                    </div>
+                `;
+            }
         }
     } catch (error) {
         console.error('Error loading stories:', error);
+        const storiesGrid = document.getElementById('storiesGrid');
+        if (storiesGrid) {
+            storiesGrid.innerHTML = `
+                <div class="content-loading" style="color: var(--danger-color);">
+                    <span>Error loading stories. Please check your connection and try again.</span>
+                </div>
+            `;
+        }
     }
 }
 

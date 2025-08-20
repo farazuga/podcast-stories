@@ -80,13 +80,28 @@ async function loadUserInfo() {
 }
 
 async function loadInitialData() {
-    await Promise.all([
-        loadTags(),
-        loadSchools(),
-        loadTeacherRequests(),
-        loadStatistics(),
-        loadRecentStories()
-    ]);
+    // Show page loading
+    if (typeof window.showPageLoader === 'function') {
+        window.showPageLoader('Loading admin panel data...');
+    }
+
+    try {
+        await Promise.all([
+            loadTags(),
+            loadSchools(),
+            loadTeacherRequests(),
+            loadStatistics(),
+            loadRecentStories()
+        ]);
+    } catch (error) {
+        console.error('Error loading initial data:', error);
+        showError('Failed to load some admin data. Please refresh the page.');
+    } finally {
+        // Hide page loading
+        if (typeof window.hidePageLoader === 'function') {
+            window.hidePageLoader();
+        }
+    }
 }
 
 // Tab Management - Make function globally available
@@ -263,6 +278,11 @@ async function loadStatistics() {
 // Schools Management
 async function loadSchools() {
     try {
+        // Show table loading state
+        if (typeof window.showTableLoader === 'function') {
+            window.showTableLoader('schoolsTable', 'Loading schools...', 6);
+        }
+
         const response = await fetch(`${window.API_URL}/schools`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
@@ -270,9 +290,30 @@ async function loadSchools() {
         if (response.ok) {
             allSchools = await response.json();
             displaySchools();
+        } else {
+            const schoolsTable = document.getElementById('schoolsTable');
+            if (schoolsTable) {
+                schoolsTable.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="table-loading" style="color: var(--danger-color);">
+                            Failed to load schools
+                        </td>
+                    </tr>
+                `;
+            }
         }
     } catch (error) {
         console.error('Error loading schools:', error);
+        const schoolsTable = document.getElementById('schoolsTable');
+        if (schoolsTable) {
+            schoolsTable.innerHTML = `
+                <tr>
+                    <td colspan="6" class="table-loading" style="color: var(--danger-color);">
+                        Error loading schools
+                    </td>
+                </tr>
+            `;
+        }
     }
 }
 
@@ -505,6 +546,17 @@ window.rejectTeacherRequest = async function(requestId) {
 // Tags Management (existing functionality)
 async function loadTags() {
     try {
+        // Show loading state
+        const tagsList = document.getElementById('tagsList');
+        if (tagsList) {
+            tagsList.innerHTML = `
+                <div class="content-loading">
+                    <div class="spinner"></div>
+                    <span>Loading tags...</span>
+                </div>
+            `;
+        }
+
         const response = await fetch(`${window.API_URL}/tags`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
@@ -512,9 +564,25 @@ async function loadTags() {
         if (response.ok) {
             allTags = await response.json();
             displayTags();
+        } else {
+            if (tagsList) {
+                tagsList.innerHTML = `
+                    <div class="content-loading" style="color: var(--danger-color);">
+                        <span>Failed to load tags</span>
+                    </div>
+                `;
+            }
         }
     } catch (error) {
         console.error('Error loading tags:', error);
+        const tagsList = document.getElementById('tagsList');
+        if (tagsList) {
+            tagsList.innerHTML = `
+                <div class="content-loading" style="color: var(--danger-color);">
+                    <span>Error loading tags</span>
+                </div>
+            `;
+        }
     }
 }
 

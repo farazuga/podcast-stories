@@ -1,6 +1,10 @@
 // Add Story functionality
 // Uses window.API_URL from auth.js
 
+// Global variables
+let isEditMode = false;
+let editStoryId = null;
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Add Story page loading...');
@@ -10,6 +14,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!token) {
         window.location.href = '/index.html';
         return;
+    }
+    
+    // Check if we're in edit mode
+    const urlParams = new URLSearchParams(window.location.search);
+    editStoryId = urlParams.get('edit');
+    isEditMode = !!editStoryId;
+    
+    if (isEditMode) {
+        console.log('Edit mode detected for story ID:', editStoryId);
+        // Update page title and heading
+        document.title = 'VidPOD - Edit Story';
+        const formHeader = document.querySelector('.form-header h2');
+        if (formHeader) {
+            formHeader.textContent = 'Edit Story Idea';
+        }
+        const submitBtn = document.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.textContent = 'Update Story Idea';
+        }
     }
     
     // Load user info
@@ -24,6 +47,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Load tags
     await loadTags();
+    
+    // Load story data if in edit mode
+    if (isEditMode) {
+        await loadStoryForEdit();
+    }
     
     // Setup form submission
     setupFormHandler();
@@ -75,6 +103,83 @@ function populateTagsSelect(tags) {
     console.log(`Populated ${tags.length} tags in select`);
 }
 
+// Load story data for editing
+async function loadStoryForEdit() {
+    console.log('Loading story for edit mode...');
+    try {
+        const response = await fetch(`${window.API_URL}/stories/${editStoryId}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            const story = await response.json();
+            console.log('Loaded story data:', story);
+            populateFormWithStoryData(story);
+        } else {
+            console.error('Failed to load story:', response.status);
+            showError('Failed to load story data. Please try again.');
+            // Redirect back to dashboard on error
+            setTimeout(() => {
+                window.location.href = '/dashboard.html';
+            }, 3000);
+        }
+    } catch (error) {
+        console.error('Error loading story:', error);
+        showError('Network error loading story data.');
+        setTimeout(() => {
+            window.location.href = '/dashboard.html';
+        }, 3000);
+    }
+}
+
+// Populate form with existing story data
+function populateFormWithStoryData(story) {
+    console.log('Populating form with story data...');
+    
+    // Basic information
+    document.getElementById('idea_title').value = story.idea_title || '';
+    document.getElementById('idea_description').value = story.idea_description || '';
+    document.getElementById('coverage_start_date').value = story.coverage_start_date ? story.coverage_start_date.split('T')[0] : '';
+    document.getElementById('coverage_end_date').value = story.coverage_end_date ? story.coverage_end_date.split('T')[0] : '';
+    
+    // Questions
+    document.getElementById('question_1').value = story.question_1 || '';
+    document.getElementById('question_2').value = story.question_2 || '';
+    document.getElementById('question_3').value = story.question_3 || '';
+    document.getElementById('question_4').value = story.question_4 || '';
+    document.getElementById('question_5').value = story.question_5 || '';
+    document.getElementById('question_6').value = story.question_6 || '';
+    
+    // Select tags
+    if (story.tags && story.tags.length > 0) {
+        const tagsSelect = document.getElementById('tags');
+        if (tagsSelect) {
+            // Clear any existing selections
+            Array.from(tagsSelect.options).forEach(option => option.selected = false);
+            
+            // Select the story's tags
+            story.tags.forEach(tag => {
+                Array.from(tagsSelect.options).forEach(option => {
+                    if (option.value === tag) {
+                        option.selected = true;
+                    }
+                });
+            });
+        }
+    }
+    
+    // Populate interviewees if we have them
+    if (story.interviewees && story.interviewees.length > 0) {
+        story.interviewees.forEach(interviewee => {
+            addIntervieweeToList(interviewee);
+        });
+    }
+    
+    console.log('Form populated successfully');
+}
+
 // Setup form submission handler
 function setupFormHandler() {
     const form = document.getElementById('storyForm');
@@ -109,10 +214,12 @@ function setupFormHandler() {
             console.log('Selected tags:', selectedTags);
         }
         
-        // Get interviewees if field exists
-        const intervieweesField = document.getElementById('interviewees');
-        if (intervieweesField && intervieweesField.value) {
-            formData.interviewees = intervieweesField.value.split(',').map(name => name.trim());
+        // Get interviewees from the list
+        const intervieweeItems = document.querySelectorAll('.interviewee-item');
+        if (intervieweeItems.length > 0) {
+            formData.interviewees = Array.from(intervieweeItems).map(item => 
+                item.textContent.replace('×', '').trim()
+            );
         }
         
         // Submit to API
@@ -122,18 +229,23 @@ function setupFormHandler() {
 
 // Save story to API
 async function saveStory(storyData) {
-    console.log('Saving story...', storyData);
+    const actionText = isEditMode ? 'Updating' : 'Saving';
+    const successText = isEditMode ? 'Story updated successfully!' : 'Story saved successfully!';
+    console.log(`${actionText} story...`, storyData);
     
     // Show loading state
     const submitBtn = document.querySelector('button[type="submit"]');
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Saving...';
+        submitBtn.textContent = `${actionText}...`;
     }
     
     try {
-        const response = await fetch(`${window.API_URL}/stories`, {
-            method: 'POST',
+        const url = isEditMode ? `${window.API_URL}/stories/${editStoryId}` : `${window.API_URL}/stories`;
+        const method = isEditMode ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -143,8 +255,8 @@ async function saveStory(storyData) {
 
         if (response.ok) {
             const result = await response.json();
-            console.log('Story saved successfully:', result);
-            showSuccess('Story saved successfully!');
+            console.log(`Story ${isEditMode ? 'updated' : 'saved'} successfully:`, result);
+            showSuccess(successText);
             
             // Redirect to dashboard after 2 seconds
             setTimeout(() => {
@@ -152,23 +264,23 @@ async function saveStory(storyData) {
             }, 2000);
         } else {
             const error = await response.json();
-            console.error('Failed to save story:', error);
-            showError(error.message || 'Failed to save story. Please try again.');
+            console.error(`Failed to ${isEditMode ? 'update' : 'save'} story:`, error);
+            showError(error.message || `Failed to ${isEditMode ? 'update' : 'save'} story. Please try again.`);
             
             // Re-enable submit button
             if (submitBtn) {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Save Story';
+                submitBtn.textContent = isEditMode ? 'Update Story Idea' : 'Save Story Idea';
             }
         }
     } catch (error) {
-        console.error('Error saving story:', error);
+        console.error(`Error ${isEditMode ? 'updating' : 'saving'} story:`, error);
         showError('Network error. Please check your connection and try again.');
         
         // Re-enable submit button
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Save Story';
+            submitBtn.textContent = isEditMode ? 'Update Story Idea' : 'Save Story Idea';
         }
     }
 }
@@ -198,6 +310,67 @@ function showError(message) {
         setTimeout(() => alert.remove(), 5000);
     }
 }
+
+// Interviewee management functions
+function addInterviewee() {
+    const newIntervieweeInput = document.getElementById('newInterviewee');
+    if (!newIntervieweeInput) return;
+    
+    const intervieweeName = newIntervieweeInput.value.trim();
+    if (!intervieweeName) {
+        showError('Please enter a person or role to interview');
+        return;
+    }
+    
+    // Check if already exists
+    const existingItems = document.querySelectorAll('.interviewee-item');
+    const exists = Array.from(existingItems).some(item => 
+        item.textContent.replace('×', '').trim().toLowerCase() === intervieweeName.toLowerCase()
+    );
+    
+    if (exists) {
+        showError('This person/role is already in the list');
+        return;
+    }
+    
+    addIntervieweeToList(intervieweeName);
+    newIntervieweeInput.value = '';
+}
+
+function addIntervieweeToList(intervieweeName) {
+    const intervieweeList = document.getElementById('intervieweeList');
+    if (!intervieweeList) return;
+    
+    const intervieweeItem = document.createElement('div');
+    intervieweeItem.className = 'interviewee-item';
+    intervieweeItem.innerHTML = `
+        ${intervieweeName}
+        <button type="button" class="remove-btn" onclick="removeInterviewee(this)">×</button>
+    `;
+    
+    intervieweeList.appendChild(intervieweeItem);
+}
+
+function removeInterviewee(button) {
+    button.parentElement.remove();
+}
+
+// Handle Enter key in interviewee input
+document.addEventListener('DOMContentLoaded', () => {
+    const newIntervieweeInput = document.getElementById('newInterviewee');
+    if (newIntervieweeInput) {
+        newIntervieweeInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addInterviewee();
+            }
+        });
+    }
+});
+
+// Make functions available globally
+window.addInterviewee = addInterviewee;
+window.removeInterviewee = removeInterviewee;
 
 // Make logout available globally
 window.logout = function() {

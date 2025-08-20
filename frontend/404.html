@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found - VidPOD</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .error-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--bg-color) 0%, #e8f2ff 100%);
+            padding: 2rem;
+        }
+
+        .error-card {
+            text-align: center;
+            background: var(--white);
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow-hover);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .error-icon {
+            font-size: 6rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .error-code {
+            font-size: 4rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            line-height: 1;
+        }
+
+        .error-title {
+            font-size: 1.5rem;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .error-message {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .error-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-home {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-home:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-back {
+            background: transparent;
+            color: var(--text-color);
+            padding: 0.75rem 2rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-back:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .helpful-links {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .helpful-links h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .quick-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            padding: 0.5rem;
+            border-radius: 6px;
+            transition: background 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .quick-link:hover {
+            background: var(--bg-color);
+        }
+
+        @media (max-width: 768px) {
+            .error-card {
+                padding: 2rem 1rem;
+            }
+            
+            .error-code {
+                font-size: 3rem;
+            }
+            
+            .error-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn-home, .btn-back {
+                width: 100%;
+                justify-content: center;
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-card">
+            <div class="error-icon">📻</div>
+            <div class="error-code">404</div>
+            <h1 class="error-title">Page Not Found</h1>
+            <p class="error-message">
+                Oops! The page you're looking for doesn't exist. It might have been moved, deleted, or you might have entered the wrong URL.
+            </p>
+            
+            <div class="error-actions">
+                <a href="/" class="btn-home" id="homeBtn">
+                    🏠 Go Home
+                </a>
+                <button onclick="history.back()" class="btn-back">
+                    ← Go Back
+                </button>
+            </div>
+
+            <div class="helpful-links">
+                <h3>Quick Navigation</h3>
+                <div class="links-grid">
+                    <a href="/" class="quick-link">Login</a>
+                    <a href="/dashboard.html" class="quick-link">Dashboard</a>
+                    <a href="/stories.html" class="quick-link">Stories</a>
+                    <a href="/add-story.html" class="quick-link">Add Story</a>
+                    <a href="/register.html" class="quick-link">Register</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if user is logged in and adjust home button
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            const homeBtn = document.getElementById('homeBtn');
+            
+            if (token && user) {
+                try {
+                    const userData = JSON.parse(user);
+                    // Redirect to appropriate dashboard based on role
+                    switch(userData.role) {
+                        case 'amitrace_admin':
+                            homeBtn.href = '/admin.html';
+                            homeBtn.innerHTML = '🏠 Admin Panel';
+                            break;
+                        case 'teacher':
+                            homeBtn.href = '/teacher-dashboard.html';
+                            homeBtn.innerHTML = '🏠 Teacher Dashboard';
+                            break;
+                        case 'student':
+                            homeBtn.href = '/dashboard.html';
+                            homeBtn.innerHTML = '🏠 Dashboard';
+                            break;
+                        default:
+                            homeBtn.href = '/dashboard.html';
+                            homeBtn.innerHTML = '🏠 Dashboard';
+                    }
+                } catch (error) {
+                    console.error('Error parsing user data:', error);
+                    homeBtn.href = '/';
+                }
+            } else {
+                homeBtn.href = '/';
+                homeBtn.innerHTML = '🏠 Login';
+            }
+
+            // Add some interactive functionality
+            const errorCard = document.querySelector('.error-card');
+            
+            // Add subtle animation on load
+            setTimeout(() => {
+                errorCard.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    errorCard.style.transform = 'scale(1)';
+                }, 200);
+            }, 100);
+
+            // Track 404 errors (if analytics are available)
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'page_not_found', {
+                    'event_category': 'Error',
+                    'event_label': window.location.pathname
+                });
+            }
+
+            console.log('404 Page loaded for:', window.location.pathname);
+        });
+    </script>
+</body>
+</html>

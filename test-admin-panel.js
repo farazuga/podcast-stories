@@ -22,7 +22,7 @@ async function testAdminPanel() {
         
         await page.waitForSelector('#email');
         await page.type('#email', 'admin@vidpod.com');
-        await page.type('#password', 'rumi&amaml');
+        await page.type('#password', 'vidpod');
         await page.click('button[type="submit"]');
         
         await page.waitForNavigation({ timeout: 10000 });
