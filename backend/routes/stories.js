@@ -501,7 +501,7 @@ router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
             
             // Check for numbered interviewee columns (interviewees 1, interviewees 2, etc.)
             Object.keys(row).forEach(key => {
-              if (key.match(/^interviewees?\s*\d+$/i) && row[key] && row[key].trim()) {
+              if (key.trim().match(/^interviewees?\s*\d+$/i) && row[key] && row[key].trim()) {
                 people.push(row[key].trim());
               }
             });
