@@ -7,23 +7,7 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-brand">
-            <h1>📻 VidPOD - Admin</h1>
-        </div>
-        <div class="nav-menu">
-            <a href="/dashboard.html">Dashboard</a>
-            <a href="/admin-browse-stories.html">🏛️ Browse Stories</a>
-            <a href="/add-story.html">Add Story</a>
-            <a href="/admin.html" class="active">Admin Panel</a>
-            <a href="/user-management.html" id="userManagementLink">User Management</a>
-        </div>
-        <div class="nav-user">
-            <span id="userInfo"></span>
-            <span class="admin-badge">ADMIN</span>
-            <button class="btn btn-logout" onclick="logout()">Logout</button>
-        </div>
-    </nav>
+    <!-- Navigation will auto-load here -->
 
     <div class="container">
         <!-- Admin Panel Navigation Tabs -->
@@ -512,5 +496,7 @@
             console.log('🔍 Debug setup complete');
         });
     </script>
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
 </body>
 </html>
