@@ -137,35 +137,6 @@
         </div>
     </div>
 
-    <!-- CSV Import Modal -->
-    <div id="csvModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>📁 Import Stories from CSV</h2>
-            <form id="csvForm">
-                <div class="form-group">
-                    <label for="csvFile">Choose CSV File</label>
-                    <input type="file" id="csvFile" accept=".csv" required>
-                </div>
-                
-                <div class="csv-instructions">
-                    <h4>CSV Format Instructions:</h4>
-                    <p>Your CSV file should include the following columns:</p>
-                    <ul>
-                        <li><strong>idea_title</strong> - Story title (required)</li>
-                        <li><strong>idea_description</strong> - Story description</li>
-                        <li><strong>question_1</strong> to <strong>question_6</strong> - Interview questions</li>
-                        <li><strong>coverage_start_date</strong> - Start date (YYYY-MM-DD)</li>
-                        <li><strong>coverage_end_date</strong> - End date (YYYY-MM-DD)</li>
-                        <li><strong>tags</strong> - Comma-separated tags</li>
-                        <li><strong>interviewees</strong> - Comma-separated names</li>
-                    </ul>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">📤 Upload CSV</button>
-            </form>
-        </div>
-    </div>
 
     <script src="js/auth.js"></script>
     <script src="js/shared-filters.js"></script>

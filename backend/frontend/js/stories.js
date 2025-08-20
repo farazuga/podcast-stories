@@ -92,9 +92,6 @@ async function loadUserInfo() {
         if (user.role === 'teacher' || user.role === 'amitrace_admin') {
             const teacherLink = document.getElementById('teacherLink');
             if (teacherLink) teacherLink.style.display = 'inline-block';
-            
-            const csvBtn = document.getElementById('csvImportBtn');
-            if (csvBtn) csvBtn.style.display = 'inline-block';
         }
         
         if (user.role === 'amitrace_admin') {
@@ -214,7 +211,7 @@ function renderStoryCard(story) {
     
     // Fixed checkbox without double box issue
     const selectionCheckbox = `
-        <div class="story-checkbox-compact">
+        <div class="story-checkbox-compact" onclick="event.stopPropagation()">
             <input type="checkbox" 
                    class="story-select-checkbox" 
                    data-story-id="${story.id}"
@@ -226,7 +223,7 @@ function renderStoryCard(story) {
     // Simple star favorite next to title
     const favoriteStar = `
         <button class="favorite-star ${story.is_favorited ? 'favorited' : ''}" 
-                onclick="toggleFavorite(${story.id})" 
+                onclick="event.stopPropagation(); toggleFavorite(${story.id})" 
                 data-story-id="${story.id}"
                 title="${story.is_favorited ? 'Remove from favorites' : 'Add to favorites'}">
             ${story.is_favorited ? '⭐' : '☆'}
@@ -267,9 +264,12 @@ function renderStoryCard(story) {
         `;
     }
     
-    // Grid view layout (original)
+    // Grid view layout - clickable tile
     return `
-        <div class="${cardClass} ${isSelected ? 'selected' : ''}" data-story-id="${story.id}" data-sort-date="${story.coverage_start_date || story.uploaded_date || ''}">
+        <div class="${cardClass} ${isSelected ? 'selected' : ''} clickable-card" 
+             data-story-id="${story.id}" 
+             data-sort-date="${story.coverage_start_date || story.uploaded_date || ''}"
+             onclick="handleStoryCardClick(event, ${story.id})">
             <div class="story-header-compact">
                 ${selectionCheckbox}
                 ${titleWithTooltip}
@@ -284,11 +284,8 @@ function renderStoryCard(story) {
             ${interviewees ? `<div class="story-interviewees-compact">🎤 ${interviewees}</div>` : ''}
             
             <div class="story-actions-compact">
-                <button class="btn btn-primary btn-small" onclick="viewStory(${story.id})">
-                    View
-                </button>
                 ${story.uploaded_by === currentUser?.id ? `
-                    <button class="btn btn-secondary btn-small" onclick="editStory(${story.id})">
+                    <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); editStory(${story.id})">
                         Edit
                     </button>
                 ` : ''}
@@ -385,33 +382,6 @@ function setupEventListeners() {
         });
     }
     
-    // CSV import
-    const csvBtn = document.getElementById('csvImportBtn');
-    const csvModal = document.getElementById('csvModal');
-    const csvForm = document.getElementById('csvForm');
-    
-    if (csvBtn && csvModal) {
-        csvBtn.addEventListener('click', () => {
-            csvModal.style.display = 'block';
-        });
-        
-        // Close modal
-        csvModal.querySelector('.close').addEventListener('click', () => {
-            csvModal.style.display = 'none';
-        });
-        
-        // Handle CSV upload
-        if (csvForm) {
-            csvForm.addEventListener('submit', handleCSVUpload);
-        }
-        
-        // Click outside modal to close
-        window.addEventListener('click', (event) => {
-            if (event.target === csvModal) {
-                csvModal.style.display = 'none';
-            }
-        });
-    }
 }
 
 function applyFilters() {
@@ -551,6 +521,21 @@ function viewStory(storyId) {
     window.location.href = `/story-detail.html?id=${storyId}`;
 }
 
+function handleStoryCardClick(event, storyId) {
+    // Prevent clicking on interactive elements from opening the story
+    const target = event.target;
+    if (target.tagName === 'INPUT' || 
+        target.tagName === 'BUTTON' || 
+        target.classList.contains('favorite-star') ||
+        target.closest('input') ||
+        target.closest('button')) {
+        return;
+    }
+    
+    // Open the story
+    viewStory(storyId);
+}
+
 function editStory(storyId) {
     window.location.href = `/add-story.html?edit=${storyId}`;
 }
@@ -600,142 +585,6 @@ async function toggleFavorite(storyId) {
     }
 }
 
-// CSV Upload function - Enhanced with better user feedback
-async function handleCSVUpload(e) {
-    e.preventDefault();
-    
-    const fileInput = document.getElementById('csvFile');
-    const file = fileInput.files[0];
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    const originalBtnText = submitBtn.textContent;
-    
-    // Validation
-    if (!file) {
-        showNotification('Please select a CSV file', 'error');
-        return;
-    }
-    
-    if (!file.name.toLowerCase().endsWith('.csv')) {
-        showNotification('Please select a valid CSV file', 'error');
-        return;
-    }
-    
-    if (file.size > 10 * 1024 * 1024) { // 10MB limit
-        showNotification('File too large. Please select a file smaller than 10MB', 'error');
-        return;
-    }
-    
-    // Show loading state
-    submitBtn.disabled = true;
-    submitBtn.textContent = '📤 Uploading...';
-    
-    const formData = new FormData();
-    formData.append('csv', file);
-    
-    try {
-        console.log(`Starting CSV upload: ${file.name} (${file.size} bytes)`);
-        
-        const response = await fetch(`${API_URL}/stories/import`, {
-            method: 'POST',
-            headers: { 
-                'Authorization': `Bearer ${localStorage.getItem('token')}` 
-                // Note: Don't set Content-Type header - let browser set it with boundary for FormData
-            },
-            body: formData
-        });
-        
-        console.log(`CSV upload response: ${response.status} ${response.statusText}`);
-        
-        if (response.ok) {
-            const result = await response.json();
-            console.log('CSV import result:', result);
-            
-            // Prepare success message
-            let message = `Successfully imported ${result.imported}`;
-            if (result.total && result.total !== result.imported) {
-                message += ` of ${result.total}`;
-            }
-            message += ` stories!`;
-            
-            // Add schema info if available
-            if (result.schemaInfo) {
-                console.log(`Schema info: ${result.schemaInfo}`);
-            }
-            
-            // Show errors if any
-            if (result.errors && result.errors.length > 0) {
-                console.warn('Import had errors:', result.errors);
-                message += `\n\nNote: ${result.errors.length} rows had errors. Check console for details.`;
-                
-                // Log detailed errors
-                result.errors.forEach((error, index) => {
-                    console.error(`Import error ${index + 1}:`, error);
-                });
-            }
-            
-            showNotification(message, 'success');
-            
-            // Close modal and reload
-            document.getElementById('csvModal').style.display = 'none';
-            fileInput.value = ''; // Clear file input
-            await loadStories(); // Reload stories to show new imports
-            
-        } else {
-            // Handle error responses
-            let errorMessage = 'Import failed';
-            
-            try {
-                const error = await response.json();
-                console.error('CSV import error response:', error);
-                
-                if (error.message) {
-                    errorMessage += `: ${error.message}`;
-                } else if (error.error) {
-                    errorMessage += `: ${error.error}`;
-                }
-                
-                if (error.details) {
-                    console.error('Error details:', error.details);
-                    errorMessage += `\nDetails: ${error.details}`;
-                }
-                
-                // Show partial success info if available
-                if (error.imported && error.imported > 0) {
-                    errorMessage += `\n\nPartial success: ${error.imported} stories were imported before the error occurred.`;
-                }
-                
-            } catch (parseError) {
-                const errorText = await response.text();
-                console.error('Failed to parse error response:', errorText);
-                errorMessage += `: Server error (${response.status})`;
-                
-                if (response.status === 401) {
-                    errorMessage = 'Import failed: Please log in again';
-                } else if (response.status === 403) {
-                    errorMessage = 'Import failed: You do not have permission to import stories';
-                } else if (response.status === 413) {
-                    errorMessage = 'Import failed: File too large';
-                }
-            }
-            
-            showNotification(errorMessage, 'error');
-        }
-        
-    } catch (error) {
-        console.error('CSV import network error:', error);
-        
-        let errorMessage = 'Import failed: Network error';
-        if (error.message.includes('fetch')) {
-            errorMessage += ' - Please check your internet connection';
-        }
-        
-        showNotification(errorMessage, 'error');
-    } finally {
-        // Reset button state
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalBtnText;
-    }
-}
 
 // Multi-select functionality
 function toggleStorySelection(storyId) {

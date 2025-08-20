@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD - Admin Browse Stories</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/navigation.css">
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+
+    <div class="container">
+        <!-- Stories Header -->
+        <div class="page-header">
+            <h1>🏛️ Admin Browse Stories</h1>
+            <p>Administrative view for managing and reviewing all podcast story ideas</p>
+        </div>
+
+        <!-- Admin Stats Row -->
+        <div class="admin-stats-row">
+            <div class="stat-card">
+                <div class="stat-value" id="totalStoriesAdmin">0</div>
+                <div class="stat-label">Total Stories</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pendingStoriesAdmin">0</div>
+                <div class="stat-label">Pending Approval</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="approvedStoriesAdmin">0</div>
+                <div class="stat-label">Approved Stories</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="rejectedStoriesAdmin">0</div>
+                <div class="stat-label">Rejected Stories</div>
+            </div>
+        </div>
+
+        <!-- Admin Actions Bar -->
+        <div class="admin-actions-bar">
+            <button class="btn btn-primary" onclick="showCSVImportModal()">
+                📤 Import CSV Stories
+            </button>
+            <button class="btn btn-secondary" onclick="exportAllStories()">
+                📄 Export All Stories
+            </button>
+            <button class="btn btn-success" onclick="bulkApproveSelected()" id="bulkApproveBtn" style="display: none;">
+                ✅ Approve Selected
+            </button>
+            <button class="btn btn-danger" onclick="bulkRejectSelected()" id="bulkRejectBtn" style="display: none;">
+                ❌ Reject Selected
+            </button>
+        </div>
+
+        <!-- Search & Filter Section -->
+        <div class="search-section">
+            <h2>🔍 Search & Filter</h2>
+            <form id="searchForm">
+                <div class="search-grid">
+                    <div class="form-group">
+                        <label>Search Keywords</label>
+                        <input type="text" id="searchKeywords" placeholder="Search titles and descriptions...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Tags</label>
+                        <select id="searchTags" multiple></select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Approval Status</label>
+                        <select id="searchStatus">
+                            <option value="">All Stories</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Coverage Start Date</label>
+                        <input type="date" id="searchStartDate">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Coverage End Date</label>
+                        <input type="date" id="searchEndDate">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Submitted By</label>
+                        <input type="text" id="searchAuthor" placeholder="Search by author name...">
+                    </div>
+                </div>
+                
+                <div class="search-actions">
+                    <button type="submit" class="btn btn-primary">🔍 Apply Filters</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearFilters()">🗑️ Clear All</button>
+                    <div class="search-stats" id="searchStats">
+                        <span id="resultsCount">Loading stories...</span>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Story Display Options -->
+        <div class="display-options">
+            <div class="view-controls">
+                <button class="btn btn-outline active" id="gridViewBtn" onclick="setViewMode('grid')">
+                    📱 Grid View
+                </button>
+                <button class="btn btn-outline" id="listViewBtn" onclick="setViewMode('list')">
+                    📋 List View
+                </button>
+            </div>
+            <div class="selection-controls">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                    <span class="checkmark"></span>
+                    Select All
+                </label>
+                <div class="selection-info" id="selectionInfo" style="display: none;">
+                    <span id="selectedCount">0</span> selected
+                </div>
+            </div>
+            <div class="sort-controls">
+                <label>Sort by:</label>
+                <select id="sortBy" onchange="sortStories()">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="status">Status</option>
+                    <option value="coverage_newest">Coverage Date (Newest)</option>
+                    <option value="coverage_oldest">Coverage Date (Oldest)</option>
+                    <option value="title">Title A-Z</option>
+                    <option value="author">Author A-Z</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Admin Bulk Actions Bar -->
+        <div class="bulk-actions-bar admin-bulk-actions" id="bulkActionsBar" style="display: none;">
+            <div class="bulk-actions-content">
+                <div class="bulk-actions-info">
+                    <span id="bulkSelectedCount">0</span> stories selected
+                </div>
+                <div class="bulk-actions-buttons">
+                    <button class="btn btn-success btn-small" onclick="bulkApproveSelected()">
+                        ✅ Approve
+                    </button>
+                    <button class="btn btn-warning btn-small" onclick="bulkRejectSelected()">
+                        ❌ Reject
+                    </button>
+                    <button class="btn btn-outline btn-small" onclick="bulkFavorite()">
+                        ❤️ Add to Favorites
+                    </button>
+                    <button class="btn btn-outline btn-small" onclick="bulkExport()">
+                        📄 Export
+                    </button>
+                    <button class="btn btn-danger btn-small" onclick="bulkDelete()">
+                        🗑️ Delete
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="clearSelection()">
+                        ✕ Clear Selection
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stories Grid/List -->
+        <div id="storiesContainer" class="stories-container">
+            <div id="storiesGrid" class="stories-grid">
+                <!-- Stories will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="pagination-section" id="paginationSection">
+            <div class="pagination-controls" id="paginationControls" style="display: none;">
+                <!-- Pagination buttons will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- No Results -->
+        <div id="noResults" class="no-results" style="display: none;">
+            <div class="no-results-content">
+                <h3>🔍 No Stories Found</h3>
+                <p>Try adjusting your search filters or check the story approval queue.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CSV Import Modal -->
+    <div id="csvModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>📁 Import Stories from CSV</h2>
+            <form id="csvForm">
+                <div class="form-group">
+                    <label for="csvFile">Choose CSV File</label>
+                    <input type="file" id="csvFile" accept=".csv" required>
+                </div>
+                
+                <div class="csv-instructions">
+                    <h4>CSV Format Instructions:</h4>
+                    <p>Your CSV file should include the following columns:</p>
+                    <ul>
+                        <li><strong>idea_title</strong> - Story title (required)</li>
+                        <li><strong>idea_description</strong> - Story description</li>
+                        <li><strong>question_1</strong> to <strong>question_6</strong> - Interview questions</li>
+                        <li><strong>coverage_start_date</strong> - Start date (YYYY-MM-DD)</li>
+                        <li><strong>coverage_end_date</strong> - End date (YYYY-MM-DD)</li>
+                        <li><strong>tags</strong> - Comma-separated tags</li>
+                        <li><strong>interviewees</strong> - Comma-separated names</li>
+                    </ul>
+                    
+                    <div class="sample-csv-link">
+                        <button type="button" class="btn btn-outline btn-small" onclick="downloadSampleCSV()">
+                            📄 Download Sample CSV File
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="admin-import-options">
+                    <h4>Import Options:</h4>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="autoApprove">
+                        <span class="checkmark"></span>
+                        Auto-approve imported stories
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">📤 Upload CSV</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/shared-filters.js"></script>
+    <script src="js/admin-browse-stories.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
+</body>
+</html>

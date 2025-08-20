@@ -335,6 +335,116 @@ body {
     box-shadow: var(--shadow-hover);
 }
 
+.story-card.clickable-card {
+    cursor: pointer;
+}
+
+.story-card.clickable-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Admin-specific story card styling */
+.story-card.admin-story-card {
+    border-left: 3px solid var(--secondary-color);
+}
+
+.admin-info-panel {
+    background: #f8f9fa;
+    border-radius: 4px;
+    padding: 8px;
+    margin: 8px 0;
+    font-size: 0.8rem;
+}
+
+.admin-info-item {
+    color: var(--text-light);
+    margin: 2px 0;
+}
+
+.admin-info-row {
+    display: flex;
+    gap: 12px;
+    font-size: 0.75rem;
+    color: var(--text-light);
+    margin: 4px 0;
+}
+
+.admin-info-row span {
+    flex: 1;
+}
+
+.admin-status-section {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-quick-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.btn-tiny {
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    min-width: auto;
+    height: auto;
+    line-height: 1;
+}
+
+.admin-stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.admin-actions-bar {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1.5rem 0;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.bulk-actions-bar.admin-bulk-actions {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid var(--secondary-color);
+}
+
+/* Status badges */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.status-approved {
+    background: #d1edff;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.status-rejected {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f1aeb5;
+}
+
 .story-header {
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 8px;

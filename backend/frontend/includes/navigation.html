@@ -30,6 +30,10 @@
                 <span class="badge" id="classBadge"></span>
             </a>
             <!-- Admin only -->
+            <a href="/admin-browse-stories.html" class="nav-item" data-page="admin-browse-stories" data-role="admin">
+                <span class="icon">🏛️</span>
+                <span>Admin Browse Stories</span>
+            </a>
             <a href="/admin.html" class="nav-item" data-page="admin" data-role="admin">
                 <span class="icon">⚙️</span>
                 <span>Admin Panel</span>
@@ -40,10 +44,6 @@
         <div class="navbar-actions">
             <!-- Secondary Actions -->
             <div class="navbar-secondary">
-                <button class="action-btn" data-role="admin" onclick="VidPODNav.handleCSVImport()" id="csvImportBtn">
-                    <span>📄</span>
-                    <span>Import CSV</span>
-                </button>
                 <a href="/add-story.html" class="action-btn primary">
                     <span>➕</span>
                     <span>Quick Add</span>
@@ -92,6 +92,10 @@
                     <span class="icon">🎓</span>
                     <span>My Classes</span>
                 </a>
+                <a href="/admin-browse-stories.html" class="nav-item" data-page="admin-browse-stories" data-role="admin">
+                    <span class="icon">🏛️</span>
+                    <span>Admin Browse Stories</span>
+                </a>
                 <a href="/admin.html" class="nav-item" data-page="admin" data-role="admin">
                     <span class="icon">⚙️</span>
                     <span>Admin Panel</span>
@@ -101,10 +105,6 @@
         <div class="mobile-section">
             <h4>Actions</h4>
             <div class="mobile-nav">
-                <a href="#" class="nav-item" data-role="admin" onclick="VidPODNav.handleCSVImport()">
-                    <span class="icon">📄</span>
-                    <span>Import CSV</span>
-                </a>
                 <a href="#" class="nav-item" onclick="VidPODNav.handleLogout()">
                     <span class="icon">🚪</span>
                     <span>Logout</span>
