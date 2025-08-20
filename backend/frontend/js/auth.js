@@ -1,26 +1,38 @@
-// API base URL - now provided by config.js
-// window.window.API_URL is set by config.js loaded before this script
+// API base URL - change this to your backend URL
+const API_URL = 'https://podcast-stories-production.up.railway.app/api';
+// Make it globally available for other scripts
+window.API_URL = API_URL;
 
 // Debug logging
 console.log('Auth.js loaded, current path:', window.location.pathname);
 console.log('Existing token:', localStorage.getItem('token'));
 
-// Check if user is already logged in - only redirect if token is valid
-if (localStorage.getItem('token') && (window.location.pathname === '/' || window.location.pathname.includes('index.html'))) {
-    // Verify token before redirecting
-    fetch(`${window.API_URL}/auth/verify`, {
+// Check if user is already logged in - ONLY on login page
+const isLoginPage = (window.location.pathname === '/' || window.location.pathname.includes('index.html'));
+if (localStorage.getItem('token') && isLoginPage) {
+    // Verify token before redirecting - ONLY on login page
+    fetch(`${API_URL}/auth/verify`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     }).then(response => {
         if (response.ok) {
             console.log('Valid token found, redirecting to dashboard');
-            window.location.href = '/dashboard.html';
+            // Get user data to determine redirect
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            if (userData.role === 'amitrace_admin') {
+                window.location.href = '/admin.html';
+            } else if (userData.role === 'teacher') {
+                window.location.href = '/teacher-dashboard.html';
+            } else {
+                window.location.href = '/dashboard.html';
+            }
         } else {
-            console.log('Invalid token found, clearing storage');
+            console.log('Invalid token found on login page, clearing storage');
             localStorage.removeItem('token');
             localStorage.removeItem('user');
         }
     }).catch(error => {
-        console.log('Token verification failed:', error);
+        console.log('Token verification failed on login page:', error);
+        // Only clear on login page - don't clear on other pages due to network issues
         localStorage.removeItem('token');
         localStorage.removeItem('user');
     });
@@ -35,11 +47,11 @@ if (document.getElementById('loginForm')) {
         const password = document.getElementById('password').value;
         
         console.log('Login attempt starting...');
-        console.log('API URL:', `${window.API_URL}/auth/login`);
+        console.log('API URL:', `${API_URL}/auth/login`);
         console.log('Attempting login for:', email);
         
         try {
-            const response = await fetch(`${window.API_URL}/auth/login`, {
+            const response = await fetch(`${API_URL}/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -71,8 +83,8 @@ if (document.getElementById('registerForm')) {
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const username = document.getElementById('username').value;
         const email = document.getElementById('email').value;
+        const name = document.getElementById('name').value;
         const school = document.getElementById('school').value;
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
@@ -83,12 +95,12 @@ if (document.getElementById('registerForm')) {
         }
         
         try {
-            const response = await fetch(`${window.API_URL}/auth/register`, {
+            const response = await fetch(`${API_URL}/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ username, email, school, password })
+                body: JSON.stringify({ email, name, school, password })
             });
             
             const data = await response.json();
