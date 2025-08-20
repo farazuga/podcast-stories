@@ -273,6 +273,33 @@ body {
     color: var(--white);
 }
 
+.btn-favorite {
+    background: #fff;
+    color: #e91e63;
+    border: 2px solid #e91e63;
+    transition: all 0.3s ease;
+}
+
+.btn-favorite:hover {
+    background: #fce4ec;
+    transform: scale(1.05);
+}
+
+.btn-favorite.favorited {
+    background: #e91e63;
+    color: #fff;
+}
+
+.btn-favorite.favorited:hover {
+    background: #c2185b;
+}
+
+.btn-favorite:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
 .btn-logout {
     background: transparent;
     color: var(--primary-color);
