@@ -169,10 +169,12 @@ podcast-stories/
 ## 6. Key Features
 
 ### Unified Navigation System
-- Single navigation component across all pages
-- Role-based menu visibility
-- Mobile responsive hamburger menu
-- CSV import restricted to admin only
+- Single navigation component across all pages using `includes/navigation.html`
+- Role-based menu visibility controlled by `js/navigation.js`
+- Mobile responsive hamburger menu with collapsible design
+- Auto-loading navigation via `js/include-navigation.js`
+- CSV import restricted to admin only (admin-browse-stories.html)
+- Consistent user authentication and logout functionality
 
 ### Story Management
 - Rich metadata support
@@ -453,6 +455,124 @@ curl https://podcast-stories-production.up.railway.app/api/schools/public
 
 ---
 
-*Last Updated: August 2025*  
-*VidPOD Version: 2.2.0*  
-*System Status: 🟢 Production Ready - All Critical Issues Resolved*
+## 11. Unified Navigation System Implementation
+
+### Overview
+VidPOD uses a unified navigation system that provides consistent navigation across all authenticated pages. This eliminates static navigation duplication and ensures role-based menu visibility.
+
+### Core Components
+
+#### Navigation Template
+**File:** `includes/navigation.html`
+- Single source of truth for navigation structure
+- Role-based menu items with conditional visibility
+- Mobile-responsive hamburger menu design
+- User authentication status display
+
+#### Navigation Controller
+**File:** `js/navigation.js`
+- Manages role-based menu visibility
+- Handles user authentication state
+- Controls mobile menu toggle functionality
+- Provides logout functionality
+
+#### Navigation Loader
+**File:** `js/include-navigation.js`
+- Auto-loads navigation template into pages
+- Ensures navigation appears on all authenticated pages
+- Handles loading order dependencies
+
+### Page Implementation
+All authenticated application pages follow this pattern:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Page Title</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+    
+    <!-- Page content -->
+    
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
+</body>
+</html>
+```
+
+### Pages Using Unified Navigation
+
+#### Authenticated Pages (With Navigation)
+- `admin.html` - Admin panel with full system access
+- `admin-browse-stories.html` - Admin story management
+- `teacher-dashboard.html` - Teacher class management
+- `dashboard.html` - Student/general dashboard
+- `stories.html` - Story browsing interface
+- `add-story.html` - Story creation form
+- `story-detail.html` - Individual story view
+- `user-management.html` - User administration
+
+#### Authentication Pages (No Navigation)
+- `index.html` - Login page
+- `register.html` - Registration type selection
+- `register-student.html` - Student registration
+- `register-teacher.html` - Teacher registration
+- `forgot-password.html` - Password reset request
+- `reset-password.html` - Password reset form
+- `404.html` - Error page with custom navigation
+
+### Role-Based Menu Items
+
+#### Admin Users (amitrace_admin)
+- Dashboard
+- Browse Stories → Admin Browse Stories
+- Add Story
+- Admin Panel
+- User Management
+- Logout
+
+#### Teacher Users
+- Dashboard → Teacher Dashboard
+- Browse Stories
+- Add Story
+- Logout
+
+#### Student Users
+- Dashboard
+- Browse Stories
+- Add Story
+- Logout
+
+### Implementation Benefits
+1. **Consistency**: All pages share identical navigation structure
+2. **Maintainability**: Single point of navigation updates
+3. **Role Security**: Menu items automatically hide based on user role
+4. **Mobile Responsive**: Unified hamburger menu across all pages
+5. **Clean Code**: Eliminates duplicate navigation HTML
+
+### Troubleshooting Navigation Issues
+
+**Navigation Not Loading:**
+1. Check console for JavaScript errors
+2. Verify `navigation.js` and `include-navigation.js` are included
+3. Ensure `includes/navigation.html` exists
+
+**Role-Based Items Not Showing:**
+1. Check localStorage for valid user token
+2. Verify user role in localStorage
+3. Test with different user accounts
+
+**Mobile Menu Not Working:**
+1. Check CSS responsive styles are loaded
+2. Verify hamburger menu JavaScript is functioning
+3. Test on actual mobile devices
+
+---
+
+*Last Updated: January 2025*  
+*VidPOD Version: 2.3.0*  
+*System Status: 🟢 Production Ready - Unified Navigation Implemented*
