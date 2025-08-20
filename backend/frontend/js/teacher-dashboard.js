@@ -1,6 +1,6 @@
-// API base URL - use global API_URL from auth.js with fallback
+// Use global API_URL from auth.js with fallback
 window.API_URL = window.API_URL || 'https://podcast-stories-production.up.railway.app/api';
-const API_URL = window.API_URL;
+// Use window.API_URL directly - no const redeclaration
 
 // Global variables
 let currentUser = null;
@@ -107,7 +107,7 @@ async function loadUserInfo() {
 
 async function loadClasses() {
     try {
-        const response = await makeAuthenticatedRequest(`${API_URL}/classes`);
+        const response = await makeAuthenticatedRequest(`${window.API_URL}/classes`);
         
         if (response.ok) {
             myClasses = await response.json();
@@ -225,7 +225,7 @@ async function createClass(e) {
     
     try {
         console.log('Making API request to create class...');
-        const response = await makeAuthenticatedRequest(`${API_URL}/classes`, {
+        const response = await makeAuthenticatedRequest(`${window.API_URL}/classes`, {
             method: 'POST',
             body: JSON.stringify({
                 class_name: className,
@@ -263,7 +263,7 @@ async function viewClassDetails(classId) {
     currentClassId = classId;
     
     try {
-        const response = await makeAuthenticatedRequest(`${API_URL}/classes/${classId}`);
+        const response = await makeAuthenticatedRequest(`${window.API_URL}/classes/${classId}`);
         
         if (response.ok) {
             currentClassData = await response.json();
@@ -344,7 +344,7 @@ async function regenerateCode() {
     }
     
     try {
-        const response = await fetch(`${API_URL}/classes/${currentClassId}/regenerate-code`, {
+        const response = await fetch(`${window.API_URL}/classes/${currentClassId}/regenerate-code`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -374,7 +374,7 @@ async function removeStudent(studentId) {
     }
     
     try {
-        const response = await fetch(`${API_URL}/classes/${currentClassId}/students/${studentId}`, {
+        const response = await fetch(`${window.API_URL}/classes/${currentClassId}/students/${studentId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -402,7 +402,7 @@ async function deleteClass() {
     }
     
     try {
-        const response = await fetch(`${API_URL}/classes/${currentClassId}`, {
+        const response = await fetch(`${window.API_URL}/classes/${currentClassId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -603,7 +603,7 @@ async function toggleClassDetails(classId) {
 // Load students for a specific class
 async function loadStudentsForClass(classId, container) {
     try {
-        const response = await fetch(`${API_URL}/classes/${classId}/students`, {
+        const response = await fetch(`${window.API_URL}/classes/${classId}/students`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
