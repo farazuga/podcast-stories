@@ -14,10 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadSchools() {
     try {
-        // Teacher requests endpoint doesn't require authentication
-        // We need to get schools list - this might need a public endpoint
-        // For now, we'll use a hardcoded list or try to fetch
-        const response = await fetch(`${API_URL}/schools`);
+        // Use the public schools endpoint for registration forms
+        const response = await fetch(`${API_URL}/schools/public`);
         
         if (response.ok) {
             const schools = await response.json();

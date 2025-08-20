@@ -29,7 +29,7 @@ function setupEventListeners() {
 
 async function loadSchools() {
     try {
-        const response = await fetch(`${API_URL}/students/schools`);
+        const response = await fetch(`${API_URL}/schools/public`);
         
         if (response.ok) {
             const schools = await response.json();

@@ -8,6 +8,22 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
+// Get all schools for public use (registration forms)
+router.get('/public', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT id, school_name
+      FROM schools 
+      ORDER BY school_name
+    `);
+    
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching public schools:', error);
+    res.status(500).json({ error: 'Failed to fetch schools' });
+  }
+});
+
 // Get all schools (Amitrace Admin only)
 router.get('/', verifyToken, isAmitraceAdmin, async (req, res) => {
   try {
@@ -16,7 +32,7 @@ router.get('/', verifyToken, isAmitraceAdmin, async (req, res) => {
         s.id, 
         s.school_name, 
         s.created_at,
-        u.username as created_by_username,
+        u.email as created_by_email,
         (SELECT COUNT(*) FROM users WHERE school_id = s.id) as user_count,
         (SELECT COUNT(*) FROM teacher_requests WHERE school_id = s.id) as teacher_request_count
       FROM schools s
