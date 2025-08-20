@@ -38,10 +38,17 @@ if (document.readyState === 'loading') {
 
 function checkAuth() {
     const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    
+    console.log('🔍 checkAuth called - token:', token ? 'present' : 'missing', 'user:', user ? 'present' : 'missing');
+    
     if (!token) {
+        console.log('❌ No token found, redirecting to login');
         window.location.href = '/index.html';
         return false;
     }
+    
+    console.log('✅ Token found, continuing with stories page');
     return true;
 }
 
