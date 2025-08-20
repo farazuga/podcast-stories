@@ -1,6 +1,7 @@
 /**
- * VidPOD Unified Navigation Component JavaScript
+ * VidPOD Unified Navigation Component JavaScript - V2 FIXED
  * Handles navigation state, user display, and role-based visibility
+ * DEPLOYMENT VERSION: 2025-08-20-FINAL - ALL AMITRACE_ADMIN FIXES
  */
 
 const VidPODNav = {
@@ -145,7 +146,7 @@ const VidPODNav = {
         }
 
         const userRole = this.currentUser.role.toLowerCase().trim();
-        console.log(`Updating navigation visibility for role: ${userRole}`);
+        console.log(`🔧 V2 NAVIGATION: Updating visibility for role: ${userRole}`);
 
         // Handle elements with data-role attribute
         document.querySelectorAll('[data-role]').forEach(element => {
@@ -159,23 +160,23 @@ const VidPODNav = {
             
             // Debug logging
             const elementDesc = element.textContent?.trim() || element.getAttribute('href') || 'unnamed element';
-            console.log(`Element "${elementDesc}": roles=${allowedRoles.join(',')}, userRole=${userRole}, visible=${shouldShow}`);
+            console.log(`🔧 V2 Element "${elementDesc}": roles=${allowedRoles.join(',')}, userRole=${userRole}, visible=${shouldShow}`);
         });
 
-        // Handle legacy role-based visibility (for backward compatibility)
+        // Handle legacy role-based visibility (for backward compatibility) - FIXED FOR AMITRACE_ADMIN
         const adminLinks = document.querySelectorAll('#adminLink, [href*="admin"]:not([data-role])');
         const teacherLinks = document.querySelectorAll('#teacherLink, [href*="teacher-dashboard"]:not([data-role])');
 
         adminLinks.forEach(link => {
-            const shouldShow = ['admin', 'amitrace_admin'].includes(userRole);
+            const shouldShow = ['admin', 'amitrace_admin'].includes(userRole); // ✅ FIXED
             link.style.display = shouldShow ? '' : 'none';
-            console.log(`Legacy admin link: visible=${shouldShow}`);
+            console.log(`🔧 V2 Legacy admin link: visible=${shouldShow}`);
         });
 
         teacherLinks.forEach(link => {
-            const shouldShow = ['teacher', 'admin', 'amitrace_admin'].includes(userRole);
+            const shouldShow = ['teacher', 'admin', 'amitrace_admin'].includes(userRole); // ✅ FIXED
             link.style.display = shouldShow ? '' : 'none';
-            console.log(`Legacy teacher link: visible=${shouldShow}`);
+            console.log(`🔧 V2 Legacy teacher link: visible=${shouldShow}`);
         });
 
         // Specific role-based validation
@@ -200,7 +201,7 @@ const VidPODNav = {
                 visible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard', 'admin', 'admin-browse-stories'],
                 hidden: []
             },
-            'amitrace_admin': {
+            'amitrace_admin': { // ✅ FIXED - ADDED AMITRACE_ADMIN ROLE
                 visible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard', 'admin', 'admin-browse-stories'],
                 hidden: []
             }
@@ -208,16 +209,18 @@ const VidPODNav = {
 
         const expected = expectations[userRole];
         if (!expected) {
-            console.warn(`Unknown user role: ${userRole}`);
+            console.warn(`🔧 V2 Unknown user role: ${userRole}`);
             return;
         }
+
+        console.log(`🔧 V2 Validating access for role: ${userRole}`);
 
         // Check visible items
         expected.visible.forEach(item => {
             const elements = document.querySelectorAll(`[data-page="${item}"], [data-role*="${userRole}"]`);
             elements.forEach(el => {
                 if (el.style.display === 'none') {
-                    console.error(`❌ ${item} should be visible for ${userRole} but is hidden`);
+                    console.error(`🔧 V2 ❌ ${item} should be visible for ${userRole} but is hidden`);
                 }
             });
         });
@@ -227,7 +230,7 @@ const VidPODNav = {
             const elements = document.querySelectorAll(`[data-page="${item}"]`);
             elements.forEach(el => {
                 if (el.style.display !== 'none') {
-                    console.error(`❌ ${item} should be hidden for ${userRole} but is visible`);
+                    console.error(`🔧 V2 ❌ ${item} should be hidden for ${userRole} but is visible`);
                 }
             });
         });
@@ -256,7 +259,7 @@ const VidPODNav = {
     async loadBadgeCounts() {
         try {
             // If user is teacher or admin, load class count
-            if (['teacher', 'admin'].includes(this.currentUser?.role)) {
+            if (['teacher', 'admin', 'amitrace_admin'].includes(this.currentUser?.role)) { // ✅ FIXED
                 const classCount = await this.getClassCount();
                 this.setBadgeCount('classBadge', classCount);
             }
@@ -314,8 +317,8 @@ const VidPODNav = {
      * Handle CSV import action - redirect to admin browse stories page
      */
     handleCSVImport() {
-        // Check if user has permission (admin only)
-        if (this.currentUser?.role !== 'amitrace_admin') {
+        // Check if user has permission (admin only) - FIXED FOR AMITRACE_ADMIN
+        if (!['admin', 'amitrace_admin'].includes(this.currentUser?.role)) { // ✅ FIXED
             alert('You do not have permission to import CSV files. Admin access required.');
             return;
         }
@@ -387,6 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentPage = getCurrentPageFromPath();
         
         if (user) {
+            console.log('🔧 V2 NAVIGATION: Auto-initializing for user role:', user.role);
             VidPODNav.init({
                 currentPage: currentPage,
                 user: user,
@@ -411,8 +415,4 @@ if (typeof module !== 'undefined' && module.exports) {
 window.VidPODNav = VidPODNav;
 window.VidPODNavigation = VidPODNav; // Backward compatibility
 
-// DEPLOYMENT VERSION: 2025-08-20-16-15 - CRITICAL NAVIGATION FIXES
-// This version includes:
-// 1. Fixed amitrace_admin role recognition in validateRoleBasedAccess()
-// 2. Fixed legacy adminLinks and teacherLinks to include amitrace_admin
-// 3. Fixed token preservation in admin.js and dashboard.js
+// V2 DEPLOYMENT MARKER: 2025-08-20-FINAL-COMPLETE-AMITRACE-ADMIN-FIXES
