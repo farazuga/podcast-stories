@@ -333,9 +333,9 @@ class TeacherFlowTester {
         try {
             // Test navigation menu items
             const navItems = [
-                { selector: 'a[href="/dashboard.html"]', name: 'Dashboard Link' },
-                { selector: 'a[href="/add-story.html"]', name: 'Add Story Link' },
-                { selector: 'a[href="/admin.html"]', name: 'Admin Link' }
+                { selector: 'a[href="/dashboard.html"]', name: 'Dashboard Link', shouldBeVisible: true },
+                { selector: 'a[href="/add-story.html"]', name: 'Add Story Link', shouldBeVisible: true },
+                { selector: 'a[href="/admin.html"]', name: 'Admin Link', shouldBeVisible: false } // Teachers should NOT see admin link
             ];
             
             for (const item of navItems) {
@@ -344,10 +344,18 @@ class TeacherFlowTester {
                     const isVisible = await this.page.evaluate(el => 
                         window.getComputedStyle(el).display !== 'none', element
                     );
-                    await this.logResult(`Navigation: ${item.name}`, isVisible, 
-                        isVisible ? 'Link visible' : 'Link hidden');
+                    // Check if visibility matches expected behavior
+                    const isCorrect = isVisible === item.shouldBeVisible;
+                    await this.logResult(`Navigation: ${item.name}`, isCorrect, 
+                        isCorrect ? 
+                            (item.shouldBeVisible ? 'Link visible (correct)' : 'Link hidden (correct for teacher role)') : 
+                            (item.shouldBeVisible ? 'Link hidden (should be visible)' : 'Link visible (should be hidden for teacher)')
+                    );
                 } else {
-                    await this.logResult(`Navigation: ${item.name}`, false, 'Link not found');
+                    // If element doesn't exist and shouldn't be visible, that's correct
+                    const isCorrect = !item.shouldBeVisible;
+                    await this.logResult(`Navigation: ${item.name}`, isCorrect, 
+                        isCorrect ? 'Link not found (correct for teacher role)' : 'Link not found (should exist)');
                 }
             }
             
