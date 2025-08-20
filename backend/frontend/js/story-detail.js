@@ -5,6 +5,7 @@
 let currentUser = null;
 let currentStory = null;
 let storyId = null;
+let isFavorited = false;
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', async () => {
@@ -21,6 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     await loadUserInfo();
     await loadStory();
+    await loadFavoriteStatus();
 });
 
 function checkAuth() {
@@ -140,6 +142,101 @@ function displayStory() {
     if (currentUser.role !== 'admin') {
         deleteBtn.style.display = 'none';
     }
+    
+    // Update favorite button state
+    updateFavoriteButton();
+}
+
+async function loadFavoriteStatus() {
+    try {
+        const response = await fetch(`${window.API_URL}/favorites`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            const favorites = await response.json();
+            isFavorited = favorites.some(fav => fav.story_id === parseInt(storyId));
+        }
+    } catch (error) {
+        console.error('Error loading favorite status:', error);
+    }
+}
+
+function updateFavoriteButton() {
+    const favoriteIcon = document.getElementById('favoriteIcon');
+    const favoriteText = document.getElementById('favoriteText');
+    const favoriteBtn = document.getElementById('favoriteBtn');
+    
+    if (isFavorited) {
+        favoriteIcon.textContent = '♥';
+        favoriteText.textContent = 'Remove from Favorites';
+        favoriteBtn.classList.add('favorited');
+    } else {
+        favoriteIcon.textContent = '♡';
+        favoriteText.textContent = 'Add to Favorites';
+        favoriteBtn.classList.remove('favorited');
+    }
+}
+
+async function toggleFavorite() {
+    const favoriteBtn = document.getElementById('favoriteBtn');
+    
+    // Disable button during request
+    favoriteBtn.disabled = true;
+    
+    try {
+        const method = isFavorited ? 'DELETE' : 'POST';
+        const response = await fetch(`${window.API_URL}/favorites/${storyId}`, {
+            method: method,
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            isFavorited = !isFavorited;
+            updateFavoriteButton();
+            
+            // Show success message
+            const message = isFavorited ? 'Added to favorites!' : 'Removed from favorites!';
+            showTempMessage(message, 'success');
+        } else {
+            showTempMessage('Failed to update favorite status', 'error');
+        }
+    } catch (error) {
+        console.error('Error toggling favorite:', error);
+        showTempMessage('Network error. Please try again.', 'error');
+    } finally {
+        favoriteBtn.disabled = false;
+    }
+}
+
+function showTempMessage(message, type) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `temp-message ${type}`;
+    messageDiv.textContent = message;
+    messageDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 10px 20px;
+        border-radius: 5px;
+        background: ${type === 'success' ? '#4CAF50' : '#f44336'};
+        color: white;
+        z-index: 1000;
+        font-family: Arial, sans-serif;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    `;
+    
+    document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        if (messageDiv.parentNode) {
+            messageDiv.parentNode.removeChild(messageDiv);
+        }
+    }, 3000);
 }
 
 function editStory() {

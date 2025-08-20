@@ -69,6 +69,9 @@
             <div class="action-buttons">
                 <button class="btn btn-secondary" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
                 <div class="right-actions">
+                    <button class="btn btn-favorite" id="favoriteBtn" onclick="toggleFavorite()">
+                        <span id="favoriteIcon">♡</span> <span id="favoriteText">Add to Favorites</span>
+                    </button>
                     <button class="btn btn-edit" id="editBtn" onclick="editStory()">Edit Story</button>
                     <button class="btn btn-delete" id="deleteBtn" onclick="deleteStory()">Delete Story</button>
                 </div>
