@@ -449,21 +449,49 @@ document.addEventListener('DOMContentLoaded', function() {
     function forceMobileMenuFix() {
         const mobileMenu = document.getElementById('mobileMenu');
         const mobileToggle = document.getElementById('mobileToggle');
+        const mainNav = document.getElementById('mainNav');
         const isDesktop = window.innerWidth > 768;
         
         console.log('🔧 V2 NAVIGATION: Applying mobile menu fix for viewport:', window.innerWidth);
         
-        if (isDesktop && mobileMenu) {
-            mobileMenu.style.display = 'none';
-            mobileMenu.style.visibility = 'hidden';
-            mobileMenu.classList.remove('active');
-            console.log('🔧 V2 NAVIGATION: Mobile menu FORCED HIDDEN on desktop');
-        }
-        
-        if (isDesktop && mobileToggle) {
-            mobileToggle.style.display = 'none';
-            mobileToggle.style.visibility = 'hidden';
-            console.log('🔧 V2 NAVIGATION: Mobile toggle FORCED HIDDEN on desktop');
+        if (isDesktop) {
+            // Hide mobile elements on desktop
+            if (mobileMenu) {
+                mobileMenu.style.display = 'none';
+                mobileMenu.style.visibility = 'hidden';
+                mobileMenu.classList.remove('active');
+                console.log('🔧 V2 NAVIGATION: Mobile menu FORCED HIDDEN on desktop');
+            }
+            
+            if (mobileToggle) {
+                mobileToggle.style.display = 'none';
+                mobileToggle.style.visibility = 'hidden';
+                console.log('🔧 V2 NAVIGATION: Mobile toggle FORCED HIDDEN on desktop');
+            }
+            
+            // Show main nav on desktop
+            if (mainNav) {
+                mainNav.style.display = 'flex';
+                console.log('🔧 V2 NAVIGATION: Main nav set to flex on desktop');
+            }
+        } else {
+            // Mobile viewport - hide main nav, allow mobile elements
+            if (mainNav) {
+                mainNav.style.display = 'none';
+                console.log('🔧 V2 NAVIGATION: Main nav hidden on mobile');
+            }
+            
+            if (mobileToggle) {
+                mobileToggle.style.display = 'flex';
+                mobileToggle.style.visibility = 'visible';
+                console.log('🔧 V2 NAVIGATION: Mobile toggle shown on mobile');
+            }
+            
+            // Mobile menu starts hidden until toggled
+            if (mobileMenu && !mobileMenu.classList.contains('active')) {
+                mobileMenu.style.display = 'none';
+                console.log('🔧 V2 NAVIGATION: Mobile menu hidden until toggled');
+            }
         }
     }
     
