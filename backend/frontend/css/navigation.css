@@ -1,0 +1,338 @@
+/* VidPOD Unified Navigation Component CSS */
+/* Add this to your existing styles.css or include as a separate file */
+
+/* Navigation Container */
+.vidpod-navbar {
+    background: var(--white);
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.navbar-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    min-height: 64px;
+}
+
+/* Brand Section */
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-decoration: none;
+    margin-right: 2rem;
+}
+
+.navbar-brand .logo-emoji {
+    font-size: 1.8rem;
+}
+
+/* Main Navigation */
+.navbar-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    color: var(--text-light);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    white-space: nowrap;
+    position: relative;
+}
+
+.nav-item:hover {
+    background: #f8f9fa;
+    color: var(--text-color);
+}
+
+.nav-item.active {
+    background: #fff5f0;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.nav-item .icon {
+    font-size: 1.1rem;
+}
+
+.nav-item .badge {
+    background: var(--primary-color);
+    color: var(--white);
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    margin-left: 0.25rem;
+    min-width: 18px;
+    text-align: center;
+}
+
+/* Right Actions */
+.navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: auto;
+}
+
+.navbar-secondary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color);
+    background: var(--white);
+    color: var(--text-light);
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.action-btn.primary {
+    background: var(--primary-color);
+    color: var(--white);
+    border-color: var(--primary-color);
+}
+
+.action-btn.primary:hover {
+    background: var(--primary-hover);
+}
+
+/* User Section */
+.navbar-user {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    color: var(--text-color);
+    position: relative;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+}
+
+.user-role {
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+}
+
+.user-role.student {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.user-role.teacher {
+    background: #e8f5e8;
+    color: #2e7d32;
+}
+
+.user-role.admin {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.logout-btn {
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    background: var(--white);
+    color: var(--text-light);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logout-btn:hover {
+    border-color: #ff4444;
+    color: #ff4444;
+}
+
+/* Mobile Menu */
+.mobile-toggle {
+    display: none;
+    padding: 0.5rem;
+    border: none;
+    background: none;
+    color: var(--text-color);
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.mobile-toggle:hover {
+    background: #f8f9fa;
+}
+
+.mobile-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--white);
+    box-shadow: var(--shadow);
+    border-top: 1px solid var(--border-color);
+    z-index: 1000;
+}
+
+.mobile-menu.active {
+    display: block;
+}
+
+.mobile-section {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.mobile-section:last-child {
+    border-bottom: none;
+}
+
+.mobile-section h4 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.5px;
+}
+
+.mobile-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.mobile-nav .nav-item {
+    margin: 0;
+    padding: 0.75rem;
+    border-radius: 6px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .navbar-nav {
+        display: none;
+    }
+
+    .navbar-secondary {
+        display: none;
+    }
+
+    .mobile-toggle {
+        display: flex;
+    }
+
+    .user-name {
+        display: none;
+    }
+
+    .navbar-container {
+        position: relative;
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar-brand {
+        font-size: 1.3rem;
+        margin-right: 1rem;
+    }
+
+    .navbar-brand .logo-emoji {
+        font-size: 1.5rem;
+    }
+
+    .user-info {
+        display: none;
+    }
+}
+
+/* Legacy Compatibility - Override existing navbar styles */
+.navbar {
+    /* Reset existing navbar styles to prevent conflicts */
+    background: var(--white);
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 0;
+    display: block;
+}
+
+.nav-brand h1 {
+    /* Reset h1 styles in nav-brand */
+    margin: 0;
+    font-size: inherit;
+    font-weight: inherit;
+}
+
+/* Ensure existing components work with new navigation */
+.container {
+    margin-top: 0;
+}
+
+.dashboard-header,
+.form-header {
+    margin-top: 2rem;
+}
