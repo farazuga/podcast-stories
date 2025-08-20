@@ -593,6 +593,20 @@ body {
     padding: 1rem;
     background: #f9f9f9;
     border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    background: linear-gradient(135deg, #ffffff, #f0f0f0);
+}
+
+.stat-item:active {
+    transform: translateY(-1px) scale(0.98);
 }
 
 .stat-value {
