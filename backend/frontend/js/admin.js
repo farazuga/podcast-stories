@@ -108,11 +108,14 @@ async function loadUserInfo() {
         }
         
     } catch (error) {
-        console.error('Error loading user info:', error);
-        console.error('Error details:', error.message, error.stack);
-        console.error('🚨 NOT calling logout() to prevent token clearing - FIXED VERSION DEPLOYED');
-        // Don't logout on user info loading errors - preserve authentication
-        // logout();
+        console.error('🔧 ADMIN.JS ERROR HANDLER - Error loading user info:', error);
+        console.error('🔧 Error details:', error.message, error.stack);
+        console.error('🔧 TOKEN PRESERVED - NOT calling logout() to prevent token clearing');
+        console.error('🔧 DEPLOYMENT VERSION:', new Date().toISOString());
+        // CRITICAL: Don't logout on user info loading errors - preserve authentication
+        // The logout() call here was causing the token to be cleared immediately
+        // after successful login, creating a redirect loop back to login page
+        // logout(); // ← DISABLED TO FIX AUTHENTICATION ISSUE
     }
 }
 
