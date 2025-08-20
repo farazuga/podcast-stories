@@ -65,6 +65,17 @@ app.get('/api', (req, res) => {
   res.json({ message: 'Podcast Stories API is running!' });
 });
 
+// 404 handler - serve custom 404 page for all non-API routes
+app.get('*', (req, res) => {
+  // Don't serve 404 page for API routes
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  
+  // Serve custom 404 page for all other routes
+  res.status(404).sendFile(path.join(__dirname, 'frontend', '404.html'));
+});
+
 // Explicit routes for main pages
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
