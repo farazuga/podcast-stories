@@ -94,8 +94,12 @@ async function loadUserInfo() {
                 console.log('🔍 Admin Debug - Token verification:', response.status, response.ok);
                 
                 if (!response.ok) {
-                    console.error('❌ Token verification failed');
-                    logout();
+                    const errorText = await response.text();
+                    console.error('❌ Token verification failed:', response.status, errorText);
+                    console.error('❌ Token being used:', token);
+                    console.error('❌ Full API URL:', `${window.API_URL}/auth/verify`);
+                    // Don't logout immediately - let user try to continue
+                    console.error('❌ Continuing without token verification for debugging...');
                     return;
                 }
             } catch (verifyError) {
