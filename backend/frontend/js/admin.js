@@ -1507,3 +1507,63 @@ window.adminBulkReject = adminBulkReject;
 window.adminBulkDelete = adminBulkDelete;
 
 // Force cache refresh - Sun Aug 17 23:52:52 CDT 2025
+
+// Admin dashboard stat navigation function
+function navigateToAdminTab(tabName) {
+    console.log('Navigating to admin tab:', tabName);
+    showAdminLoadingFeedback('Loading ' + tabName + ' section...');
+    
+    setTimeout(() => {
+        // Call the existing showTab function to switch tabs
+        if (typeof showTab === 'function') {
+            showTab(tabName);
+        } else {
+            // Fallback: manually show tab
+            switchToTab(tabName);
+        }
+    }, 300);
+}
+
+function switchToTab(tabName) {
+    // Hide all tab contents
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Remove active class from all tab buttons
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show the requested tab
+    const targetTab = document.getElementById(tabName + '-tab');
+    if (targetTab) {
+        targetTab.classList.add('active');
+    }
+    
+    // Activate the corresponding tab button
+    const targetButton = Array.from(tabButtons).find(btn => 
+        btn.onclick && btn.onclick.toString().includes(tabName)
+    );
+    if (targetButton) {
+        targetButton.classList.add('active');
+    }
+}
+
+function showAdminLoadingFeedback(message) {
+    const loadingDiv = document.createElement('div');
+    loadingDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; background: var(--primary-color); color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000; font-family: Arial, sans-serif; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
+    loadingDiv.textContent = message;
+    document.body.appendChild(loadingDiv);
+    
+    setTimeout(() => {
+        if (loadingDiv.parentNode) {
+            loadingDiv.parentNode.removeChild(loadingDiv);
+        }
+    }, 1000);
+}
+
+// Make navigation function globally available
+window.navigateToAdminTab = navigateToAdminTab;
