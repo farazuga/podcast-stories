@@ -1,48 +1,48 @@
 {
-  "timestamp": "2025-08-20T03:05:08.485Z",
+  "timestamp": "2025-08-20T03:55:30.406Z",
   "summary": {
     "totalTests": 20,
-    "passed": 16,
-    "failed": 4,
-    "totalBugs": 15
+    "passed": 15,
+    "failed": 5,
+    "totalBugs": 11
   },
   "bugs": [
     {
       "type": "404 Error",
       "message": "404 Not Found: https://podcast-stories-production.up.railway.app/favicon.ico",
       "url": "https://podcast-stories-production.up.railway.app/index.html",
-      "timestamp": "2025-08-20T03:04:03.178Z"
+      "timestamp": "2025-08-20T03:54:19.543Z"
     },
     {
       "type": "Console Error",
       "message": "Failed to load resource: the server responded with a status of 404 ()",
       "url": "https://podcast-stories-production.up.railway.app/index.html",
-      "timestamp": "2025-08-20T03:04:03.179Z"
+      "timestamp": "2025-08-20T03:54:19.545Z"
     },
     {
       "type": "Page Error",
       "message": "Identifier 'API_URL' has already been declared",
       "stack": "SyntaxError: Identifier 'API_URL' has already been declared",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html",
-      "timestamp": "2025-08-20T03:04:12.469Z"
+      "timestamp": "2025-08-20T03:54:28.953Z"
     },
     {
       "type": "404 Error",
       "message": "404 Not Found: https://podcast-stories-production.up.railway.app/includes/navigation.html",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html",
-      "timestamp": "2025-08-20T03:04:12.520Z"
+      "timestamp": "2025-08-20T03:54:28.997Z"
     },
     {
       "type": "Console Error",
       "message": "Failed to load resource: the server responded with a status of 404 ()",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html",
-      "timestamp": "2025-08-20T03:04:12.520Z"
+      "timestamp": "2025-08-20T03:54:28.997Z"
     },
     {
       "type": "Console Error",
       "message": "Failed to load navigation: JSHandle@error",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html",
-      "timestamp": "2025-08-20T03:04:12.520Z"
+      "timestamp": "2025-08-20T03:54:28.997Z"
     },
     {
       "type": "Bug",
@@ -50,57 +50,32 @@
       "description": "User role element not found in navigation",
       "severity": "medium",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html",
-      "timestamp": "2025-08-20T03:04:21.446Z"
+      "timestamp": "2025-08-20T03:54:38.008Z"
     },
     {
       "type": "Page Error",
       "message": "Identifier 'API_URL' has already been declared",
       "stack": "SyntaxError: Identifier 'API_URL' has already been declared",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html?",
-      "timestamp": "2025-08-20T03:04:48.457Z"
+      "timestamp": "2025-08-20T03:55:05.252Z"
     },
     {
       "type": "404 Error",
       "message": "404 Not Found: https://podcast-stories-production.up.railway.app/includes/navigation.html",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html?",
-      "timestamp": "2025-08-20T03:04:48.498Z"
+      "timestamp": "2025-08-20T03:55:05.289Z"
     },
     {
       "type": "Console Error",
       "message": "Failed to load resource: the server responded with a status of 404 ()",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html?",
-      "timestamp": "2025-08-20T03:04:48.498Z"
+      "timestamp": "2025-08-20T03:55:05.290Z"
     },
     {
       "type": "Console Error",
       "message": "Failed to load navigation: JSHandle@error",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html?",
-      "timestamp": "2025-08-20T03:04:48.498Z"
-    },
-    {
-      "type": "Page Error",
-      "message": "Identifier 'API_URL' has already been declared",
-      "stack": "SyntaxError: Identifier 'API_URL' has already been declared",
-      "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html",
-      "timestamp": "2025-08-20T03:04:58.047Z"
-    },
-    {
-      "type": "404 Error",
-      "message": "404 Not Found: https://podcast-stories-production.up.railway.app/includes/navigation.html",
-      "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html",
-      "timestamp": "2025-08-20T03:04:58.101Z"
-    },
-    {
-      "type": "Console Error",
-      "message": "Failed to load resource: the server responded with a status of 404 ()",
-      "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html",
-      "timestamp": "2025-08-20T03:04:58.101Z"
-    },
-    {
-      "type": "Console Error",
-      "message": "Failed to load navigation: JSHandle@error",
-      "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html",
-      "timestamp": "2025-08-20T03:04:58.101Z"
+      "timestamp": "2025-08-20T03:55:05.290Z"
     }
   ],
   "testResults": [
@@ -108,112 +83,112 @@
       "test": "Teacher Login",
       "success": true,
       "details": "Successfully logged in and redirected to teacher dashboard",
-      "timestamp": "2025-08-20T03:04:12.470Z",
+      "timestamp": "2025-08-20T03:54:28.953Z",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html"
     },
     {
       "test": "Dashboard Element: Teacher Name",
       "success": true,
       "details": "Element found",
-      "timestamp": "2025-08-20T03:04:13.587Z",
+      "timestamp": "2025-08-20T03:54:30.086Z",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html"
     },
     {
       "test": "Dashboard Element: Total Classes Stat",
       "success": true,
       "details": "Element found",
-      "timestamp": "2025-08-20T03:04:14.198Z",
+      "timestamp": "2025-08-20T03:54:30.722Z",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html"
     },
     {
       "test": "Dashboard Element: Total Students Stat",
       "success": true,
       "details": "Element found",
-      "timestamp": "2025-08-20T03:04:14.810Z",
+      "timestamp": "2025-08-20T03:54:31.341Z",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html"
     },
     {
       "test": "Dashboard Element: School Name Stat",
       "success": true,
       "details": "Element found",
-      "timestamp": "2025-08-20T03:04:15.421Z",
+      "timestamp": "2025-08-20T03:54:31.963Z",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html"
     },
     {
       "test": "Dashboard Element: Create Class Form",
       "success": true,
       "details": "Element found",
-      "timestamp": "2025-08-20T03:04:16.032Z",
+      "timestamp": "2025-08-20T03:54:32.589Z",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html"
     },
     {
       "test": "Role Badge",
       "success": false,
       "details": "Role badge element #userRole not found",
-      "timestamp": "2025-08-20T03:04:21.446Z",
+      "timestamp": "2025-08-20T03:54:38.007Z",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html"
     },
     {
       "test": "Active Classes Stat Click",
       "success": true,
       "details": "Stat clicked successfully",
-      "timestamp": "2025-08-20T03:04:23.678Z",
+      "timestamp": "2025-08-20T03:54:40.260Z",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html"
     },
     {
       "test": "Total Students Stat Click",
       "success": true,
       "details": "Stat clicked successfully",
-      "timestamp": "2025-08-20T03:04:25.901Z",
+      "timestamp": "2025-08-20T03:54:42.508Z",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html"
     },
     {
       "test": "School Stat Click",
       "success": true,
       "details": "Stat clicked successfully",
-      "timestamp": "2025-08-20T03:04:28.129Z",
+      "timestamp": "2025-08-20T03:54:44.749Z",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html"
     },
     {
       "test": "Class Creation",
       "success": false,
       "details": "Success alert not visible",
-      "timestamp": "2025-08-20T03:04:52.777Z",
+      "timestamp": "2025-08-20T03:55:09.595Z",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html?"
     },
     {
       "test": "Class Cards Present",
       "success": false,
       "details": "Found 0 class cards",
-      "timestamp": "2025-08-20T03:04:55.297Z",
+      "timestamp": "2025-08-20T03:55:12.119Z",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html?"
     },
     {
       "test": "Navigation: Dashboard Link",
       "success": true,
       "details": "Link visible",
-      "timestamp": "2025-08-20T03:04:55.808Z",
+      "timestamp": "2025-08-20T03:55:12.635Z",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html?"
     },
     {
       "test": "Navigation: Add Story Link",
       "success": true,
       "details": "Link visible",
-      "timestamp": "2025-08-20T03:04:56.321Z",
+      "timestamp": "2025-08-20T03:55:13.155Z",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html?"
     },
     {
       "test": "Navigation: Admin Link",
       "success": false,
       "details": "Link not found",
-      "timestamp": "2025-08-20T03:04:56.423Z",
+      "timestamp": "2025-08-20T03:55:13.259Z",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html?"
     },
     {
       "test": "Add Story Navigation",
       "success": true,
       "details": "Successfully navigated to add story",
-      "timestamp": "2025-08-20T03:04:57.820Z",
+      "timestamp": "2025-08-20T03:55:14.763Z",
       "url": "https://podcast-stories-production.up.railway.app/add-story.html"
     },
     {
@@ -222,7 +197,7 @@
         "handle": {}
       },
       "details": "Stats cards: 3, Header: visible",
-      "timestamp": "2025-08-20T03:05:01.923Z",
+      "timestamp": "2025-08-20T03:55:18.875Z",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html"
     },
     {
@@ -231,7 +206,7 @@
         "handle": {}
       },
       "details": "Stats cards: 3, Header: visible",
-      "timestamp": "2025-08-20T03:05:04.358Z",
+      "timestamp": "2025-08-20T03:55:21.325Z",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html"
     },
     {
@@ -240,15 +215,15 @@
         "handle": {}
       },
       "details": "Stats cards: 3, Header: visible",
-      "timestamp": "2025-08-20T03:05:06.803Z",
+      "timestamp": "2025-08-20T03:55:23.779Z",
       "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html"
     },
     {
       "test": "Logout",
-      "success": true,
-      "details": "Successfully logged out and redirected",
-      "timestamp": "2025-08-20T03:05:08.484Z",
-      "url": "https://podcast-stories-production.up.railway.app/index.html"
+      "success": false,
+      "details": "Logout failed: Navigation timeout of 5000 ms exceeded",
+      "timestamp": "2025-08-20T03:55:30.406Z",
+      "url": "https://podcast-stories-production.up.railway.app/teacher-dashboard.html"
     }
   ]
 }

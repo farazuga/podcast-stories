@@ -1,7 +1,5 @@
-// API base URL - change this to your backend URL
-const API_URL = 'https://podcast-stories-production.up.railway.app/api';
-// Make it globally available for other scripts
-window.API_URL = API_URL;
+// API base URL - use config if available, otherwise set default
+window.API_URL = window.API_URL || 'https://podcast-stories-production.up.railway.app/api';
 
 // Debug logging
 console.log('Auth.js loaded, current path:', window.location.pathname);
@@ -47,11 +45,11 @@ if (document.getElementById('loginForm')) {
         const password = document.getElementById('password').value;
         
         console.log('Login attempt starting...');
-        console.log('API URL:', `${API_URL}/auth/login`);
+        console.log('API URL:', `${window.API_URL}/auth/login`);
         console.log('Attempting login for:', email);
         
         try {
-            const response = await fetch(`${API_URL}/auth/login`, {
+            const response = await fetch(`${window.API_URL}/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -95,7 +93,7 @@ if (document.getElementById('registerForm')) {
         }
         
         try {
-            const response = await fetch(`${API_URL}/auth/register`, {
+            const response = await fetch(`${window.API_URL}/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

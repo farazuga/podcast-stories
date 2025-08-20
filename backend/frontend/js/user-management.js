@@ -18,8 +18,8 @@ let selectedTeachers = new Set();
 let selectedAdmins = new Set();
 let currentTab = 'teachers';
 
-// API Configuration
-const API_URL = window.API_URL || 'https://podcast-stories-production.up.railway.app/api';
+// API Configuration - use global API_URL from auth.js
+window.API_URL = window.API_URL || 'https://podcast-stories-production.up.railway.app/api';
 
 // ============================================================================
 // INITIALIZATION
@@ -973,7 +973,7 @@ async function createAdmin() {
 
 async function makeAuthenticatedRequest(endpoint, options = {}) {
     const token = localStorage.getItem('token');
-    const url = `${API_URL}${endpoint}`;
+    const url = `${window.API_URL}${endpoint}`;
     
     const config = {
         ...options,
