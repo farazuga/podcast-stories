@@ -338,17 +338,56 @@ router.delete('/:id', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-// CSV Import - Improved with better error handling and schema compatibility
+// Helper function to parse various date formats
+function parseFlexibleDate(dateStr) {
+  if (!dateStr || dateStr.trim() === '') return null;
+  
+  const cleaned = dateStr.trim();
+  
+  // Handle formats like "1-Jan", "2-Feb", etc.
+  const monthMap = {
+    'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04',
+    'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08',
+    'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+  };
+  
+  // Pattern: "1-Jan", "15-Dec", etc.
+  const dayMonthPattern = /^(\d{1,2})-([A-Za-z]{3})$/;
+  const match = cleaned.match(dayMonthPattern);
+  
+  if (match) {
+    const day = match[1].padStart(2, '0');
+    const monthName = match[2];
+    const monthNum = monthMap[monthName];
+    
+    if (monthNum) {
+      // Default to current year for month/day only dates
+      const currentYear = new Date().getFullYear();
+      return `${currentYear}-${monthNum}-${day}`;
+    }
+  }
+  
+  // Try standard date parsing for other formats
+  const parsedDate = new Date(cleaned);
+  if (!isNaN(parsedDate.getTime())) {
+    return parsedDate.toISOString().split('T')[0]; // Return YYYY-MM-DD format
+  }
+  
+  return null; // Return null for unparseable dates
+}
+
+// CSV Import - Enhanced with better error handling, date parsing, and schema compatibility
 router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
-  console.log(`CSV import started by user ${req.user.id} (${req.user.email || req.user.username})`);
-  console.log(`File: ${req.file.originalname}, Size: ${req.file.size} bytes`);
+  console.log(`📤 CSV import started by user ${req.user.id} (${req.user.email || req.user.username})`);
+  console.log(`📁 File: ${req.file.originalname}, Size: ${req.file.size} bytes`);
 
   const results = [];
   const errors = [];
+  const warnings = [];
   let hasApprovalStatus = false;
   let successCount = 0;
   
@@ -400,6 +439,29 @@ router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
               continue;
             }
 
+            // Parse and validate dates with flexible format support
+            const startDateRaw = row.coverage_start_date || row.start_date || '';
+            const endDateRaw = row.coverage_end_date || row.end_date || '';
+            
+            const startDate = parseFlexibleDate(startDateRaw);
+            const endDate = parseFlexibleDate(endDateRaw);
+            
+            // Log date parsing for debugging
+            if (startDateRaw && !startDate) {
+              warnings.push({
+                row: rowNumber,
+                title: title,
+                warning: `Could not parse start date: "${startDateRaw}"`
+              });
+            }
+            if (endDateRaw && !endDate) {
+              warnings.push({
+                row: rowNumber,
+                title: title,
+                warning: `Could not parse end date: "${endDateRaw}"`
+              });
+            }
+
             // Prepare the base insert query and values
             let insertQuery, insertValues;
             
@@ -416,8 +478,8 @@ router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
                 (row.idea_description || row.enhanced_description || row.description || '').trim(),
                 row.question_1 || null, row.question_2 || null, row.question_3 || null,
                 row.question_4 || null, row.question_5 || null, row.question_6 || null,
-                row.coverage_start_date || row.start_date || null,
-                row.coverage_end_date || row.end_date || null,
+                startDate, // Use parsed date
+                endDate,   // Use parsed date
                 req.user.id, 
                 'approved' // Auto-approve CSV imports by admin users
               ];
@@ -434,8 +496,8 @@ router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
                 (row.idea_description || row.enhanced_description || row.description || '').trim(),
                 row.question_1 || null, row.question_2 || null, row.question_3 || null,
                 row.question_4 || null, row.question_5 || null, row.question_6 || null,
-                row.coverage_start_date || row.start_date || null,
-                row.coverage_end_date || row.end_date || null,
+                startDate, // Use parsed date
+                endDate,   // Use parsed date
                 req.user.id
               ];
             }
@@ -544,10 +606,14 @@ router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
         }
 
         await client.query('COMMIT');
-        console.log(`CSV import completed: ${successCount} stories imported, ${errors.length} errors`);
+        console.log(`📊 CSV import completed: ${successCount} stories imported, ${errors.length} errors, ${warnings.length} warnings`);
         
         if (hasApprovalStatus) {
           console.log(`✅ Auto-approved ${successCount} stories from CSV import by admin ${req.user.email || req.user.username}`);
+        }
+        
+        if (warnings.length > 0) {
+          console.log(`⚠️ Warnings during import:`, warnings.slice(0, 5)); // Log first 5 warnings
         }
         
         // Clean up uploaded file
@@ -558,13 +624,19 @@ router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
         }
         
         res.json({
-          message: 'CSV import completed successfully',
+          message: `CSV import completed ${successCount > 0 ? 'successfully' : 'with issues'}`,
           imported: successCount,
           total: results.length,
-          errors: errors.length > 0 ? errors : null,
+          errors: errors.length > 0 ? errors.slice(0, 10) : null, // Limit errors in response
+          warnings: warnings.length > 0 ? warnings.slice(0, 10) : null, // Include warnings
           schemaInfo: hasApprovalStatus ? 'Phase 2 schema detected' : 'Basic schema detected',
           approval_status: hasApprovalStatus ? 'auto-approved' : 'no approval system',
-          auto_approved_count: hasApprovalStatus ? successCount : 0
+          auto_approved_count: hasApprovalStatus ? successCount : 0,
+          date_parsing: {
+            supported_formats: ['YYYY-MM-DD', 'MM/DD/YYYY', 'DD-MMM (e.g., 1-Jan)', 'ISO dates'],
+            total_warnings: warnings.length,
+            total_errors: errors.length
+          }
         });
         
       } catch (error) {
