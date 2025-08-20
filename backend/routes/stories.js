@@ -384,6 +384,7 @@ router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
 
   console.log(`📤 CSV import started by user ${req.user.id} (${req.user.email || req.user.username})`);
   console.log(`📁 File: ${req.file.originalname}, Size: ${req.file.size} bytes`);
+  console.log(`🔧 Enhanced CSV import with flexible date parsing v2.0`);
 
   const results = [];
   const errors = [];
