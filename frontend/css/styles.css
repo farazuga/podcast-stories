@@ -2917,6 +2917,94 @@ body {
     box-shadow: 0 0 8px rgba(247, 155, 91, 0.3);
 }
 
+/* Expand button in class cards */
+.expand-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-left: 1rem;
+}
+
+.expand-btn:hover {
+    background: #e6884a;
+    transform: translateY(-1px);
+}
+
+/* Students list in class cards */
+.students-list {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+    border: 1px solid #e9ecef;
+}
+
+.students-header h4 {
+    color: var(--primary-color);
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+}
+
+.students-grid {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.student-item {
+    background: white;
+    padding: 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.student-info strong {
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.student-details {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.student-joined {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.no-students {
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    margin: 1rem 0;
+}
+
+.students-loading {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 1rem;
+}
+
+.error-message {
+    color: #dc3545;
+    text-align: center;
+    padding: 1rem;
+    background: #f8d7da;
+    border-radius: 4px;
+    border: 1px solid #f5c6cb;
+}
+
 .class-actions {
     display: flex;
     gap: 0.5rem;

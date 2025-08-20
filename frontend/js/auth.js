@@ -7,22 +7,32 @@ window.API_URL = API_URL;
 console.log('Auth.js loaded, current path:', window.location.pathname);
 console.log('Existing token:', localStorage.getItem('token'));
 
-// Check if user is already logged in - only redirect if token is valid
-if (localStorage.getItem('token') && (window.location.pathname === '/' || window.location.pathname.includes('index.html'))) {
-    // Verify token before redirecting
+// Check if user is already logged in - ONLY on login page
+const isLoginPage = (window.location.pathname === '/' || window.location.pathname.includes('index.html'));
+if (localStorage.getItem('token') && isLoginPage) {
+    // Verify token before redirecting - ONLY on login page
     fetch(`${API_URL}/auth/verify`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     }).then(response => {
         if (response.ok) {
             console.log('Valid token found, redirecting to dashboard');
-            window.location.href = '/dashboard.html';
+            // Get user data to determine redirect
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            if (userData.role === 'amitrace_admin') {
+                window.location.href = '/admin.html';
+            } else if (userData.role === 'teacher') {
+                window.location.href = '/teacher-dashboard.html';
+            } else {
+                window.location.href = '/dashboard.html';
+            }
         } else {
-            console.log('Invalid token found, clearing storage');
+            console.log('Invalid token found on login page, clearing storage');
             localStorage.removeItem('token');
             localStorage.removeItem('user');
         }
     }).catch(error => {
-        console.log('Token verification failed:', error);
+        console.log('Token verification failed on login page:', error);
+        // Only clear on login page - don't clear on other pages due to network issues
         localStorage.removeItem('token');
         localStorage.removeItem('user');
     });

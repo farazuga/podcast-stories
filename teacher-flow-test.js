@@ -143,14 +143,26 @@ class TeacherFlowTester {
                 await this.logResult(`Dashboard Element: ${check.name}`, exists, exists ? 'Element found' : 'Element missing');
             }
             
-            // Check for role badge
-            const roleBadge = await this.page.$('.role-badge');
+            // Wait for navigation to fully load and initialize
+            await this.page.waitForFunction(() => {
+                const userRole = document.getElementById('userRole');
+                return userRole && userRole.textContent && userRole.textContent.trim() !== 'Student';
+            }, { timeout: 5000 }).catch(() => {
+                console.log('Role badge still not populated after 5 seconds, checking anyway...');
+            });
+            
+            const roleBadge = await this.page.$('#userRole');
             if (roleBadge) {
                 const roleText = await this.page.evaluate(el => el.textContent, roleBadge);
-                await this.logResult('Role Badge', true, `Role displayed: ${roleText}`);
+                if (roleText && roleText.trim() && roleText.trim() !== 'Student') {
+                    await this.logResult('Role Badge', true, `Role displayed: ${roleText}`);
+                } else {
+                    await this.logResult('Role Badge', false, `Role badge found but empty or default: "${roleText}"`);
+                    await this.addBug('Role Badge Not Populated', 'Role badge exists but not populated with teacher role', 'low');
+                }
             } else {
-                await this.logResult('Role Badge', false, 'Role badge not found');
-                await this.addBug('Missing Role Badge', 'Teacher role badge not displayed on dashboard', 'medium');
+                await this.logResult('Role Badge', false, 'Role badge element #userRole not found');
+                await this.addBug('Missing Role Badge Element', 'User role element not found in navigation', 'medium');
             }
             
         } catch (error) {

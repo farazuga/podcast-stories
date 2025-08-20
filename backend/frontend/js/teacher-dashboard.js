@@ -135,7 +135,7 @@ function displayClasses() {
     }
     
     classesGrid.innerHTML = myClasses.map(classItem => `
-        <div class="class-card">
+        <div class="class-card" data-class-id="${classItem.id}">
             <div class="class-header">
                 <h3>${classItem.class_name}</h3>
                 <div class="class-code-section">
@@ -146,6 +146,9 @@ function displayClasses() {
                             📋
                         </button>
                     </div>
+                    <button class="expand-btn" onclick="toggleClassDetails(${classItem.id})" title="Show/hide student details">
+                        📂 Show Students
+                    </button>
                 </div>
             </div>
             <div class="class-details">
@@ -154,6 +157,9 @@ function displayClasses() {
                 <p><strong>👥 Students:</strong> ${classItem.student_count || 0}</p>
                 <p><strong>🏫 School:</strong> ${classItem.school_name}</p>
                 <p><strong>📅 Created:</strong> ${formatDate(classItem.created_at)}</p>
+            </div>
+            <div class="students-list" style="display: none;" id="students-list-${classItem.id}">
+                <div class="students-loading">Loading student details...</div>
             </div>
             <div class="class-actions">
                 <button class="btn btn-primary" onclick="viewClassDetails(${classItem.id})">
@@ -566,6 +572,80 @@ function scrollToClassManagement() {
     }, 300);
 }
 
+// Toggle class details visibility for a specific class
+async function toggleClassDetails(classId) {
+    const studentsList = document.getElementById(`students-list-${classId}`);
+    const classCard = document.querySelector(`[data-class-id="${classId}"]`);
+    const expandBtn = classCard ? classCard.querySelector('.expand-btn') : null;
+    
+    if (!studentsList || !expandBtn) return;
+    
+    const isVisible = studentsList.style.display !== 'none';
+    
+    if (isVisible) {
+        // Hide students
+        studentsList.style.display = 'none';
+        expandBtn.textContent = '📂 Show Students';
+        expandBtn.setAttribute('data-expanded', 'false');
+    } else {
+        // Show students - load them first if needed
+        studentsList.style.display = 'block';
+        expandBtn.textContent = '📁 Hide Students';
+        expandBtn.setAttribute('data-expanded', 'true');
+        
+        // Load student data if not already loaded
+        if (studentsList.innerHTML.includes('Loading student details...')) {
+            await loadStudentsForClass(classId, studentsList);
+        }
+    }
+}
+
+// Load students for a specific class
+async function loadStudentsForClass(classId, container) {
+    try {
+        const response = await fetch(`${window.API_URL}/classes/${classId}/students`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load students');
+        }
+        
+        const students = await response.json();
+        
+        if (students.length === 0) {
+            container.innerHTML = '<p class="no-students">No students enrolled yet.</p>';
+        } else {
+            container.innerHTML = `
+                <div class="students-header">
+                    <h4>Enrolled Students (${students.length})</h4>
+                </div>
+                <div class="students-grid">
+                    ${students.map(student => `
+                        <div class="student-item">
+                            <div class="student-info">
+                                <strong>${student.name}</strong>
+                                <div class="student-details">
+                                    <span>📧 ${student.email}</span>
+                                    ${student.student_id ? `<span>🆔 ${student.student_id}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="student-joined">
+                                Joined: ${formatDate(student.joined_at)}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading students:', error);
+        container.innerHTML = '<p class="error-message">Failed to load students. Please try again.</p>';
+    }
+}
+
 function expandAllClasses() {
     console.log('Expanding all class details...');
     showTeacherLoadingFeedback('Loading student details...');
@@ -576,12 +656,11 @@ function expandAllClasses() {
         classCards.forEach(card => {
             const expandBtn = card.querySelector('.expand-btn');
             const studentsList = card.querySelector('.students-list');
+            const classId = card.getAttribute('data-class-id');
             
-            if (expandBtn && studentsList) {
+            if (expandBtn && studentsList && classId) {
                 if (studentsList.style.display === 'none' || !studentsList.style.display) {
-                    studentsList.style.display = 'block';
-                    expandBtn.textContent = '📂 Hide Students';
-                    expandBtn.setAttribute('data-expanded', 'true');
+                    toggleClassDetails(parseInt(classId));
                 }
             }
         });
