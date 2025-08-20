@@ -66,13 +66,7 @@ const VidPODNav = {
             });
         });
 
-        // Handle CSV import button clicks
-        document.querySelectorAll('[onclick*="importCSV"]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.handleCSVImport();
-            });
-        });
+        // CSV import is now handled in admin browse stories page only
     },
 
     /**
@@ -196,14 +190,14 @@ const VidPODNav = {
         const expectations = {
             'student': {
                 visible: ['dashboard', 'stories', 'add-story'],
-                hidden: ['teacher-dashboard', 'admin', 'csv-import']
+                hidden: ['teacher-dashboard', 'admin', 'admin-browse-stories']
             },
             'teacher': {
                 visible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard'],
-                hidden: ['admin', 'csv-import']
+                hidden: ['admin', 'admin-browse-stories']
             },
             'admin': {
-                visible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard', 'admin', 'csv-import'],
+                visible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard', 'admin', 'admin-browse-stories'],
                 hidden: []
             }
         };
@@ -313,31 +307,17 @@ const VidPODNav = {
     },
 
     /**
-     * Handle CSV import action
+     * Handle CSV import action - redirect to admin browse stories page
      */
     handleCSVImport() {
         // Check if user has permission (admin only)
-        if (this.currentUser?.role !== 'admin') {
+        if (this.currentUser?.role !== 'amitrace_admin') {
             alert('You do not have permission to import CSV files. Admin access required.');
             return;
         }
 
-        // Redirect to import functionality or trigger import modal
-        if (window.location.pathname.includes('stories')) {
-            // If on stories page, trigger import functionality
-            if (typeof triggerCSVImport === 'function') {
-                triggerCSVImport();
-            } else {
-                // Fallback: scroll to import section
-                const importSection = document.querySelector('.csv-import-section, #csvImportSection');
-                if (importSection) {
-                    importSection.scrollIntoView({ behavior: 'smooth' });
-                }
-            }
-        } else {
-            // Redirect to stories page with import flag
-            window.location.href = '/stories.html?import=true';
-        }
+        // Redirect to admin browse stories page where CSV import is now located
+        window.location.href = '/admin-browse-stories.html';
     },
 
     /**
