@@ -330,7 +330,7 @@ function applyFilters() {
 async function approveStory(storyId) {
     try {
         const response = await fetch(`${window.API_URL}/stories/${storyId}/approve`, {
-            method: 'PUT',
+            method: 'PATCH',
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
@@ -356,7 +356,7 @@ async function approveStory(storyId) {
 async function rejectStory(storyId) {
     try {
         const response = await fetch(`${window.API_URL}/stories/${storyId}/reject`, {
-            method: 'PUT',
+            method: 'PATCH',
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
@@ -392,7 +392,7 @@ async function bulkApproveSelected() {
     try {
         const promises = Array.from(selectedStories).map(storyId => 
             fetch(`${window.API_URL}/stories/${storyId}/approve`, {
-                method: 'PUT',
+                method: 'PATCH',
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             })
         );
@@ -430,7 +430,7 @@ async function bulkRejectSelected() {
     try {
         const promises = Array.from(selectedStories).map(storyId => 
             fetch(`${window.API_URL}/stories/${storyId}/reject`, {
-                method: 'PUT',
+                method: 'PATCH',
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             })
         );
