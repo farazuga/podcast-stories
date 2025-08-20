@@ -37,8 +37,11 @@ async function loadUserInfo() {
         const user = JSON.parse(localStorage.getItem('user'));
         currentUser = user;
         
-        // Display user info
-        document.getElementById('userInfo').textContent = user.name || user.email;
+        // Display user info - add null check
+        const userInfo = document.getElementById('userInfo');
+        if (userInfo) {
+            userInfo.textContent = user.name || user.email;
+        }
         
         // Display role badge
         const roleBadge = document.getElementById('userRoleBadge');
@@ -47,12 +50,15 @@ async function loadUserInfo() {
             roleBadge.className = `role-badge role-${user.role}`;
         }
         
-        // Show appropriate navigation links based on role
+        // Show appropriate navigation links based on role - add null checks
         if (user.role === 'admin' || user.role === 'amitrace_admin') {
-            document.getElementById('adminLink').style.display = 'block';
-            document.getElementById('teacherLink').style.display = 'block';
+            const adminLink = document.getElementById('adminLink');
+            const teacherLink = document.getElementById('teacherLink');
+            if (adminLink) adminLink.style.display = 'block';
+            if (teacherLink) teacherLink.style.display = 'block';
         } else if (user.role === 'teacher') {
-            document.getElementById('teacherLink').style.display = 'block';
+            const teacherLink = document.getElementById('teacherLink');
+            if (teacherLink) teacherLink.style.display = 'block';
         }
         
         // Hide CSV import for students
@@ -85,6 +91,8 @@ async function loadTags() {
 
 function populateTagsSelect() {
     const tagsSelect = document.getElementById('searchTags');
+    if (!tagsSelect) return; // Add null check
+    
     tagsSelect.innerHTML = '';
     
     allTags.forEach(tag => {
@@ -128,6 +136,7 @@ async function loadStories(filters = {}) {
 
 function displayStories(stories) {
     const storiesGrid = document.getElementById('storiesGrid');
+    if (!storiesGrid) return; // Add null check
     
     if (stories.length === 0) {
         storiesGrid.innerHTML = '<div class="no-stories">No stories found. <a href="add-story.html">Add your first story</a></div>';
@@ -187,44 +196,72 @@ function createStoryCard(story) {
 }
 
 function setupEventListeners() {
-    // Search form
-    document.getElementById('searchForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        applyFilters();
-    });
+    // Search form - add null check
+    const searchForm = document.getElementById('searchForm');
+    if (searchForm) {
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            applyFilters();
+        });
+    }
     
-    // CSV Import modal
+    // CSV Import modal - add null checks
     const csvModal = document.getElementById('csvModal');
     const csvBtn = document.getElementById('csvImportBtn');
     const closeBtn = document.querySelector('.close');
     
-    csvBtn.onclick = () => csvModal.style.display = 'block';
-    closeBtn.onclick = () => csvModal.style.display = 'none';
+    if (csvBtn && csvModal) {
+        csvBtn.onclick = () => csvModal.style.display = 'block';
+    }
     
-    window.onclick = (event) => {
-        if (event.target === csvModal) {
-            csvModal.style.display = 'none';
-        }
-    };
+    if (closeBtn && csvModal) {
+        closeBtn.onclick = () => csvModal.style.display = 'none';
+    }
     
-    // CSV Upload form
-    document.getElementById('csvUploadForm').addEventListener('submit', handleCSVUpload);
+    if (csvModal) {
+        window.onclick = (event) => {
+            if (event.target === csvModal) {
+                csvModal.style.display = 'none';
+            }
+        };
+    }
+    
+    // CSV Upload form - add null check
+    const csvUploadForm = document.getElementById('csvUploadForm');
+    if (csvUploadForm) {
+        csvUploadForm.addEventListener('submit', handleCSVUpload);
+    }
 }
 
 function applyFilters() {
-    const filters = {
-        search: document.getElementById('searchKeywords').value,
-        tags: Array.from(document.getElementById('searchTags').selectedOptions).map(option => option.value),
-        startDate: document.getElementById('searchStartDate').value,
-        endDate: document.getElementById('searchEndDate').value,
-        interviewee: document.getElementById('searchInterviewee').value
-    };
+    const filters = {};
+    
+    // Add null checks for all filter inputs
+    const searchKeywords = document.getElementById('searchKeywords');
+    if (searchKeywords) filters.search = searchKeywords.value;
+    
+    const searchTags = document.getElementById('searchTags');
+    if (searchTags) {
+        filters.tags = Array.from(searchTags.selectedOptions).map(option => option.value);
+    }
+    
+    const searchStartDate = document.getElementById('searchStartDate');
+    if (searchStartDate) filters.startDate = searchStartDate.value;
+    
+    const searchEndDate = document.getElementById('searchEndDate');
+    if (searchEndDate) filters.endDate = searchEndDate.value;
+    
+    const searchInterviewee = document.getElementById('searchInterviewee');
+    if (searchInterviewee) filters.interviewee = searchInterviewee.value;
     
     loadStories(filters);
 }
 
 function clearFilters() {
-    document.getElementById('searchForm').reset();
+    const searchForm = document.getElementById('searchForm');
+    if (searchForm) {
+        searchForm.reset();
+    }
     loadStories();
 }
 
