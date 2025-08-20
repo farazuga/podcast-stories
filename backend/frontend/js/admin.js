@@ -110,7 +110,7 @@ async function loadUserInfo() {
     } catch (error) {
         console.error('Error loading user info:', error);
         console.error('Error details:', error.message, error.stack);
-        console.error('🚨 NOT calling logout() to prevent token clearing');
+        console.error('🚨 NOT calling logout() to prevent token clearing - FIXED VERSION DEPLOYED');
         // Don't logout on user info loading errors - preserve authentication
         // logout();
     }
