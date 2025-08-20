@@ -16,6 +16,10 @@ let selectionMode = false;
 // Initialize page
 async function initializeStoriesPage() {
     console.log('Stories page initialization starting...');
+    
+    // Wait a moment for auth.js to finish any token processing
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     if (!checkAuth()) return;
     
     await loadUserInfo();
