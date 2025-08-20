@@ -367,6 +367,25 @@ function parseFlexibleDate(dateStr) {
     }
   }
   
+  // Handle MM/DD/YY format (e.g., "1/1/25")
+  const shortDatePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{2})$/;
+  const shortMatch = cleaned.match(shortDatePattern);
+  
+  if (shortMatch) {
+    const month = shortMatch[1].padStart(2, '0');
+    const day = shortMatch[2].padStart(2, '0');
+    let year = parseInt(shortMatch[3]);
+    
+    // Convert 2-digit year to 4-digit (assuming 20xx for now)
+    if (year < 50) {
+      year = 2000 + year;
+    } else {
+      year = 1900 + year;
+    }
+    
+    return `${year}-${month}-${day}`;
+  }
+  
   // Try standard date parsing for other formats
   const parsedDate = new Date(cleaned);
   if (!isNaN(parsedDate.getTime())) {
@@ -409,11 +428,31 @@ router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
   }
 
   fs.createReadStream(req.file.path)
-    .pipe(csv())
+    .pipe(csv({
+      skipEmptyLines: true,
+      skipLinesWithError: false,
+      strict: false,
+      // Handle BOM and encoding issues
+      separator: ',',
+      quote: '"',
+      escape: '"'
+    }))
     .on('data', (data) => {
+      console.log(`📝 Raw CSV row data:`, Object.keys(data));
+      
+      // Handle BOM in header by cleaning first field
+      const cleanedData = {};
+      Object.keys(data).forEach(key => {
+        const cleanKey = key.replace(/^\uFEFF/, ''); // Remove BOM
+        cleanedData[cleanKey] = data[key];
+      });
+      
       // Skip empty rows
-      if (data.idea_title || data.title) {
-        results.push(data);
+      if (cleanedData.idea_title || cleanedData.title) {
+        results.push(cleanedData);
+        console.log(`📋 Added row: "${cleanedData.idea_title || cleanedData.title}"`);
+      } else {
+        console.log(`⚠️ Skipped empty row:`, cleanedData);
       }
     })
     .on('end', async () => {
