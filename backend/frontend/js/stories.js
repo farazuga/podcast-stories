@@ -1,5 +1,6 @@
-// API base URL
-const API_URL = 'https://podcast-stories-production.up.railway.app/api';
+// API base URL - use global from auth.js
+// const API_URL is already declared in auth.js and made globally available
+console.log('🔥 STORIES.JS LOADING - FIRST LINE EXECUTED');
 
 // Global variables
 let allStories = [];
@@ -13,14 +14,27 @@ let selectedStories = new Set();
 let selectionMode = false;
 
 // Initialize page
-document.addEventListener('DOMContentLoaded', async () => {
+async function initializeStoriesPage() {
+    console.log('Stories page initialization starting...');
     if (!checkAuth()) return;
     
     await loadUserInfo();
     await loadTags();
     await loadStories();
     setupEventListeners();
-});
+    console.log('Stories page initialization complete!');
+}
+
+// Handle both DOMContentLoaded and immediate execution
+if (document.readyState === 'loading') {
+    // DOM is still loading, wait for DOMContentLoaded
+    console.log('DOM loading - waiting for DOMContentLoaded');
+    document.addEventListener('DOMContentLoaded', initializeStoriesPage);
+} else {
+    // DOM is already loaded, execute immediately
+    console.log('DOM already loaded - executing immediately');
+    initializeStoriesPage();
+}
 
 function checkAuth() {
     const token = localStorage.getItem('token');
