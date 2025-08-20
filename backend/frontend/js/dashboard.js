@@ -1206,3 +1206,63 @@ function viewFavorites() {
     // Navigate to favorites or show favorites section
     window.location.href = '/favorites.html';
 }
+// Dashboard stat navigation functions
+function navigateToMyStories() {
+    console.log('Navigating to My Stories...');
+    showLoadingFeedback('Loading your stories...');
+    
+    setTimeout(() => {
+        const searchParams = new URLSearchParams();
+        searchParams.append('filter', 'my-stories');
+        window.location.href = '/stories.html?' + searchParams.toString();
+    }, 300);
+}
+
+function navigateToFavorites() {
+    console.log('Navigating to Favorites...');
+    showLoadingFeedback('Loading your favorites...');
+    
+    setTimeout(() => {
+        const searchParams = new URLSearchParams();
+        searchParams.append('filter', 'favorites');
+        window.location.href = '/stories.html?' + searchParams.toString();
+    }, 300);
+}
+
+function navigateToClasses() {
+    console.log('Navigating to Classes...');
+    showLoadingFeedback('Loading your classes...');
+    
+    setTimeout(() => {
+        if (currentUser.role === 'teacher') {
+            window.location.href = '/teacher-dashboard.html';
+        } else {
+            const classesSection = document.getElementById('studentClasses');
+            if (classesSection) {
+                classesSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    }, 300);
+}
+
+function navigateToAllStories() {
+    console.log('Navigating to All Stories...');
+    showLoadingFeedback('Loading all stories...');
+    
+    setTimeout(() => {
+        window.location.href = '/stories.html';
+    }, 300);
+}
+
+function showLoadingFeedback(message) {
+    const loadingDiv = document.createElement('div');
+    loadingDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; background: var(--primary-color); color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000; font-family: Arial, sans-serif; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
+    loadingDiv.textContent = message;
+    document.body.appendChild(loadingDiv);
+    
+    setTimeout(() => {
+        if (loadingDiv.parentNode) {
+            loadingDiv.parentNode.removeChild(loadingDiv);
+        }
+    }, 1000);
+}

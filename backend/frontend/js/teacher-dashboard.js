@@ -547,3 +547,79 @@ function logout() {
     localStorage.removeItem('user');
     window.location.href = '/index.html';
 }
+// Teacher dashboard stat navigation functions
+function scrollToClassManagement() {
+    console.log('Scrolling to class management section...');
+    showTeacherLoadingFeedback('Opening class management...');
+    
+    setTimeout(() => {
+        const classSection = document.getElementById('classesSection');
+        if (classSection) {
+            classSection.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            // Fallback: scroll to classes list
+            const classList = document.querySelector('.classes-list');
+            if (classList) {
+                classList.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    }, 300);
+}
+
+function expandAllClasses() {
+    console.log('Expanding all class details...');
+    showTeacherLoadingFeedback('Loading student details...');
+    
+    setTimeout(() => {
+        // Find all class cards and expand them
+        const classCards = document.querySelectorAll('.class-card');
+        classCards.forEach(card => {
+            const expandBtn = card.querySelector('.expand-btn');
+            const studentsList = card.querySelector('.students-list');
+            
+            if (expandBtn && studentsList) {
+                if (studentsList.style.display === 'none' || !studentsList.style.display) {
+                    studentsList.style.display = 'block';
+                    expandBtn.textContent = '📂 Hide Students';
+                    expandBtn.setAttribute('data-expanded', 'true');
+                }
+            }
+        });
+        
+        // Scroll to first class if exists
+        const firstClass = document.querySelector('.class-card');
+        if (firstClass) {
+            firstClass.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, 300);
+}
+
+function navigateToSchoolInfo() {
+    console.log('Navigating to school information...');
+    showTeacherLoadingFeedback('Loading school details...');
+    
+    setTimeout(() => {
+        // Check if user is admin and can access schools
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (user.role === 'amitrace_admin') {
+            window.location.href = '/admin.html?tab=schools';
+        } else {
+            // For teachers, show school info in alert or modal
+            const schoolName = document.getElementById('schoolName').textContent;
+            alert('School: ' + schoolName + '\n\nFor more school information, contact your administrator.');
+        }
+    }, 300);
+}
+
+function showTeacherLoadingFeedback(message) {
+    const loadingDiv = document.createElement('div');
+    loadingDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; background: var(--secondary-color); color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000; font-family: Arial, sans-serif; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
+    loadingDiv.textContent = message;
+    document.body.appendChild(loadingDiv);
+    
+    setTimeout(() => {
+        if (loadingDiv.parentNode) {
+            loadingDiv.parentNode.removeChild(loadingDiv);
+        }
+    }, 1000);
+}
