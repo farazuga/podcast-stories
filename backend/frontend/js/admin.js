@@ -80,7 +80,12 @@ async function loadUserInfo() {
         });
         
         const displayName = user.name || user.email || user.username || 'User';
-        document.getElementById('userInfo').textContent = `${displayName} (${user.role})`;
+        const userInfoElement = document.getElementById('userInfo');
+        if (userInfoElement) {
+            userInfoElement.textContent = `${displayName} (${user.role})`;
+        } else {
+            console.log('🔍 userInfo element not found (expected for admin page with unified navigation)');
+        }
         
         // Verify admin permissions with backend
         const token = localStorage.getItem('token');
