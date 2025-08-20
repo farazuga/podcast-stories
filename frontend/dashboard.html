@@ -20,7 +20,7 @@
         <!-- Dashboard Overview -->
         <div class="dashboard-overview">
             <div class="stats-cards">
-                <div class="stat-card">
+                <div class="stat-card" onclick="navigateToMyStories()" title="View your stories">
                     <div class="stat-icon">📝</div>
                     <div class="stat-content">
                         <h3 id="myStoriesCount">0</h3>
@@ -28,7 +28,7 @@
                     </div>
                 </div>
                 
-                <div class="stat-card">
+                <div class="stat-card" onclick="navigateToFavorites()" title="View your favorite stories">
                     <div class="stat-icon">❤️</div>
                     <div class="stat-content">
                         <h3 id="myFavoritesCount">0</h3>
@@ -36,7 +36,7 @@
                     </div>
                 </div>
                 
-                <div class="stat-card" id="classStatsCard" style="display: none;">
+                <div class="stat-card" id="classStatsCard" onclick="navigateToClasses()" title="View your classes" style="display: none;">
                     <div class="stat-icon">👥</div>
                     <div class="stat-content">
                         <h3 id="myClassesCount">0</h3>
@@ -44,7 +44,7 @@
                     </div>
                 </div>
                 
-                <div class="stat-card">
+                <div class="stat-card" onclick="navigateToAllStories()" title="Browse all available stories">
                     <div class="stat-icon">📚</div>
                     <div class="stat-content">
                         <h3 id="totalStoriesCount">0</h3>

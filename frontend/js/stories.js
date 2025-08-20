@@ -136,11 +136,21 @@ function renderStoryCard(story) {
     const cardClass = isGridView ? 'story-card' : 'story-card story-card-list';
     const isSelected = selectedStories.has(story.id);
     
-    // Format dates for coverage (keep only coverage dates, remove upload info)
+    // Format dates for coverage and determine applicable date for sorting
     const startDate = story.coverage_start_date ? new Date(story.coverage_start_date).toLocaleDateString() : '';
     const endDate = story.coverage_end_date ? new Date(story.coverage_end_date).toLocaleDateString() : '';
+    const uploadedDate = story.uploaded_date ? new Date(story.uploaded_date).toLocaleDateString() : '';
     
-    // Format tags (limit to 2 for compactness)
+    // Determine the most applicable date for display in list view
+    const applicableDate = story.coverage_start_date ? startDate : (story.uploaded_date ? uploadedDate : '');
+    const applicableDateLabel = story.coverage_start_date ? 'Coverage' : 'Uploaded';
+    
+    // Format tags (all tags for hover tooltip)
+    const allTags = story.tags && Array.isArray(story.tags) 
+        ? story.tags.filter(tag => tag).join(', ')
+        : '';
+    
+    // Format tags for display (limit to 2 for compactness)
     const tags = story.tags && Array.isArray(story.tags) 
         ? story.tags.filter(tag => tag).slice(0, 2).map(tag => `<span class="tag">${tag}</span>`).join('') 
         : '';
@@ -159,17 +169,14 @@ function renderStoryCard(story) {
     const statusBadge = showStatus ? 
         `<span class="status-badge status-${story.approval_status}">${story.approval_status}</span>` : '';
     
-    // Ultra-compact selection checkbox - roomier next to title
+    // Fixed checkbox without double box issue
     const selectionCheckbox = `
         <div class="story-checkbox-compact">
-            <label class="checkbox-container-compact">
-                <input type="checkbox" 
-                       class="story-select-checkbox" 
-                       data-story-id="${story.id}"
-                       ${isSelected ? 'checked' : ''}
-                       onchange="toggleStorySelection(${story.id})">
-                <span class="checkmark-compact"></span>
-            </label>
+            <input type="checkbox" 
+                   class="story-select-checkbox" 
+                   data-story-id="${story.id}"
+                   ${isSelected ? 'checked' : ''}
+                   onchange="toggleStorySelection(${story.id})">
         </div>
     `;
     
@@ -183,11 +190,46 @@ function renderStoryCard(story) {
         </button>
     `;
     
+    // Title with tags hover tooltip
+    const titleWithTooltip = allTags ? 
+        `<h3 class="story-title-compact" title="Tags: ${allTags}">${story.idea_title}</h3>` :
+        `<h3 class="story-title-compact">${story.idea_title}</h3>`;
+    
+    // List view specific layout with date
+    if (!isGridView) {
+        return `
+            <div class="${cardClass} ${isSelected ? 'selected' : ''}" data-story-id="${story.id}" data-sort-date="${story.coverage_start_date || story.uploaded_date || ''}">
+                <div class="story-header-compact">
+                    ${selectionCheckbox}
+                    ${titleWithTooltip}
+                    ${favoriteStar}
+                    ${statusBadge}
+                </div>
+                
+                <div class="story-date-compact">
+                    ${applicableDate ? `📅 ${applicableDateLabel}: ${applicableDate}` : ''}
+                </div>
+                
+                <div class="story-actions-compact">
+                    <button class="btn btn-primary btn-small" onclick="viewStory(${story.id})">
+                        View
+                    </button>
+                    ${story.uploaded_by === currentUser?.id ? `
+                        <button class="btn btn-secondary btn-small" onclick="editStory(${story.id})">
+                            Edit
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Grid view layout (original)
     return `
-        <div class="${cardClass} ${isSelected ? 'selected' : ''}" data-story-id="${story.id}">
+        <div class="${cardClass} ${isSelected ? 'selected' : ''}" data-story-id="${story.id}" data-sort-date="${story.coverage_start_date || story.uploaded_date || ''}">
             <div class="story-header-compact">
                 ${selectionCheckbox}
-                <h3 class="story-title-compact">${story.idea_title}</h3>
+                ${titleWithTooltip}
                 ${favoriteStar}
                 ${statusBadge}
             </div>
