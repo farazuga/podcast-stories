@@ -381,6 +381,43 @@ router.post('/:id/leave', verifyToken, hasAnyRole(['student']), async (req, res)
   }
 });
 
+// Get students for a specific class (Teacher of the class or admin)
+router.get('/:id/students', verifyToken, isTeacherOrAbove, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Get class to check ownership
+    const classResult = await pool.query('SELECT teacher_id FROM classes WHERE id = $1', [id]);
+    if (classResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Class not found' });
+    }
+    
+    // Check permissions - only class teacher or admin can view students
+    if (req.user.role === 'teacher' && classResult.rows[0].teacher_id !== req.user.id) {
+      return res.status(403).json({ error: 'Access denied. Not your class.' });
+    }
+    
+    // Get enrolled students
+    const studentsResult = await pool.query(`
+      SELECT 
+        u.id,
+        u.name,
+        u.email,
+        u.student_id,
+        uc.joined_at
+      FROM users u
+      INNER JOIN user_classes uc ON u.id = uc.user_id
+      WHERE uc.class_id = $1
+      ORDER BY uc.joined_at DESC
+    `, [id]);
+    
+    res.json(studentsResult.rows);
+  } catch (error) {
+    console.error('Error getting class students:', error);
+    res.status(500).json({ error: 'Failed to get class students' });
+  }
+});
+
 // Remove student from class (Teacher of the class or admin)
 router.delete('/:id/students/:studentId', verifyToken, isTeacherOrAbove, async (req, res) => {
   try {
