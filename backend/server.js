@@ -7,6 +7,9 @@ const path = require('path');
 // Load environment variables
 dotenv.config();
 
+// DEPLOYMENT FORCE: 2025-08-20-16-30 - Force frontend file deployment
+console.log('🚀 SERVER STARTUP: Navigation fixes deployment forced');
+
 // Import centralized configuration
 const config = require('./config/environment');
 const db = require('./config/database');
