@@ -36,10 +36,16 @@ const VidPODNav = {
         const mobileToggle = document.getElementById('mobileToggle');
         const mobileMenu = document.getElementById('mobileMenu');
 
+        // Ensure mobile menu is hidden on desktop
+        this.ensureMobileMenuHidden();
+
         if (mobileToggle && mobileMenu) {
             mobileToggle.addEventListener('click', (e) => {
                 e.stopPropagation();
-                mobileMenu.classList.toggle('active');
+                // Only toggle on mobile viewports
+                if (window.innerWidth <= 768) {
+                    mobileMenu.classList.toggle('active');
+                }
             });
         }
 
@@ -181,6 +187,48 @@ const VidPODNav = {
 
         // Specific role-based validation
         this.validateRoleBasedAccess(userRole);
+    },
+
+    /**
+     * Ensure mobile menu is properly hidden on desktop viewports
+     */
+    ensureMobileMenuHidden() {
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileToggle = document.getElementById('mobileToggle');
+        
+        if (window.innerWidth > 768) {
+            if (mobileMenu) {
+                mobileMenu.classList.remove('active');
+                mobileMenu.style.display = 'none';
+                console.log('🔧 V2 NAVIGATION: Mobile menu hidden for desktop viewport');
+            }
+            
+            if (mobileToggle) {
+                mobileToggle.style.display = 'none';
+                console.log('🔧 V2 NAVIGATION: Mobile toggle hidden for desktop viewport');
+            }
+        }
+        
+        // Also listen for window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                if (mobileMenu) {
+                    mobileMenu.classList.remove('active');
+                    mobileMenu.style.display = 'none';
+                }
+                if (mobileToggle) {
+                    mobileToggle.style.display = 'none';
+                }
+            } else {
+                // On mobile, allow CSS to control display
+                if (mobileMenu) {
+                    mobileMenu.style.display = '';
+                }
+                if (mobileToggle) {
+                    mobileToggle.style.display = '';
+                }
+            }
+        });
     },
 
     /**

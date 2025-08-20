@@ -226,7 +226,7 @@
 }
 
 .mobile-menu {
-    display: none;
+    display: none !important; /* Force hide by default */
     position: absolute;
     top: 100%;
     left: 0;
@@ -284,12 +284,27 @@
         display: flex;
     }
 
+    .mobile-menu.active {
+        display: block !important; /* Only show on mobile when active */
+    }
+
     .user-name {
         display: none;
     }
 
     .navbar-container {
         position: relative;
+    }
+}
+
+/* Desktop - Force hide mobile elements */
+@media (min-width: 769px) {
+    .mobile-menu {
+        display: none !important; /* Always hide on desktop */
+    }
+    
+    .mobile-toggle {
+        display: none !important; /* Always hide on desktop */
     }
 }
 
