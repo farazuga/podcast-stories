@@ -41,6 +41,28 @@ class TeacherFlowTester {
             }
         });
 
+        // Track failed network requests
+        this.page.on('requestfailed', request => {
+            this.bugs.push({
+                type: 'Network Error',
+                message: `Failed to load: ${request.url()} - ${request.failure().errorText}`,
+                url: this.page.url(),
+                timestamp: new Date().toISOString()
+            });
+        });
+
+        // Track 404 responses
+        this.page.on('response', response => {
+            if (response.status() === 404) {
+                this.bugs.push({
+                    type: '404 Error',
+                    message: `404 Not Found: ${response.url()}`,
+                    url: this.page.url(),
+                    timestamp: new Date().toISOString()
+                });
+            }
+        });
+
         this.page.on('pageerror', error => {
             this.bugs.push({
                 type: 'Page Error',
@@ -273,8 +295,8 @@ class TeacherFlowTester {
             
             await new Promise(resolve => setTimeout(resolve, 2000));
             
-            // Look for class cards
-            const classCards = await this.page.$$('.class-card');
+            // Look for class cards (both old and new styles)
+            const classCards = await this.page.$$('.class-card, .class-card-new');
             await this.logResult('Class Cards Present', classCards.length > 0, `Found ${classCards.length} class cards`);
             
             if (classCards.length > 0) {

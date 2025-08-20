@@ -1,5 +1,6 @@
-// API base URL - uses window.window.API_URL from config.js
-// window.window.API_URL is now provided by config.js
+// API base URL - use global API_URL from auth.js with fallback
+window.API_URL = window.API_URL || 'https://podcast-stories-production.up.railway.app/api';
+const API_URL = window.API_URL;
 
 // Global variables
 let currentUser = null;
@@ -106,7 +107,7 @@ async function loadUserInfo() {
 
 async function loadClasses() {
     try {
-        const response = await makeAuthenticatedRequest(`${window.API_URL}/classes`);
+        const response = await makeAuthenticatedRequest(`${API_URL}/classes`);
         
         if (response.ok) {
             myClasses = await response.json();
@@ -135,41 +136,58 @@ function displayClasses() {
     }
     
     classesGrid.innerHTML = myClasses.map(classItem => `
-        <div class="class-card" data-class-id="${classItem.id}">
-            <div class="class-header">
-                <h3>${classItem.class_name}</h3>
-                <div class="class-code-section">
-                    <div class="class-code-display">
-                        <span class="class-code-label">Class Code:</span>
-                        <span class="class-code-large">${classItem.class_code}</span>
-                        <button class="btn btn-outline btn-tiny" onclick="copyCode('${classItem.class_code}')" title="Copy class code">
-                            📋
-                        </button>
-                    </div>
-                    <button class="expand-btn" onclick="toggleClassDetails(${classItem.id})" title="Show/hide student details">
-                        📂 Show Students
-                    </button>
+        <div class="class-card-new" data-class-id="${classItem.id}">
+            <div class="class-card-header">
+                <h2 class="class-title">${classItem.class_name}</h2>
+                <div class="class-code-pill" onclick="copyCode('${classItem.class_code}')" title="Click to copy class code">Code: ${classItem.class_code}</div>
+                <button class="expand-btn" onclick="toggleClassDetails(${classItem.id})" title="Show/hide student details">
+                    📂 Show Students
+                </button>
+            </div>
+            
+            <div class="class-info-grid">
+                ${classItem.subject ? `
+                <div class="info-row">
+                    <span class="info-label">Subject:</span>
+                    <span class="info-value">${classItem.subject}</span>
+                </div>
+                ` : ''}
+                
+                <div class="info-row">
+                    <span class="info-label">Teacher:</span>
+                    <span class="info-value">${currentUser ? (currentUser.name || currentUser.email) : 'You'}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">School:</span>
+                    <span class="info-value">${classItem.school_name || 'VidPOD Default School'}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Students:</span>
+                    <span class="info-value">${classItem.student_count || 0}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Joined:</span>
+                    <span class="info-value">${formatDate(classItem.created_at)}</span>
                 </div>
             </div>
-            <div class="class-details">
-                ${classItem.subject ? `<p><strong>📚 Subject:</strong> ${classItem.subject}</p>` : ''}
-                ${classItem.description ? `<p class="class-description"><strong>📝 Description:</strong> ${classItem.description}</p>` : ''}
-                <p><strong>👥 Students:</strong> ${classItem.student_count || 0}</p>
-                <p><strong>🏫 School:</strong> ${classItem.school_name}</p>
-                <p><strong>📅 Created:</strong> ${formatDate(classItem.created_at)}</p>
+            
+            ${classItem.description ? `
+            <div class="class-description-new">
+                <strong>Description:</strong><br>
+                ${classItem.description}
             </div>
+            ` : ''}
+            
             <div class="students-list" style="display: none;" id="students-list-${classItem.id}">
                 <div class="students-loading">Loading student details...</div>
             </div>
-            <div class="class-actions">
-                <button class="btn btn-primary" onclick="viewClassDetails(${classItem.id})">
-                    👀 View Details
-                </button>
-                <button class="btn btn-secondary" onclick="copyCode('${classItem.class_code}')">
-                    📋 Copy Code
-                </button>
-                <button class="btn btn-outline" onclick="shareClassCode('${classItem.class_code}', '${classItem.class_name}')">
-                    📤 Share
+            
+            <div class="class-actions-new">
+                <button class="btn-leave" onclick="viewClassDetails(${classItem.id})">
+                    View Details
                 </button>
             </div>
         </div>
@@ -207,7 +225,7 @@ async function createClass(e) {
     
     try {
         console.log('Making API request to create class...');
-        const response = await makeAuthenticatedRequest(`${window.API_URL}/classes`, {
+        const response = await makeAuthenticatedRequest(`${API_URL}/classes`, {
             method: 'POST',
             body: JSON.stringify({
                 class_name: className,
@@ -245,7 +263,7 @@ async function viewClassDetails(classId) {
     currentClassId = classId;
     
     try {
-        const response = await makeAuthenticatedRequest(`${window.API_URL}/classes/${classId}`);
+        const response = await makeAuthenticatedRequest(`${API_URL}/classes/${classId}`);
         
         if (response.ok) {
             currentClassData = await response.json();
@@ -326,7 +344,7 @@ async function regenerateCode() {
     }
     
     try {
-        const response = await fetch(`${window.API_URL}/classes/${currentClassId}/regenerate-code`, {
+        const response = await fetch(`${API_URL}/classes/${currentClassId}/regenerate-code`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -356,7 +374,7 @@ async function removeStudent(studentId) {
     }
     
     try {
-        const response = await fetch(`${window.API_URL}/classes/${currentClassId}/students/${studentId}`, {
+        const response = await fetch(`${API_URL}/classes/${currentClassId}/students/${studentId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -384,7 +402,7 @@ async function deleteClass() {
     }
     
     try {
-        const response = await fetch(`${window.API_URL}/classes/${currentClassId}`, {
+        const response = await fetch(`${API_URL}/classes/${currentClassId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -553,24 +571,6 @@ function logout() {
     localStorage.removeItem('user');
     window.location.href = '/index.html';
 }
-// Teacher dashboard stat navigation functions
-function scrollToClassManagement() {
-    console.log('Scrolling to class management section...');
-    showTeacherLoadingFeedback('Opening class management...');
-    
-    setTimeout(() => {
-        const classSection = document.getElementById('classesSection');
-        if (classSection) {
-            classSection.scrollIntoView({ behavior: 'smooth' });
-        } else {
-            // Fallback: scroll to classes list
-            const classList = document.querySelector('.classes-list');
-            if (classList) {
-                classList.scrollIntoView({ behavior: 'smooth' });
-            }
-        }
-    }, 300);
-}
 
 // Toggle class details visibility for a specific class
 async function toggleClassDetails(classId) {
@@ -603,7 +603,7 @@ async function toggleClassDetails(classId) {
 // Load students for a specific class
 async function loadStudentsForClass(classId, container) {
     try {
-        const response = await fetch(`${window.API_URL}/classes/${classId}/students`, {
+        const response = await fetch(`${API_URL}/classes/${classId}/students`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -652,7 +652,7 @@ function expandAllClasses() {
     
     setTimeout(() => {
         // Find all class cards and expand them
-        const classCards = document.querySelectorAll('.class-card');
+        const classCards = document.querySelectorAll('.class-card-new, .class-card');
         classCards.forEach(card => {
             const expandBtn = card.querySelector('.expand-btn');
             const studentsList = card.querySelector('.students-list');
@@ -666,9 +666,27 @@ function expandAllClasses() {
         });
         
         // Scroll to first class if exists
-        const firstClass = document.querySelector('.class-card');
+        const firstClass = document.querySelector('.class-card-new, .class-card');
         if (firstClass) {
             firstClass.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, 300);
+}
+
+// Navigation functions for clickable stats
+function scrollToClassManagement() {
+    console.log('Scrolling to class management section...');
+    showTeacherLoadingFeedback('Opening class management...');
+    
+    setTimeout(() => {
+        const classSection = document.getElementById('classesSection') || document.querySelector('.classes-section');
+        if (classSection) {
+            classSection.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            const classList = document.querySelector('.classes-list') || document.querySelector('#classesGrid');
+            if (classList) {
+                classList.scrollIntoView({ behavior: 'smooth' });
+            }
         }
     }, 300);
 }
@@ -678,21 +696,14 @@ function navigateToSchoolInfo() {
     showTeacherLoadingFeedback('Loading school details...');
     
     setTimeout(() => {
-        // Check if user is admin and can access schools
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        if (user.role === 'amitrace_admin') {
-            window.location.href = '/admin.html?tab=schools';
-        } else {
-            // For teachers, show school info in alert or modal
-            const schoolName = document.getElementById('schoolName').textContent;
-            alert('School: ' + schoolName + '\n\nFor more school information, contact your administrator.');
-        }
+        // Could navigate to admin panel or show school info modal
+        window.location.href = '/admin.html';
     }, 300);
 }
 
 function showTeacherLoadingFeedback(message) {
     const loadingDiv = document.createElement('div');
-    loadingDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; background: var(--secondary-color); color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000; font-family: Arial, sans-serif; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
+    loadingDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; background: var(--primary-color); color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000; font-family: Arial, sans-serif; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
     loadingDiv.textContent = message;
     document.body.appendChild(loadingDiv);
     
@@ -702,3 +713,10 @@ function showTeacherLoadingFeedback(message) {
         }
     }, 1000);
 }
+
+// Make functions globally available
+window.toggleClassDetails = toggleClassDetails;
+window.loadStudentsForClass = loadStudentsForClass;
+window.expandAllClasses = expandAllClasses;
+window.scrollToClassManagement = scrollToClassManagement;
+window.navigateToSchoolInfo = navigateToSchoolInfo;
