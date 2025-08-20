@@ -409,4 +409,10 @@ if (typeof module !== 'undefined' && module.exports) {
 
 // Make available globally
 window.VidPODNav = VidPODNav;
-window.VidPODNavigation = VidPODNav; // Backward compatibility// Force deployment Wed Aug 20 16:10:29 CDT 2025
+window.VidPODNavigation = VidPODNav; // Backward compatibility
+
+// DEPLOYMENT VERSION: 2025-08-20-16-15 - CRITICAL NAVIGATION FIXES
+// This version includes:
+// 1. Fixed amitrace_admin role recognition in validateRoleBasedAccess()
+// 2. Fixed legacy adminLinks and teacherLinks to include amitrace_admin
+// 3. Fixed token preservation in admin.js and dashboard.js
