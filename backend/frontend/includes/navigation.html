@@ -116,3 +116,20 @@
         </div>
     </div>
 </nav>
+
+<!-- Hotfix CSS to immediately hide mobile elements on desktop -->
+<style>
+@media (min-width: 769px) {
+    .mobile-menu {
+        display: none !important;
+        visibility: hidden !important;
+    }
+    .mobile-toggle {
+        display: none !important;
+        visibility: hidden !important;
+    }
+}
+</style>
+
+<!-- Hotfix script to immediately hide mobile elements on desktop -->
+<script src="/js/navigation-hotfix.js"></script>
