@@ -22,11 +22,28 @@ async function initializeStoriesPage() {
     
     if (!checkAuth()) return;
     
-    await loadUserInfo();
-    await loadTags();
-    await loadStories();
-    setupEventListeners();
-    console.log('Stories page initialization complete!');
+    try {
+        console.log('🔍 Starting loadUserInfo...');
+        await loadUserInfo();
+        console.log('✅ loadUserInfo complete');
+        
+        console.log('🔍 Starting loadTags...');
+        await loadTags();
+        console.log('✅ loadTags complete');
+        
+        console.log('🔍 Starting loadStories...');
+        await loadStories();
+        console.log('✅ loadStories complete');
+        
+        console.log('🔍 Starting setupEventListeners...');
+        setupEventListeners();
+        console.log('✅ setupEventListeners complete');
+        
+        console.log('Stories page initialization complete!');
+    } catch (error) {
+        console.error('❌ Initialization error:', error);
+        // Don't redirect on error, just log it
+    }
 }
 
 // Handle both DOMContentLoaded and immediate execution
@@ -86,7 +103,8 @@ async function loadUserInfo() {
         }
     } catch (error) {
         console.error('Error loading user info:', error);
-        logout();
+        // Don't logout on user info errors - token is still valid
+        // Just continue without user info display
     }
 }
 
