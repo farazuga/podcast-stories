@@ -136,19 +136,18 @@ function renderStoryCard(story) {
     const cardClass = isGridView ? 'story-card' : 'story-card story-card-list';
     const isSelected = selectedStories.has(story.id);
     
-    // Format dates
+    // Format dates for coverage (keep only coverage dates, remove upload info)
     const startDate = story.coverage_start_date ? new Date(story.coverage_start_date).toLocaleDateString() : '';
     const endDate = story.coverage_end_date ? new Date(story.coverage_end_date).toLocaleDateString() : '';
-    const uploadedDate = story.uploaded_date ? new Date(story.uploaded_date).toLocaleDateString() : '';
     
-    // Format tags
+    // Format tags (limit to 2 for compactness)
     const tags = story.tags && Array.isArray(story.tags) 
-        ? story.tags.filter(tag => tag).slice(0, 3).map(tag => `<span class="tag">${tag}</span>`).join('') 
+        ? story.tags.filter(tag => tag).slice(0, 2).map(tag => `<span class="tag">${tag}</span>`).join('') 
         : '';
     
-    // Format interviewees
+    // Format interviewees (limit to 1 for compactness)
     const interviewees = story.interviewees && Array.isArray(story.interviewees)
-        ? story.interviewees.filter(person => person).slice(0, 2).join(', ')
+        ? story.interviewees.filter(person => person).slice(0, 1).join(', ')
         : '';
     
     // Status badge for admin/own stories
@@ -160,62 +159,54 @@ function renderStoryCard(story) {
     const statusBadge = showStatus ? 
         `<span class="status-badge status-${story.approval_status}">${story.approval_status}</span>` : '';
     
-    // Selection checkbox
+    // Ultra-compact selection checkbox - roomier next to title
     const selectionCheckbox = `
-        <div class="story-checkbox">
-            <label class="checkbox-container">
+        <div class="story-checkbox-compact">
+            <label class="checkbox-container-compact">
                 <input type="checkbox" 
                        class="story-select-checkbox" 
                        data-story-id="${story.id}"
                        ${isSelected ? 'checked' : ''}
                        onchange="toggleStorySelection(${story.id})">
-                <span class="checkmark"></span>
+                <span class="checkmark-compact"></span>
             </label>
         </div>
     `;
     
+    // Simple star favorite next to title
+    const favoriteStar = `
+        <button class="favorite-star ${story.is_favorited ? 'favorited' : ''}" 
+                onclick="toggleFavorite(${story.id})" 
+                data-story-id="${story.id}"
+                title="${story.is_favorited ? 'Remove from favorites' : 'Add to favorites'}">
+            ${story.is_favorited ? '⭐' : '☆'}
+        </button>
+    `;
+    
     return `
         <div class="${cardClass} ${isSelected ? 'selected' : ''}" data-story-id="${story.id}">
-            ${selectionCheckbox}
-            <div class="story-header">
-                <h3 class="story-title">${story.idea_title}</h3>
+            <div class="story-header-compact">
+                ${selectionCheckbox}
+                <h3 class="story-title-compact">${story.idea_title}</h3>
+                ${favoriteStar}
                 ${statusBadge}
             </div>
             
-            <div class="story-meta">
-                <p class="story-author">👤 ${story.uploaded_by_name || 'Unknown'}</p>
-                <p class="story-date">📅 ${uploadedDate}</p>
-                ${story.coverage_start_date ? `<p class="story-coverage">🎬 ${startDate}${endDate ? ` - ${endDate}` : ''}</p>` : ''}
-            </div>
+            ${story.coverage_start_date ? `<div class="story-coverage-compact">🎬 ${startDate}${endDate ? ` - ${endDate}` : ''}</div>` : ''}
             
-            <div class="story-description">
-                <p>${story.idea_description || 'No description available'}</p>
-            </div>
+            ${tags ? `<div class="story-tags-compact">${tags}</div>` : ''}
             
-            ${tags ? `<div class="story-tags">${tags}</div>` : ''}
+            ${interviewees ? `<div class="story-interviewees-compact">🎤 ${interviewees}</div>` : ''}
             
-            ${interviewees ? `<div class="story-interviewees">🎤 ${interviewees}</div>` : ''}
-            
-            <div class="story-actions">
+            <div class="story-actions-compact">
                 <button class="btn btn-primary btn-small" onclick="viewStory(${story.id})">
-                    👀 View Details
+                    View
                 </button>
                 ${story.uploaded_by === currentUser?.id ? `
                     <button class="btn btn-secondary btn-small" onclick="editStory(${story.id})">
-                        ✏️ Edit
+                        Edit
                     </button>
                 ` : ''}
-                <div class="story-rating">
-                    <div class="star-rating" data-story-id="${story.id}">
-                        ${renderStarRating(story.id, story.user_rating || 0, story.average_rating || 0, story.rating_count || 0)}
-                    </div>
-                    <button class="btn btn-outline btn-small favorite-btn ${story.is_favorited ? 'favorited' : ''}" 
-                            onclick="toggleFavorite(${story.id})" 
-                            data-story-id="${story.id}">
-                        <span class="heart-icon">${story.is_favorited ? '❤️' : '🤍'}</span>
-                        <span class="favorite-text">${story.is_favorited ? 'Favorited' : 'Favorite'}</span>
-                    </button>
-                </div>
             </div>
         </div>
     `;

@@ -1,6 +1,5 @@
-// Stories.js - uses window.API_URL set by auth.js
-// Fallback only if window.API_URL is not already set
-window.API_URL = window.API_URL || 'https://podcast-stories-production.up.railway.app/api';
+// API base URL
+const API_URL = 'https://podcast-stories-production.up.railway.app/api';
 
 // Global variables
 let allStories = [];
@@ -8,11 +7,10 @@ let filteredStories = [];
 let currentUser = null;
 let allTags = [];
 let currentPage = 0;
-let storiesPerPage = 12;
+let storiesPerPage = 50;
 let currentViewMode = 'grid';
 let selectedStories = new Set();
 let selectionMode = false;
-let userFavorites = new Set(); // Store user's favorited story IDs
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', async () => {
@@ -20,16 +18,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     await loadUserInfo();
     await loadTags();
-    await loadUserFavorites(); // Load user's favorites
-    
-    // Check if this is add-story page
-    if (window.location.pathname.includes('add-story.html')) {
-        setupAddStoryPage();
-    } else {
-        await loadStories();
-        setupEventListeners();
-        setupCSVImport();
-    }
+    await loadStories();
+    setupEventListeners();
 });
 
 function checkAuth() {
@@ -38,342 +28,270 @@ function checkAuth() {
         window.location.href = '/index.html';
         return false;
     }
-    
-    // Check if token is expired
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const currentTime = Math.floor(Date.now() / 1000);
-        
-        if (payload.exp && currentTime >= payload.exp) {
-            console.log('Token expired, redirecting to login');
-            localStorage.clear();
-            window.location.href = '/index.html';
-            return false;
-        }
-    } catch (error) {
-        console.error('Invalid token format:', error);
-        localStorage.clear();
-        window.location.href = '/index.html';
-        return false;
-    }
-    
     return true;
 }
 
-async function makeAuthenticatedRequest(url, options = {}) {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        throw new Error('No authentication token');
-    }
-    
-    const defaultOptions = {
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-            ...options.headers
-        }
-    };
-    
-    const finalOptions = { ...defaultOptions, ...options };
-    
-    try {
-        const response = await fetch(url, finalOptions);
-        
-        // Handle token expiration
-        if (response.status === 401) {
-            console.log('Authentication failed, clearing token and redirecting');
-            localStorage.clear();
-            window.location.href = '/index.html';
-            throw new Error('Authentication failed');
-        }
-        
-        return response;
-    } catch (error) {
-        console.error('Authenticated request failed:', error);
-        throw error;
-    }
-}
-
-// Make function globally available for testing
-window.makeAuthenticatedRequest = makeAuthenticatedRequest;
-
 async function loadUserInfo() {
-    const user = localStorage.getItem('user');
-    if (user) {
-        currentUser = JSON.parse(user);
-        updateUserDisplay();
-    }
-}
-
-function updateUserDisplay() {
-    const userInfo = document.getElementById('userInfo');
-    if (userInfo && currentUser) {
-        const displayName = currentUser.name || currentUser.email || currentUser.username || 'User';
-        userInfo.textContent = displayName;
-    }
-    
-    // Update UI elements based on user role
-    updateUIForUserRole();
-}
-
-function updateUIForUserRole() {
-    if (!currentUser) return;
-    
-    // Show/hide delete button based on role
-    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
-    if (bulkDeleteBtn) {
-        // Show delete button for teachers and admins
-        if (currentUser.role === 'teacher' || currentUser.role === 'amitrace_admin') {
-            bulkDeleteBtn.style.display = 'inline-block';
-        } else {
-            bulkDeleteBtn.style.display = 'none';
+    try {
+        const user = JSON.parse(localStorage.getItem('user'));
+        currentUser = user;
+        
+        // Display user info
+        document.getElementById('userInfo').textContent = user.name || user.email;
+        
+        // Display role badge
+        const roleBadge = document.getElementById('userRoleBadge');
+        if (roleBadge) {
+            roleBadge.textContent = user.role.toUpperCase().replace('_', ' ');
+            roleBadge.className = `role-badge role-${user.role}`;
         }
-    }
-    
-    // Show/hide teacher and admin links
-    const teacherLink = document.getElementById('teacherLink');
-    const adminLink = document.getElementById('adminLink');
-    
-    if (teacherLink && (currentUser.role === 'teacher' || currentUser.role === 'amitrace_admin')) {
-        teacherLink.style.display = 'inline-block';
-    }
-    
-    if (adminLink && currentUser.role === 'amitrace_admin') {
-        adminLink.style.display = 'inline-block';
-    }
-    
-    // Update role badge if it exists
-    const roleBadge = document.getElementById('userRoleBadge');
-    if (roleBadge) {
-        roleBadge.textContent = currentUser.role;
-        roleBadge.className = `role-badge ${currentUser.role}`;
+        
+        // Show appropriate navigation links based on role
+        if (user.role === 'teacher' || user.role === 'amitrace_admin') {
+            const teacherLink = document.getElementById('teacherLink');
+            if (teacherLink) teacherLink.style.display = 'inline-block';
+            
+            const csvBtn = document.getElementById('csvImportBtn');
+            if (csvBtn) csvBtn.style.display = 'inline-block';
+        }
+        
+        if (user.role === 'amitrace_admin') {
+            const adminLink = document.getElementById('adminLink');
+            if (adminLink) adminLink.style.display = 'inline-block';
+        }
+    } catch (error) {
+        console.error('Error loading user info:', error);
+        logout();
     }
 }
 
 async function loadTags() {
     try {
-        const response = await makeAuthenticatedRequest(`${window.API_URL}/tags`);
-
+        const response = await fetch(`${API_URL}/tags`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
         if (response.ok) {
             allTags = await response.json();
-            console.log(`Loaded ${allTags.length} tags`);
-            
-            // Populate tag select for add-story page
-            populateAddStoryTags();
-        } else {
-            console.error('Failed to load tags:', response.status);
+            populateTagsDropdown();
         }
     } catch (error) {
         console.error('Error loading tags:', error);
     }
 }
 
-async function loadUserFavorites() {
-    try {
-        const response = await makeAuthenticatedRequest(`${window.API_URL}/favorites`);
-
-        if (response.ok) {
-            const favorites = await response.json();
-            userFavorites.clear();
-            favorites.forEach(story => {
-                userFavorites.add(story.id);
-            });
-            console.log(`Loaded ${userFavorites.size} user favorites`);
-        } else {
-            console.log('No favorites found or error loading favorites');
-        }
-    } catch (error) {
-        console.error('Error loading user favorites:', error);
-    }
+function populateTagsDropdown() {
+    // Use shared tags dropdown setup
+    StoryFilters.setupTagsDropdown('searchTags', allTags, 'All Tags');
 }
-
-// Legacy function - removed in favor of populateSearchTagsFilter
 
 async function loadStories() {
     try {
-        const response = await makeAuthenticatedRequest(`${window.API_URL}/stories`);
-
+        const response = await fetch(`${API_URL}/stories`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
         if (response.ok) {
             allStories = await response.json();
-            // Filter to show only approved stories for students
-            if (currentUser && currentUser.role === 'student') {
-                allStories = allStories.filter(story => story.approval_status === 'approved');
-            }
             filteredStories = [...allStories];
+            currentPage = 0;
             displayStories();
+            updateResultsCount();
         } else {
-            console.error('Failed to load stories:', response.status);
-            showError('Failed to load stories. Please refresh the page.');
+            console.error('Failed to load stories');
+            showNoResults();
         }
     } catch (error) {
         console.error('Error loading stories:', error);
-        showError('Network error. Please check your connection.');
+        showNoResults();
     }
 }
 
 function displayStories() {
-    const storiesContainer = document.getElementById('storiesContainer');
-    const storiesGrid = document.getElementById('storiesGrid');
-    if (!storiesGrid || !storiesContainer) return;
-
-    // Update search stats
-    updateSearchStats();
-
-    if (filteredStories.length === 0) {
-        storiesGrid.innerHTML = `
-            <div class="no-stories">
-                <p>No stories found</p>
-            </div>
-        `;
+    const container = document.getElementById('storiesGrid');
+    if (!container) return;
+    
+    const startIndex = currentPage * storiesPerPage;
+    const endIndex = startIndex + storiesPerPage;
+    const storiesToShow = filteredStories.slice(startIndex, endIndex);
+    
+    if (storiesToShow.length === 0) {
+        showNoResults();
         return;
     }
+    
+    // Hide no results
+    document.getElementById('noResults').style.display = 'none';
+    
+    // Render stories based on view mode
+    container.className = currentViewMode === 'grid' ? 'stories-grid' : 'stories-list';
+    container.innerHTML = storiesToShow.map(story => renderStoryCard(story)).join('');
+    
+    // Show/hide pagination
+    updatePaginationControls();
+}
 
-    // Apply current view mode
-    if (currentViewMode === 'list') {
-        renderListView();
-    } else {
-        renderGridView();
+function renderStoryCard(story) {
+    const isGridView = currentViewMode === 'grid';
+    const cardClass = isGridView ? 'story-card' : 'story-card story-card-list';
+    const isSelected = selectedStories.has(story.id);
+    
+    // Format dates for coverage (keep only coverage dates, remove upload info)
+    const startDate = story.coverage_start_date ? new Date(story.coverage_start_date).toLocaleDateString() : '';
+    const endDate = story.coverage_end_date ? new Date(story.coverage_end_date).toLocaleDateString() : '';
+    
+    // Format tags (limit to 2 for compactness)
+    const tags = story.tags && Array.isArray(story.tags) 
+        ? story.tags.filter(tag => tag).slice(0, 2).map(tag => `<span class="tag">${tag}</span>`).join('') 
+        : '';
+    
+    // Format interviewees (limit to 1 for compactness)
+    const interviewees = story.interviewees && Array.isArray(story.interviewees)
+        ? story.interviewees.filter(person => person).slice(0, 1).join(', ')
+        : '';
+    
+    // Status badge for admin/own stories
+    const showStatus = currentUser && (
+        currentUser.role === 'amitrace_admin' || 
+        story.uploaded_by === currentUser.id
+    );
+    
+    const statusBadge = showStatus ? 
+        `<span class="status-badge status-${story.approval_status}">${story.approval_status}</span>` : '';
+    
+    // Ultra-compact selection checkbox - roomier next to title
+    const selectionCheckbox = `
+        <div class="story-checkbox-compact">
+            <label class="checkbox-container-compact">
+                <input type="checkbox" 
+                       class="story-select-checkbox" 
+                       data-story-id="${story.id}"
+                       ${isSelected ? 'checked' : ''}
+                       onchange="toggleStorySelection(${story.id})">
+                <span class="checkmark-compact"></span>
+            </label>
+        </div>
+    `;
+    
+    // Simple star favorite next to title
+    const favoriteStar = `
+        <button class="favorite-star ${story.is_favorited ? 'favorited' : ''}" 
+                onclick="toggleFavorite(${story.id})" 
+                data-story-id="${story.id}"
+                title="${story.is_favorited ? 'Remove from favorites' : 'Add to favorites'}">
+            ${story.is_favorited ? '⭐' : '☆'}
+        </button>
+    `;
+    
+    return `
+        <div class="${cardClass} ${isSelected ? 'selected' : ''}" data-story-id="${story.id}">
+            <div class="story-header-compact">
+                ${selectionCheckbox}
+                <h3 class="story-title-compact">${story.idea_title}</h3>
+                ${favoriteStar}
+                ${statusBadge}
+            </div>
+            
+            ${story.coverage_start_date ? `<div class="story-coverage-compact">🎬 ${startDate}${endDate ? ` - ${endDate}` : ''}</div>` : ''}
+            
+            ${tags ? `<div class="story-tags-compact">${tags}</div>` : ''}
+            
+            ${interviewees ? `<div class="story-interviewees-compact">🎤 ${interviewees}</div>` : ''}
+            
+            <div class="story-actions-compact">
+                <button class="btn btn-primary btn-small" onclick="viewStory(${story.id})">
+                    View
+                </button>
+                ${story.uploaded_by === currentUser?.id ? `
+                    <button class="btn btn-secondary btn-small" onclick="editStory(${story.id})">
+                        Edit
+                    </button>
+                ` : ''}
+            </div>
+        </div>
+    `;
+}
+
+function showNoResults() {
+    document.getElementById('storiesGrid').innerHTML = '';
+    document.getElementById('noResults').style.display = 'block';
+    document.getElementById('loadMoreSection').style.display = 'none';
+}
+
+function updateResultsCount() {
+    const countElement = document.getElementById('resultsCount');
+    if (countElement) {
+        const total = filteredStories.length;
+        const startIndex = currentPage * storiesPerPage;
+        const endIndex = Math.min(startIndex + storiesPerPage, total);
+        const shown = Math.max(0, endIndex - startIndex);
+        
+        if (total === 0) {
+            countElement.textContent = 'No stories found';
+        } else {
+            countElement.textContent = `Showing ${startIndex + 1}-${endIndex} of ${total} stories`;
+        }
     }
 }
 
-function renderGridView() {
-    const storiesGrid = document.getElementById('storiesGrid');
-    const storiesContainer = document.getElementById('storiesContainer');
+function updatePaginationControls() {
+    const total = filteredStories.length;
+    const totalPages = Math.ceil(total / storiesPerPage);
+    const paginationElement = document.getElementById('paginationControls');
     
-    // Set grid view classes
-    storiesContainer.className = 'stories-container';
-    storiesGrid.className = 'stories-grid';
-
-    storiesGrid.innerHTML = filteredStories.map(story => renderStoryCard(story, 'grid')).join('');
-}
-
-function renderListView() {
-    const storiesGrid = document.getElementById('storiesGrid');
-    const storiesContainer = document.getElementById('storiesContainer');
+    if (!paginationElement) return;
     
-    // Set list view classes
-    storiesContainer.className = 'stories-container';
-    storiesGrid.className = 'stories-list';
-
-    storiesGrid.innerHTML = filteredStories.map(story => renderStoryCard(story, 'list')).join('');
-}
-
-function renderStoryCard(story, viewMode) {
-    const cardClass = viewMode === 'list' ? 'story-card-list' : 'story-card';
-    const isFavorited = userFavorites.has(story.id);
-    
-    if (viewMode === 'list') {
-        return `
-            <div class="${cardClass} card" data-story-id="${story.id}">
-                <div class="story-selection">
-                    <label class="checkbox-container">
-                        <input type="checkbox" class="story-checkbox" value="${story.id}" onchange="updateSelection()">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-                
-                <div class="story-header">
-                    <h3>${story.idea_title || story.title}</h3>
-                    <div class="story-meta">
-                        <span class="story-author">By: ${story.uploaded_by_name || story.author || 'Unknown'}</span>
-                        <span class="story-date">${formatDate(story.uploaded_date || story.created_at)}</span>
-                    </div>
-                </div>
-                
-                <div class="story-description">
-                    <p>${truncateText(story.idea_description || story.description || 'No description available', 150)}</p>
-                </div>
-                
-                <div class="story-tags">
-                    ${story.tags && story.tags.length > 0 ? 
-                        story.tags.slice(0, 3).map(tag => `<span class="tag">${tag}</span>`).join('') + 
-                        (story.tags.length > 3 ? ` <span class="tag-count">+${story.tags.length - 3}</span>` : '') :
-                        '<span class="no-tags">No tags</span>'
-                    }
-                </div>
-                
-                <div class="story-interviewees">
-                    ${story.interviewees && story.interviewees.length > 0 ?
-                        story.interviewees.slice(0, 2).join(', ') + 
-                        (story.interviewees.length > 2 ? ` +${story.interviewees.length - 2}` : '') :
-                        'No interviewees'
-                    }
-                </div>
-                
-                <div class="story-actions">
-                    <button class="btn btn-sm btn-outline favorite-btn ${isFavorited ? 'favorited' : ''}" 
-                            onclick="toggleFavorite(${story.id})" title="${isFavorited ? 'Remove from favorites' : 'Add to favorites'}">
-                        <span class="heart-icon">${isFavorited ? '♥' : '♡'}</span>
-                        <span class="favorite-count">${story.favorite_count || 0}</span>
-                    </button>
-                    <button class="btn btn-sm btn-primary" onclick="viewStory(${story.id})">View</button>
-                    ${currentUser && (currentUser.role !== 'student' || story.uploaded_by === currentUser.id) ? 
-                        `<button class="btn btn-sm btn-secondary" onclick="editStory(${story.id})">Edit</button>` : 
-                        ''
-                    }
-                </div>
-            </div>
-        `;
-    } else {
-        // Grid view (existing implementation with selection checkbox added)
-        return `
-            <div class="${cardClass}" data-story-id="${story.id}">
-                <div class="story-selection">
-                    <label class="checkbox-container">
-                        <input type="checkbox" class="story-checkbox" value="${story.id}" onchange="updateSelection()">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-                
-                <h3>${story.idea_title || story.title}</h3>
-                <p class="story-description">${story.idea_description || story.description || 'No description available'}</p>
-                <div class="story-meta">
-                    <span class="story-author">By: ${story.uploaded_by_name || story.author || 'Unknown'}</span>
-                    <span class="story-date">${formatDate(story.uploaded_date || story.created_at)}</span>
-                </div>
-                <div class="story-tags">
-                    ${story.tags && story.tags.length > 0 ? 
-                        story.tags.map(tag => `<span class="tag">${tag}</span>`).join('') : 
-                        '<span class="no-tags">No tags</span>'
-                    }
-                </div>
-                <div class="story-actions">
-                    <button class="btn btn-sm btn-outline favorite-btn ${isFavorited ? 'favorited' : ''}" 
-                            onclick="toggleFavorite(${story.id})" title="${isFavorited ? 'Remove from favorites' : 'Add to favorites'}">
-                        <span class="heart-icon">${isFavorited ? '♥' : '♡'}</span>
-                        <span class="favorite-count">${story.favorite_count || 0}</span>
-                    </button>
-                    <button class="btn btn-sm btn-primary" onclick="viewStory(${story.id})">View Details</button>
-                    ${currentUser && (currentUser.role !== 'student' || story.uploaded_by === currentUser.id) ? 
-                        `<button class="btn btn-sm btn-secondary" onclick="editStory(${story.id})">Edit</button>` : 
-                        ''
-                    }
-                </div>
-            </div>
-        `;
+    if (totalPages <= 1) {
+        paginationElement.style.display = 'none';
+        return;
     }
+    
+    paginationElement.style.display = 'flex';
+    paginationElement.innerHTML = `
+        <button class="btn btn-outline" 
+                onclick="goToPage(${currentPage - 1})" 
+                ${currentPage === 0 ? 'disabled' : ''}>
+            ← Previous
+        </button>
+        <span class="pagination-info">
+            Page ${currentPage + 1} of ${totalPages}
+        </span>
+        <button class="btn btn-outline" 
+                onclick="goToPage(${currentPage + 1})" 
+                ${currentPage >= totalPages - 1 ? 'disabled' : ''}>
+            Next →
+        </button>
+    `;
 }
 
-function formatDate(dateString) {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-    });
+function goToPage(page) {
+    const totalPages = Math.ceil(filteredStories.length / storiesPerPage);
+    
+    if (page < 0 || page >= totalPages) return;
+    
+    currentPage = page;
+    displayStories();
+    updateResultsCount();
+    
+    // Scroll to top of stories
+    document.getElementById('storiesContainer')?.scrollIntoView({ behavior: 'smooth' });
 }
 
-function viewStory(storyId) {
-    window.location.href = `/story-detail.html?id=${storyId}`;
+// View mode functions
+function setViewMode(mode) {
+    currentViewMode = mode;
+    
+    // Update button states
+    document.getElementById('gridViewBtn').classList.toggle('active', mode === 'grid');
+    document.getElementById('listViewBtn').classList.toggle('active', mode === 'list');
+    
+    // Re-render stories
+    displayStories();
 }
 
-function editStory(storyId) {
-    window.location.href = `/add-story.html?id=${storyId}`;
-}
-
+// Search and filter functions
 function setupEventListeners() {
-    // Search form submission
+    // Search form
     const searchForm = document.getElementById('searchForm');
     if (searchForm) {
         searchForm.addEventListener('submit', (e) => {
@@ -381,1110 +299,666 @@ function setupEventListeners() {
             applyFilters();
         });
     }
-
-    // Search functionality (for live search)
-    const searchInput = document.getElementById('searchKeywords');
-    if (searchInput) {
-        searchInput.addEventListener('input', debounce(applyFilters, 300));
-    }
-
-    // Filter listeners - using the correct IDs from stories.html
-    const filters = ['searchTags', 'searchStartDate', 'searchEndDate', 'searchInterviewee'];
-    filters.forEach(filterId => {
-        const element = document.getElementById(filterId);
-        if (element) {
-            element.addEventListener('change', applyFilters);
-        }
-    });
-
-    // Populate tags in search filter
-    populateSearchTagsFilter();
-}
-
-function applyFilters() {
-    const searchTerm = document.getElementById('searchKeywords')?.value.toLowerCase() || '';
-    const searchTags = document.getElementById('searchTags');
-    const selectedTags = searchTags ? Array.from(searchTags.selectedOptions).map(opt => opt.value) : [];
-    const startDate = document.getElementById('searchStartDate')?.value || '';
-    const endDate = document.getElementById('searchEndDate')?.value || '';
-    const interviewee = document.getElementById('searchInterviewee')?.value.toLowerCase() || '';
-
-    filteredStories = allStories.filter(story => {
-        // Search filter (title and description)
-        if (searchTerm && 
-            !story.idea_title?.toLowerCase().includes(searchTerm) &&
-            !story.idea_description?.toLowerCase().includes(searchTerm)) {
-            return false;
-        }
-
-        // Tag filter (multiple tags)
-        if (selectedTags.length > 0) {
-            const storyTags = story.tags || [];
-            const hasMatchingTag = selectedTags.some(tag => storyTags.includes(tag));
-            if (!hasMatchingTag) {
-                return false;
-            }
-        }
-
-        // Interviewee filter
-        if (interviewee && story.interviewees) {
-            const storyInterviewees = Array.isArray(story.interviewees) ? 
-                story.interviewees.join(' ').toLowerCase() : 
-                story.interviewees.toLowerCase();
-            if (!storyInterviewees.includes(interviewee)) {
-                return false;
-            }
-        }
-
-        // Date filters
-        if (startDate && story.coverage_start_date && new Date(story.coverage_start_date) < new Date(startDate)) {
-            return false;
-        }
-        if (endDate && story.coverage_end_date && new Date(story.coverage_end_date) > new Date(endDate)) {
-            return false;
-        }
-
-        return true;
-    });
-
-    displayStories();
-    console.log(`Filtered ${filteredStories.length} stories from ${allStories.length} total`);
-}
-
-function populateSearchTagsFilter() {
-    const searchTags = document.getElementById('searchTags');
-    if (searchTags && allTags.length > 0) {
-        searchTags.innerHTML = '';
-        allTags.forEach(tag => {
-            const option = document.createElement('option');
-            option.value = tag.tag_name;
-            option.textContent = tag.tag_name;
-            searchTags.appendChild(option);
-        });
-        console.log(`Populated ${allTags.length} tags in search filter`);
-    }
-}
-
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-function showError(message) {
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'alert alert-error';
-    errorDiv.textContent = message;
     
-    const container = document.querySelector('.container');
-    if (container) {
-        container.insertBefore(errorDiv, container.firstChild);
-        setTimeout(() => errorDiv.remove(), 5000);
-    }
-}
-
-// Add story page functions
-function setupAddStoryPage() {
-    console.log('Setting up add-story page...');
-    
-    // Setup form submission
-    const form = document.getElementById('storyForm');
-    if (form) {
-        form.addEventListener('submit', handleAddStorySubmit);
-        console.log('Form submission handler attached');
-    }
-}
-
-function populateAddStoryTags() {
-    const tagsSelect = document.getElementById('tags');
-    if (tagsSelect && allTags.length > 0) {
-        // Clear existing options
-        tagsSelect.innerHTML = '';
-        
-        // Add tags as options
-        allTags.forEach(tag => {
-            const option = document.createElement('option');
-            option.value = tag.tag_name;
-            option.textContent = tag.tag_name;
-            tagsSelect.appendChild(option);
-        });
-        
-        console.log(`Populated ${allTags.length} tags in add-story select`);
-    }
-}
-
-async function handleAddStorySubmit(e) {
-    e.preventDefault();
-    console.log('Add story form submitted');
-    
-    // Collect form data
-    const formData = {
-        idea_title: document.getElementById('idea_title')?.value,
-        idea_description: document.getElementById('idea_description')?.value,
-        coverage_start_date: document.getElementById('coverage_start_date')?.value,
-        coverage_end_date: document.getElementById('coverage_end_date')?.value,
-        question_1: document.getElementById('question_1')?.value || '',
-        question_2: document.getElementById('question_2')?.value || '',
-        question_3: document.getElementById('question_3')?.value || '',
-        question_4: document.getElementById('question_4')?.value || '',
-        question_5: document.getElementById('question_5')?.value || '',
-        question_6: document.getElementById('question_6')?.value || ''
-    };
-    
-    // Get selected tags
-    const tagsSelect = document.getElementById('tags');
-    if (tagsSelect) {
-        const selectedTags = Array.from(tagsSelect.selectedOptions).map(opt => opt.value);
-        formData.tags = selectedTags;
-        console.log('Selected tags:', selectedTags);
-    }
-    
-    // Get interviewees if field exists
-    const intervieweesField = document.getElementById('interviewees');
-    if (intervieweesField && intervieweesField.value) {
-        formData.interviewees = intervieweesField.value.split(',').map(name => name.trim());
-    }
-    
-    console.log('Form data:', formData);
-    
-    // Submit to API
-    await saveNewStory(formData);
-}
-
-async function saveNewStory(storyData) {
-    console.log('Saving new story...', storyData);
-    
-    // Show loading state
-    const submitBtn = document.querySelector('button[type="submit"]');
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Saving...';
-    }
-    
-    try {
-        const response = await fetch(`${window.API_URL}/stories`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify(storyData)
-        });
-
-        if (response.ok) {
-            const result = await response.json();
-            console.log('Story saved successfully:', result);
-            showSuccess('Story saved successfully!');
-            
-            // Redirect to dashboard after 2 seconds
-            setTimeout(() => {
-                window.location.href = '/dashboard.html';
-            }, 2000);
-        } else {
-            const error = await response.json();
-            console.error('Failed to save story:', error);
-            showError(error.message || 'Failed to save story. Please try again.');
-            
-            // Re-enable submit button
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Save Story';
-            }
-        }
-    } catch (error) {
-        console.error('Error saving story:', error);
-        showError('Network error. Please check your connection and try again.');
-        
-        // Re-enable submit button
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Save Story';
-        }
-    }
-}
-
-function showSuccess(message) {
-    const alert = document.createElement('div');
-    alert.className = 'alert alert-success';
-    alert.style.cssText = 'background: #d4edda; color: #155724; padding: 10px; margin: 10px 0; border-radius: 4px; border: 1px solid #c3e6cb;';
-    alert.textContent = message;
-    
-    const container = document.querySelector('.container');
-    if (container) {
-        container.insertBefore(alert, container.firstChild);
-        setTimeout(() => alert.remove(), 5000);
-    }
-}
-
-// Utility functions
-function truncateText(text, maxLength) {
-    if (!text) return '';
-    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-}
-
-function escapeCSV(text) {
-    if (!text) return '';
-    const str = String(text);
-    // If string contains comma, newline, or quote, wrap in quotes and escape internal quotes
-    if (str.includes(',') || str.includes('\n') || str.includes('"')) {
-        return `"${str.replace(/"/g, '""')}"`;
-    }
-    return str;
-}
-
-function formatDateForCSV(dateString) {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toISOString().split('T')[0]; // YYYY-MM-DD format
-}
-
-function updateSearchStats() {
-    const resultsCount = document.getElementById('resultsCount');
-    if (resultsCount) {
-        const total = allStories.length;
-        const showing = filteredStories.length;
-        if (showing === total) {
-            resultsCount.textContent = `Showing all ${total} stories`;
-        } else {
-            resultsCount.textContent = `Showing ${showing} of ${total} stories`;
-        }
-    }
-}
-
-// View mode functions (called by HTML buttons) - defined immediately for global access
-function setViewMode(mode) {
-    currentViewMode = mode;
-    
-    // Update button states
-    const gridBtn = document.getElementById('gridViewBtn');
-    const listBtn = document.getElementById('listViewBtn');
-    
-    if (gridBtn && listBtn) {
-        gridBtn.classList.toggle('active', mode === 'grid');
-        listBtn.classList.toggle('active', mode === 'list');
-    }
-    
-    // Re-render stories with new view mode
-    displayStories();
-    
-    console.log(`View mode changed to: ${mode}`);
-}
-
-// Make globally available
-window.setViewMode = setViewMode;
-
-// Selection functions (called by HTML buttons)
-function toggleSelectAll() {
-    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-    const storyCheckboxes = document.querySelectorAll('.story-checkbox');
-    
-    if (selectAllCheckbox.checked) {
-        // Select all
-        storyCheckboxes.forEach(checkbox => {
-            checkbox.checked = true;
-            selectedStories.add(parseInt(checkbox.value));
-        });
-        selectionMode = true;
-    } else {
-        // Deselect all
-        storyCheckboxes.forEach(checkbox => {
-            checkbox.checked = false;
-        });
-        selectedStories.clear();
-        selectionMode = selectedStories.size > 0;
-    }
-    
-    updateSelectionUI();
-}
-
-window.toggleSelectAll = toggleSelectAll;
-
-function updateSelection() {
-    const storyCheckboxes = document.querySelectorAll('.story-checkbox');
-    selectedStories.clear();
-    
-    storyCheckboxes.forEach(checkbox => {
-        if (checkbox.checked) {
-            selectedStories.add(parseInt(checkbox.value));
-        }
-    });
-    
-    selectionMode = selectedStories.size > 0;
-    updateSelectionUI();
-}
-
-window.updateSelection = updateSelection;
-
-function updateSelectionUI() {
-    const selectionInfo = document.getElementById('selectionInfo');
-    const selectedCount = document.getElementById('selectedCount');
-    const bulkActionsBar = document.getElementById('bulkActionsBar');
-    const bulkSelectedCount = document.getElementById('bulkSelectedCount');
-    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-    
-    // Update selection info
-    if (selectionInfo && selectedCount) {
-        if (selectedStories.size > 0) {
-            selectionInfo.style.display = 'block';
-            selectedCount.textContent = selectedStories.size;
-        } else {
-            selectionInfo.style.display = 'none';
-        }
-    }
-    
-    // Update bulk actions bar
-    if (bulkActionsBar && bulkSelectedCount) {
-        if (selectedStories.size > 0) {
-            bulkActionsBar.style.display = 'block';
-            bulkSelectedCount.textContent = selectedStories.size;
-        } else {
-            bulkActionsBar.style.display = 'none';
-        }
-    }
-    
-    // Update select all checkbox state
-    if (selectAllCheckbox) {
-        const storyCheckboxes = document.querySelectorAll('.story-checkbox');
-        const checkedCount = document.querySelectorAll('.story-checkbox:checked').length;
-        
-        if (checkedCount === 0) {
-            selectAllCheckbox.checked = false;
-            selectAllCheckbox.indeterminate = false;
-        } else if (checkedCount === storyCheckboxes.length) {
-            selectAllCheckbox.checked = true;
-            selectAllCheckbox.indeterminate = false;
-        } else {
-            selectAllCheckbox.checked = false;
-            selectAllCheckbox.indeterminate = true;
-        }
-    }
-}
-
-// Search and filter functions (called by HTML)
-function clearFilters() {
-    // Clear all filter inputs
-    const inputs = ['searchKeywords', 'searchTags', 'searchStartDate', 'searchEndDate', 'searchInterviewee'];
-    inputs.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-            if (element.type === 'select-multiple') {
-                Array.from(element.options).forEach(option => option.selected = false);
-            } else {
-                element.value = '';
-            }
-        }
-    });
-    
-    // Reset filtered stories and redisplay
-    filteredStories = [...allStories];
-    displayStories();
-    
-    console.log('Filters cleared');
-}
-
-window.clearFilters = clearFilters;
-
-function sortStories() {
-    const sortBy = document.getElementById('sortBy');
-    if (!sortBy) return;
-    
-    const sortValue = sortBy.value;
-    
-    filteredStories.sort((a, b) => {
-        switch (sortValue) {
-            case 'newest':
-                return new Date(b.uploaded_date || b.created_at) - new Date(a.uploaded_date || a.created_at);
-            case 'oldest':
-                return new Date(a.uploaded_date || a.created_at) - new Date(b.uploaded_date || b.created_at);
-            case 'title':
-                return (a.idea_title || a.title || '').localeCompare(b.idea_title || b.title || '');
-            case 'author':
-                return (a.uploaded_by_name || a.author || '').localeCompare(b.uploaded_by_name || b.author || '');
-            default:
-                return 0;
-        }
-    });
-    
-    displayStories();
-    console.log(`Stories sorted by: ${sortValue}`);
-}
-
-window.sortStories = sortStories;
-
-// Bulk action functions (called by HTML buttons)
-async function bulkFavorite() {
-    if (selectedStories.size === 0) return;
-    
-    const storyIds = Array.from(selectedStories);
-    console.log(`Adding ${storyIds.length} stories to favorites:`, storyIds);
-    
-    // Show loading state
-    const bulkFavoriteBtn = document.querySelector('[onclick="bulkFavorite()"]');
-    if (bulkFavoriteBtn) {
-        bulkFavoriteBtn.disabled = true;
-        bulkFavoriteBtn.textContent = 'Adding to Favorites...';
-    }
-    
-    let successCount = 0;
-    let errorCount = 0;
-    
-    try {
-        // Process favorites in parallel for better performance
-        const promises = storyIds.map(async (storyId) => {
-            try {
-                // Only add if not already favorited
-                if (!userFavorites.has(storyId)) {
-                    const response = await fetch(`${window.API_URL}/favorites/${storyId}`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    
-                    if (response.ok) {
-                        const result = await response.json();
-                        userFavorites.add(storyId);
-                        updateFavoriteUI(storyId, true, result.total_favorites);
-                        successCount++;
-                    } else {
-                        errorCount++;
-                    }
-                } else {
-                    // Already favorited, count as success
-                    successCount++;
-                }
-            } catch (error) {
-                console.error(`Error favoriting story ${storyId}:`, error);
-                errorCount++;
-            }
-        });
-        
-        await Promise.all(promises);
-        
-        // Show results
-        if (errorCount === 0) {
-            showNotification(`Successfully added ${successCount} stories to favorites!`, 'success');
-        } else if (successCount > 0) {
-            showNotification(`Added ${successCount} stories to favorites. ${errorCount} failed.`, 'warning');
-        } else {
-            showNotification(`Failed to add stories to favorites. Please try again.`, 'error');
-        }
-        
-        // Clear selection after successful operation
-        if (successCount > 0) {
-            clearSelection();
-        }
-        
-    } catch (error) {
-        console.error('Bulk favorite error:', error);
-        showNotification('Network error during bulk favorite operation.', 'error');
-    } finally {
-        // Restore button state
-        if (bulkFavoriteBtn) {
-            bulkFavoriteBtn.disabled = false;
-            bulkFavoriteBtn.textContent = 'Add to Favorites';
-        }
-    }
-}
-
-function bulkExport() {
-    if (selectedStories.size === 0) return;
-    
-    const storyIds = Array.from(selectedStories);
-    console.log(`Exporting ${storyIds.length} stories:`, storyIds);
-    
-    // Show loading state
-    const bulkExportBtn = document.querySelector('[onclick="bulkExport()"]');
-    if (bulkExportBtn) {
-        bulkExportBtn.disabled = true;
-        bulkExportBtn.textContent = 'Exporting...';
-    }
-    
-    try {
-        // Get selected stories data
-        const selectedStoriesData = filteredStories.filter(story => selectedStories.has(story.id));
-        
-        if (selectedStoriesData.length === 0) {
-            showNotification('No stories found to export.', 'warning');
-            return;
-        }
-        
-        // Create CSV content
-        const csvHeaders = [
-            'idea_title', 'enhanced_description', 'question_1', 'question_2', 'question_3', 
-            'question_4', 'question_5', 'question_6', 'coverage_start_date', 'coverage_end_date', 
-            'auto_tags', 'interviewees'
-        ];
-        
-        const csvRows = selectedStoriesData.map(story => {
-            return [
-                escapeCSV(story.idea_title || story.title || ''),
-                escapeCSV(story.idea_description || story.description || ''),
-                escapeCSV(story.question_1 || ''),
-                escapeCSV(story.question_2 || ''),
-                escapeCSV(story.question_3 || ''),
-                escapeCSV(story.question_4 || ''),
-                escapeCSV(story.question_5 || ''),
-                escapeCSV(story.question_6 || ''),
-                formatDateForCSV(story.coverage_start_date),
-                formatDateForCSV(story.coverage_end_date),
-                escapeCSV(Array.isArray(story.tags) ? story.tags.join(', ') : ''),
-                escapeCSV(Array.isArray(story.interviewees) ? story.interviewees.join(', ') : '')
-            ];
-        });
-        
-        // Combine headers and rows
-        const csvContent = [csvHeaders, ...csvRows]
-            .map(row => row.join(','))
-            .join('\n');
-        
-        // Create and download file
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        
-        // Generate filename with timestamp
-        const timestamp = new Date().toISOString().split('T')[0];
-        const filename = `vidpod-stories-export-${timestamp}.csv`;
-        link.setAttribute('download', filename);
-        
-        // Trigger download
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        showNotification(`Successfully exported ${selectedStoriesData.length} stories to ${filename}`, 'success');
-        
-        // Clear selection after successful export
-        clearSelection();
-        
-    } catch (error) {
-        console.error('Bulk export error:', error);
-        showNotification('Error during export. Please try again.', 'error');
-    } finally {
-        // Restore button state
-        if (bulkExportBtn) {
-            bulkExportBtn.disabled = false;
-            bulkExportBtn.textContent = 'Export CSV';
-        }
-    }
-}
-
-async function bulkDelete() {
-    if (selectedStories.size === 0) return;
-    
-    const storyIds = Array.from(selectedStories);
-    console.log(`Attempting to delete ${storyIds.length} stories:`, storyIds);
-    
-    // Check authorization - only allow admins or story owners
-    if (currentUser.role === 'student') {
-        // Students can only delete their own stories
-        const selectedStoriesData = filteredStories.filter(story => selectedStories.has(story.id));
-        const unauthorizedStories = selectedStoriesData.filter(story => story.uploaded_by !== currentUser.id);
-        
-        if (unauthorizedStories.length > 0) {
-            showNotification(`You can only delete your own stories. ${unauthorizedStories.length} selected stories cannot be deleted.`, 'error');
-            return;
-        }
-    }
-    
-    // Confirm deletion
-    const confirmMessage = `Are you sure you want to delete ${storyIds.length} selected stories?\n\nThis action cannot be undone.`;
-    if (!confirm(confirmMessage)) {
-        return;
-    }
-    
-    // Show loading state
-    const bulkDeleteBtn = document.querySelector('[onclick="bulkDelete()"]');
-    if (bulkDeleteBtn) {
-        bulkDeleteBtn.disabled = true;
-        bulkDeleteBtn.textContent = 'Deleting...';
-    }
-    
-    let successCount = 0;
-    let errorCount = 0;
-    const errors = [];
-    
-    try {
-        // Process deletions sequentially to avoid overwhelming the server
-        for (const storyId of storyIds) {
-            try {
-                const response = await fetch(`${window.API_URL}/stories/${storyId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    successCount++;
-                    // Remove from local arrays
-                    allStories = allStories.filter(story => story.id !== storyId);
-                    filteredStories = filteredStories.filter(story => story.id !== storyId);
-                    userFavorites.delete(storyId);
-                } else {
-                    const error = await response.json();
-                    errorCount++;
-                    errors.push(`Story ${storyId}: ${error.message || 'Delete failed'}`);
-                }
-            } catch (error) {
-                console.error(`Error deleting story ${storyId}:`, error);
-                errorCount++;
-                errors.push(`Story ${storyId}: Network error`);
-            }
-        }
-        
-        // Show results
-        if (errorCount === 0) {
-            showNotification(`Successfully deleted ${successCount} stories!`, 'success');
-        } else if (successCount > 0) {
-            showNotification(`Deleted ${successCount} stories. ${errorCount} failed.`, 'warning');
-            if (errors.length > 0) {
-                console.warn('Delete errors:', errors);
-            }
-        } else {
-            showNotification(`Failed to delete stories. Please check your permissions and try again.`, 'error');
-            if (errors.length > 0) {
-                console.error('Delete errors:', errors);
-            }
-        }
-        
-        // Refresh display and clear selection
-        if (successCount > 0) {
-            displayStories();
-            clearSelection();
-        }
-        
-    } catch (error) {
-        console.error('Bulk delete error:', error);
-        showNotification('Network error during bulk delete operation.', 'error');
-    } finally {
-        // Restore button state
-        if (bulkDeleteBtn) {
-            bulkDeleteBtn.disabled = false;
-            bulkDeleteBtn.textContent = 'Delete Selected';
-        }
-    }
-}
-
-function clearSelection() {
-    selectedStories.clear();
-    selectionMode = false;
-    
-    // Uncheck all checkboxes
-    const checkboxes = document.querySelectorAll('.story-checkbox, #selectAllCheckbox');
-    checkboxes.forEach(checkbox => checkbox.checked = false);
-    
-    updateSelectionUI();
-    console.log('Selection cleared');
-}
-
-// Make bulk functions globally available
-window.bulkFavorite = bulkFavorite;
-window.bulkExport = bulkExport;
-window.bulkDelete = bulkDelete;
-window.clearSelection = clearSelection;
-
-// Favorite functionality (fully implemented)
-async function toggleFavorite(storyId) {
-    console.log(`🔄 Toggle favorite for story ${storyId}`);
-    
-    try {
-        // Validate inputs
-        if (!storyId || storyId <= 0) {
-            throw new Error('Invalid story ID');
-        }
-        
-        // Check if API_URL is defined
-        if (typeof window.API_URL === 'undefined') {
-            throw new Error('API_URL not defined - config.js may not be loaded');
-        }
-        
-        // Check authentication
-        const token = localStorage.getItem('token');
-        if (!token) {
-            showNotification('Please log in to add favorites', 'error');
-            return;
-        }
-        
-        // Check if userFavorites is initialized
-        if (typeof userFavorites === 'undefined') {
-            console.error('userFavorites not initialized, creating new Set');
-            userFavorites = new Set();
-        }
-        
-        const isFavorited = userFavorites.has(storyId);
-        const method = isFavorited ? 'DELETE' : 'POST';
-        const url = `${window.API_URL}/favorites/${storyId}`;
-        
-        console.log(`📡 ${method} ${url}`);
-        
-        // Find favorite button - try multiple selector strategies
-        let favoriteBtn = document.querySelector(`[data-story-id="${storyId}"] .favorite-btn`);
-        if (!favoriteBtn) {
-            favoriteBtn = document.querySelector(`[onclick="toggleFavorite(${storyId})"]`);
-        }
-        if (!favoriteBtn) {
-            favoriteBtn = document.querySelector(`button[onclick*="toggleFavorite(${storyId})"]`);
-        }
-        
-        // Show loading state
-        if (favoriteBtn) {
-            favoriteBtn.disabled = true;
-            favoriteBtn.classList.add('loading');
-            console.log('✅ Found favorite button, showing loading state');
-        } else {
-            console.warn('⚠️  Could not find favorite button for story', storyId);
-        }
-        
-        const response = await makeAuthenticatedRequest(url, { method });
-        
-        if (response.ok) {
-            const result = await response.json();
-            console.log('✅ API response:', result);
-            
-            // Update local state
-            if (isFavorited) {
-                userFavorites.delete(storyId);
-                console.log(`➖ Removed story ${storyId} from favorites`);
-            } else {
-                userFavorites.add(storyId);
-                console.log(`➕ Added story ${storyId} to favorites`);
-            }
-            
-            // Update UI
-            updateFavoriteUI(storyId, !isFavorited, result.total_favorites);
-            
-            // Show success message
-            showNotification(result.message || `Story ${isFavorited ? 'removed from' : 'added to'} favorites`, 'success');
-            
-        } else {
-            const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-            console.error('❌ API error:', response.status, error);
-            showNotification(error.error || 'Failed to update favorite', 'error');
-        }
-        
-    } catch (error) {
-        console.error('❌ toggleFavorite error:', error);
-        
-        // Provide specific error messages
-        if (error.message.includes('API_URL')) {
-            showNotification('Configuration error. Please refresh the page.', 'error');
-        } else if (error.message.includes('authentication')) {
-            showNotification('Please log in to use favorites.', 'error');
-        } else if (error.message.includes('Network')) {
-            showNotification('Network error. Please check your connection.', 'error');
-        } else {
-            showNotification('Error updating favorite. Please try again.', 'error');
-        }
-    } finally {
-        // Remove loading state - use same selector strategy
-        let favoriteBtn = document.querySelector(`[data-story-id="${storyId}"] .favorite-btn`);
-        if (!favoriteBtn) {
-            favoriteBtn = document.querySelector(`[onclick="toggleFavorite(${storyId})"]`);
-        }
-        if (!favoriteBtn) {
-            favoriteBtn = document.querySelector(`button[onclick*="toggleFavorite(${storyId})"]`);
-        }
-        
-        if (favoriteBtn) {
-            favoriteBtn.disabled = false;
-            favoriteBtn.classList.remove('loading');
-            console.log('✅ Removed loading state from favorite button');
-        }
-    }
-}
-
-function updateFavoriteUI(storyId, isFavorited, totalFavorites) {
-    console.log(`🎨 Updating favorite UI for story ${storyId}: ${isFavorited ? 'favorited' : 'not favorited'}, count: ${totalFavorites}`);
-    
-    // Try multiple selector strategies to find favorite buttons
-    const selectors = [
-        `[data-story-id="${storyId}"] .favorite-btn`,
-        `[onclick="toggleFavorite(${storyId})"]`,
-        `button[onclick*="toggleFavorite(${storyId})"]`
-    ];
-    
-    let favoriteButtons = [];
-    for (const selector of selectors) {
-        const buttons = document.querySelectorAll(selector);
-        if (buttons.length > 0) {
-            favoriteButtons = Array.from(buttons);
-            console.log(`✅ Found ${buttons.length} favorite buttons using selector: ${selector}`);
-            break;
-        }
-    }
-    
-    if (favoriteButtons.length === 0) {
-        console.warn(`⚠️  No favorite buttons found for story ${storyId}`);
-        return;
-    }
-    
-    favoriteButtons.forEach(btn => {
-        try {
-            const heartIcon = btn.querySelector('.heart-icon');
-            const favoriteCount = btn.querySelector('.favorite-count');
-            
-            // Update heart icon
-            if (heartIcon) {
-                heartIcon.textContent = isFavorited ? '♥' : '♡';
-                heartIcon.style.color = isFavorited ? '#ff6b35' : '#ccc';
-                console.log(`✅ Updated heart icon: ${heartIcon.textContent}`);
-            } else {
-                console.warn('⚠️  Heart icon not found in button');
-            }
-            
-            // Update favorite count
-            if (favoriteCount && totalFavorites !== undefined) {
-                favoriteCount.textContent = totalFavorites;
-                console.log(`✅ Updated favorite count: ${totalFavorites}`);
-            } else if (!favoriteCount) {
-                console.warn('⚠️  Favorite count element not found in button');
-            }
-            
-            // Update button class and title
-            btn.classList.toggle('favorited', isFavorited);
-            btn.title = isFavorited ? 'Remove from favorites' : 'Add to favorites';
-            
-            // Add animation
-            btn.classList.add('favorite-pulse');
-            setTimeout(() => btn.classList.remove('favorite-pulse'), 300);
-            
-        } catch (btnError) {
-            console.error('❌ Error updating favorite button:', btnError);
-        }
-    });
-}
-
-function showNotification(message, type = 'info', duration = 4000) {
-    // Remove any existing notifications of the same type to prevent stacking
-    const existingNotifications = document.querySelectorAll(`.notification.${type}`);
-    existingNotifications.forEach(notification => {
-        if (notification.parentNode) {
-            notification.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }
-    });
-    
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 25px;
-        border-radius: 8px;
-        color: white;
-        font-weight: 500;
-        z-index: 10000;
-        max-width: 350px;
-        min-width: 250px;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-        transform: translateX(100%);
-        transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        font-size: 14px;
-        line-height: 1.4;
-        border-left: 4px solid rgba(255,255,255,0.3);
-    `;
-    
-    // Set background color and icon based on type
-    const configs = {
-        success: { color: '#4CAF50', icon: '✅' },
-        error: { color: '#f44336', icon: '❌' },
-        info: { color: '#2196F3', icon: 'ℹ️' },
-        warning: { color: '#ff9800', icon: '⚠️' }
-    };
-    
-    const config = configs[type] || configs.info;
-    notification.style.backgroundColor = config.color;
-    
-    // Add icon and message
-    const content = document.createElement('div');
-    content.style.cssText = 'display: flex; align-items: center; gap: 8px;';
-    content.innerHTML = `
-        <span style="font-size: 16px;">${config.icon}</span>
-        <span>${message}</span>
-    `;
-    notification.appendChild(content);
-    
-    // Add close button
-    const closeBtn = document.createElement('button');
-    closeBtn.innerHTML = '×';
-    closeBtn.style.cssText = `
-        position: absolute;
-        top: 5px;
-        right: 8px;
-        background: none;
-        border: none;
-        color: white;
-        font-size: 18px;
-        cursor: pointer;
-        padding: 0;
-        width: 20px;
-        height: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0.7;
-        transition: opacity 0.2s ease;
-    `;
-    closeBtn.onmouseover = () => closeBtn.style.opacity = '1';
-    closeBtn.onmouseout = () => closeBtn.style.opacity = '0.7';
-    closeBtn.onclick = () => removeNotification(notification);
-    
-    notification.appendChild(closeBtn);
-    document.body.appendChild(notification);
-    
-    // Animate in after a brief delay to ensure proper rendering
-    requestAnimationFrame(() => {
-        setTimeout(() => {
-            notification.style.transform = 'translateX(0)';
-        }, 50);
-    });
-    
-    // Auto remove after specified duration
-    const autoRemoveTimer = setTimeout(() => {
-        removeNotification(notification);
-    }, duration);
-    
-    // Store timer on element so we can clear it if manually closed
-    notification.autoRemoveTimer = autoRemoveTimer;
-    
-    return notification;
-}
-
-function removeNotification(notification) {
-    if (notification.autoRemoveTimer) {
-        clearTimeout(notification.autoRemoveTimer);
-    }
-    
-    notification.style.transform = 'translateX(100%)';
-    notification.style.opacity = '0';
-    
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-        }
-    }, 300);
-}
-
-window.toggleFavorite = toggleFavorite;
-
-// Make logout available globally
-window.logout = function() {
-    localStorage.clear();
-    window.location.href = '/index.html';
-};
-
-// CSV Import functionality
-function setupCSVImport() {
-    const csvImportBtn = document.getElementById('csvImportBtn');
+    // CSV import
+    const csvBtn = document.getElementById('csvImportBtn');
     const csvModal = document.getElementById('csvModal');
     const csvForm = document.getElementById('csvForm');
-    const closeModal = document.querySelector('.close');
     
-    if (csvImportBtn && csvModal) {
-        // Show modal on button click
-        csvImportBtn.addEventListener('click', () => {
+    if (csvBtn && csvModal) {
+        csvBtn.addEventListener('click', () => {
             csvModal.style.display = 'block';
         });
         
-        // Close modal events
-        if (closeModal) {
-            closeModal.addEventListener('click', () => {
-                csvModal.style.display = 'none';
-            });
+        // Close modal
+        csvModal.querySelector('.close').addEventListener('click', () => {
+            csvModal.style.display = 'none';
+        });
+        
+        // Handle CSV upload
+        if (csvForm) {
+            csvForm.addEventListener('submit', handleCSVUpload);
         }
         
-        // Close modal when clicking outside
+        // Click outside modal to close
         window.addEventListener('click', (event) => {
             if (event.target === csvModal) {
                 csvModal.style.display = 'none';
             }
         });
-        
-        // Handle form submission
-        if (csvForm) {
-            csvForm.addEventListener('submit', handleCSVImport);
-        }
     }
 }
 
-async function handleCSVImport(e) {
+function applyFilters() {
+    // Build filters from form using shared component
+    const filters = StoryFilters.buildFiltersFromForm('searchForm');
+    
+    console.log('Applying story filters:', filters);
+    
+    // Apply all filters using shared component
+    filteredStories = StoryFilters.applyAllFilters(allStories, filters);
+    
+    currentPage = 0;
+    displayStories();
+    updateResultsCount();
+}
+
+function clearFilters() {
+    // Clear all filter inputs using shared component
+    StoryFilters.clearAllFilters('searchForm');
+    
+    filteredStories = [...allStories];
+    currentPage = 0;
+    displayStories();
+    updateResultsCount();
+}
+
+function sortStories() {
+    const sortBy = document.getElementById('sortBy').value;
+    
+    // Use shared sorting functionality
+    filteredStories = StoryFilters.applySorting(filteredStories, sortBy);
+    
+    currentPage = 0;
+    displayStories();
+}
+
+// Remove loadMoreStories function as we now use pagination
+// function loadMoreStories() {
+//     currentPage++;
+//     displayStories();
+//     updateResultsCount();
+// }
+
+// Star rating system
+function renderStarRating(storyId, userRating, averageRating, ratingCount) {
+    const stars = [];
+    
+    // User's rating stars (interactive)
+    for (let i = 1; i <= 5; i++) {
+        const isActive = i <= userRating;
+        stars.push(`
+            <span class="star user-star ${isActive ? 'active' : ''}" 
+                  data-rating="${i}" 
+                  onclick="rateStory(${storyId}, ${i})"
+                  title="Rate ${i} star${i > 1 ? 's' : ''}">
+                ${isActive ? '⭐' : '☆'}
+            </span>
+        `);
+    }
+    
+    const averageDisplay = averageRating > 0 ? averageRating.toFixed(1) : '0.0';
+    const countText = ratingCount === 1 ? '1 rating' : `${ratingCount} ratings`;
+    
+    return `
+        <div class="user-rating">
+            <label>Your rating:</label>
+            <div class="stars-container">
+                ${stars.join('')}
+            </div>
+        </div>
+        <div class="average-rating">
+            <span class="avg-score">${averageDisplay}</span>
+            <div class="avg-stars">
+                ${renderAverageStars(averageRating)}
+            </div>
+            <span class="rating-count">(${countText})</span>
+        </div>
+    `;
+}
+
+function renderAverageStars(rating) {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating - fullStars >= 0.5;
+    
+    for (let i = 1; i <= 5; i++) {
+        if (i <= fullStars) {
+            stars.push('⭐');
+        } else if (i === fullStars + 1 && hasHalfStar) {
+            stars.push('⭐'); // Could use half-star if available
+        } else {
+            stars.push('☆');
+        }
+    }
+    
+    return stars.join('');
+}
+
+async function rateStory(storyId, rating) {
+    try {
+        const response = await fetch(`${API_URL}/stories/${storyId}/rate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ rating })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            
+            // Update the star rating display
+            updateStarRatingDisplay(storyId, rating, result.average_rating, result.rating_count);
+            
+            // Show feedback
+            showNotification(`Rated ${rating} star${rating > 1 ? 's' : ''}!`, 'success');
+        } else {
+            const error = await response.json();
+            showNotification(error.message || 'Failed to rate story', 'error');
+        }
+    } catch (error) {
+        console.error('Error rating story:', error);
+        showNotification('Failed to rate story', 'error');
+    }
+}
+
+function updateStarRatingDisplay(storyId, userRating, averageRating, ratingCount) {
+    const container = document.querySelector(`[data-story-id="${storyId}"] .star-rating`);
+    if (container) {
+        container.innerHTML = renderStarRating(storyId, userRating, averageRating, ratingCount);
+    }
+}
+
+// Story action functions
+function viewStory(storyId) {
+    window.location.href = `/story-detail.html?id=${storyId}`;
+}
+
+function editStory(storyId) {
+    window.location.href = `/add-story.html?edit=${storyId}`;
+}
+
+async function toggleFavorite(storyId) {
+    const btn = document.querySelector(`[data-story-id="${storyId}"] .favorite-btn`);
+    const heartIcon = btn?.querySelector('.heart-icon');
+    const favoriteText = btn?.querySelector('.favorite-text');
+    
+    if (!btn) return;
+    
+    const wasLiked = btn.classList.contains('favorited');
+    
+    try {
+        const method = wasLiked ? 'DELETE' : 'POST';
+        const response = await fetch(`${API_URL}/favorites/${storyId}`, {
+            method: method,
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            
+            // Update UI immediately
+            btn.classList.toggle('favorited', !wasLiked);
+            if (heartIcon) {
+                heartIcon.textContent = !wasLiked ? '❤️' : '🤍';
+            }
+            if (favoriteText) {
+                favoriteText.textContent = !wasLiked ? 'Favorited' : 'Favorite';
+            }
+            
+            // Add animation effect
+            btn.classList.add('favorite-animation');
+            setTimeout(() => btn.classList.remove('favorite-animation'), 300);
+            
+            // Show notification
+            const action = !wasLiked ? 'added to' : 'removed from';
+            showNotification(`Story ${action} favorites!`, 'success');
+        } else {
+            const error = await response.json();
+            showNotification(error.message || 'Failed to update favorite', 'error');
+        }
+    } catch (error) {
+        console.error('Error toggling favorite:', error);
+        showNotification('Failed to update favorite', 'error');
+    }
+}
+
+// CSV Upload function - Enhanced with better user feedback
+async function handleCSVUpload(e) {
     e.preventDefault();
     
     const fileInput = document.getElementById('csvFile');
     const file = fileInput.files[0];
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.textContent;
     
+    // Validation
     if (!file) {
         showNotification('Please select a CSV file', 'error');
         return;
     }
     
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+        showNotification('Please select a valid CSV file', 'error');
+        return;
+    }
+    
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        showNotification('File too large. Please select a file smaller than 10MB', 'error');
+        return;
+    }
+    
     // Show loading state
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Uploading...';
+    submitBtn.textContent = '📤 Uploading...';
+    
+    const formData = new FormData();
+    formData.append('csv', file);
     
     try {
-        const formData = new FormData();
-        formData.append('csv', file);
+        console.log(`Starting CSV upload: ${file.name} (${file.size} bytes)`);
         
-        const response = await fetch(`${window.API_URL}/stories/import`, {
+        const response = await fetch(`${API_URL}/stories/import`, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            headers: { 
+                'Authorization': `Bearer ${localStorage.getItem('token')}` 
+                // Note: Don't set Content-Type header - let browser set it with boundary for FormData
             },
             body: formData
         });
         
+        console.log(`CSV upload response: ${response.status} ${response.statusText}`);
+        
         if (response.ok) {
             const result = await response.json();
-            showNotification(
-                `Successfully imported ${result.imported || 0} stories!`, 
-                'success'
-            );
+            console.log('CSV import result:', result);
             
-            // Close modal and refresh stories
-            const csvModal = document.getElementById('csvModal');
-            if (csvModal) {
-                csvModal.style.display = 'none';
+            // Prepare success message
+            let message = `Successfully imported ${result.imported}`;
+            if (result.total && result.total !== result.imported) {
+                message += ` of ${result.total}`;
+            }
+            message += ` stories!`;
+            
+            // Add schema info if available
+            if (result.schemaInfo) {
+                console.log(`Schema info: ${result.schemaInfo}`);
             }
             
-            // Reset form
-            e.target.reset();
+            // Show errors if any
+            if (result.errors && result.errors.length > 0) {
+                console.warn('Import had errors:', result.errors);
+                message += `\n\nNote: ${result.errors.length} rows had errors. Check console for details.`;
+                
+                // Log detailed errors
+                result.errors.forEach((error, index) => {
+                    console.error(`Import error ${index + 1}:`, error);
+                });
+            }
             
-            // Reload stories to show imported ones
-            await loadStories();
+            showNotification(message, 'success');
+            
+            // Close modal and reload
+            document.getElementById('csvModal').style.display = 'none';
+            fileInput.value = ''; // Clear file input
+            await loadStories(); // Reload stories to show new imports
             
         } else {
-            const error = await response.json();
-            showNotification(`Import failed: ${error.message || 'Unknown error'}`, 'error');
+            // Handle error responses
+            let errorMessage = 'Import failed';
+            
+            try {
+                const error = await response.json();
+                console.error('CSV import error response:', error);
+                
+                if (error.message) {
+                    errorMessage += `: ${error.message}`;
+                } else if (error.error) {
+                    errorMessage += `: ${error.error}`;
+                }
+                
+                if (error.details) {
+                    console.error('Error details:', error.details);
+                    errorMessage += `\nDetails: ${error.details}`;
+                }
+                
+                // Show partial success info if available
+                if (error.imported && error.imported > 0) {
+                    errorMessage += `\n\nPartial success: ${error.imported} stories were imported before the error occurred.`;
+                }
+                
+            } catch (parseError) {
+                const errorText = await response.text();
+                console.error('Failed to parse error response:', errorText);
+                errorMessage += `: Server error (${response.status})`;
+                
+                if (response.status === 401) {
+                    errorMessage = 'Import failed: Please log in again';
+                } else if (response.status === 403) {
+                    errorMessage = 'Import failed: You do not have permission to import stories';
+                } else if (response.status === 413) {
+                    errorMessage = 'Import failed: File too large';
+                }
+            }
+            
+            showNotification(errorMessage, 'error');
         }
         
     } catch (error) {
-        console.error('CSV import error:', error);
-        showNotification('Network error during import. Please try again.', 'error');
+        console.error('CSV import network error:', error);
+        
+        let errorMessage = 'Import failed: Network error';
+        if (error.message.includes('fetch')) {
+            errorMessage += ' - Please check your internet connection';
+        }
+        
+        showNotification(errorMessage, 'error');
     } finally {
-        // Restore button state
+        // Reset button state
         submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
+        submitBtn.textContent = originalBtnText;
     }
+}
+
+// Multi-select functionality
+function toggleStorySelection(storyId) {
+    if (selectedStories.has(storyId)) {
+        selectedStories.delete(storyId);
+    } else {
+        selectedStories.add(storyId);
+    }
+    
+    updateSelectionUI();
+    updateBulkActionsVisibility();
+}
+
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const storyCheckboxes = document.querySelectorAll('.story-select-checkbox');
+    
+    if (selectAllCheckbox.checked) {
+        // Select all visible stories
+        const visibleStories = document.querySelectorAll('.story-card[data-story-id]');
+        visibleStories.forEach(card => {
+            const storyId = parseInt(card.getAttribute('data-story-id'));
+            selectedStories.add(storyId);
+        });
+    } else {
+        // Deselect all
+        selectedStories.clear();
+    }
+    
+    // Update all checkboxes
+    storyCheckboxes.forEach(checkbox => {
+        const storyId = parseInt(checkbox.getAttribute('data-story-id'));
+        checkbox.checked = selectedStories.has(storyId);
+    });
+    
+    updateSelectionUI();
+    updateBulkActionsVisibility();
+}
+
+function updateSelectionUI() {
+    const selectedCount = selectedStories.size;
+    const selectedCountSpan = document.getElementById('selectedCount');
+    const bulkSelectedCountSpan = document.getElementById('bulkSelectedCount');
+    const selectionInfo = document.getElementById('selectionInfo');
+    
+    // Update selection count displays
+    if (selectedCountSpan) selectedCountSpan.textContent = selectedCount;
+    if (bulkSelectedCountSpan) bulkSelectedCountSpan.textContent = selectedCount;
+    
+    // Show/hide selection info
+    if (selectionInfo) {
+        selectionInfo.style.display = selectedCount > 0 ? 'block' : 'none';
+    }
+    
+    // Update select all checkbox state
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const visibleStories = document.querySelectorAll('.story-card[data-story-id]');
+    const visibleStoryIds = Array.from(visibleStories).map(card => parseInt(card.getAttribute('data-story-id')));
+    const allVisibleSelected = visibleStoryIds.length > 0 && visibleStoryIds.every(id => selectedStories.has(id));
+    
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked = allVisibleSelected;
+        selectAllCheckbox.indeterminate = selectedCount > 0 && !allVisibleSelected;
+    }
+    
+    // Update story card visual state
+    visibleStories.forEach(card => {
+        const storyId = parseInt(card.getAttribute('data-story-id'));
+        const checkbox = card.querySelector('.story-select-checkbox');
+        const isSelected = selectedStories.has(storyId);
+        
+        if (checkbox) checkbox.checked = isSelected;
+        card.classList.toggle('selected', isSelected);
+    });
+    
+    // Show bulk delete button only for admin or own stories
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    if (bulkDeleteBtn && currentUser) {
+        const canDelete = selectedCount > 0 && (
+            currentUser.role === 'amitrace_admin' || 
+            Array.from(selectedStories).every(storyId => {
+                const story = allStories.find(s => s.id === storyId);
+                return story && story.uploaded_by === currentUser.id;
+            })
+        );
+        bulkDeleteBtn.style.display = canDelete ? 'inline-block' : 'none';
+    }
+}
+
+function updateBulkActionsVisibility() {
+    const bulkActionsBar = document.getElementById('bulkActionsBar');
+    const hasSelection = selectedStories.size > 0;
+    
+    if (bulkActionsBar) {
+        bulkActionsBar.style.display = hasSelection ? 'block' : 'none';
+    }
+}
+
+function clearSelection() {
+    selectedStories.clear();
+    updateSelectionUI();
+    updateBulkActionsVisibility();
+}
+
+// Bulk action functions
+async function bulkFavorite() {
+    if (selectedStories.size === 0) {
+        alert('Please select stories to add to favorites');
+        return;
+    }
+    
+    const selectedArray = Array.from(selectedStories);
+    let successCount = 0;
+    let errors = [];
+    
+    for (const storyId of selectedArray) {
+        try {
+            const response = await fetch(`${API_URL}/favorites/${storyId}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            
+            if (response.ok) {
+                successCount++;
+            } else {
+                const error = await response.json();
+                errors.push(`Story ${storyId}: ${error.message}`);
+            }
+        } catch (error) {
+            errors.push(`Story ${storyId}: Network error`);
+        }
+    }
+    
+    if (successCount > 0) {
+        alert(`Successfully added ${successCount} stories to favorites!`);
+    }
+    
+    if (errors.length > 0) {
+        console.error('Bulk favorite errors:', errors);
+        alert(`${errors.length} stories could not be favorited. Check console for details.`);
+    }
+    
+    clearSelection();
+}
+
+async function bulkExport() {
+    if (selectedStories.size === 0) {
+        alert('Please select stories to export');
+        return;
+    }
+    
+    const selectedArray = Array.from(selectedStories);
+    const exportData = selectedArray.map(storyId => {
+        const story = allStories.find(s => s.id === storyId);
+        if (!story) return null;
+        
+        return {
+            title: story.idea_title,
+            description: story.idea_description,
+            author: story.uploaded_by_name,
+            date: story.uploaded_date,
+            tags: story.tags ? story.tags.join(', ') : '',
+            interviewees: story.interviewees ? story.interviewees.join(', ') : '',
+            coverage_start: story.coverage_start_date,
+            coverage_end: story.coverage_end_date,
+            questions: [
+                story.question_1,
+                story.question_2,
+                story.question_3,
+                story.question_4,
+                story.question_5,
+                story.question_6
+            ].filter(q => q).join(' | ')
+        };
+    }).filter(story => story !== null);
+    
+    // Convert to CSV
+    const csvContent = convertToCSV(exportData);
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `vidpod-stories-export-${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    
+    alert(`Exported ${exportData.length} stories to CSV file`);
+    clearSelection();
+}
+
+function convertToCSV(data) {
+    if (data.length === 0) return '';
+    
+    const headers = Object.keys(data[0]);
+    const csvRows = [
+        headers.join(','),
+        ...data.map(row =>
+            headers.map(header => {
+                const value = row[header] || '';
+                // Escape quotes and wrap in quotes if contains comma or quote
+                if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+                    return `"${value.replace(/"/g, '""')}"`;
+                }
+                return value;
+            }).join(',')
+        )
+    ];
+    
+    return csvRows.join('\n');
+}
+
+async function bulkDelete() {
+    if (selectedStories.size === 0) {
+        alert('Please select stories to delete');
+        return;
+    }
+    
+    const selectedArray = Array.from(selectedStories);
+    const confirmMessage = `Are you sure you want to delete ${selectedArray.length} selected stories? This action cannot be undone.`;
+    
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    let successCount = 0;
+    let errors = [];
+    
+    for (const storyId of selectedArray) {
+        try {
+            const response = await fetch(`${API_URL}/stories/${storyId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            
+            if (response.ok) {
+                successCount++;
+            } else {
+                const error = await response.json();
+                errors.push(`Story ${storyId}: ${error.message}`);
+            }
+        } catch (error) {
+            errors.push(`Story ${storyId}: Network error`);
+        }
+    }
+    
+    if (successCount > 0) {
+        alert(`Successfully deleted ${successCount} stories!`);
+        await loadStories(); // Reload stories to reflect deletions
+    }
+    
+    if (errors.length > 0) {
+        console.error('Bulk delete errors:', errors);
+        alert(`${errors.length} stories could not be deleted. Check console for details.`);
+    }
+    
+    clearSelection();
+}
+
+// Notification system
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <span class="notification-icon">${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+        <span class="notification-message">${message}</span>
+    `;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Show with animation
+    setTimeout(() => notification.classList.add('show'), 100);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => document.body.removeChild(notification), 300);
+    }, 3000);
+}
+
+// Make functions globally available
+window.loadStories = loadStories;
+window.displayStories = displayStories;
+window.setViewMode = setViewMode;
+window.applyFilters = applyFilters;
+window.clearFilters = clearFilters;
+window.sortStories = sortStories;
+window.goToPage = goToPage;
+window.viewStory = viewStory;
+window.editStory = editStory;
+window.toggleStorySelection = toggleStorySelection;
+window.toggleSelectAll = toggleSelectAll;
+window.clearSelection = clearSelection;
+window.bulkFavorite = bulkFavorite;
+window.bulkExport = bulkExport;
+window.bulkDelete = bulkDelete;
+window.rateStory = rateStory;
+window.showNotification = showNotification;
+
+// Utility function
+function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/index.html';
 }

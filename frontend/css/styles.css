@@ -2164,6 +2164,185 @@ body {
     font-style: italic;
 }
 
+/* ============================================================================ */
+/* ULTRA-COMPACT DESIGN ELEMENTS */
+/* ============================================================================ */
+
+/* Ultra-compact header with checkbox, title, and star in one line */
+.story-header-compact {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.story-checkbox-compact {
+    flex-shrink: 0;
+}
+
+.checkbox-container-compact {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin: 0;
+    padding: 4px;
+}
+
+.checkmark-compact {
+    height: 16px;
+    width: 16px;
+    background-color: #fff;
+    border: 2px solid var(--border-color);
+    border-radius: 3px;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.checkbox-container-compact input:checked ~ .checkmark-compact {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.checkbox-container-compact input:checked ~ .checkmark-compact:after {
+    content: "✓";
+    position: absolute;
+    left: 2px;
+    top: -2px;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.story-title-compact {
+    flex: 1;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.2;
+    color: var(--text-color);
+    min-width: 0; /* Allow text to shrink */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Simple star favorite button */
+.favorite-star {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    color: #ccc;
+}
+
+.favorite-star:hover {
+    background: rgba(247, 155, 91, 0.1);
+    transform: scale(1.1);
+}
+
+.favorite-star.favorited {
+    color: #ffd700;
+}
+
+/* Ultra-compact metadata */
+.story-coverage-compact,
+.story-tags-compact,
+.story-interviewees-compact {
+    font-size: 0.75rem;
+    margin: 2px 0;
+    color: var(--text-light);
+}
+
+.story-tags-compact {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.story-tags-compact .tag {
+    padding: 1px 6px;
+    font-size: 0.65rem;
+    border-radius: 8px;
+}
+
+/* Ultra-compact actions */
+.story-actions-compact {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.story-actions-compact .btn-small {
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    border-radius: 3px;
+}
+
+/* List view ultra-compact overrides */
+.stories-list .story-card.story-card-list {
+    min-height: 40px !important;
+    padding: 6px 10px !important;
+}
+
+.stories-list .story-card-list .story-header-compact {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.stories-list .story-card-list .story-title-compact {
+    font-size: 0.9rem;
+    flex: 1;
+}
+
+.stories-list .story-card-list .story-coverage-compact,
+.stories-list .story-card-list .story-tags-compact,
+.stories-list .story-card-list .story-interviewees-compact {
+    display: none; /* Hide in list view for maximum compactness */
+}
+
+.stories-list .story-card-list .story-actions-compact {
+    flex-shrink: 0;
+    margin: 0;
+    margin-left: auto;
+}
+
+/* Grid view ultra-compact */
+.stories-grid .story-card {
+    max-height: 120px !important;
+    overflow: hidden;
+}
+
+.stories-grid .story-card .story-coverage-compact,
+.stories-grid .story-card .story-interviewees-compact {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Mobile responsiveness for ultra-compact */
+@media (max-width: 768px) {
+    .story-header-compact {
+        gap: 6px;
+    }
+    
+    .story-title-compact {
+        font-size: 0.85rem;
+    }
+    
+    .favorite-star {
+        font-size: 14px;
+        padding: 2px 3px;
+    }
+    
+    .stories-grid .story-card {
+        max-height: 100px !important;
+    }
+}
+
 /* Pagination Controls */
 .pagination-section {
     margin: 2rem 0;
