@@ -196,16 +196,22 @@ const VidPODNav = {
         const mobileMenu = document.getElementById('mobileMenu');
         const mobileToggle = document.getElementById('mobileToggle');
         
+        console.log('🔧 V2 NAVIGATION: ensureMobileMenuHidden called for viewport:', window.innerWidth);
+        
         if (window.innerWidth > 768) {
             if (mobileMenu) {
                 mobileMenu.classList.remove('active');
                 mobileMenu.style.display = 'none';
-                console.log('🔧 V2 NAVIGATION: Mobile menu hidden for desktop viewport');
+                mobileMenu.style.visibility = 'hidden';
+                mobileMenu.style.position = 'absolute';
+                mobileMenu.style.left = '-9999px';
+                console.log('🔧 V2 NAVIGATION: Mobile menu AGGRESSIVELY hidden for desktop viewport');
             }
             
             if (mobileToggle) {
                 mobileToggle.style.display = 'none';
-                console.log('🔧 V2 NAVIGATION: Mobile toggle hidden for desktop viewport');
+                mobileToggle.style.visibility = 'hidden';
+                console.log('🔧 V2 NAVIGATION: Mobile toggle AGGRESSIVELY hidden for desktop viewport');
             }
         }
         
@@ -215,17 +221,25 @@ const VidPODNav = {
                 if (mobileMenu) {
                     mobileMenu.classList.remove('active');
                     mobileMenu.style.display = 'none';
+                    mobileMenu.style.visibility = 'hidden';
+                    mobileMenu.style.position = 'absolute';
+                    mobileMenu.style.left = '-9999px';
                 }
                 if (mobileToggle) {
                     mobileToggle.style.display = 'none';
+                    mobileToggle.style.visibility = 'hidden';
                 }
             } else {
-                // On mobile, allow CSS to control display
+                // On mobile, reset to allow CSS control
                 if (mobileMenu) {
                     mobileMenu.style.display = '';
+                    mobileMenu.style.visibility = '';
+                    mobileMenu.style.position = '';
+                    mobileMenu.style.left = '';
                 }
                 if (mobileToggle) {
                     mobileToggle.style.display = '';
+                    mobileToggle.style.visibility = '';
                 }
             }
         });
@@ -431,6 +445,38 @@ function getCurrentPageFromPath() {
  * This provides automatic setup for pages that don't manually initialize
  */
 document.addEventListener('DOMContentLoaded', function() {
+    // CRITICAL FIX: Immediately hide mobile menu on desktop
+    function forceMobileMenuFix() {
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileToggle = document.getElementById('mobileToggle');
+        const isDesktop = window.innerWidth > 768;
+        
+        console.log('🔧 V2 NAVIGATION: Applying mobile menu fix for viewport:', window.innerWidth);
+        
+        if (isDesktop && mobileMenu) {
+            mobileMenu.style.display = 'none';
+            mobileMenu.style.visibility = 'hidden';
+            mobileMenu.classList.remove('active');
+            console.log('🔧 V2 NAVIGATION: Mobile menu FORCED HIDDEN on desktop');
+        }
+        
+        if (isDesktop && mobileToggle) {
+            mobileToggle.style.display = 'none';
+            mobileToggle.style.visibility = 'hidden';
+            console.log('🔧 V2 NAVIGATION: Mobile toggle FORCED HIDDEN on desktop');
+        }
+    }
+    
+    // Apply fix immediately
+    forceMobileMenuFix();
+    
+    // Apply fix on window resize
+    window.addEventListener('resize', forceMobileMenuFix);
+    
+    // Apply fix with delays to catch late-loading elements
+    setTimeout(forceMobileMenuFix, 100);
+    setTimeout(forceMobileMenuFix, 500);
+    
     // Only auto-initialize if VidPOD navbar exists and hasn't been manually initialized
     const navbar = document.getElementById('vidpodNavbar');
     if (navbar && !navbar.hasAttribute('data-initialized')) {
@@ -450,6 +496,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             navbar.setAttribute('data-initialized', 'true');
+            
+            // Apply fix again after initialization
+            setTimeout(forceMobileMenuFix, 200);
         }
     }
 });
