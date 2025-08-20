@@ -409,4 +409,4 @@ if (typeof module !== 'undefined' && module.exports) {
 
 // Make available globally
 window.VidPODNav = VidPODNav;
-window.VidPODNavigation = VidPODNav; // Backward compatibility
+window.VidPODNavigation = VidPODNav; // Backward compatibility// Force deployment Wed Aug 20 16:10:29 CDT 2025
