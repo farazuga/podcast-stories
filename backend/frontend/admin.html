@@ -13,6 +13,7 @@
         </div>
         <div class="nav-menu">
             <a href="/dashboard.html">Dashboard</a>
+            <a href="/admin-browse-stories.html">🏛️ Browse Stories</a>
             <a href="/add-story.html">Add Story</a>
             <a href="/admin.html" class="active">Admin Panel</a>
             <a href="/user-management.html" id="userManagementLink">User Management</a>
@@ -73,6 +74,41 @@
                             <div class="stat-value" id="approvedStories">0</div>
                             <div class="stat-label">Approved Stories</div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="admin-card">
+                    <h2>📋 Quick Actions</h2>
+                    <div class="quick-actions-grid">
+                        <a href="/admin-browse-stories.html" class="quick-action-btn">
+                            <div class="action-icon">🏛️</div>
+                            <div class="action-text">
+                                <h3>Browse & Manage Stories</h3>
+                                <p>Approve, reject, and manage all stories. Import CSV files.</p>
+                            </div>
+                        </a>
+                        <a href="/user-management.html" class="quick-action-btn">
+                            <div class="action-icon">👥</div>
+                            <div class="action-text">
+                                <h3>User Management</h3>
+                                <p>Manage users, approve teachers, assign roles.</p>
+                            </div>
+                        </a>
+                        <button class="quick-action-btn" onclick="showTab('schools')">
+                            <div class="action-icon">🏫</div>
+                            <div class="action-text">
+                                <h3>School Management</h3>
+                                <p>Add and manage schools in the system.</p>
+                            </div>
+                        </button>
+                        <button class="quick-action-btn" onclick="showTab('tags')">
+                            <div class="action-icon">🏷️</div>
+                            <div class="action-text">
+                                <h3>Tag Management</h3>
+                                <p>Create and organize content tags.</p>
+                            </div>
+                        </button>
                     </div>
                 </div>
 
