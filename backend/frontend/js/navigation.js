@@ -222,6 +222,11 @@ const VidPODNav = {
             this.customizeTeacherNavigation();
         }
 
+        // Admin-specific navigation customization
+        if (userRole === 'admin' || userRole === 'amitrace_admin') {
+            this.customizeAdminNavigation();
+        }
+
         // Specific role-based validation
         this.validateRoleBasedAccess(userRole);
     },
@@ -367,6 +372,24 @@ const VidPODNav = {
                 textSpan.textContent = 'Settings';
                 console.log('🔧 V2 TEACHER: Changed mobile Admin Panel to Settings');
             }
+        });
+    },
+
+    /**
+     * Customize navigation for admin role
+     * Hide My Classes for admin users
+     */
+    customizeAdminNavigation() {
+        // Hide My Classes for admin users
+        document.querySelectorAll('[href*="teacher-dashboard"]').forEach(element => {
+            element.style.display = 'none';
+            console.log('🔧 V2 ADMIN: Hidden My Classes link');
+        });
+        
+        // Also hide from mobile menu
+        document.querySelectorAll('.mobile-nav [href*="teacher-dashboard"]').forEach(element => {
+            element.style.display = 'none';
+            console.log('🔧 V2 ADMIN: Hidden mobile My Classes link');
         });
     },
 
