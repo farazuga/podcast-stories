@@ -1,6 +1,6 @@
-// API base URL - use global from auth.js
-// const API_URL is already declared in auth.js and made globally available
-console.log('🔥 STORIES.JS LOADING - FIRST LINE EXECUTED');
+// API base URL - use global from config.js
+const API_URL = window.API_URL || 'https://podcast-stories-production.up.railway.app/api';
+console.log('🔥 STORIES.JS LOADING - API_URL:', API_URL);
 
 // Global variables
 let allStories = [];
