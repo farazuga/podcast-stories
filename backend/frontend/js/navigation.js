@@ -342,15 +342,9 @@ const VidPODNav = {
 
     /**
      * Customize navigation for teacher role
-     * Hide Admin Browse Stories and rename Admin Panel to Settings
+     * Rename Admin Panel to Settings (Admin Browse Stories now hidden via data-role)
      */
     customizeTeacherNavigation() {
-        // Hide Admin Browse Stories for teachers
-        document.querySelectorAll('[href*="admin-browse-stories"]').forEach(element => {
-            element.style.display = 'none';
-            console.log('🔧 V2 TEACHER: Hidden Admin Browse Stories link');
-        });
-        
         // Change "Admin Panel" to "Settings" for teachers
         document.querySelectorAll('[href*="admin.html"]').forEach(element => {
             const textSpan = element.querySelector('span:not(.icon)');
@@ -358,12 +352,6 @@ const VidPODNav = {
                 textSpan.textContent = 'Settings';
                 console.log('🔧 V2 TEACHER: Changed Admin Panel to Settings');
             }
-        });
-
-        // Also handle mobile menu
-        document.querySelectorAll('.mobile-nav [href*="admin-browse-stories"]').forEach(element => {
-            element.style.display = 'none';
-            console.log('🔧 V2 TEACHER: Hidden mobile Admin Browse Stories link');
         });
         
         document.querySelectorAll('.mobile-nav [href*="admin.html"]').forEach(element => {
