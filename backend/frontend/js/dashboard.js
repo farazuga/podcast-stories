@@ -1254,8 +1254,8 @@ function viewMyStories() {
 }
 
 function viewFavorites() {
-    // Navigate to favorites or show favorites section
-    window.location.href = '/favorites.html';
+    // Navigate to stories page with favorites filter
+    window.location.href = '/stories.html?favorites=true';
 }
 // Dashboard stat navigation functions
 function navigateToMyStories() {

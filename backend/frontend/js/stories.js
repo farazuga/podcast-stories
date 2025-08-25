@@ -13,9 +13,24 @@ let currentViewMode = 'grid';
 let selectedStories = new Set();
 let selectionMode = false;
 
+// Check URL parameters for special modes
+let showFavoritesOnly = false;
+
 // Initialize page
 async function initializeStoriesPage() {
     console.log('Stories page initialization starting...');
+    
+    // Check URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    showFavoritesOnly = urlParams.get('favorites') === 'true';
+    
+    if (showFavoritesOnly) {
+        console.log('🌟 Favorites mode enabled - will load user favorites');
+        // Update page title to indicate favorites mode
+        document.title = 'VidPOD - My Favorites';
+        const header = document.querySelector('h1');
+        if (header) header.textContent = '⭐ My Favorite Stories';
+    }
     
     // Wait a moment for auth.js to finish any token processing
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -127,16 +142,33 @@ function populateTagsDropdown() {
 
 async function loadStories() {
     try {
-        const response = await fetch(`${API_URL}/stories`, {
+        // Choose endpoint based on mode
+        const endpoint = showFavoritesOnly ? `${API_URL}/favorites` : `${API_URL}/stories`;
+        console.log(`Loading from endpoint: ${endpoint}`);
+        
+        const response = await fetch(endpoint, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
         if (response.ok) {
             allStories = await response.json();
+            
+            // For favorites, mark all stories as favorited
+            if (showFavoritesOnly) {
+                allStories = allStories.map(story => ({
+                    ...story,
+                    is_favorited: true
+                }));
+            }
+            
             filteredStories = [...allStories];
             currentPage = 0;
             displayStories();
             updateResultsCount();
+            
+            if (showFavoritesOnly && allStories.length === 0) {
+                showNoFavorites();
+            }
         } else {
             console.error('Failed to load stories');
             showNoResults();
@@ -297,6 +329,22 @@ function renderStoryCard(story) {
 function showNoResults() {
     document.getElementById('storiesGrid').innerHTML = '';
     document.getElementById('noResults').style.display = 'block';
+    document.getElementById('loadMoreSection').style.display = 'none';
+}
+
+function showNoFavorites() {
+    const container = document.getElementById('storiesGrid');
+    container.innerHTML = `
+        <div class="no-favorites-message">
+            <div class="empty-state">
+                <div class="empty-icon">⭐</div>
+                <h3>No Favorite Stories Yet</h3>
+                <p>You haven't favorited any stories yet. Browse stories and click the star icon to add them to your favorites!</p>
+                <a href="/stories.html" class="btn btn-primary">Browse Stories</a>
+            </div>
+        </div>
+    `;
+    document.getElementById('noResults').style.display = 'none';
     document.getElementById('loadMoreSection').style.display = 'none';
 }
 
