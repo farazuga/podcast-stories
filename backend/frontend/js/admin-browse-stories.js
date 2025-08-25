@@ -579,10 +579,17 @@ async function handleCSVUpload(e) {
     }
     
     const formData = new FormData();
-    formData.append('csvFile', fileInput.files[0]);
+    formData.append('csv', fileInput.files[0]); // Backend expects 'csv' not 'csvFile'
     formData.append('autoApprove', autoApprove);
     
+    // Show loading state
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Importing...';
+    submitBtn.disabled = true;
+    
     try {
+        console.log('Starting CSV import...');
         const response = await fetch(`${window.API_URL}/stories/import`, {
             method: 'POST',
             headers: {
@@ -592,18 +599,51 @@ async function handleCSVUpload(e) {
         });
         
         const result = await response.json();
+        console.log('Import result:', result);
         
         if (response.ok) {
-            showSuccess(`Successfully imported ${result.imported || 0} stories!`);
+            // Show detailed success message
+            let message = `Successfully imported ${result.imported || 0} of ${result.total || 0} stories!`;
+            
+            if (result.warnings && result.warnings.length > 0) {
+                message += `\n⚠️ ${result.warnings.length} warnings`;
+                console.warn('Import warnings:', result.warnings);
+            }
+            
+            if (result.errors && result.errors.length > 0) {
+                message += `\n❌ ${result.errors.length} errors`;
+                console.error('Import errors:', result.errors);
+                // Show first few errors
+                const errorDetails = result.errors.slice(0, 3).map(err => 
+                    `Row ${err.row}: ${err.error}`
+                ).join('\n');
+                message += '\n\nFirst errors:\n' + errorDetails;
+            }
+            
+            showSuccess(message);
             document.getElementById('csvModal').style.display = 'none';
+            
+            // Clear file input for next use
+            fileInput.value = '';
+            
             await loadStories(); // Reload stories
             await loadAdminStats(); // Reload stats
         } else {
-            showError(result.error || 'Import failed');
+            // Show detailed error
+            let errorMsg = result.error || 'Import failed';
+            if (result.details) {
+                errorMsg += ': ' + result.details;
+            }
+            showError(errorMsg);
+            console.error('Import error:', result);
         }
     } catch (error) {
         console.error('CSV upload error:', error);
-        showError('Upload failed. Please try again.');
+        showError(`Upload failed: ${error.message}. Please check the console for details.`);
+    } finally {
+        // Restore button state
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
     }
 }
 
