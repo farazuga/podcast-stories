@@ -80,7 +80,19 @@ const VidPODNav = {
      * Update user display information in the navigation
      */
     updateUserDisplay() {
-        if (!this.currentUser) return;
+        if (!this.currentUser) {
+            // Try to load user from localStorage
+            try {
+                this.currentUser = JSON.parse(localStorage.getItem('user'));
+                if (!this.currentUser) {
+                    console.warn('No user data available for navigation display');
+                    return;
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                return;
+            }
+        }
 
         const userName = document.getElementById('userName');
         const userRole = document.getElementById('userRole');
@@ -88,13 +100,33 @@ const VidPODNav = {
 
         // Update user name
         if (userName) {
-            const displayName = this.currentUser.name || this.currentUser.username || 'User';
+            const displayName = this.currentUser.name || this.currentUser.email || this.currentUser.username || 'User';
             userName.textContent = displayName;
         }
 
-        // Update user role
+        // Update user role with proper formatting
         if (userRole && this.currentUser.role) {
-            userRole.textContent = this.currentUser.role.charAt(0).toUpperCase() + this.currentUser.role.slice(1);
+            let roleText = this.currentUser.role;
+            
+            // Format role display text
+            switch (this.currentUser.role) {
+                case 'amitrace_admin':
+                    roleText = 'Admin';
+                    break;
+                case 'admin':
+                    roleText = 'Admin';
+                    break;
+                case 'teacher':
+                    roleText = 'Teacher';
+                    break;
+                case 'student':
+                    roleText = 'Student';
+                    break;
+                default:
+                    roleText = this.currentUser.role.charAt(0).toUpperCase() + this.currentUser.role.slice(1);
+            }
+            
+            userRole.textContent = roleText;
             userRole.className = `user-role ${this.currentUser.role}`;
         }
 

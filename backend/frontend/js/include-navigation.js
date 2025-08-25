@@ -116,14 +116,34 @@ const NavigationLoader = {
         const userRole = document.getElementById('userRole');
         const userAvatar = document.getElementById('userAvatar');
 
-        if (userName && user.name) {
-            userName.textContent = user.name;
+        // Update user name
+        if (userName) {
+            const displayName = user.name || user.email || user.username || 'User';
+            userName.textContent = displayName;
         }
-        
+
+        // Update user role with proper formatting and styling
         if (userRole && user.role) {
-            userRole.textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+            let roleText = user.role;
+            switch (user.role) {
+                case 'amitrace_admin':
+                case 'admin':
+                    roleText = 'Admin';
+                    break;
+                case 'teacher':
+                    roleText = 'Teacher';
+                    break;
+                case 'student':
+                    roleText = 'Student';
+                    break;
+                default:
+                    roleText = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+            }
+            userRole.textContent = roleText;
             userRole.className = `user-role ${user.role}`;
         }
+
+        // Remove duplicate code - already handled above
         
         if (userAvatar && user.name) {
             userAvatar.textContent = user.name.substring(0, 2).toUpperCase();
