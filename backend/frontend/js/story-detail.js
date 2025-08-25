@@ -177,7 +177,7 @@ function displayStory() {
 
 async function loadFavoriteStatus() {
     try {
-        const response = await fetch(`${window.API_URL}/favorites`, {
+        const response = await fetch(`${window.API_URL || 'https://podcast-stories-production.up.railway.app/api'}/favorites`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -216,7 +216,7 @@ async function toggleFavorite() {
     
     try {
         const method = isFavorited ? 'DELETE' : 'POST';
-        const response = await fetch(`${window.API_URL}/favorites/${storyId}`, {
+        const response = await fetch(`${window.API_URL || 'https://podcast-stories-production.up.railway.app/api'}/favorites/${storyId}`, {
             method: method,
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`

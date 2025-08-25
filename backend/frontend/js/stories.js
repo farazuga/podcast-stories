@@ -541,11 +541,12 @@ function editStory(storyId) {
 }
 
 async function toggleFavorite(storyId) {
-    const btn = document.querySelector(`[data-story-id="${storyId}"] .favorite-btn`);
-    const heartIcon = btn?.querySelector('.heart-icon');
-    const favoriteText = btn?.querySelector('.favorite-text');
+    const btn = document.querySelector(`.favorite-star[data-story-id="${storyId}"]`);
     
-    if (!btn) return;
+    if (!btn) {
+        console.error('Favorite button not found for story ID:', storyId);
+        return;
+    }
     
     const wasLiked = btn.classList.contains('favorited');
     
@@ -561,12 +562,8 @@ async function toggleFavorite(storyId) {
             
             // Update UI immediately
             btn.classList.toggle('favorited', !wasLiked);
-            if (heartIcon) {
-                heartIcon.textContent = !wasLiked ? '❤️' : '🤍';
-            }
-            if (favoriteText) {
-                favoriteText.textContent = !wasLiked ? 'Favorited' : 'Favorite';
-            }
+            btn.textContent = !wasLiked ? '⭐' : '☆';
+            btn.title = !wasLiked ? 'Remove from favorites' : 'Add to favorites';
             
             // Add animation effect
             btn.classList.add('favorite-animation');

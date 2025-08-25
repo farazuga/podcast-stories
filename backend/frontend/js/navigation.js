@@ -395,16 +395,15 @@ const VidPODNav = {
      * Handle logout action
      */
     handleLogout() {
-        if (confirm('Are you sure you want to logout?')) {
-            if (this.onLogout && typeof this.onLogout === 'function') {
-                this.onLogout();
-            } else {
-                // Default logout behavior
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                window.location.href = '/index.html';
-            }
+        if (this.onLogout && typeof this.onLogout === 'function') {
+            this.onLogout();
+        } else {
+            // Default logout behavior
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/index.html';
         }
+    }
     },
 
     /**
