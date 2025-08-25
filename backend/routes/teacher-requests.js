@@ -96,12 +96,17 @@ router.get('/:id', verifyToken, isAmitraceAdmin, async (req, res) => {
 // Submit teacher request (Public endpoint)
 router.post('/', async (req, res) => {
   try {
-    const { name, email, school_id, message } = req.body;
+    const { first_name, last_name, name, email, school_id, message } = req.body;
+    
+    // Use first_name/last_name if provided, otherwise fall back to name
+    const finalFirstName = first_name || (name ? name.split(' ')[0] : '');
+    const finalLastName = last_name || '';
+    const finalName = name || (first_name && last_name ? `${first_name} ${last_name}` : first_name || '');
     
     // Validate required fields
-    if (!name || !email || !school_id) {
+    if ((!finalFirstName && !finalName) || !email || !school_id) {
       return res.status(400).json({ 
-        error: 'Name, email, and school are required' 
+        error: 'First name (or full name), email, and school are required' 
       });
     }
     
@@ -137,10 +142,17 @@ router.post('/', async (req, res) => {
     }
     
     const result = await pool.query(`
-      INSERT INTO teacher_requests (name, email, school_id, message) 
-      VALUES ($1, $2, $3, $4) 
-      RETURNING id, name, email, school_id, message, status, requested_at
-    `, [name.trim(), email.toLowerCase().trim(), school_id, message?.trim() || null]);
+      INSERT INTO teacher_requests (name, first_name, last_name, email, school_id, message) 
+      VALUES ($1, $2, $3, $4, $5, $6) 
+      RETURNING id, name, first_name, last_name, email, school_id, message, status, requested_at
+    `, [
+      finalName.trim(), 
+      finalFirstName.trim(), 
+      finalLastName.trim(),
+      email.toLowerCase().trim(), 
+      school_id, 
+      message?.trim() || null
+    ]);
     
     res.status(201).json(result.rows[0]);
   } catch (error) {

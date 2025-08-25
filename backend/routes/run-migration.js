@@ -109,4 +109,108 @@ router.get('/favorites', async (req, res) => {
     }
 });
 
+// Run first/last name migration
+router.get('/first-last-names', async (req, res) => {
+    try {
+        console.log('Running first/last name migration...');
+        
+        // Check if migration already applied
+        const checkResult = await pool.query(`
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'users' 
+            AND column_name IN ('first_name', 'last_name')
+        `);
+        
+        if (checkResult.rows.length >= 2) {
+            return res.json({ 
+                message: 'Migration already applied!',
+                status: 'already_applied' 
+            });
+        }
+        
+        const migrationSQL = `
+            -- Add first_name and last_name columns to users table
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(255);
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name VARCHAR(255);
+
+            -- Add first_name and last_name columns to teacher_requests table
+            ALTER TABLE teacher_requests ADD COLUMN IF NOT EXISTS first_name VARCHAR(255);
+            ALTER TABLE teacher_requests ADD COLUMN IF NOT EXISTS last_name VARCHAR(255);
+
+            -- Migrate existing data from users table
+            UPDATE users 
+            SET 
+                first_name = CASE 
+                    WHEN name IS NULL OR name = '' THEN ''
+                    ELSE TRIM(SPLIT_PART(name, ' ', 1))
+                END,
+                last_name = ''
+            WHERE first_name IS NULL;
+
+            -- Migrate existing data from teacher_requests table  
+            UPDATE teacher_requests 
+            SET 
+                first_name = CASE 
+                    WHEN name IS NULL OR name = '' THEN ''
+                    ELSE TRIM(SPLIT_PART(name, ' ', 1))
+                END,
+                last_name = ''
+            WHERE first_name IS NULL;
+
+            -- Add indexes for better performance
+            CREATE INDEX IF NOT EXISTS idx_users_first_name ON users(first_name);
+            CREATE INDEX IF NOT EXISTS idx_users_last_name ON users(last_name);
+            CREATE INDEX IF NOT EXISTS idx_teacher_requests_first_name ON teacher_requests(first_name);
+            CREATE INDEX IF NOT EXISTS idx_teacher_requests_last_name ON teacher_requests(last_name);
+
+            -- Create helper function
+            CREATE OR REPLACE FUNCTION get_full_name(first_name VARCHAR, last_name VARCHAR) 
+            RETURNS VARCHAR AS $$
+            BEGIN
+                IF first_name IS NULL OR first_name = '' THEN
+                    RETURN COALESCE(last_name, '');
+                END IF;
+                
+                IF last_name IS NULL OR last_name = '' THEN
+                    RETURN first_name;
+                END IF;
+                
+                RETURN first_name || ' ' || last_name;
+            END;
+            $$ LANGUAGE plpgsql;
+        `;
+        
+        await pool.query(migrationSQL);
+        
+        // Get counts for verification
+        const userCount = await pool.query('SELECT COUNT(*) FROM users WHERE first_name IS NOT NULL AND first_name != \'\'');
+        const teacherRequestCount = await pool.query('SELECT COUNT(*) FROM teacher_requests WHERE first_name IS NOT NULL AND first_name != \'\'');
+        
+        // Get sample data
+        const sampleUsers = await pool.query(`
+            SELECT name as original_name, first_name, last_name 
+            FROM users 
+            WHERE name IS NOT NULL 
+            LIMIT 3
+        `);
+        
+        res.json({ 
+            success: true, 
+            message: 'First/Last name migration completed successfully!',
+            migrated_users: userCount.rows[0].count,
+            migrated_teacher_requests: teacherRequestCount.rows[0].count,
+            sample_data: sampleUsers.rows,
+            status: 'completed'
+        });
+    } catch (error) {
+        console.error('Migration failed:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message,
+            status: 'failed'
+        });
+    }
+});
+
 module.exports = router;

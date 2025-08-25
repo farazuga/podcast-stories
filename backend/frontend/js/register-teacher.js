@@ -61,12 +61,13 @@ function setupEventListeners() {
 async function handleTeacherRequest(e) {
     e.preventDefault();
     
-    const name = document.getElementById('name').value.trim();
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
     const email = document.getElementById('email').value.trim();
     const schoolId = document.getElementById('school').value;
     const message = document.getElementById('message').value.trim();
     
-    if (!name || !email || !schoolId) {
+    if (!firstName || !lastName || !email || !schoolId) {
         showError('Please fill in all required fields');
         return;
     }
@@ -78,7 +79,9 @@ async function handleTeacherRequest(e) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                name,
+                first_name: firstName,
+                last_name: lastName,
+                name: firstName + ' ' + lastName, // Keep for backward compatibility
                 email,
                 school_id: parseInt(schoolId),
                 message: message || null

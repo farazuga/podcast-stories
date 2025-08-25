@@ -88,13 +88,36 @@ async function makeAuthenticatedRequest(url, options = {}) {
     }
 }
 
+// Helper function to extract first name from user data
+function getFirstName(user) {
+    // Use first_name if available from database
+    if (user.first_name) {
+        return user.first_name;
+    }
+    
+    // Extract first name from full name field
+    if (user.name) {
+        return user.name.split(' ')[0];
+    }
+    
+    // Fallback to email prefix or 'User'
+    if (user.email) {
+        return user.email.split('@')[0];
+    }
+    
+    return 'User';
+}
+
 async function loadUserInfo() {
     try {
         const user = JSON.parse(localStorage.getItem('user'));
         currentUser = user;
         
-        document.getElementById('userInfo').textContent = user.name || user.email;
-        document.getElementById('teacherName').textContent = user.name || user.email;
+        const firstName = getFirstName(user);
+        const fullDisplayName = user.name || user.email;
+        
+        document.getElementById('userInfo').textContent = fullDisplayName;
+        document.getElementById('teacherName').textContent = firstName;
         
         // If user has a school, display it
         if (user.school) {
@@ -196,10 +219,17 @@ function displayClasses() {
 
 async function loadStatistics() {
     // Update total classes
-    document.getElementById('totalClasses').textContent = myClasses.filter(c => c.is_active !== false).length;
+    const activeClasses = myClasses.filter(c => c.is_active !== false);
+    document.getElementById('totalClasses').textContent = activeClasses.length;
     
-    // Calculate total students
-    const totalStudents = myClasses.reduce((sum, classItem) => sum + (classItem.student_count || 0), 0);
+    // Calculate total students with debugging
+    const totalStudents = myClasses.reduce((sum, classItem) => {
+        const studentCount = parseInt(classItem.student_count) || 0;
+        console.log(`Class "${classItem.class_name}" has ${studentCount} students`);
+        return sum + studentCount;
+    }, 0);
+    
+    console.log(`Total students across all classes: ${totalStudents}`);
     document.getElementById('totalStudents').textContent = totalStudents;
 }
 

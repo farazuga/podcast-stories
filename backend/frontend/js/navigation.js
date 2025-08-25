@@ -217,6 +217,11 @@ const VidPODNav = {
             console.log(`🔧 V2 Legacy teacher link: visible=${shouldShow}`);
         });
 
+        // Teacher-specific navigation customization
+        if (userRole === 'teacher') {
+            this.customizeTeacherNavigation();
+        }
+
         // Specific role-based validation
         this.validateRoleBasedAccess(userRole);
     },
@@ -327,6 +332,41 @@ const VidPODNav = {
                     console.error(`🔧 V2 ❌ ${item} should be hidden for ${userRole} but is visible`);
                 }
             });
+        });
+    },
+
+    /**
+     * Customize navigation for teacher role
+     * Hide Admin Browse Stories and rename Admin Panel to Settings
+     */
+    customizeTeacherNavigation() {
+        // Hide Admin Browse Stories for teachers
+        document.querySelectorAll('[href*="admin-browse-stories"]').forEach(element => {
+            element.style.display = 'none';
+            console.log('🔧 V2 TEACHER: Hidden Admin Browse Stories link');
+        });
+        
+        // Change "Admin Panel" to "Settings" for teachers
+        document.querySelectorAll('[href*="admin.html"]').forEach(element => {
+            const textSpan = element.querySelector('span:not(.icon)');
+            if (textSpan && textSpan.textContent.includes('Admin Panel')) {
+                textSpan.textContent = 'Settings';
+                console.log('🔧 V2 TEACHER: Changed Admin Panel to Settings');
+            }
+        });
+
+        // Also handle mobile menu
+        document.querySelectorAll('.mobile-nav [href*="admin-browse-stories"]').forEach(element => {
+            element.style.display = 'none';
+            console.log('🔧 V2 TEACHER: Hidden mobile Admin Browse Stories link');
+        });
+        
+        document.querySelectorAll('.mobile-nav [href*="admin.html"]').forEach(element => {
+            const textSpan = element.querySelector('span:not(.icon)');
+            if (textSpan && textSpan.textContent.includes('Admin Panel')) {
+                textSpan.textContent = 'Settings';
+                console.log('🔧 V2 TEACHER: Changed mobile Admin Panel to Settings');
+            }
         });
     },
 

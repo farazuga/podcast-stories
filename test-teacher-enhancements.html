@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Enhancements Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            background: #f9f9f9;
+        }
+        .test-result {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎓 Teacher System Enhancements Test</h1>
+    <p>This page tests the enhancements made to the teacher registration and dashboard system.</p>
+
+    <div class="test-section">
+        <h2>1. Database Migration Test</h2>
+        <p>Test if the first_name/last_name migration was applied successfully.</p>
+        <button onclick="testDatabaseMigration()">Test Migration</button>
+        <div id="migrationResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Teacher Registration Form Test</h2>
+        <p>Test the new teacher registration form with separate first/last name fields.</p>
+        <button onclick="openTeacherRegistration()">Open Teacher Registration</button>
+        <div class="test-result info">
+            <strong>Expected:</strong> Form should have separate "First Name" and "Last Name" fields instead of a single "Full Name" field.
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Navigation Test</h2>
+        <p>Test teacher-specific navigation changes.</p>
+        <button onclick="testTeacherNavigation()">Test Navigation</button>
+        <div id="navigationResult"></div>
+        <div class="test-result info">
+            <strong>Instructions:</strong> Login as a teacher (teacher@vidpod.com / vidpod) and verify:
+            <ul>
+                <li>"Admin Browse Stories" is hidden</li>
+                <li>"Admin Panel" shows as "Settings"</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Teacher Dashboard Test</h2>
+        <p>Test first name display and student count calculation.</p>
+        <button onclick="openTeacherDashboard()">Open Teacher Dashboard</button>
+        <div class="test-result info">
+            <strong>Expected:</strong> 
+            <ul>
+                <li>Welcome message shows first name only (e.g., "Welcome, Demo!" not "Welcome, Demo Teacher!")</li>
+                <li>Total Students count is accurate sum across all classes</li>
+                <li>My Classes section has improved visual design</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. API Endpoint Test</h2>
+        <p>Test teacher-requests API with new first_name/last_name fields.</p>
+        <button onclick="testTeacherRequestAPI()">Test API</button>
+        <div id="apiResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Accounts</h2>
+        <div class="test-result success">
+            <strong>Test Accounts:</strong><br>
+            <strong>Teacher:</strong> teacher@vidpod.com / vidpod<br>
+            <strong>Admin:</strong> admin@vidpod.com / vidpod<br>
+            <strong>Student:</strong> student@vidpod.com / vidpod
+        </div>
+    </div>
+
+    <script>
+        async function testDatabaseMigration() {
+            const result = document.getElementById('migrationResult');
+            result.innerHTML = '<div class="test-result info">Testing database migration...</div>';
+            
+            try {
+                const response = await fetch('https://podcast-stories-production.up.railway.app/api/migration/first-last-names');
+                const data = await response.json();
+                
+                if (data.success || data.status === 'already_applied') {
+                    result.innerHTML = `
+                        <div class="test-result success">
+                            <strong>✅ Migration Success!</strong><br>
+                            Status: ${data.status}<br>
+                            ${data.migrated_users ? `Migrated Users: ${data.migrated_users}` : ''}<br>
+                            ${data.message || 'Database migration completed successfully'}
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `
+                        <div class="test-result warning">
+                            <strong>⚠️ Migration Status:</strong><br>
+                            ${data.message || 'Migration may need to be run manually'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="test-result warning">
+                        <strong>⚠️ Cannot connect to migration endpoint:</strong><br>
+                        ${error.message}<br>
+                        Migration may need to be run manually on production
+                    </div>
+                `;
+            }
+        }
+
+        function openTeacherRegistration() {
+            window.open('https://podcast-stories-production.up.railway.app/register-teacher.html', '_blank');
+        }
+
+        function openTeacherDashboard() {
+            window.open('https://podcast-stories-production.up.railway.app/teacher-dashboard.html', '_blank');
+        }
+
+        function testTeacherNavigation() {
+            const result = document.getElementById('navigationResult');
+            result.innerHTML = `
+                <div class="test-result info">
+                    <strong>Manual Test Required:</strong><br>
+                    1. Login as a teacher: <a href="https://podcast-stories-production.up.railway.app/index.html" target="_blank">Login Page</a><br>
+                    2. Check navigation bar for teacher-specific changes<br>
+                    3. Verify Admin Browse Stories is hidden<br>
+                    4. Verify Admin Panel shows as "Settings"
+                </div>
+            `;
+        }
+
+        async function testTeacherRequestAPI() {
+            const result = document.getElementById('apiResult');
+            result.innerHTML = '<div class="test-result info">Testing API endpoint...</div>';
+            
+            try {
+                // Test with sample data
+                const testData = {
+                    first_name: "Test",
+                    last_name: "Teacher",
+                    email: `test-${Date.now()}@example.com`,
+                    school_id: 1,
+                    message: "API test request"
+                };
+                
+                const response = await fetch('https://podcast-stories-production.up.railway.app/api/teacher-requests', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="test-result success">
+                            <strong>✅ API Test Success!</strong><br>
+                            Request created with ID: ${data.id}<br>
+                            First Name: ${data.first_name}<br>
+                            Last Name: ${data.last_name}<br>
+                            Name: ${data.name}
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `
+                        <div class="test-result warning">
+                            <strong>⚠️ API Error:</strong><br>
+                            ${data.error || 'Unknown error'}<br>
+                            This might be expected (duplicate email, etc.)
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="test-result warning">
+                        <strong>⚠️ Network Error:</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-run migration test on page load
+        window.addEventListener('load', () => {
+            console.log('Teacher Enhancements Test Page Loaded');
+            setTimeout(testDatabaseMigration, 1000);
+        });
+    </script>
+</body>
+</html>
