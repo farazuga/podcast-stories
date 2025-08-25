@@ -484,4 +484,59 @@ router.post('/:id/regenerate-code', verifyToken, isTeacherOrAbove, async (req, r
   }
 });
 
+// Lookup class information by class code (public endpoint for registration)
+router.get('/lookup/:code', async (req, res) => {
+  try {
+    const { code } = req.params;
+    
+    if (!code || code.trim() === '') {
+      return res.status(400).json({ error: 'Class code is required' });
+    }
+    
+    // Validate code format (4 characters, alphanumeric)
+    const cleanCode = code.trim().toUpperCase();
+    if (cleanCode.length !== 4 || !/^[A-Z0-9]{4}$/.test(cleanCode)) {
+      return res.status(400).json({ error: 'Class code must be exactly 4 alphanumeric characters' });
+    }
+    
+    // Find class with teacher and school information
+    const result = await pool.query(`
+      SELECT 
+        c.class_name,
+        c.subject,
+        c.description,
+        c.is_active,
+        COALESCE(u.name, u.email) as teacher_name,
+        s.school_name
+      FROM classes c
+      JOIN users u ON c.teacher_id = u.id
+      LEFT JOIN schools s ON c.school_id = s.id
+      WHERE c.class_code = $1
+    `, [cleanCode]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Invalid class code' });
+    }
+    
+    const classInfo = result.rows[0];
+    
+    if (!classInfo.is_active) {
+      return res.status(400).json({ error: 'This class is no longer active' });
+    }
+    
+    // Return class information (excluding sensitive data)
+    res.json({
+      class_name: classInfo.class_name,
+      subject: classInfo.subject || null,
+      description: classInfo.description || null,
+      teacher_name: classInfo.teacher_name,
+      school_name: classInfo.school_name || 'No school specified'
+    });
+    
+  } catch (error) {
+    console.error('Error looking up class:', error);
+    res.status(500).json({ error: 'Failed to lookup class information' });
+  }
+});
+
 module.exports = router;

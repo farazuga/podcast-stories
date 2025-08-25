@@ -1,10 +1,14 @@
 // API base URL - uses window.window.API_URL from config.js
 // const window.API_URL is now provided by config.js
 
+// Global variables for class validation
+let classValidationTimeout = null;
+let isValidatingClass = false;
+let currentClassInfo = null;
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
-    loadSchools();
     
     // Check if already logged in
     if (localStorage.getItem('token')) {
@@ -18,57 +22,162 @@ function setupEventListeners() {
         form.addEventListener('submit', handleRegistration);
     }
     
-    // Format class code input to uppercase
+    // Setup class code input with real-time validation
     const classCodeInput = document.getElementById('classCode');
     if (classCodeInput) {
-        classCodeInput.addEventListener('input', (e) => {
-            e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-        });
+        classCodeInput.addEventListener('input', handleClassCodeInput);
+        classCodeInput.addEventListener('blur', handleClassCodeBlur);
     }
 }
 
-async function loadSchools() {
+function handleClassCodeInput(e) {
+    // Format input to uppercase alphanumeric only
+    const cleanValue = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    e.target.value = cleanValue;
+    
+    // Clear previous timeout
+    if (classValidationTimeout) {
+        clearTimeout(classValidationTimeout);
+    }
+    
+    // Hide class info if code is not complete
+    if (cleanValue.length !== 4) {
+        hideClassInfo();
+        clearClassCodeStatus();
+        currentClassInfo = null;
+        return;
+    }
+    
+    // Show loading state
+    showClassCodeLoading();
+    
+    // Debounce validation (500ms delay)
+    classValidationTimeout = setTimeout(() => {
+        validateClassCode(cleanValue);
+    }, 500);
+}
+
+function handleClassCodeBlur(e) {
+    const cleanValue = e.target.value;
+    if (cleanValue.length > 0 && cleanValue.length !== 4) {
+        showClassCodeError('Class code must be exactly 4 characters');
+    }
+}
+
+async function validateClassCode(code) {
+    if (isValidatingClass) return;
+    
+    isValidatingClass = true;
+    
     try {
-        const response = await fetch(`${window.API_URL}/schools/public`);
+        const response = await fetch(`${window.API_URL}/classes/lookup/${code}`);
+        const data = await response.json();
         
         if (response.ok) {
-            const schools = await response.json();
-            populateSchoolDropdown(schools);
+            // Valid class code
+            currentClassInfo = data;
+            showClassCodeSuccess();
+            displayClassInfo(data);
         } else {
-            console.warn('Could not load schools list');
+            // Invalid class code
+            currentClassInfo = null;
+            showClassCodeError(data.error || 'Invalid class code');
+            hideClassInfo();
         }
     } catch (error) {
-        console.error('Error loading schools:', error);
+        console.error('Error validating class code:', error);
+        currentClassInfo = null;
+        showClassCodeError('Unable to validate class code. Please check your internet connection.');
+        hideClassInfo();
+    } finally {
+        isValidatingClass = false;
     }
 }
 
-function populateSchoolDropdown(schools) {
-    const schoolSelect = document.getElementById('school');
-    if (!schoolSelect) return;
-    
-    // Clear existing options except the first
-    schoolSelect.innerHTML = '<option value="">Select your school</option>';
-    
-    // Add school options
-    schools.forEach(school => {
-        const option = document.createElement('option');
-        option.value = school.id;
-        option.textContent = school.school_name;
-        schoolSelect.appendChild(option);
-    });
+function showClassCodeLoading() {
+    const status = document.getElementById('classCodeStatus');
+    status.innerHTML = '<div class="loading-spinner"></div>';
+    status.className = 'class-code-status loading';
 }
+
+function showClassCodeSuccess() {
+    const status = document.getElementById('classCodeStatus');
+    status.innerHTML = '✅';
+    status.className = 'class-code-status success';
+}
+
+function showClassCodeError(message) {
+    const status = document.getElementById('classCodeStatus');
+    status.innerHTML = '❌';
+    status.className = 'class-code-status error';
+    status.title = message;
+}
+
+function clearClassCodeStatus() {
+    const status = document.getElementById('classCodeStatus');
+    status.innerHTML = '';
+    status.className = 'class-code-status';
+    status.title = '';
+}
+
+function displayClassInfo(classInfo) {
+    const display = document.getElementById('classInfoDisplay');
+    const nameEl = document.getElementById('classInfoName');
+    const teacherEl = document.getElementById('classInfoTeacher');
+    const schoolEl = document.getElementById('classInfoSchool');
+    const subjectEl = document.getElementById('classInfoSubject');
+    
+    // Update content
+    nameEl.textContent = `📚 ${classInfo.class_name}`;
+    teacherEl.textContent = classInfo.teacher_name;
+    schoolEl.textContent = classInfo.school_name;
+    
+    // Show subject if available
+    if (classInfo.subject) {
+        subjectEl.querySelector('span').textContent = classInfo.subject;
+        subjectEl.style.display = 'block';
+    } else {
+        subjectEl.style.display = 'none';
+    }
+    
+    // Show the display with animation
+    display.style.display = 'block';
+    setTimeout(() => {
+        display.classList.add('show');
+    }, 10);
+}
+
+function hideClassInfo() {
+    const display = document.getElementById('classInfoDisplay');
+    display.classList.remove('show');
+    setTimeout(() => {
+        display.style.display = 'none';
+    }, 300);
+}
+
+// School dropdown functionality removed - no longer needed
+// Class information is now displayed dynamically via class code lookup
 
 async function handleRegistration(e) {
     e.preventDefault();
     
-    const name = document.getElementById('name').value.trim();
-    const username = document.getElementById('username').value.trim();
+    // Get form values with new field structure
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
     const email = document.getElementById('email').value.trim();
     const studentId = document.getElementById('studentId').value.trim();
-    const schoolId = document.getElementById('school').value;
     const classCode = document.getElementById('classCode').value.trim();
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    // Create full name from first and last name
+    const fullName = `${firstName} ${lastName}`.trim();
+    
+    // Validate required fields
+    if (!firstName || !lastName) {
+        showError('Please enter both first and last name');
+        return;
+    }
     
     // Validate passwords match
     if (password !== confirmPassword) {
@@ -76,9 +185,15 @@ async function handleRegistration(e) {
         return;
     }
     
-    // Validate class code length
+    // Validate class code
     if (classCode.length !== 4) {
         showError('Class code must be exactly 4 characters');
+        return;
+    }
+    
+    // Validate that class code has been verified
+    if (!currentClassInfo) {
+        showError('Please enter a valid class code and wait for verification');
         return;
     }
     
@@ -86,10 +201,13 @@ async function handleRegistration(e) {
         // Show loading state
         const submitButton = document.querySelector('button[type="submit"]');
         const originalText = submitButton.textContent;
-        submitButton.textContent = 'Registering...';
+        submitButton.textContent = 'Creating Account...';
         submitButton.disabled = true;
         
         // Step 1: Register the student account using dedicated student endpoint
+        // Note: Generate a username from email prefix for backend compatibility
+        const username = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+        
         const registerResponse = await fetch(`${window.API_URL}/students/register`, {
             method: 'POST',
             headers: {
@@ -99,9 +217,9 @@ async function handleRegistration(e) {
                 username,
                 email,
                 password,
-                name,
+                name: fullName,
                 student_id: studentId || null,
-                school_id: schoolId ? parseInt(schoolId) : null
+                school_id: null // No longer collecting school from form
             })
         });
         
@@ -120,7 +238,7 @@ async function handleRegistration(e) {
         localStorage.setItem('user', JSON.stringify(registerResult.user));
         
         // Update button text for next step
-        submitButton.textContent = 'Joining class...';
+        submitButton.textContent = `Joining ${currentClassInfo.class_name}...`;
         
         // Step 2: Join the class using the code
         const joinResponse = await fetch(`${window.API_URL}/classes/join`, {
@@ -139,7 +257,7 @@ async function handleRegistration(e) {
             // Reset button state
             submitButton.textContent = originalText;
             submitButton.disabled = false;
-            showError(`Registration successful but couldn't join class: ${joinResult.error}. You can join the class later from your dashboard.`);
+            showError(`Account created but couldn't join class: ${joinResult.error}. You can join the class later from your dashboard.`);
             setTimeout(() => {
                 window.location.href = '/dashboard.html';
             }, 5000);
@@ -148,7 +266,7 @@ async function handleRegistration(e) {
         
         // Success - show message and redirect
         submitButton.textContent = 'Success! Redirecting...';
-        showSuccess(`Registration successful! You've been enrolled in ${joinResult.class_name}. Redirecting...`);
+        showSuccess(`Welcome ${firstName}! You've successfully joined ${currentClassInfo.class_name}. Redirecting to your dashboard...`);
         setTimeout(() => {
             window.location.href = '/dashboard.html';
         }, 2000);

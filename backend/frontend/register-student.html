@@ -15,14 +15,38 @@
             </div>
             
             <form id="studentRegisterForm">
+                <!-- Class Code - First Field -->
                 <div class="form-group">
-                    <label for="name">Full Name</label>
-                    <input type="text" id="name" placeholder="Enter your full name" required>
+                    <label for="classCode">Class Code</label>
+                    <div class="class-code-input-wrapper">
+                        <input type="text" id="classCode" placeholder="Enter 4-digit class code" maxlength="4" required>
+                        <div class="class-code-status" id="classCodeStatus"></div>
+                    </div>
+                    <small>Ask your teacher for the 4-digit class code</small>
                 </div>
                 
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" placeholder="Choose a username" required>
+                <!-- Dynamic Class Information Display -->
+                <div class="class-info-display" id="classInfoDisplay" style="display: none;">
+                    <div class="class-info-card">
+                        <h3 id="classInfoName">📚 Class Name</h3>
+                        <div class="class-details">
+                            <p><strong>Teacher:</strong> <span id="classInfoTeacher">Teacher Name</span></p>
+                            <p><strong>School:</strong> <span id="classInfoSchool">School Name</span></p>
+                            <p id="classInfoSubject" style="display: none;"><strong>Subject:</strong> <span></span></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Name Fields - Split into First and Last -->
+                <div class="form-row">
+                    <div class="form-group form-group-half">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" placeholder="Enter your first name" required>
+                    </div>
+                    <div class="form-group form-group-half">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" placeholder="Enter your last name" required>
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -33,20 +57,6 @@
                 <div class="form-group">
                     <label for="studentId">Student ID (Optional)</label>
                     <input type="text" id="studentId" placeholder="Enter your student ID">
-                </div>
-                
-                <div class="form-group">
-                    <label for="school">School (Optional)</label>
-                    <select id="school">
-                        <option value="">Select your school</option>
-                    </select>
-                    <small>You can skip this if your teacher hasn't specified a school</small>
-                </div>
-                
-                <div class="form-group">
-                    <label for="classCode">Class Code</label>
-                    <input type="text" id="classCode" placeholder="Enter 4-digit class code" maxlength="4" required>
-                    <small>Ask your teacher for the class code</small>
                 </div>
                 
                 <div class="form-group">

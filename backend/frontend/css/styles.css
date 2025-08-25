@@ -185,6 +185,10 @@ body {
     gap: 1rem;
 }
 
+.form-group-half {
+    margin-bottom: 1rem;
+}
+
 .form-card {
     background: var(--white);
     border-radius: 10px;
@@ -227,6 +231,140 @@ body {
     margin-top: 2rem;
     padding-top: 2rem;
     border-top: 1px solid var(--border-color);
+}
+
+/* Class Code Validation Styles */
+.class-code-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.class-code-status {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+}
+
+.class-code-status.loading {
+    color: var(--primary-color);
+}
+
+.class-code-status.success {
+    color: #10b981;
+    font-size: 1.1rem;
+}
+
+.class-code-status.error {
+    color: #ef4444;
+    font-size: 1.1rem;
+    cursor: help;
+}
+
+.loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border-color);
+    border-top: 2px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Class Information Display */
+.class-info-display {
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.class-info-display.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.class-info-card {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border: 2px solid var(--primary-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.class-info-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), #fbbf24);
+}
+
+.class-info-card h3 {
+    margin: 0 0 1rem 0;
+    color: var(--primary-color);
+    font-size: 1.3rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.class-details {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.class-details p {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.class-details strong {
+    color: var(--secondary-color);
+    font-weight: 600;
+    min-width: 60px;
+}
+
+.class-details span {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+/* Mobile Responsiveness for Class Info */
+@media (max-width: 768px) {
+    .class-info-card {
+        padding: 1rem;
+    }
+    
+    .class-info-card h3 {
+        font-size: 1.1rem;
+    }
+    
+    .class-details p {
+        font-size: 0.9rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Buttons */
