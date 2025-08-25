@@ -40,10 +40,13 @@ async function loadUserInfo() {
         currentUser = user;
         
         const displayName = user.name || user.email || user.username || 'User';
-        document.getElementById('userInfo').textContent = `${displayName} (${user.role})`;
+        const userInfoElement = document.getElementById('userInfo');
+        if (userInfoElement) {
+            userInfoElement.textContent = `${displayName} (${user.role})`;
+        }
         
-        // Show admin link if user is admin
-        if (user.role === 'admin') {
+        // Show admin link if user is admin or amitrace_admin
+        if (user.role === 'admin' || user.role === 'amitrace_admin') {
             const adminLink = document.getElementById('adminLink');
             if (adminLink) {
                 adminLink.style.display = 'block';
@@ -51,7 +54,8 @@ async function loadUserInfo() {
         }
     } catch (error) {
         console.error('Error loading user info:', error);
-        logout();
+        // Don't logout on error, just log it
+        console.warn('Could not load user info, continuing with limited functionality');
     }
 }
 
@@ -66,14 +70,38 @@ async function loadStory() {
         if (response.ok) {
             currentStory = await response.json();
             displayStory();
+        } else if (response.status === 404) {
+            // Story not found - show error but don't logout
+            showErrorPage('Story Not Found', 'The story you are looking for does not exist or has been deleted.');
+        } else if (response.status === 401) {
+            // Unauthorized - token might be expired
+            console.error('Authentication failed');
+            alert('Your session has expired. Please login again.');
+            window.location.href = '/index.html';
         } else {
-            alert('Story not found');
-            window.location.href = '/dashboard.html';
+            // Other error - show generic message
+            showErrorPage('Error Loading Story', `Unable to load story details. Error: ${response.status}`);
         }
     } catch (error) {
         console.error('Error loading story:', error);
-        alert('Error loading story');
-        window.location.href = '/dashboard.html';
+        showErrorPage('Connection Error', 'Unable to connect to the server. Please check your internet connection and try again.');
+    }
+}
+
+function showErrorPage(title, message) {
+    // Hide loading or show error in the main content area
+    const container = document.querySelector('.story-detail-card');
+    if (container) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 3rem;">
+                <h2 style="color: #dc3545; margin-bottom: 1rem;">⚠️ ${title}</h2>
+                <p style="color: #6c757d; margin-bottom: 2rem;">${message}</p>
+                <button onclick="window.location.href='/dashboard.html'" 
+                        style="padding: 0.5rem 2rem; background: #f97316; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    Return to Dashboard
+                </button>
+            </div>
+        `;
     }
 }
 
@@ -139,7 +167,7 @@ function displayStory() {
     
     // Show/hide action buttons based on user role
     const deleteBtn = document.getElementById('deleteBtn');
-    if (currentUser.role !== 'admin') {
+    if (deleteBtn && currentUser.role !== 'admin' && currentUser.role !== 'amitrace_admin') {
         deleteBtn.style.display = 'none';
     }
     
