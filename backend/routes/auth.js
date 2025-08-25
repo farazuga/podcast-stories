@@ -114,6 +114,8 @@ router.post('/login', async (req, res) => {
         id: userData.id,
         email: userData.email,
         name: userData.name,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
         school: userData.school_name,
         role: userData.role,
         student_id: userData.student_id
@@ -138,7 +140,7 @@ router.get('/verify', async (req, res) => {
     
     // Get fresh user data with school information
     const user = await pool.query(
-      'SELECT u.id, u.email, u.name, u.role, u.student_id, s.school_name FROM users u LEFT JOIN schools s ON u.school_id = s.id WHERE u.id = $1',
+      'SELECT u.id, u.email, u.name, u.first_name, u.last_name, u.role, u.student_id, s.school_name FROM users u LEFT JOIN schools s ON u.school_id = s.id WHERE u.id = $1',
       [verified.id]
     );
 
@@ -154,6 +156,8 @@ router.get('/verify', async (req, res) => {
         id: userData.id,
         email: userData.email,
         name: userData.name,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
         school: userData.school_name,
         role: userData.role,
         student_id: userData.student_id
