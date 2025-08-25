@@ -203,7 +203,6 @@ const VidPODNav = {
 
         // Handle legacy role-based visibility (for backward compatibility) - FIXED FOR AMITRACE_ADMIN
         const adminLinks = document.querySelectorAll('#adminLink, [href*="admin"]:not([data-role])');
-        const teacherLinks = document.querySelectorAll('#teacherLink, [href*="teacher-dashboard"]:not([data-role])');
 
         adminLinks.forEach(link => {
             const shouldShow = ['admin', 'amitrace_admin'].includes(userRole); // ✅ FIXED
@@ -211,20 +210,9 @@ const VidPODNav = {
             console.log(`🔧 V2 Legacy admin link: visible=${shouldShow}`);
         });
 
-        teacherLinks.forEach(link => {
-            const shouldShow = ['teacher', 'admin', 'amitrace_admin'].includes(userRole); // ✅ FIXED
-            link.style.display = shouldShow ? '' : 'none';
-            console.log(`🔧 V2 Legacy teacher link: visible=${shouldShow}`);
-        });
-
         // Teacher-specific navigation customization
         if (userRole === 'teacher') {
             this.customizeTeacherNavigation();
-        }
-
-        // Admin-specific navigation customization
-        if (userRole === 'admin' || userRole === 'amitrace_admin') {
-            this.customizeAdminNavigation();
         }
 
         // Specific role-based validation
