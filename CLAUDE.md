@@ -179,7 +179,10 @@ podcast-stories/
 ### Story Management
 - Rich metadata support
 - Multi-select bulk operations
-- Grid/list view toggle
+- Grid/list view toggle with clickable cards
+- Grid and list view cards are fully clickable for navigation
+- Keyboard accessibility with Enter/Space key support
+- Tag overflow indicator (+N) for stories with multiple tags
 - Advanced search and filters
 - CSV import/export
 

@@ -2548,9 +2548,9 @@ body {
     line-height: 1.2;
     color: var(--text-color);
     min-width: 0; /* Allow text to shrink */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal; /* Allow text wrapping */
+    word-wrap: break-word; /* Break long words */
+    overflow: visible; /* Remove truncation */
 }
 
 /* Simple star favorite button */
@@ -2597,6 +2597,13 @@ body {
     border-radius: 8px;
 }
 
+.tag-overflow {
+    background-color: var(--light-gray) !important;
+    color: var(--text-color) !important;
+    font-style: italic;
+    opacity: 0.8;
+}
+
 /* Ultra-compact actions */
 .story-actions-compact {
     display: flex;
@@ -2616,6 +2623,16 @@ body {
     padding: 6px 10px !important;
 }
 
+/* List view clickable cards */
+.stories-list .story-card-list.clickable-card {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.stories-list .story-card-list.clickable-card:hover {
+    background-color: rgba(247, 155, 91, 0.05);
+}
+
 .stories-list .story-card-list .story-header-compact {
     flex: 1;
     margin-bottom: 0;
@@ -2627,9 +2644,16 @@ body {
 }
 
 .stories-list .story-card-list .story-coverage-compact,
-.stories-list .story-card-list .story-tags-compact,
 .stories-list .story-card-list .story-interviewees-compact {
     display: none; /* Hide in list view for maximum compactness */
+}
+
+/* Show tags in list view */
+.stories-list .story-card-list .story-tags-compact {
+    display: flex; 
+    gap: 4px; 
+    flex-wrap: wrap; 
+    margin: 2px 0;
 }
 
 .stories-list .story-card-list .story-date-compact {
@@ -2647,8 +2671,12 @@ body {
 
 /* Grid view ultra-compact */
 .stories-grid .story-card {
-    max-height: 120px !important;
-    overflow: hidden;
+    max-height: none;
+    overflow: visible;
+}
+.story-title-compact {
+    white-space: normal;
+    word-break: break-word;
 }
 
 .stories-grid .story-card .story-coverage-compact,
@@ -2674,7 +2702,7 @@ body {
     }
     
     .stories-grid .story-card {
-        max-height: 100px !important;
+        max-height: none;
     }
 }
 

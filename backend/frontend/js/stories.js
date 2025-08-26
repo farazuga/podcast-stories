@@ -2,6 +2,14 @@
 const API_URL = window.API_URL || 'https://podcast-stories-production.up.railway.app/api';
 console.log('🔥 STORIES.JS LOADING - API_URL:', API_URL);
 
+// HTML escaping utility for safe rendering of user content
+const escapeHTML = (str = '') => String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
 // Global variables
 let allStories = [];
 let filteredStories = [];
@@ -222,24 +230,25 @@ function renderStoryCard(story) {
         ? story.tags.filter(tag => tag).join(', ')
         : '';
     
-    // Format tags for display (limit to 2 for compactness)
-    const tags = story.tags && Array.isArray(story.tags) 
-        ? story.tags.filter(tag => tag).slice(0, 2).map(tag => `<span class="tag">${tag}</span>`).join('') 
-        : '';
+    // Format tags for display with overflow indicator
+    let tags = '';
+    if (story.tags && Array.isArray(story.tags) && story.tags.filter(tag => tag).length > 0) {
+        const validTags = story.tags.filter(tag => tag);
+        const displayTags = validTags.slice(0, 2);
+        const remainingCount = validTags.length - 2;
+        
+        tags = displayTags.map(tag => `<span class="tag">${escapeHTML(tag)}</span>`).join('');
+        if (remainingCount > 0) {
+            tags += `<span class="tag tag-overflow">+${remainingCount}</span>`;
+        }
+    }
     
-    // Format interviewees (limit to 1 for compactness)
+    // Format interviewees (limit to 1 for compactness) - safely escaped
     const interviewees = story.interviewees && Array.isArray(story.interviewees)
-        ? story.interviewees.filter(person => person).slice(0, 1).join(', ')
+        ? escapeHTML(story.interviewees.filter(person => person).slice(0, 1).join(', '))
         : '';
     
-    // Status badge for admin/own stories
-    const showStatus = currentUser && (
-        currentUser.role === 'amitrace_admin' || 
-        story.uploaded_by === currentUser.id
-    );
-    
-    const statusBadge = showStatus ? 
-        `<span class="status-badge status-${story.approval_status}">${story.approval_status}</span>` : '';
+    // Remove status badge for improved readability
     
     // Fixed checkbox without double box issue
     const selectionCheckbox = `
@@ -262,32 +271,37 @@ function renderStoryCard(story) {
         </button>
     `;
     
-    // Title with tags hover tooltip
-    const titleWithTooltip = allTags ? 
-        `<h3 class="story-title-compact" title="Tags: ${allTags}">${story.idea_title}</h3>` :
-        `<h3 class="story-title-compact">${story.idea_title}</h3>`;
+    // Simple title without truncation - safely escaped
+    const storyTitle = `<h3 class="story-title-compact">${escapeHTML(story.idea_title)}</h3>`;
     
-    // List view specific layout with date
+    // List view specific layout with date - now clickable with tags displayed
     if (!isGridView) {
         return `
-            <div class="${cardClass} ${isSelected ? 'selected' : ''}" data-story-id="${story.id}" data-sort-date="${story.coverage_start_date || story.uploaded_date || ''}">
+            <div class="${cardClass} ${isSelected ? 'selected' : ''} clickable-card" 
+                 data-story-id="${story.id}" 
+                 data-sort-date="${story.coverage_start_date || story.uploaded_date || ''}"
+                 role="button"
+                 tabindex="0"
+                 onclick="handleStoryCardClick(event, ${story.id})"
+                 onkeydown="handleStoryCardKeydown(event, ${story.id})">
                 <div class="story-header-compact">
                     ${selectionCheckbox}
-                    ${titleWithTooltip}
+                    ${storyTitle}
                     ${favoriteStar}
-                    ${statusBadge}
                 </div>
                 
                 <div class="story-date-compact">
                     ${applicableDate ? `📅 ${applicableDateLabel}: ${applicableDate}` : ''}
                 </div>
                 
+                ${tags ? `<div class="story-tags-compact">${tags}</div>` : ''}
+                
                 <div class="story-actions-compact">
-                    <button class="btn btn-primary btn-small" onclick="viewStory(${story.id})">
+                    <button class="btn btn-primary btn-small" onclick="event.stopPropagation(); viewStory(${story.id})">
                         View
                     </button>
                     ${story.uploaded_by === currentUser?.id ? `
-                        <button class="btn btn-secondary btn-small" onclick="editStory(${story.id})">
+                        <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); editStory(${story.id})">
                             Edit
                         </button>
                     ` : ''}
@@ -296,20 +310,24 @@ function renderStoryCard(story) {
         `;
     }
     
-    // Grid view layout - clickable tile
+    // Grid view layout - clickable tile with improved readability
     return `
         <div class="${cardClass} ${isSelected ? 'selected' : ''} clickable-card" 
              data-story-id="${story.id}" 
              data-sort-date="${story.coverage_start_date || story.uploaded_date || ''}"
-             onclick="handleStoryCardClick(event, ${story.id})">
+             role="button"
+             tabindex="0"
+             onclick="handleStoryCardClick(event, ${story.id})"
+             onkeydown="handleStoryCardKeydown(event, ${story.id})">
             <div class="story-header-compact">
                 ${selectionCheckbox}
-                ${titleWithTooltip}
+                ${storyTitle}
                 ${favoriteStar}
-                ${statusBadge}
             </div>
             
-            ${story.coverage_start_date ? `<div class="story-coverage-compact">🎬 ${startDate}${endDate ? ` - ${endDate}` : ''}</div>` : ''}
+            ${story.coverage_start_date
+              ? `<div class="story-coverage-compact">🎬 ${startDate}${endDate ? ` - ${endDate}` : ''}</div>`
+              : `${uploadedDate ? `<div class="story-date-compact">📅 Uploaded: ${uploadedDate}</div>` : ''}`}
             
             ${tags ? `<div class="story-tags-compact">${tags}</div>` : ''}
             
@@ -571,6 +589,29 @@ function viewStory(storyId) {
 
 function handleStoryCardClick(event, storyId) {
     // Prevent clicking on interactive elements from opening the story
+    const target = event.target;
+    if (target.tagName === 'INPUT' || 
+        target.tagName === 'BUTTON' || 
+        target.classList.contains('favorite-star') ||
+        target.closest('input') ||
+        target.closest('button')) {
+        return;
+    }
+    
+    // Open the story
+    viewStory(storyId);
+}
+
+function handleStoryCardKeydown(event, storyId) {
+    // Only handle Enter and Space keys
+    if (event.key !== 'Enter' && event.key !== ' ') {
+        return;
+    }
+    
+    // Prevent default behavior for space (scrolling)
+    event.preventDefault();
+    
+    // Don't trigger if focused on an input or button
     const target = event.target;
     if (target.tagName === 'INPUT' || 
         target.tagName === 'BUTTON' || 
@@ -920,6 +961,8 @@ window.sortStories = sortStories;
 window.goToPage = goToPage;
 window.viewStory = viewStory;
 window.editStory = editStory;
+window.handleStoryCardClick = handleStoryCardClick;
+window.handleStoryCardKeydown = handleStoryCardKeydown;
 window.toggleStorySelection = toggleStorySelection;
 window.toggleSelectAll = toggleSelectAll;
 window.clearSelection = clearSelection;
