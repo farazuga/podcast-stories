@@ -1,11 +1,8 @@
 /**
- * VidPOD Unified Navigation Component JavaScript - V2 FIXED  
+ * VidPOD Unified Navigation Component JavaScript - V2 PRODUCTION
  * Handles navigation state, user display, and role-based visibility
- * DEPLOYMENT VERSION: 2025-08-26-PHASE1-RETRY - AGGRESSIVE DEPLOYMENT RETRY
- * BUILD: 01:35 UTC - Cache Resolution RETRY
+ * Production Version - January 2025
  */
-
-console.log('🚀 NAVIGATION VERSION: 2025-08-26-PHASE1-RETRY loaded - BUILD 01:35 UTC - AGGRESSIVE RETRY');
 
 const VidPODNav = {
     currentUser: null,
@@ -187,7 +184,6 @@ const VidPODNav = {
         }
 
         const userRole = this.currentUser.role.toLowerCase().trim();
-        console.log(`🔧 V2 NAVIGATION: Updating visibility for role: ${userRole}`, this.currentUser);
 
         // Handle elements with data-role attribute
         document.querySelectorAll('[data-role]').forEach(element => {
@@ -198,19 +194,14 @@ const VidPODNav = {
             
             const shouldShow = allowedRoles.includes(userRole);
             element.style.display = shouldShow ? '' : 'none';
-            
-            // Debug logging
-            const elementDesc = element.textContent?.trim() || element.getAttribute('href') || 'unnamed element';
-            console.log(`🔧 V2 Element "${elementDesc}": roles=${allowedRoles.join(',')}, userRole=${userRole}, visible=${shouldShow}`);
         });
 
         // Handle legacy role-based visibility (for backward compatibility) - FIXED FOR AMITRACE_ADMIN
         const adminLinks = document.querySelectorAll('#adminLink, [href*="admin"]:not([data-role])');
 
         adminLinks.forEach(link => {
-            const shouldShow = ['admin', 'amitrace_admin'].includes(userRole); // ✅ FIXED
+            const shouldShow = ['admin', 'amitrace_admin'].includes(userRole);
             link.style.display = shouldShow ? '' : 'none';
-            console.log(`🔧 V2 Legacy admin link: visible=${shouldShow}`);
         });
 
         // Teacher-specific navigation customization
@@ -220,10 +211,8 @@ const VidPODNav = {
 
         // Amitrace admin-specific customization - hide teacher-specific elements
         if (userRole === 'amitrace_admin') {
-            console.log('🔧 V2 NAVIGATION: Calling customizeAmitracAdminNavigation for role:', userRole);
-            // NUCLEAR OPTION: Add body class for CSS hiding
+            // Add body class for CSS hiding
             document.body.classList.add('user-role-amitrace_admin');
-            console.log('🔧 V2 NAVIGATION: Added body class user-role-amitrace_admin');
             this.customizeAmitracAdminNavigation();
         }
 
@@ -238,8 +227,6 @@ const VidPODNav = {
         const mobileMenu = document.getElementById('mobileMenu');
         const mobileToggle = document.getElementById('mobileToggle');
         
-        console.log('🔧 V2 NAVIGATION: ensureMobileMenuHidden called for viewport:', window.innerWidth);
-        
         if (window.innerWidth > 768) {
             if (mobileMenu) {
                 mobileMenu.classList.remove('active');
@@ -247,13 +234,11 @@ const VidPODNav = {
                 mobileMenu.style.visibility = 'hidden';
                 mobileMenu.style.position = 'absolute';
                 mobileMenu.style.left = '-9999px';
-                console.log('🔧 V2 NAVIGATION: Mobile menu AGGRESSIVELY hidden for desktop viewport');
             }
             
             if (mobileToggle) {
                 mobileToggle.style.display = 'none';
                 mobileToggle.style.visibility = 'hidden';
-                console.log('🔧 V2 NAVIGATION: Mobile toggle AGGRESSIVELY hidden for desktop viewport');
             }
         }
         
@@ -317,7 +302,6 @@ const VidPODNav = {
             return;
         }
 
-        console.log(`🔧 V2 Validating access for role: ${userRole}`);
 
         // Check visible items
         expected.visible.forEach(item => {
@@ -350,7 +334,6 @@ const VidPODNav = {
             const textSpan = element.querySelector('span:not(.icon)');
             if (textSpan && textSpan.textContent.includes('Admin Panel')) {
                 textSpan.textContent = 'Settings';
-                console.log('🔧 V2 TEACHER: Changed Admin Panel to Settings');
             }
         });
         
@@ -358,7 +341,6 @@ const VidPODNav = {
             const textSpan = element.querySelector('span:not(.icon)');
             if (textSpan && textSpan.textContent.includes('Admin Panel')) {
                 textSpan.textContent = 'Settings';
-                console.log('🔧 V2 TEACHER: Changed mobile Admin Panel to Settings');
             }
         });
     },
@@ -379,11 +361,9 @@ const VidPODNav = {
             setTimeout(() => {
                 if (element.parentNode) {
                     element.parentNode.removeChild(element);
-                    console.log('🔧 V2 AMITRACE_ADMIN: COMPLETELY REMOVED teacher-dashboard from DOM', index + 1);
                 }
             }, 100);
             
-            console.log('🔧 V2 AMITRACE_ADMIN: ULTIMATE HIDE teacher-dashboard (My Classes)', index + 1);
         });
         
         // Hide mobile version too with same approach
@@ -395,11 +375,9 @@ const VidPODNav = {
             setTimeout(() => {
                 if (element.parentNode) {
                     element.parentNode.removeChild(element);
-                    console.log('🔧 V2 AMITRACE_ADMIN: COMPLETELY REMOVED mobile teacher-dashboard from DOM', index + 1);
                 }
             }, 100);
             
-            console.log('🔧 V2 AMITRACE_ADMIN: ULTIMATE HIDE mobile teacher-dashboard (My Classes)', index + 1);
         });
         
         // Additional targeting - any element that contains "My Classes" text
@@ -413,11 +391,9 @@ const VidPODNav = {
                 setTimeout(() => {
                     if (element.parentNode) {
                         element.parentNode.removeChild(element);
-                        console.log('🔧 V2 AMITRACE_ADMIN: COMPLETELY REMOVED text-based My Classes from DOM', index + 1);
                     }
                 }, 100);
                 
-                console.log('🔧 V2 AMITRACE_ADMIN: ULTIMATE HIDE element containing "My Classes":', textContent.trim().substring(0, 50));
             }
         });
         
@@ -426,7 +402,6 @@ const VidPODNav = {
             document.querySelectorAll('[data-page="teacher-dashboard"]').forEach((element, index) => {
                 if (element.parentNode) {
                     element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important;';
-                    console.log('🔧 V2 AMITRACE_ADMIN: DELAYED HIDE of remaining teacher-dashboard', index + 1);
                 }
             });
         }, 500);
@@ -584,7 +559,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const mainNav = document.getElementById('mainNav');
         const isDesktop = window.innerWidth > 768;
         
-        console.log('🔧 V2 NAVIGATION: Applying mobile menu fix for viewport:', window.innerWidth);
         
         if (isDesktop) {
             // Hide mobile elements on desktop
@@ -592,37 +566,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 mobileMenu.style.display = 'none';
                 mobileMenu.style.visibility = 'hidden';
                 mobileMenu.classList.remove('active');
-                console.log('🔧 V2 NAVIGATION: Mobile menu FORCED HIDDEN on desktop');
             }
             
             if (mobileToggle) {
                 mobileToggle.style.display = 'none';
                 mobileToggle.style.visibility = 'hidden';
-                console.log('🔧 V2 NAVIGATION: Mobile toggle FORCED HIDDEN on desktop');
             }
             
             // Show main nav on desktop
             if (mainNav) {
                 mainNav.style.display = 'flex';
-                console.log('🔧 V2 NAVIGATION: Main nav set to flex on desktop');
             }
         } else {
             // Mobile viewport - hide main nav, allow mobile elements
             if (mainNav) {
                 mainNav.style.display = 'none';
-                console.log('🔧 V2 NAVIGATION: Main nav hidden on mobile');
             }
             
             if (mobileToggle) {
                 mobileToggle.style.display = 'flex';
                 mobileToggle.style.visibility = 'visible';
-                console.log('🔧 V2 NAVIGATION: Mobile toggle shown on mobile');
             }
             
             // Mobile menu starts hidden until toggled
             if (mobileMenu && !mobileMenu.classList.contains('active')) {
                 mobileMenu.style.display = 'none';
-                console.log('🔧 V2 NAVIGATION: Mobile menu hidden until toggled');
             }
         }
     }
@@ -644,7 +612,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentPage = getCurrentPageFromPath();
         
         if (user) {
-            console.log('🔧 V2 NAVIGATION: Auto-initializing for user role:', user.role);
             VidPODNav.init({
                 currentPage: currentPage,
                 user: user,
@@ -671,5 +638,3 @@ if (typeof module !== 'undefined' && module.exports) {
 // Make available globally
 window.VidPODNav = VidPODNav;
 window.VidPODNavigation = VidPODNav; // Backward compatibility
-
-// V2 DEPLOYMENT MARKER: 2025-08-20-FINAL-COMPLETE-AMITRACE-ADMIN-FIXES
