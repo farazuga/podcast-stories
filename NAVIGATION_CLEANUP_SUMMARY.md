@@ -50,7 +50,7 @@
    - Additional CSV and date test files
 
 4. **Archived Duplicate Frontend**
-   - Moved duplicate `/frontend` folder to `/archived/frontend-duplicate-root/`
+   - Moved duplicate `/frontend` folder to `/archive/legacy-code/frontend-duplicate/`
    - Primary frontend remains in `/backend/frontend/`
 
 ## 🎯 Result

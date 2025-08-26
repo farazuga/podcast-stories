@@ -105,7 +105,7 @@ podcast-stories/
 ## 4. API Endpoints
 
 ### Authentication
-- `POST /api/auth/login` - User login with email/username
+- `POST /api/auth/login` - User login with email only
 - `POST /api/auth/register` - User registration
 - `GET /api/auth/verify` - Token validation
 
@@ -364,7 +364,7 @@ student@vidpod.com / vidpod (student)
 #### Debug Documentation
 - `frontend/ADMIN_DEBUG_GUIDE.md` - Step-by-step admin debugging
 - `DEBUG_SUMMARY.md` - Overall debugging summary
-- `debug-phase1.md`, `debug-phase2.md`, `debug-phase4.md` - Phase-specific debugging
+- `archive/legacy-code/debug-phases/debug-phase1.md`, `archive/legacy-code/debug-phases/debug-phase2.md`, `archive/legacy-code/debug-phases/debug-phase4.md` - Phase-specific debugging
 - `admin-panel-debug-report.md` - Admin panel issues and resolutions
 - `story-approval-debug-final.md` - Story approval debugging guide
 

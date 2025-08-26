@@ -70,11 +70,15 @@ cat package.json | grep -A 20 "scripts"
 ```
 testing/
 ├── e2e/              # Browser automation tests
+│   ├── admin-panel-tests/  # Admin-specific UI tests
+│   └── user-flow-tests/    # Complete user journey tests
 ├── api/              # Backend API tests  
+│   ├── backend-tests/      # Core API functionality
+│   └── csv-tests/          # CSV import/export testing
 ├── integration/      # Full workflow tests
 ├── debug/            # Debug & troubleshooting tools
+│   └── deployment-tests/   # Deployment verification
 ├── data/             # Test data files
-├── archived/         # Legacy test files
 └── utils/            # Test helper utilities
 ```
 
@@ -170,7 +174,7 @@ ls testing/api/
 ## 📖 Detailed Documentation
 
 For comprehensive testing information, see:
-- **[TESTING_GUIDE.md](./TESTING_GUIDE.md)** - Complete testing documentation
+- **[Master Testing Guide](./docs/testing/master-testing-guide.md)** - Complete testing documentation
 - **[testing/README.md](./testing/README.md)** - Testing directory overview
 - **Package.json** - All available npm scripts
 
@@ -186,11 +190,11 @@ For comprehensive testing information, see:
 ### Can't Find a Test?
 1. Check the testing directory structure: `ls testing/`
 2. Search for test files: `find testing/ -name "*keyword*"`
-3. Review the TESTING_GUIDE.md for complete list
+3. Review the Master Testing Guide for complete list
 
 ### Need Help?
 1. View all available scripts: `npm run`
-2. Check the comprehensive guide: `cat TESTING_GUIDE.md`
+2. Check the comprehensive guide: `cat docs/testing/master-testing-guide.md`
 3. Look at debug tools: `ls testing/debug/`
 
 ---

@@ -145,7 +145,7 @@ const multipartData = [
 ## Files Created/Modified
 
 ### Documentation
-- `CSV_IMPORT_DOCUMENTATION.md` - Comprehensive user and developer documentation
+- `docs/features/csv-import.md` - Comprehensive user and developer documentation
 - `CSV_IMPORT_DEBUG_SUMMARY.md` - This debug summary
 
 ### Backend Enhancements

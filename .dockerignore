@@ -1,0 +1,28 @@
+# Exclude archived legacy code from production builds
+archive/
+archive/**
+
+# Exclude docs and development files
+docs/
+*.md
+
+# Exclude testing files
+testing/
+**/*.test.js
+
+# Exclude temporary and cache files
+node_modules/
+.npm/
+.cache/
+*.log
+.DS_Store
+Thumbs.db
+
+# Exclude git files
+.git/
+.gitignore
+
+# Exclude environment files (should be set in deployment)
+.env
+.env.local
+.env.production

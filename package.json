@@ -5,10 +5,10 @@
   "scripts": {
     "test": "npm run test:all",
     "test:all": "npm run test:e2e && npm run test:api && npm run test:integration",
-    "test:e2e": "node testing/e2e/comprehensive-test-suite.js",
-    "test:api": "node testing/api/test-all-fixes-final.js",
+    "test:e2e": "node testing/e2e/user-flow-tests/test-all-roles.js",
+    "test:api": "node testing/api/backend-tests/test-all-fixes.js",
     "test:integration": "node testing/integration/ultimate-final-test.js",
-    "test:admin": "node testing/e2e/comprehensive-admin-test.js",
+    "test:admin": "node testing/e2e/admin-panel-tests/admin-comprehensive-test.js",
     "test:teacher": "node testing/e2e/teacher-comprehensive-test-enhanced.js",
     "test:student": "node testing/e2e/comprehensive-student-flow-test.js",
     "test:csv": "node testing/api/test-csv-final.js",
