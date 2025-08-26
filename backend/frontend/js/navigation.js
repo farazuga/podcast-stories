@@ -1,11 +1,11 @@
 /**
- * VidPOD Unified Navigation Component JavaScript - V2 FIXED
+ * VidPOD Unified Navigation Component JavaScript - V2 FIXED  
  * Handles navigation state, user display, and role-based visibility
- * DEPLOYMENT VERSION: 2025-08-26-PHASE1 - COMPREHENSIVE NAVIGATION ANALYSIS FIX
- * BUILD: 01:30 UTC - Cache Resolution
+ * DEPLOYMENT VERSION: 2025-08-26-PHASE1-RETRY - AGGRESSIVE DEPLOYMENT RETRY
+ * BUILD: 01:35 UTC - Cache Resolution RETRY
  */
 
-console.log('🔧 NAVIGATION VERSION: 2025-08-26-PHASE1 loaded - BUILD 01:30 UTC');
+console.log('🚀 NAVIGATION VERSION: 2025-08-26-PHASE1-RETRY loaded - BUILD 01:35 UTC - AGGRESSIVE RETRY');
 
 const VidPODNav = {
     currentUser: null,

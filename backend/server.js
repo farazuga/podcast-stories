@@ -7,8 +7,8 @@ const path = require('path');
 // Load environment variables
 dotenv.config();
 
-// DEPLOYMENT FORCE: 2025-08-26-01-30 - Force FRESH navigation deployment after comprehensive analysis
-console.log('🚀 SERVER STARTUP: FRESH navigation deployment - Phase 1 cache resolution');
+// DEPLOYMENT FORCE: 2025-08-26-01-35 - AGGRESSIVE deployment retry with new timestamp
+console.log('🚀 SERVER STARTUP: AGGRESSIVE deployment retry - Phase 1 cache resolution RETRY');
 
 // Import centralized configuration
 const config = require('./config/environment');
