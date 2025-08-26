@@ -215,6 +215,11 @@ const VidPODNav = {
             this.customizeTeacherNavigation();
         }
 
+        // Amitrace admin-specific customization - hide teacher-specific elements
+        if (userRole === 'amitrace_admin') {
+            this.customizeAmitracAdminNavigation();
+        }
+
         // Specific role-based validation
         this.validateRoleBasedAccess(userRole);
     },
@@ -293,9 +298,9 @@ const VidPODNav = {
                 visible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard', 'admin', 'admin-browse-stories'],
                 hidden: []
             },
-            'amitrace_admin': { // ✅ FIXED - ADDED AMITRACE_ADMIN ROLE
-                visible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard', 'admin', 'admin-browse-stories'],
-                hidden: []
+            'amitrace_admin': { // ✅ AMITRACE_ADMIN - Admin access but no teacher-specific items
+                visible: ['dashboard', 'stories', 'add-story', 'admin', 'admin-browse-stories'],
+                hidden: ['teacher-dashboard']
             }
         };
 
@@ -351,6 +356,23 @@ const VidPODNav = {
         });
     },
 
+    /**
+     * Customize navigation for amitrace_admin role
+     * Hide teacher-specific elements like "My Classes" while keeping admin access
+     */
+    customizeAmitracAdminNavigation() {
+        // Hide teacher-specific elements for amitrace_admin users
+        document.querySelectorAll('[data-page="teacher-dashboard"]').forEach(element => {
+            element.style.display = 'none';
+            console.log('🔧 V2 AMITRACE_ADMIN: Hidden teacher-dashboard (My Classes)');
+        });
+        
+        // Hide mobile version too
+        document.querySelectorAll('.mobile-nav [data-page="teacher-dashboard"]').forEach(element => {
+            element.style.display = 'none';
+            console.log('🔧 V2 AMITRACE_ADMIN: Hidden mobile teacher-dashboard (My Classes)');
+        });
+    },
 
     /**
      * Set badge count for navigation items
