@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Date Test</title>
+</head>
+<body>
+    <div id="results"></div>
+    
+    <script>
+        // Load date-utils.js from production
+        const script = document.createElement('script');
+        script.src = 'https://podcast-stories-production.up.railway.app/js/date-utils.js';
+        script.onload = function() {
+            console.log('date-utils.js loaded');
+            
+            // Test the functions
+            const results = [];
+            const testDates = ['1954-03-05', '2024-04-01'];
+            
+            testDates.forEach(dateStr => {
+                const formatted = window.formatDateSafe(dateStr);
+                const expected = dateStr === '1954-03-05' ? '03/05/1954' : '04/01/2024';
+                results.push(`${dateStr} → ${formatted} (expected: ${expected}) ${formatted === expected ? '✅' : '❌'}`);
+            });
+            
+            document.getElementById('results').innerHTML = results.join('<br>');
+            console.log('Test results:', results);
+        };
+        script.onerror = function() {
+            document.getElementById('results').innerHTML = 'Error loading date-utils.js';
+        };
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>
