@@ -8,8 +8,8 @@ let allSchools = [];
 let teacherRequests = [];
 let currentRequestId = null;
 
-// Debug flag
-const DEBUG_MODE = true;
+// Debug flag - disabled in production
+const DEBUG_MODE = false;
 
 // Enhanced logging function
 function debugLog(message, data = null) {
