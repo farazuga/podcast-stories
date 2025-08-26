@@ -1,5 +1,5 @@
 const request = require('supertest');
-const app = require('../server');
+const { app } = require('../server');
 
 describe('Authentication API', () => {
   let adminToken;
@@ -8,8 +8,8 @@ describe('Authentication API', () => {
     const response = await request(app)
       .post('/api/auth/login')
       .send({
-        username: 'admin',
-        password: 'admin123'
+        email: 'admin@vidpod.com',
+        password: 'vidpod'
       });
     
     expect(response.status).toBe(200);
@@ -23,7 +23,7 @@ describe('Authentication API', () => {
     const response = await request(app)
       .post('/api/auth/login')
       .send({
-        username: 'admin',
+        email: 'admin@vidpod.com',
         password: 'wrongpassword'
       });
     

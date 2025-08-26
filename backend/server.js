@@ -168,4 +168,4 @@ app.listen(PORT, async () => {
   await initializeDatabase();
 });
 
-module.exports = { db };
+module.exports = { app, db };
