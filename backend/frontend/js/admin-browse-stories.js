@@ -176,11 +176,11 @@ function renderStoryCard(story) {
     const cardClass = isGridView ? 'story-card admin-story-card' : 'story-card story-card-list admin-story-card';
     const isSelected = selectedStories.has(story.id);
     
-    // Format dates
-    const startDate = story.coverage_start_date ? new Date(story.coverage_start_date).toLocaleDateString() : '';
-    const endDate = story.coverage_end_date ? new Date(story.coverage_end_date).toLocaleDateString() : '';
-    const uploadedDate = story.uploaded_date ? new Date(story.uploaded_date).toLocaleDateString() : '';
-    const submittedDate = story.created_at ? new Date(story.created_at).toLocaleDateString() : '';
+    // Format dates using safe date formatting to prevent timezone offset issues
+    const startDate = story.coverage_start_date ? formatDateSafe(story.coverage_start_date.split('T')[0]) : '';
+    const endDate = story.coverage_end_date ? formatDateSafe(story.coverage_end_date.split('T')[0]) : '';
+    const uploadedDate = story.uploaded_date ? formatDateSafe(story.uploaded_date.split('T')[0]) : '';
+    const submittedDate = story.created_at ? formatDateSafe(story.created_at.split('T')[0]) : '';
     
     // Admin-specific info
     const authorInfo = story.uploaded_by_name || story.author || 'Unknown';

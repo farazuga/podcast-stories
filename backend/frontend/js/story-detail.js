@@ -301,19 +301,14 @@ async function deleteStory() {
 // Utility functions
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
+    const datePart = dateString.split('T')[0];
+    return formatDateSafeWithOptions(datePart, { month: 'long' });
 }
 
 function formatSingleDayCoverage(dateString) {
     if (!dateString) return 'Single Day: Date not specified';
-    return 'Single Day: ' + new Date(dateString).toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric'
-    });
+    const datePart = dateString.split('T')[0];
+    return 'Single Day: ' + formatDateSafeWithOptions(datePart, { month: 'long' }).replace(/^\d+\/\d+\/\d+$/, formatDateSafeWithOptions(datePart, { month: 'long' }));
 }
 
 function logout() {
