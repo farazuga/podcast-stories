@@ -362,42 +362,68 @@ const VidPODNav = {
      * Hide teacher-specific elements like "My Classes" while keeping admin access
      */
     customizeAmitracAdminNavigation() {
-        // Hide teacher-specific elements for amitrace_admin users
-        document.querySelectorAll('[data-page="teacher-dashboard"]').forEach(element => {
-            element.style.setProperty('display', 'none', 'important');
-            element.style.setProperty('visibility', 'hidden', 'important');
-            element.style.setProperty('opacity', '0', 'important');
-            element.style.setProperty('position', 'absolute', 'important');
-            element.style.setProperty('left', '-9999px', 'important');
+        // ULTIMATE HIDING: Remove teacher-specific elements from DOM completely
+        document.querySelectorAll('[data-page="teacher-dashboard"]').forEach((element, index) => {
+            // First try hiding with the most aggressive CSS override
+            element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; left: -9999px !important; width: 0 !important; height: 0 !important; overflow: hidden !important;';
             element.setAttribute('aria-hidden', 'true');
             element.classList.add('amitrace-admin-hidden');
-            console.log('🔧 V2 AMITRACE_ADMIN: AGGRESSIVELY hidden teacher-dashboard (My Classes)');
+            
+            // As a last resort, remove from DOM completely after a small delay
+            setTimeout(() => {
+                if (element.parentNode) {
+                    element.parentNode.removeChild(element);
+                    console.log('🔧 V2 AMITRACE_ADMIN: COMPLETELY REMOVED teacher-dashboard from DOM', index + 1);
+                }
+            }, 100);
+            
+            console.log('🔧 V2 AMITRACE_ADMIN: ULTIMATE HIDE teacher-dashboard (My Classes)', index + 1);
         });
         
-        // Hide mobile version too
-        document.querySelectorAll('.mobile-nav [data-page="teacher-dashboard"]').forEach(element => {
-            element.style.setProperty('display', 'none', 'important');
-            element.style.setProperty('visibility', 'hidden', 'important');
-            element.style.setProperty('opacity', '0', 'important');
-            element.style.setProperty('position', 'absolute', 'important');
-            element.style.setProperty('left', '-9999px', 'important');
+        // Hide mobile version too with same approach
+        document.querySelectorAll('.mobile-nav [data-page="teacher-dashboard"]').forEach((element, index) => {
+            element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; left: -9999px !important; width: 0 !important; height: 0 !important; overflow: hidden !important;';
             element.setAttribute('aria-hidden', 'true');
             element.classList.add('amitrace-admin-hidden');
-            console.log('🔧 V2 AMITRACE_ADMIN: AGGRESSIVELY hidden mobile teacher-dashboard (My Classes)');
+            
+            setTimeout(() => {
+                if (element.parentNode) {
+                    element.parentNode.removeChild(element);
+                    console.log('🔧 V2 AMITRACE_ADMIN: COMPLETELY REMOVED mobile teacher-dashboard from DOM', index + 1);
+                }
+            }, 100);
+            
+            console.log('🔧 V2 AMITRACE_ADMIN: ULTIMATE HIDE mobile teacher-dashboard (My Classes)', index + 1);
         });
         
         // Additional targeting - any element that contains "My Classes" text
-        document.querySelectorAll('.nav-item').forEach(element => {
+        document.querySelectorAll('.nav-item').forEach((element, index) => {
             const textContent = element.textContent || '';
             if (textContent.includes('My Classes') || textContent.includes('Teacher Dashboard')) {
-                element.style.setProperty('display', 'none', 'important');
-                element.style.setProperty('visibility', 'hidden', 'important');
-                element.style.setProperty('opacity', '0', 'important');
+                element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; left: -9999px !important; width: 0 !important; height: 0 !important; overflow: hidden !important;';
                 element.setAttribute('aria-hidden', 'true');
                 element.classList.add('amitrace-admin-hidden');
-                console.log('🔧 V2 AMITRACE_ADMIN: AGGRESSIVELY hidden element containing "My Classes":', textContent.trim());
+                
+                setTimeout(() => {
+                    if (element.parentNode) {
+                        element.parentNode.removeChild(element);
+                        console.log('🔧 V2 AMITRACE_ADMIN: COMPLETELY REMOVED text-based My Classes from DOM', index + 1);
+                    }
+                }, 100);
+                
+                console.log('🔧 V2 AMITRACE_ADMIN: ULTIMATE HIDE element containing "My Classes":', textContent.trim().substring(0, 50));
             }
         });
+        
+        // Also try to rerun this function after a delay to catch any late-loading elements
+        setTimeout(() => {
+            document.querySelectorAll('[data-page="teacher-dashboard"]').forEach((element, index) => {
+                if (element.parentNode) {
+                    element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important;';
+                    console.log('🔧 V2 AMITRACE_ADMIN: DELAYED HIDE of remaining teacher-dashboard', index + 1);
+                }
+            });
+        }, 500);
     },
 
     /**
