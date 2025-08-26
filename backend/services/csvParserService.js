@@ -29,14 +29,24 @@ class CSVParserService {
     const match = cleaned.match(dayMonthPattern);
     
     if (match) {
-      const day = match[1].padStart(2, '0');
+      let day = parseInt(match[1]);
       const monthName = match[2];
       const monthNum = monthMap[monthName];
       
       if (monthNum) {
         // Default to current year for month/day only dates
         const currentYear = new Date().getFullYear();
-        return `${currentYear}-${monthNum}-${day}`;
+        
+        // Handle leap day for non-leap years
+        if (monthNum === '02' && day === 29) {
+          const isLeapYear = (currentYear % 4 === 0 && currentYear % 100 !== 0) || (currentYear % 400 === 0);
+          if (!isLeapYear) {
+            day = 28; // Adjust Feb 29 to Feb 28 for non-leap years
+          }
+        }
+        
+        const paddedDay = day.toString().padStart(2, '0');
+        return `${currentYear}-${monthNum}-${paddedDay}`;
       }
     }
     
@@ -95,10 +105,14 @@ class CSVParserService {
       return `${year}-${month}-${day}`;
     }
     
-    // Try standard date parsing for other formats
+    // Try standard date parsing for other formats (timezone-safe)
     const parsedDate = new Date(cleaned);
     if (!isNaN(parsedDate.getTime())) {
-      return parsedDate.toISOString().split('T')[0]; // Return YYYY-MM-DD format
+      // Use local date components instead of UTC to avoid timezone offset bug
+      const year = parsedDate.getFullYear();
+      const month = (parsedDate.getMonth() + 1).toString().padStart(2, '0');
+      const day = parsedDate.getDate().toString().padStart(2, '0');
+      return `${year}-${month}-${day}`;
     }
     
     return null; // Return null for unparseable dates
