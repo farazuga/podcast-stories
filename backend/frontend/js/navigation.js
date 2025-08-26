@@ -218,6 +218,9 @@ const VidPODNav = {
         // Amitrace admin-specific customization - hide teacher-specific elements
         if (userRole === 'amitrace_admin') {
             console.log('🔧 V2 NAVIGATION: Calling customizeAmitracAdminNavigation for role:', userRole);
+            // NUCLEAR OPTION: Add body class for CSS hiding
+            document.body.classList.add('user-role-amitrace_admin');
+            console.log('🔧 V2 NAVIGATION: Added body class user-role-amitrace_admin');
             this.customizeAmitracAdminNavigation();
         }
 

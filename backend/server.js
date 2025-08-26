@@ -7,8 +7,8 @@ const path = require('path');
 // Load environment variables
 dotenv.config();
 
-// DEPLOYMENT FORCE: 2025-08-26-01-19 - Force ULTIMATE navigation fix deployment
-console.log('🚀 SERVER STARTUP: ULTIMATE navigation fixes deployment forced');
+// DEPLOYMENT FORCE: 2025-08-26-01-24 - Force NUCLEAR navigation fix deployment
+console.log('🚀 SERVER STARTUP: NUCLEAR navigation fixes deployment forced');
 
 // Import centralized configuration
 const config = require('./config/environment');

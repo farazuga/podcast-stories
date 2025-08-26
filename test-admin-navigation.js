@@ -92,8 +92,8 @@ class AdminNavigationTester {
   async testNavigationElements() {
     this.log('🧪 Testing navigation elements...');
     
-    // Wait for navigation to load
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    // Wait for navigation to load and DOM modifications to complete
+    await new Promise(resolve => setTimeout(resolve, 8000));
     
     try {
       // Test expected visible elements
@@ -141,22 +141,38 @@ class AdminNavigationTester {
       
       for (const item of expectedHidden) {
         try {
-          const element = await this.page.$(item.selector);
-          if (element) {
-            const isVisible = await this.page.evaluate(el => {
-              const style = window.getComputedStyle(el);
-              return style.display !== 'none' && style.visibility !== 'hidden';
-            }, element);
+          const elements = await this.page.$$(item.selector);
+          this.log(`Found ${elements.length} elements matching ${item.selector}`);
+          
+          if (elements.length === 0) {
+            this.log(`${item.icon} ${item.name}: NOT FOUND (successfully removed from DOM)`, 'success');
+            hiddenCount++;
+          } else {
+            let allHidden = true;
+            for (const element of elements) {
+              const isVisible = await this.page.evaluate(el => {
+                if (!el || !el.parentNode) return false; // Element removed from DOM
+                const style = window.getComputedStyle(el);
+                const rect = el.getBoundingClientRect();
+                return (style.display !== 'none' && 
+                       style.visibility !== 'hidden' && 
+                       style.opacity !== '0' &&
+                       rect.width > 0 && 
+                       rect.height > 0);
+              }, element);
+              
+              if (isVisible) {
+                allHidden = false;
+                break;
+              }
+            }
             
-            if (!isVisible) {
+            if (allHidden) {
               this.log(`${item.icon} ${item.name}: CORRECTLY HIDDEN`, 'success');
               hiddenCount++;
             } else {
               this.log(`${item.icon} ${item.name}: VISIBLE (should be hidden)`, 'error');
             }
-          } else {
-            this.log(`${item.icon} ${item.name}: NOT FOUND (could be removed)`, 'warning');
-            hiddenCount++; // Count as success if not found
           }
         } catch (error) {
           this.log(`${item.icon} ${item.name}: ERROR - ${error.message}`, 'error');
