@@ -778,6 +778,180 @@ async function rejectStory(storyId, reason = '') {
     }
 }
 
+// School management functions
+window.editSchool = function(schoolId) {
+    debugLog(`Editing school ${schoolId}`);
+    const newName = prompt('Enter new school name:');
+    if (newName && newName.trim()) {
+        updateSchool(schoolId, newName.trim());
+    }
+};
+
+window.deleteSchool = function(schoolId) {
+    debugLog(`Deleting school ${schoolId}`);
+    if (confirm('Are you sure you want to delete this school? This will affect all associated users.')) {
+        removeSchool(schoolId);
+    }
+};
+
+async function updateSchool(schoolId, newName) {
+    try {
+        await apiCall(`/schools/${schoolId}`, { 
+            method: 'PUT',
+            body: JSON.stringify({ school_name: newName })
+        });
+        showSuccess('School updated successfully!');
+        await loadSchoolsEnhanced();
+    } catch (error) {
+        debugError('Failed to update school', error);
+    }
+}
+
+async function removeSchool(schoolId) {
+    try {
+        await apiCall(`/schools/${schoolId}`, { method: 'DELETE' });
+        showSuccess('School deleted successfully!');
+        await loadSchoolsEnhanced();
+    } catch (error) {
+        debugError('Failed to delete school', error);
+    }
+}
+
+// Generic approval modal (for teacher requests)
+window.showApprovalModal = function(requestId, type = 'teacher') {
+    debugLog(`Showing approval modal for ${type} request ${requestId}`);
+    if (confirm(`Approve this ${type} request?`)) {
+        if (type === 'teacher') {
+            approveTeacherRequest(requestId);
+        }
+    }
+};
+
+async function approveTeacherRequest(requestId) {
+    try {
+        await apiCall(`/teacher-requests/${requestId}/approve`, { method: 'PUT' });
+        showSuccess('Teacher request approved successfully!');
+        await loadTeacherRequestsEnhanced();
+    } catch (error) {
+        debugError('Failed to approve teacher request', error);
+    }
+}
+
+// Enhanced loading functions for data refresh
+async function loadSchoolsEnhanced() {
+    try {
+        debugLog('Loading schools...');
+        const schools = await apiCall('/schools');
+        
+        // Update schools display if on schools tab
+        if (document.getElementById('schools-tab').classList.contains('active')) {
+            displaySchoolsEnhanced(schools);
+        }
+        
+        return schools;
+    } catch (error) {
+        debugError('Failed to load schools', error);
+        return [];
+    }
+}
+
+async function loadTeacherRequestsEnhanced() {
+    try {
+        debugLog('Loading teacher requests...');
+        const requests = await apiCall('/teacher-requests');
+        
+        // Update teacher requests display if on teachers tab
+        if (document.getElementById('teachers-tab').classList.contains('active')) {
+            displayTeacherRequestsEnhanced(requests);
+        }
+        
+        return requests;
+    } catch (error) {
+        debugError('Failed to load teacher requests', error);
+        return [];
+    }
+}
+
+// Enhanced display functions
+function displaySchoolsEnhanced(schools) {
+    debugLog(`Displaying ${schools.length} schools`);
+    
+    const table = document.getElementById('schoolsTable');
+    if (!table) {
+        debugError('schoolsTable element not found');
+        return;
+    }
+    
+    if (schools.length === 0) {
+        table.innerHTML = '<tr><td colspan="4" class="no-data">No schools found.</td></tr>';
+        return;
+    }
+    
+    const schoolsHTML = schools.map(school => `
+        <tr>
+            <td>${school.school_name}</td>
+            <td>${new Date(school.created_at).toLocaleDateString()}</td>
+            <td>${school.teacher_count || 0}</td>
+            <td class="actions">
+                <button onclick="editSchool(${school.id})" class="btn btn-small btn-secondary">Edit</button>
+                <button onclick="deleteSchool(${school.id})" class="btn btn-small btn-danger">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+    
+    table.innerHTML = schoolsHTML;
+}
+
+function displayTeacherRequestsEnhanced(requests) {
+    debugLog(`Displaying ${requests.length} teacher requests`);
+    
+    const table = document.getElementById('teacherRequestsTable');
+    if (!table) {
+        debugError('teacherRequestsTable element not found');
+        return;
+    }
+    
+    if (requests.length === 0) {
+        table.innerHTML = '<tr><td colspan="7" class="no-data">No teacher requests found.</td></tr>';
+        return;
+    }
+    
+    const requestsHTML = requests.map(request => `
+        <tr>
+            <td>${request.name}</td>
+            <td>${request.email}</td>
+            <td>${request.school}</td>
+            <td>${request.message || ''}</td>
+            <td><span class="status-badge status-${request.status}">${request.status}</span></td>
+            <td>${new Date(request.created_at).toLocaleDateString()}</td>
+            <td class="actions">
+                ${request.status === 'pending' ? `
+                    <button onclick="showApprovalModal(${request.id})" class="btn btn-small btn-success">Approve</button>
+                    <button onclick="rejectTeacherRequest(${request.id})" class="btn btn-small btn-danger">Reject</button>
+                ` : ''}
+            </td>
+        </tr>
+    `).join('');
+    
+    table.innerHTML = requestsHTML;
+}
+
+async function rejectTeacherRequest(requestId) {
+    const reason = prompt('Reason for rejection (optional):');
+    if (reason !== null) { // User didn't cancel
+        try {
+            await apiCall(`/teacher-requests/${requestId}/reject`, { 
+                method: 'PUT',
+                body: JSON.stringify({ reason })
+            });
+            showSuccess('Teacher request rejected successfully!');
+            await loadTeacherRequestsEnhanced();
+        } catch (error) {
+            debugError('Failed to reject teacher request', error);
+        }
+    }
+}
+
 // Make logout function available
 window.logout = function() {
     debugLog('Logout called');
