@@ -635,6 +635,149 @@ window.addEventListener('unhandledrejection', function(e) {
     debugError('Unhandled Promise Rejection', e.reason);
 });
 
+// Bulk approval functions
+window.adminBulkApprove = async function() {
+    const selectedStories = getSelectedStories();
+    if (selectedStories.length === 0) {
+        showError('No stories selected');
+        return;
+    }
+    
+    if (!confirm(`Approve ${selectedStories.length} selected stories?`)) return;
+    
+    try {
+        for (const storyId of selectedStories) {
+            await apiCall(`/stories/${storyId}/approve`, { method: 'PUT' });
+        }
+        showSuccess(`${selectedStories.length} stories approved successfully!`);
+        await loadStoriesEnhanced('pending');
+        clearSelection();
+    } catch (error) {
+        debugError('Failed to bulk approve stories', error);
+    }
+};
+
+window.adminBulkReject = async function() {
+    const selectedStories = getSelectedStories();
+    if (selectedStories.length === 0) {
+        showError('No stories selected');
+        return;
+    }
+    
+    if (!confirm(`Reject ${selectedStories.length} selected stories?`)) return;
+    
+    try {
+        for (const storyId of selectedStories) {
+            await apiCall(`/stories/${storyId}/reject`, { method: 'PUT' });
+        }
+        showSuccess(`${selectedStories.length} stories rejected successfully!`);
+        await loadStoriesEnhanced('pending');
+        clearSelection();
+    } catch (error) {
+        debugError('Failed to bulk reject stories', error);
+    }
+};
+
+window.adminBulkDelete = async function() {
+    const selectedStories = getSelectedStories();
+    if (selectedStories.length === 0) {
+        showError('No stories selected');
+        return;
+    }
+    
+    if (!confirm(`DELETE ${selectedStories.length} selected stories? This cannot be undone!`)) return;
+    
+    try {
+        for (const storyId of selectedStories) {
+            await apiCall(`/stories/${storyId}`, { method: 'DELETE' });
+        }
+        showSuccess(`${selectedStories.length} stories deleted successfully!`);
+        await loadStoriesEnhanced();
+        clearSelection();
+    } catch (error) {
+        debugError('Failed to bulk delete stories', error);
+    }
+};
+
+// Helper functions for selection
+function getSelectedStories() {
+    const checkboxes = document.querySelectorAll('#storiesApprovalTable input[type="checkbox"]:checked');
+    return Array.from(checkboxes).map(cb => cb.value).filter(id => id);
+}
+
+function clearSelection() {
+    const checkboxes = document.querySelectorAll('#storiesApprovalTable input[type="checkbox"]');
+    checkboxes.forEach(cb => cb.checked = false);
+    document.getElementById('adminSelectAllStories').checked = false;
+    updateBulkActionsVisibility();
+}
+
+window.toggleAdminSelectAllStories = function() {
+    const selectAll = document.getElementById('adminSelectAllStories');
+    const checkboxes = document.querySelectorAll('#storiesApprovalTable input[type="checkbox"]');
+    
+    checkboxes.forEach(cb => {
+        if (cb !== selectAll) {
+            cb.checked = selectAll.checked;
+        }
+    });
+    
+    updateBulkActionsVisibility();
+};
+
+function updateBulkActionsVisibility() {
+    const selectedCount = getSelectedStories().length;
+    const bulkActionsBar = document.getElementById('adminBulkActions');
+    const countSpan = document.getElementById('adminSelectedCount');
+    
+    if (bulkActionsBar) {
+        bulkActionsBar.style.display = selectedCount > 0 ? 'block' : 'none';
+    }
+    
+    if (countSpan) {
+        countSpan.textContent = selectedCount;
+    }
+}
+
+// Individual story approval functions
+window.showStoryApprovalModal = function(storyId) {
+    debugLog(`Showing approval modal for story ${storyId}`);
+    if (confirm('Approve this story?')) {
+        approveStory(storyId);
+    }
+};
+
+window.showStoryRejectionModal = function(storyId) {
+    debugLog(`Showing rejection modal for story ${storyId}`);
+    const reason = prompt('Reason for rejection (optional):');
+    if (reason !== null) { // User didn't cancel
+        rejectStory(storyId, reason);
+    }
+};
+
+async function approveStory(storyId) {
+    try {
+        await apiCall(`/stories/${storyId}/approve`, { method: 'PUT' });
+        showSuccess('Story approved successfully!');
+        await loadStoriesEnhanced();
+    } catch (error) {
+        debugError('Failed to approve story', error);
+    }
+}
+
+async function rejectStory(storyId, reason = '') {
+    try {
+        await apiCall(`/stories/${storyId}/reject`, { 
+            method: 'PUT',
+            body: JSON.stringify({ reason })
+        });
+        showSuccess('Story rejected successfully!');
+        await loadStoriesEnhanced();
+    } catch (error) {
+        debugError('Failed to reject story', error);
+    }
+}
+
 // Make logout function available
 window.logout = function() {
     debugLog('Logout called');

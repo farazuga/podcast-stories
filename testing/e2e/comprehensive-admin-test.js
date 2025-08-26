@@ -76,7 +76,7 @@ class AdminPanelTester {
             // Enter credentials
             this.log('Entering admin credentials...');
             await this.page.type('#email', 'admin@vidpod.com');
-            await this.page.type('#password', 'rumi&amaml');
+            await this.page.type('#password', 'vidpod');
             
             // Submit and wait for redirect
             await this.page.click('button[type="submit"]');
