@@ -16,13 +16,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     storyId = urlParams.get('id');
     
     if (!storyId) {
-        window.location.href = '/dashboard.html';
+        window.location.href = '/stories.html';
         return;
     }
     
     await loadUserInfo();
-    await loadStory();
     await loadFavoriteStatus();
+    await loadStory();
 });
 
 function checkAuth() {
@@ -70,6 +70,7 @@ async function loadStory() {
         if (response.ok) {
             currentStory = await response.json();
             displayStory();
+            updateFavoriteButton();
         } else if (response.status === 404) {
             // Story not found - show error but don't logout
             showErrorPage('Story Not Found', 'The story you are looking for does not exist or has been deleted.');
@@ -96,9 +97,9 @@ function showErrorPage(title, message) {
             <div style="text-align: center; padding: 3rem;">
                 <h2 style="color: #dc3545; margin-bottom: 1rem;">⚠️ ${title}</h2>
                 <p style="color: #6c757d; margin-bottom: 2rem;">${message}</p>
-                <button onclick="window.location.href='/dashboard.html'" 
+                <button onclick="window.location.href='/stories.html'" 
                         style="padding: 0.5rem 2rem; background: #f97316; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                    Return to Dashboard
+                    Browse Stories
                 </button>
             </div>
         `;
@@ -109,17 +110,55 @@ function displayStory() {
     if (!currentStory) return;
     
     // Basic information
-    document.getElementById('storyTitle').textContent = currentStory.idea_title;
+    const titleText = currentStory.idea_title;
+    document.getElementById('storyTitle').textContent = isFavorited ? `★ ${titleText}` : titleText;
     document.getElementById('storyDescription').textContent = currentStory.idea_description || 'No description provided';
     document.getElementById('uploadDate').textContent = formatDate(currentStory.uploaded_date);
     document.getElementById('uploadedBy').textContent = currentStory.uploaded_by_name;
     document.getElementById('school').textContent = currentStory.uploaded_by_school || 'Not specified';
     document.getElementById('email').textContent = currentStory.uploaded_by_email;
     
-    // Coverage dates
-    document.getElementById('startDate').textContent = formatDate(currentStory.coverage_start_date);
-    document.getElementById('endDate').textContent = currentStory.coverage_end_date ? 
-        formatDate(currentStory.coverage_end_date) : formatSingleDayCoverage(currentStory.coverage_start_date);
+    // Coverage dates - handle edge case and detect if single day story
+    const coverageTitleElement = document.getElementById('coveragePeriodTitle');
+    const coverageContainer = document.getElementById('coverageDatesContainer');
+    if (!coverageTitleElement || !coverageContainer) {
+        console.error('Coverage section elements not found');
+        return;
+    }
+    
+    const startDate = currentStory.coverage_start_date;
+    const endDate = currentStory.coverage_end_date;
+    
+    // Validate inverted date ranges (end before start)
+    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+        coverageTitleElement.textContent = 'Coverage Period';
+        coverageContainer.innerHTML = '<div>Invalid coverage range</div>';
+        return;
+    }
+    
+    // Handle edge case where both dates are missing
+    if (!startDate && !endDate) {
+        coverageTitleElement.textContent = 'Coverage Period';
+        coverageContainer.innerHTML = `<div>No coverage dates specified</div>`;
+    } else {
+        // Detect single day by comparing date-only parts (ignoring timestamps)
+        const dateOnly = s => (s||'').split('T')[0];
+        const isSingleDay = !endDate || dateOnly(startDate) === dateOnly(endDate);
+        
+        if (isSingleDay) {
+            coverageTitleElement.textContent = 'Single day';
+            const startDatePart = dateOnly(startDate);
+            coverageContainer.innerHTML = `<div>${formatDateSafeWithOptions(startDatePart, { month: 'long', day: 'numeric' })}</div>`;
+        } else {
+            coverageTitleElement.textContent = 'Coverage Period';
+            const startDatePart = dateOnly(startDate);
+            const endDatePart = dateOnly(endDate);
+            coverageContainer.innerHTML = `
+                <div><strong>Start:</strong> ${formatDateSafeWithOptions(startDatePart, { month: 'long', day: 'numeric' })}</div>
+                <div><strong>End:</strong> ${formatDateSafeWithOptions(endDatePart, { month: 'long', day: 'numeric' })}</div>
+            `;
+        }
+    }
     
     // Tags
     const tagsContainer = document.getElementById('storyTags');
@@ -170,14 +209,11 @@ function displayStory() {
     if (deleteBtn && currentUser.role !== 'admin' && currentUser.role !== 'amitrace_admin') {
         deleteBtn.style.display = 'none';
     }
-    
-    // Update favorite button state
-    updateFavoriteButton();
 }
 
 async function loadFavoriteStatus() {
     try {
-        const response = await fetch(`${window.API_URL || 'https://podcast-stories-production.up.railway.app/api'}/favorites`, {
+        const response = await fetch(`${window.API_URL}/favorites`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -193,79 +229,14 @@ async function loadFavoriteStatus() {
 }
 
 function updateFavoriteButton() {
-    const favoriteIcon = document.getElementById('favoriteIcon');
-    const favoriteText = document.getElementById('favoriteText');
-    const favoriteBtn = document.getElementById('favoriteBtn');
-    
-    if (isFavorited) {
-        favoriteIcon.textContent = '♥';
-        favoriteText.textContent = 'Remove from Favorites';
-        favoriteBtn.classList.add('favorited');
-    } else {
-        favoriteIcon.textContent = '♡';
-        favoriteText.textContent = 'Add to Favorites';
-        favoriteBtn.classList.remove('favorited');
+    // Update the story title with star if favorited
+    const storyTitleElement = document.getElementById('storyTitle');
+    if (storyTitleElement && currentStory) {
+        const titleText = currentStory.idea_title;
+        storyTitleElement.textContent = isFavorited ? `★ ${titleText}` : titleText;
     }
 }
 
-async function toggleFavorite() {
-    const favoriteBtn = document.getElementById('favoriteBtn');
-    
-    // Disable button during request
-    favoriteBtn.disabled = true;
-    
-    try {
-        const method = isFavorited ? 'DELETE' : 'POST';
-        const response = await fetch(`${window.API_URL || 'https://podcast-stories-production.up.railway.app/api'}/favorites/${storyId}`, {
-            method: method,
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-        
-        if (response.ok) {
-            isFavorited = !isFavorited;
-            updateFavoriteButton();
-            
-            // Show success message
-            const message = isFavorited ? 'Added to favorites!' : 'Removed from favorites!';
-            showTempMessage(message, 'success');
-        } else {
-            showTempMessage('Failed to update favorite status', 'error');
-        }
-    } catch (error) {
-        console.error('Error toggling favorite:', error);
-        showTempMessage('Network error. Please try again.', 'error');
-    } finally {
-        favoriteBtn.disabled = false;
-    }
-}
-
-function showTempMessage(message, type) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `temp-message ${type}`;
-    messageDiv.textContent = message;
-    messageDiv.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 10px 20px;
-        border-radius: 5px;
-        background: ${type === 'success' ? '#4CAF50' : '#f44336'};
-        color: white;
-        z-index: 1000;
-        font-family: Arial, sans-serif;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    `;
-    
-    document.body.appendChild(messageDiv);
-    
-    setTimeout(() => {
-        if (messageDiv.parentNode) {
-            messageDiv.parentNode.removeChild(messageDiv);
-        }
-    }, 3000);
-}
 
 function editStory() {
     // For now, redirect to add story page with edit mode
@@ -288,7 +259,7 @@ async function deleteStory() {
         
         if (response.ok) {
             alert('Story deleted successfully');
-            window.location.href = '/dashboard.html';
+            window.location.href = '/stories.html';
         } else {
             alert('Failed to delete story');
         }
@@ -302,14 +273,9 @@ async function deleteStory() {
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
     const datePart = dateString.split('T')[0];
-    return formatDateSafeWithOptions(datePart, { month: 'long' });
+    return formatDateSafeWithOptions(datePart, { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
-function formatSingleDayCoverage(dateString) {
-    if (!dateString) return 'Single Day: Date not specified';
-    const datePart = dateString.split('T')[0];
-    return 'Single Day: ' + formatDateSafeWithOptions(datePart, { month: 'long' }).replace(/^\d+\/\d+\/\d+$/, formatDateSafeWithOptions(datePart, { month: 'long' }));
-}
 
 function logout() {
     localStorage.removeItem('token');

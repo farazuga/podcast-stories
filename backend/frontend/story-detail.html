@@ -11,7 +11,7 @@
 
     <div class="container">
         <div class="breadcrumb">
-            <a href="/dashboard.html">Dashboard</a> / <span>Story Details</span>
+            <a href="/stories.html">Browse Stories</a> / <span>Story Details</span>
         </div>
 
         <div class="story-detail-card">
@@ -31,10 +31,9 @@
             </div>
 
             <div class="detail-section">
-                <h2 class="section-title">Coverage Period</h2>
-                <div class="coverage-dates">
-                    <div><strong>Start Date:</strong> <span id="startDate"></span></div>
-                    <div><strong>End Date:</strong> <span id="endDate"></span></div>
+                <h2 class="section-title" id="coveragePeriodTitle">Coverage Period</h2>
+                <div class="coverage-dates" id="coverageDatesContainer">
+                    <!-- Content will be dynamically populated by JavaScript -->
                 </div>
             </div>
 
@@ -54,11 +53,8 @@
             </div>
 
             <div class="action-buttons">
-                <button class="btn btn-secondary" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
+                <button class="btn btn-secondary" onclick="window.location.href='/stories.html'">← Browse Stories</button>
                 <div class="right-actions">
-                    <button class="btn btn-favorite" id="favoriteBtn" onclick="toggleFavorite()">
-                        <span id="favoriteIcon">♡</span> <span id="favoriteText">Add to Favorites</span>
-                    </button>
                     <button class="btn btn-edit" id="editBtn" onclick="editStory()">Edit Story</button>
                     <button class="btn btn-delete" id="deleteBtn" onclick="deleteStory()">Delete Story</button>
                 </div>
