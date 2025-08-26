@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Role Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin-bottom: 30px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .role-buttons { margin-bottom: 20px; }
+        .role-btn { 
+            padding: 10px 15px; 
+            margin: 5px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .admin-btn { background: #ff7f00; color: white; }
+        .teacher-btn { background: #3b82f6; color: white; }
+        .student-btn { background: #10b981; color: white; }
+        .active { box-shadow: 0 0 0 3px rgba(0,0,0,0.3); }
+        .nav-test { border: 2px solid #333; margin: 10px 0; padding: 10px; }
+        .nav-item { 
+            display: inline-block; 
+            margin: 5px; 
+            padding: 5px 10px; 
+            background: #f0f0f0; 
+            border-radius: 3px;
+        }
+        .hidden { display: none !important; }
+        .visible { display: inline-block !important; }
+        .results { margin-top: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>🔧 VidPOD Unified Navigation Role Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Controls</h2>
+        <div class="role-buttons">
+            <button class="role-btn admin-btn" onclick="testRole('amitrace_admin')">Test Admin</button>
+            <button class="role-btn teacher-btn" onclick="testRole('teacher')">Test Teacher</button>
+            <button class="role-btn student-btn" onclick="testRole('student')">Test Student</button>
+            <button onclick="clearTests()">Clear</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Unified Navigation Simulation (data-role attributes)</h2>
+        <div class="nav-test">
+            <div class="nav-item" id="dashboard">Dashboard</div>
+            <div class="nav-item" id="browse-stories">Browse Stories</div>
+            <div class="nav-item" id="add-story">Add Story</div>
+            <div class="nav-item" id="my-classes" data-role="teacher">My Classes</div>
+            <div class="nav-item" id="admin-browse-stories" data-role="admin,amitrace_admin">Admin Browse Stories</div>
+            <div class="nav-item" id="admin-panel" data-role="admin,amitrace_admin">Admin Panel</div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Expected Results (New Rules)</h2>
+        <div id="expected-results">
+            <p><strong>Admin:</strong> Dashboard, Browse Stories, Add Story, Admin Browse Stories, Admin Panel</p>
+            <p><strong>Teacher:</strong> Dashboard, Browse Stories, Add Story, My Classes, Settings (Admin Panel renamed)</p>
+            <p><strong>Student:</strong> Dashboard, Browse Stories, Add Story</p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="results" class="results">
+            Click a role button to test unified navigation visibility...
+        </div>
+    </div>
+
+    <script>
+        function testRole(role) {
+            console.log(`Testing unified navigation for role: ${role}`);
+            
+            // Clear previous states
+            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('hidden', 'visible');
+                item.style.display = '';
+            });
+
+            // Mark active button
+            document.querySelector(`.${role === 'amitrace_admin' ? 'admin' : role}-btn`).classList.add('active');
+
+            // Apply unified navigation visibility rules
+            const allItems = document.querySelectorAll('.nav-item');
+            allItems.forEach(item => {
+                const dataRole = item.getAttribute('data-role');
+                
+                if (!dataRole) {
+                    // No data-role = visible to all
+                    item.classList.add('visible');
+                    return;
+                }
+
+                const allowedRoles = dataRole.toLowerCase().split(',').map(r => r.trim());
+                const shouldShow = allowedRoles.includes(role.toLowerCase());
+                
+                if (shouldShow) {
+                    item.classList.add('visible');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+
+            // Teacher customization - rename Admin Panel to Settings
+            const adminPanel = document.getElementById('admin-panel');
+            if (role === 'teacher' && adminPanel && !adminPanel.classList.contains('hidden')) {
+                adminPanel.textContent = 'Settings';
+            } else if (adminPanel) {
+                adminPanel.textContent = 'Admin Panel';
+            }
+
+            // Show results
+            showResults(role);
+        }
+
+        function showResults(role) {
+            const results = document.getElementById('results');
+            const visibleItems = Array.from(document.querySelectorAll('.nav-item.visible')).map(item => item.textContent);
+            const hiddenItems = Array.from(document.querySelectorAll('.nav-item.hidden')).map(item => item.id);
+
+            const expectations = {
+                'amitrace_admin': ['Dashboard', 'Browse Stories', 'Add Story', 'Admin Browse Stories', 'Admin Panel'],
+                'teacher': ['Dashboard', 'Browse Stories', 'Add Story', 'My Classes', 'Settings'],
+                'student': ['Dashboard', 'Browse Stories', 'Add Story']
+            };
+
+            const expected = expectations[role];
+            const passed = expected.every(item => visibleItems.includes(item)) && visibleItems.length === expected.length;
+
+            results.innerHTML = `
+                <h3>Results for ${role}:</h3>
+                <p><strong>Status:</strong> <span class="${passed ? 'success' : 'error'}">${passed ? '✅ PASS' : '❌ FAIL'}</span></p>
+                <p><strong>Visible Items:</strong> ${visibleItems.join(', ')}</p>
+                <p><strong>Hidden Items:</strong> ${hiddenItems.join(', ')}</p>
+                <p><strong>Expected:</strong> ${expected.join(', ')}</p>
+                ${!passed ? '<p class="error">❌ Unified navigation visibility does not match new rules!</p>' : '<p class="success">✅ Unified navigation visibility is correct!</p>'}
+            `;
+        }
+
+        function clearTests() {
+            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('hidden', 'visible');
+                item.style.display = '';
+                if (item.id === 'admin-panel') item.textContent = 'Admin Panel';
+            });
+            document.getElementById('results').innerHTML = 'Click a role button to test unified navigation visibility...';
+        }
+    </script>
+</body>
+</html>
