@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "timestamp": "2025-08-20T20:32:26.983Z",
-    "duration": "18.2s",
+    "timestamp": "2025-08-26T00:47:15.638Z",
+    "duration": "17.1s",
     "testSuite": "VidPOD Comprehensive Multi-Role Testing"
   },
   "summary": {
@@ -9,7 +9,7 @@
     "passed": 8,
     "failed": 3,
     "successRate": "72.7%",
-    "totalBugs": 3
+    "totalBugs": 1
   },
   "roleResults": {
     "admin": {
@@ -19,15 +19,15 @@
       "bugs": []
     },
     "teacher": {
-      "passed": 4,
-      "failed": 1,
-      "total": 5,
-      "bugs": []
-    },
-    "student": {
       "passed": 0,
       "failed": 1,
       "total": 1,
+      "bugs": []
+    },
+    "student": {
+      "passed": 4,
+      "failed": 1,
+      "total": 5,
       "bugs": []
     },
     "security": {
@@ -45,10 +45,10 @@
   },
   "bugAnalysis": {
     "summary": {
-      "total": 3,
+      "total": 1,
       "bySeverity": {
         "CRITICAL": 1,
-        "HIGH": 2,
+        "HIGH": 0,
         "MEDIUM": 0,
         "LOW": 0
       },
@@ -56,79 +56,33 @@
         "AUTHENTICATION": 1,
         "UI_UX": 0,
         "PERFORMANCE": 0,
-        "FUNCTIONAL": 2
+        "FUNCTIONAL": 0
       }
     },
     "bugs": [
       {
-        "id": "BUG_1755721946973_xwu18",
+        "id": "BUG_1756169227659_fnwn2",
         "category": "AUTHENTICATION",
         "severity": "CRITICAL",
-        "description": "student login completely failed: Execution context was destroyed, most likely because of a navigation.",
+        "description": "teacher login completely failed: Execution context was destroyed, most likely because of a navigation.",
         "context": {
           "actual": "Execution context was destroyed, most likely because of a navigation.",
           "expected": "Successful login and redirect",
           "reproductionSteps": [
             "Navigate to login page",
-            "Enter student credentials",
+            "Enter teacher credentials",
             "Submit form"
           ]
         },
-        "timestamp": "2025-08-20T20:32:26.973Z",
+        "timestamp": "2025-08-26T00:47:07.659Z",
         "reproductionSteps": [
           "Navigate to login page",
-          "Enter student credentials",
+          "Enter teacher credentials",
           "Submit form"
         ],
         "expectedBehavior": "Successful login and redirect",
         "actualBehavior": "Execution context was destroyed, most likely because of a navigation.",
         "fixPlan": "Immediate security audit and token handling review",
-        "status": "OPEN"
-      },
-      {
-        "id": "BUG_1755721930498_qwoao",
-        "category": "FUNCTIONAL",
-        "severity": "HIGH",
-        "description": "Page JavaScript Error: bulkExport is not defined",
-        "context": {
-          "actual": "bulkExport is not defined",
-          "expected": "No JavaScript errors",
-          "reproductionSteps": [
-            "Navigate to page",
-            "Check console for errors"
-          ]
-        },
-        "timestamp": "2025-08-20T20:32:10.498Z",
-        "reproductionSteps": [
-          "Navigate to page",
-          "Check console for errors"
-        ],
-        "expectedBehavior": "No JavaScript errors",
-        "actualBehavior": "bulkExport is not defined",
-        "fixPlan": "Functionality review and error handling",
-        "status": "OPEN"
-      },
-      {
-        "id": "BUG_1755721939140_rxteg",
-        "category": "FUNCTIONAL",
-        "severity": "HIGH",
-        "description": "Page JavaScript Error: bulkExport is not defined",
-        "context": {
-          "actual": "bulkExport is not defined",
-          "expected": "No JavaScript errors",
-          "reproductionSteps": [
-            "Navigate to page",
-            "Check console for errors"
-          ]
-        },
-        "timestamp": "2025-08-20T20:32:19.140Z",
-        "reproductionSteps": [
-          "Navigate to page",
-          "Check console for errors"
-        ],
-        "expectedBehavior": "No JavaScript errors",
-        "actualBehavior": "bulkExport is not defined",
-        "fixPlan": "Functionality review and error handling",
         "status": "OPEN"
       }
     ]

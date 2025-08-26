@@ -184,7 +184,7 @@ const VidPODNav = {
         }
 
         const userRole = this.currentUser.role.toLowerCase().trim();
-        console.log(`🔧 V2 NAVIGATION: Updating visibility for role: ${userRole}`);
+        console.log(`🔧 V2 NAVIGATION: Updating visibility for role: ${userRole}`, this.currentUser);
 
         // Handle elements with data-role attribute
         document.querySelectorAll('[data-role]').forEach(element => {
@@ -217,6 +217,7 @@ const VidPODNav = {
 
         // Amitrace admin-specific customization - hide teacher-specific elements
         if (userRole === 'amitrace_admin') {
+            console.log('🔧 V2 NAVIGATION: Calling customizeAmitracAdminNavigation for role:', userRole);
             this.customizeAmitracAdminNavigation();
         }
 
@@ -363,14 +364,39 @@ const VidPODNav = {
     customizeAmitracAdminNavigation() {
         // Hide teacher-specific elements for amitrace_admin users
         document.querySelectorAll('[data-page="teacher-dashboard"]').forEach(element => {
-            element.style.display = 'none';
-            console.log('🔧 V2 AMITRACE_ADMIN: Hidden teacher-dashboard (My Classes)');
+            element.style.setProperty('display', 'none', 'important');
+            element.style.setProperty('visibility', 'hidden', 'important');
+            element.style.setProperty('opacity', '0', 'important');
+            element.style.setProperty('position', 'absolute', 'important');
+            element.style.setProperty('left', '-9999px', 'important');
+            element.setAttribute('aria-hidden', 'true');
+            element.classList.add('amitrace-admin-hidden');
+            console.log('🔧 V2 AMITRACE_ADMIN: AGGRESSIVELY hidden teacher-dashboard (My Classes)');
         });
         
         // Hide mobile version too
         document.querySelectorAll('.mobile-nav [data-page="teacher-dashboard"]').forEach(element => {
-            element.style.display = 'none';
-            console.log('🔧 V2 AMITRACE_ADMIN: Hidden mobile teacher-dashboard (My Classes)');
+            element.style.setProperty('display', 'none', 'important');
+            element.style.setProperty('visibility', 'hidden', 'important');
+            element.style.setProperty('opacity', '0', 'important');
+            element.style.setProperty('position', 'absolute', 'important');
+            element.style.setProperty('left', '-9999px', 'important');
+            element.setAttribute('aria-hidden', 'true');
+            element.classList.add('amitrace-admin-hidden');
+            console.log('🔧 V2 AMITRACE_ADMIN: AGGRESSIVELY hidden mobile teacher-dashboard (My Classes)');
+        });
+        
+        // Additional targeting - any element that contains "My Classes" text
+        document.querySelectorAll('.nav-item').forEach(element => {
+            const textContent = element.textContent || '';
+            if (textContent.includes('My Classes') || textContent.includes('Teacher Dashboard')) {
+                element.style.setProperty('display', 'none', 'important');
+                element.style.setProperty('visibility', 'hidden', 'important');
+                element.style.setProperty('opacity', '0', 'important');
+                element.setAttribute('aria-hidden', 'true');
+                element.classList.add('amitrace-admin-hidden');
+                console.log('🔧 V2 AMITRACE_ADMIN: AGGRESSIVELY hidden element containing "My Classes":', textContent.trim());
+            }
         });
     },
 
