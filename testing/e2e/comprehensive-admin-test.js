@@ -300,9 +300,19 @@ class AdminPanelTester {
             await this.page.evaluate(() => window.showTab('stories'));
             await new Promise(resolve => setTimeout(resolve, 1000));
             
+            // Load stories to populate the table
+            await this.page.evaluate(() => {
+                if (window.loadStoriesForApproval) {
+                    window.loadStoriesForApproval();
+                }
+            });
+            
+            // Wait for stories to load
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
             // Check for story approval interface
             const approvalInterface = await this.page.evaluate(() => {
-                const storyTable = document.querySelector('#storiesTable, .stories-table');
+                const storyTable = document.getElementById('storiesApprovalTable');
                 const statusFilter = document.getElementById('storyStatusFilter');
                 const approvalModal = document.getElementById('storyApprovalModal');
                 
