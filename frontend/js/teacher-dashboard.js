@@ -443,7 +443,7 @@ function setupEventListeners() {
 // Utility functions
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString();
+    return formatDateSafe(dateString) || 'N/A';
 }
 
 function showError(message) {

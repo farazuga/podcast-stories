@@ -345,7 +345,7 @@ async function deleteStory(storyId) {
 // Utility functions
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString();
+    return formatDateSafe(dateString) || 'N/A';
 }
 
 function truncateText(text, maxLength) {

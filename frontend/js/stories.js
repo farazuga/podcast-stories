@@ -179,10 +179,10 @@ function renderStoryCard(story) {
     const cardClass = isGridView ? 'story-card' : 'story-card story-card-list';
     const isSelected = selectedStories.has(story.id);
     
-    // Format dates for coverage and determine applicable date for sorting
-    const startDate = story.coverage_start_date ? new Date(story.coverage_start_date).toLocaleDateString() : '';
-    const endDate = story.coverage_end_date ? new Date(story.coverage_end_date).toLocaleDateString() : '';
-    const uploadedDate = story.uploaded_date ? new Date(story.uploaded_date).toLocaleDateString() : '';
+    // Format dates for coverage and determine applicable date for sorting (timezone-safe)
+    const startDate = story.coverage_start_date ? formatDateSafe(story.coverage_start_date) : '';
+    const endDate = story.coverage_end_date ? formatDateSafe(story.coverage_end_date) : '';
+    const uploadedDate = story.uploaded_date ? formatDateSafe(story.uploaded_date) : '';
     
     // Determine the most applicable date for display in list view
     const applicableDate = story.coverage_start_date ? startDate : (story.uploaded_date ? uploadedDate : '');
