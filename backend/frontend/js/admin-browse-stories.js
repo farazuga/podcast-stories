@@ -460,24 +460,8 @@ function showCSVImportModal() {
     document.getElementById('csvModal').style.display = 'block';
 }
 
-function downloadSampleCSV() {
-    const sampleData = [
-        ['idea_title', 'idea_description', 'question_1', 'question_2', 'question_3', 'question_4', 'question_5', 'question_6', 'coverage_start_date', 'coverage_end_date', 'tags', 'interviewees'],
-        ['Local Environmental Impact', 'Investigating pollution effects on local wildlife', 'What pollution sources affect our area?', 'How has wildlife been impacted?', 'What cleanup efforts are underway?', 'How can residents help?', 'What policies need changing?', 'What is the long-term outlook?', '2024-01-15', '2024-03-15', 'environment,pollution,wildlife', 'Environmental Scientist,Local Mayor'],
-        ['School Lunch Program Innovation', 'How schools are improving nutrition and sustainability', 'What changes were made to the program?', 'How do students respond to new options?', 'What are the nutritional benefits?', 'How is food sourcing different?', 'What challenges were faced?', 'What are the cost implications?', '2024-02-01', '2024-04-01', 'education,nutrition,sustainability', 'School Nutritionist,Principal,Student Representative']
-    ];
-    
-    const csvContent = sampleData.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'vidpod-sample-stories.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
+// Note: downloadSampleCSV function removed - now handled by unified csvImportHandler
+// Function is available globally as window.downloadSampleCSV
 
 // Re-use existing functions from stories.js with modifications for admin view
 function renderStories() {
@@ -559,93 +543,16 @@ function setupEventListeners() {
         });
     }
     
-    // CSV Form
-    const csvForm = document.getElementById('csvForm');
-    if (csvForm) {
-        csvForm.addEventListener('submit', handleCSVUpload);
-    }
+    // CSV Form - now handled by unified handler
+    // csvImportHandler will auto-initialize this form
 }
 
-// CSV Upload Handler
-async function handleCSVUpload(e) {
-    e.preventDefault();
-    
-    const fileInput = document.getElementById('csvFile');
-    const autoApprove = document.getElementById('autoApprove').checked;
-    
-    if (!fileInput.files[0]) {
-        showError('Please select a CSV file');
-        return;
-    }
-    
-    const formData = new FormData();
-    formData.append('csv', fileInput.files[0]); // Backend expects 'csv' not 'csvFile'
-    formData.append('autoApprove', autoApprove);
-    
-    // Show loading state
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    submitBtn.textContent = 'Importing...';
-    submitBtn.disabled = true;
-    
-    try {
-        console.log('Starting CSV import...');
-        const response = await fetch(`${window.API_URL}/stories/import`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: formData
-        });
-        
-        const result = await response.json();
-        console.log('Import result:', result);
-        
-        if (response.ok) {
-            // Show detailed success message
-            let message = `Successfully imported ${result.imported || 0} of ${result.total || 0} stories!`;
-            
-            if (result.warnings && result.warnings.length > 0) {
-                message += `\n⚠️ ${result.warnings.length} warnings`;
-                console.warn('Import warnings:', result.warnings);
-            }
-            
-            if (result.errors && result.errors.length > 0) {
-                message += `\n❌ ${result.errors.length} errors`;
-                console.error('Import errors:', result.errors);
-                // Show first few errors
-                const errorDetails = result.errors.slice(0, 3).map(err => 
-                    `Row ${err.row}: ${err.error}`
-                ).join('\n');
-                message += '\n\nFirst errors:\n' + errorDetails;
-            }
-            
-            showSuccess(message);
-            document.getElementById('csvModal').style.display = 'none';
-            
-            // Clear file input for next use
-            fileInput.value = '';
-            
-            await loadStories(); // Reload stories
-            await loadAdminStats(); // Reload stats
-        } else {
-            // Show detailed error
-            let errorMsg = result.error || 'Import failed';
-            if (result.details) {
-                errorMsg += ': ' + result.details;
-            }
-            showError(errorMsg);
-            console.error('Import error:', result);
-        }
-    } catch (error) {
-        console.error('CSV upload error:', error);
-        showError(`Upload failed: ${error.message}. Please check the console for details.`);
-    } finally {
-        // Restore button state
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-    }
-}
+// Note: handleCSVUpload function removed - now handled by unified csvImportHandler
+// Listen for import completion to refresh data
+document.addEventListener('csvImportComplete', async () => {
+    await loadStories(); // Reload stories
+    await loadAdminStats(); // Reload stats
+});
 
 // Common utility functions (reused from stories.js)
 function viewStory(storyId) {

@@ -272,11 +272,8 @@ function setupEventListeners() {
         };
     }
     
-    // CSV Upload form - add null check
-    const csvUploadForm = document.getElementById('csvUploadForm');
-    if (csvUploadForm) {
-        csvUploadForm.addEventListener('submit', handleCSVUpload);
-    }
+    // CSV Upload form - now handled by unified csvImportHandler
+    // csvImportHandler will auto-initialize CSV forms
 }
 
 function applyFilters() {
@@ -311,62 +308,11 @@ function clearFilters() {
     loadStories();
 }
 
-async function handleCSVUpload(e) {
-    e.preventDefault();
-    
-    const fileInput = document.getElementById('csvFile');
-    const file = fileInput.files[0];
-    
-    if (!file) {
-        alert('Please select a CSV file');
-        return;
-    }
-    
-    const formData = new FormData();
-    formData.append('csv', file);
-    
-    try {
-        const response = await fetch(`${API_URL}/stories/import`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok) {
-            document.getElementById('csvResult').innerHTML = `
-                <div class="success-message" style="display: block;">
-                    Import completed! ${result.imported} stories imported.
-                    ${result.errors.length > 0 ? `${result.errors.length} errors occurred.` : ''}
-                </div>
-            `;
-            
-            // Refresh stories list
-            await loadStories();
-            
-            // Close modal after 3 seconds
-            setTimeout(() => {
-                document.getElementById('csvModal').style.display = 'none';
-                document.getElementById('csvUploadForm').reset();
-                document.getElementById('csvResult').innerHTML = '';
-            }, 3000);
-        } else {
-            document.getElementById('csvResult').innerHTML = `
-                <div class="error-message" style="display: block;">
-                    Import failed: ${result.error}
-                </div>
-            `;
-        }
-    } catch (error) {
-        document.getElementById('csvResult').innerHTML = `
-            <div class="error-message" style="display: block;">
-                Network error during upload
-            </div>
-        `;
-    }
+// Note: handleCSVUpload function removed - now handled by unified csvImportHandler
+// Listen for import completion to refresh data
+document.addEventListener('csvImportComplete', async () => {
+    await loadStories(); // Reload stories after successful import
+});
 }
 
 function viewStory(storyId) {

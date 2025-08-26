@@ -4,6 +4,8 @@ const multer = require('multer');
 const csv = require('csv-parser');
 const fs = require('fs');
 const { verifyToken, isAdmin } = require('../middleware/auth');
+const csvImportService = require('../services/csvImportService');
+const csvValidationService = require('../services/csvValidationService');
 const router = express.Router();
 
 const pool = new Pool({
@@ -338,383 +340,50 @@ router.delete('/:id', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-// Helper function to parse various date formats
-function parseFlexibleDate(dateStr) {
-  if (!dateStr || dateStr.trim() === '') return null;
-  
-  const cleaned = dateStr.trim();
-  
-  // Handle formats like "1-Jan", "2-Feb", etc.
-  const monthMap = {
-    'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04',
-    'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08',
-    'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
-  };
-  
-  // Pattern: "1-Jan", "15-Dec", etc.
-  const dayMonthPattern = /^(\d{1,2})-([A-Za-z]{3})$/;
-  const match = cleaned.match(dayMonthPattern);
-  
-  if (match) {
-    const day = match[1].padStart(2, '0');
-    const monthName = match[2];
-    const monthNum = monthMap[monthName];
-    
-    if (monthNum) {
-      // Default to current year for month/day only dates
-      const currentYear = new Date().getFullYear();
-      return `${currentYear}-${monthNum}-${day}`;
-    }
-  }
-  
-  // Handle MM/DD/YY format (e.g., "1/1/25")
-  const shortDatePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{2})$/;
-  const shortMatch = cleaned.match(shortDatePattern);
-  
-  if (shortMatch) {
-    const month = shortMatch[1].padStart(2, '0');
-    const day = shortMatch[2].padStart(2, '0');
-    let year = parseInt(shortMatch[3]);
-    
-    // Convert 2-digit year to 4-digit (assuming 20xx for now)
-    if (year < 50) {
-      year = 2000 + year;
-    } else {
-      year = 1900 + year;
-    }
-    
-    return `${year}-${month}-${day}`;
-  }
-  
-  // Try standard date parsing for other formats
-  const parsedDate = new Date(cleaned);
-  if (!isNaN(parsedDate.getTime())) {
-    return parsedDate.toISOString().split('T')[0]; // Return YYYY-MM-DD format
-  }
-  
-  return null; // Return null for unparseable dates
-}
+// Note: parseFlexibleDate function moved to csvParserService.js
 
-// CSV Import - Enhanced with better error handling, date parsing, and schema compatibility
+// CSV Import - Centralized using csvImportService
 router.post('/import', verifyToken, upload.single('csv'), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
-  }
-
-  console.log(`📤 CSV import started by user ${req.user.id} (${req.user.email || req.user.username})`);
-  console.log(`📁 File: ${req.file.originalname}, Size: ${req.file.size} bytes`);
-  console.log(`🔧 Enhanced CSV import with flexible date parsing v2.0`);
-
-  const results = [];
-  const errors = [];
-  const warnings = [];
-  let hasApprovalStatus = false;
-  let successCount = 0;
-  
-  // Check if approval_status column exists (Phase 2 feature)
-  const client = await pool.connect();
   try {
-    const schemaCheck = await client.query(`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'story_ideas' AND column_name = 'approval_status'
-    `);
-    hasApprovalStatus = schemaCheck.rows.length > 0;
-    console.log(`Database schema check: approval_status field ${hasApprovalStatus ? 'exists' : 'not found'}`);
+    // Validate file upload
+    const fileValidation = csvValidationService.validateUploadedFile(req.file);
+    if (!fileValidation.isValid) {
+      return res.status(400).json({ error: fileValidation.message });
+    }
+
+    // Validate user permissions
+    const permissionValidation = csvValidationService.validateImportPermissions(req.user);
+    if (!permissionValidation.isValid) {
+      return res.status(403).json({ error: permissionValidation.message });
+    }
+
+    // Extract options from request
+    const options = {
+      autoApprove: req.body.autoApprove === 'true' || req.body.autoApprove === true
+    };
+
+    // Import using centralized service
+    const result = await csvImportService.importCSV(req.file, req.user, options);
+    
+    res.json(result);
+    
   } catch (error) {
-    console.log('Schema check failed, assuming basic schema');
-  } finally {
-    client.release();
-  }
-
-  fs.createReadStream(req.file.path)
-    .pipe(csv({
-      skipEmptyLines: true,
-      skipLinesWithError: false,
-      strict: false,
-      // Handle BOM and encoding issues
-      separator: ',',
-      quote: '"',
-      escape: '"'
-    }))
-    .on('data', (data) => {
-      console.log(`📝 Raw CSV row data:`, Object.keys(data));
-      
-      // Handle BOM in header by cleaning first field
-      const cleanedData = {};
-      Object.keys(data).forEach(key => {
-        const cleanKey = key.replace(/^\uFEFF/, ''); // Remove BOM
-        cleanedData[cleanKey] = data[key];
-      });
-      
-      // Skip empty rows
-      if (cleanedData.idea_title || cleanedData.title) {
-        results.push(cleanedData);
-        console.log(`📋 Added row: "${cleanedData.idea_title || cleanedData.title}"`);
-      } else {
-        console.log(`⚠️ Skipped empty row:`, cleanedData);
-      }
-    })
-    .on('end', async () => {
-      console.log(`Parsed ${results.length} rows from CSV`);
-      
-      const client = await pool.connect();
-      
-      try {
-        await client.query('BEGIN');
-        
-        for (let i = 0; i < results.length; i++) {
-          const row = results[i];
-          const rowNumber = i + 2; // +2 because CSV row 1 is header, and we're 0-indexed
-          
-          try {
-            // Validate required fields
-            const title = row.idea_title || row.title;
-            if (!title || title.trim() === '') {
-              errors.push({ 
-                row: rowNumber, 
-                title: 'Empty row', 
-                error: 'Story title is required' 
-              });
-              continue;
-            }
-
-            // Parse and validate dates with flexible format support
-            const startDateRaw = row.coverage_start_date || row.start_date || '';
-            const endDateRaw = row.coverage_end_date || row.end_date || '';
-            
-            const startDate = parseFlexibleDate(startDateRaw);
-            const endDate = parseFlexibleDate(endDateRaw);
-            
-            // Log date parsing for debugging
-            if (startDateRaw && !startDate) {
-              warnings.push({
-                row: rowNumber,
-                title: title,
-                warning: `Could not parse start date: "${startDateRaw}"`
-              });
-            }
-            if (endDateRaw && !endDate) {
-              warnings.push({
-                row: rowNumber,
-                title: title,
-                warning: `Could not parse end date: "${endDateRaw}"`
-              });
-            }
-
-            // Prepare the base insert query and values
-            let insertQuery, insertValues;
-            
-            if (hasApprovalStatus) {
-              // Phase 2 schema with approval_status
-              insertQuery = `INSERT INTO story_ideas (
-                idea_title, idea_description,
-                question_1, question_2, question_3, question_4, question_5, question_6,
-                coverage_start_date, coverage_end_date, uploaded_by, approval_status
-              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`;
-              
-              insertValues = [
-                title.trim(),
-                (row.idea_description || row.enhanced_description || row.description || '').trim(),
-                row.question_1 || null, row.question_2 || null, row.question_3 || null,
-                row.question_4 || null, row.question_5 || null, row.question_6 || null,
-                startDate, // Use parsed date
-                endDate,   // Use parsed date
-                req.user.id, 
-                'approved' // Auto-approve CSV imports by admin users
-              ];
-            } else {
-              // Basic schema without approval_status
-              insertQuery = `INSERT INTO story_ideas (
-                idea_title, idea_description,
-                question_1, question_2, question_3, question_4, question_5, question_6,
-                coverage_start_date, coverage_end_date, uploaded_by
-              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`;
-              
-              insertValues = [
-                title.trim(),
-                (row.idea_description || row.enhanced_description || row.description || '').trim(),
-                row.question_1 || null, row.question_2 || null, row.question_3 || null,
-                row.question_4 || null, row.question_5 || null, row.question_6 || null,
-                startDate, // Use parsed date
-                endDate,   // Use parsed date
-                req.user.id
-              ];
-            }
-
-            // Insert the story
-            const storyResult = await client.query(insertQuery, insertValues);
-            const storyId = storyResult.rows[0].id;
-            console.log(`Imported story ${successCount + 1}: "${title}" (ID: ${storyId})`);
-
-            // Handle tags if present (check multiple possible column names)
-            const tagsValue = row.tags || row.auto_tags || row.tag;
-            if (tagsValue && tagsValue.trim()) {
-              const tags = tagsValue.split(',').map(t => t.trim()).filter(t => t);
-              let tagsAdded = 0;
-              
-              for (const tagName of tags) {
-                try {
-                  // First try to find existing tag
-                  let tagResult = await client.query(
-                    'SELECT id FROM tags WHERE tag_name = $1',
-                    [tagName]
-                  );
-                  
-                  let tagId;
-                  if (tagResult.rows.length > 0) {
-                    tagId = tagResult.rows[0].id;
-                  } else {
-                    // Create new tag if it doesn't exist
-                    const newTagResult = await client.query(
-                      'INSERT INTO tags (tag_name, created_by) VALUES ($1, $2) RETURNING id',
-                      [tagName, req.user.id]
-                    );
-                    tagId = newTagResult.rows[0].id;
-                    console.log(`Created new tag: "${tagName}"`);
-                  }
-                  
-                  // Link tag to story
-                  await client.query(
-                    'INSERT INTO story_tags (story_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-                    [storyId, tagId]
-                  );
-                  tagsAdded++;
-                } catch (tagError) {
-                  console.log(`Warning: Failed to add tag "${tagName}" to story ${storyId}: ${tagError.message}`);
-                }
-              }
-              
-              if (tagsAdded > 0) {
-                console.log(`  Added ${tagsAdded} tags to story ${storyId}`);
-              }
-            }
-
-            // Handle interviewees if present (support multiple column formats)
-            const people = [];
-            
-            // Check for single interviewees column
-            if (row.interviewees && row.interviewees.trim()) {
-              people.push(...row.interviewees.split(',').map(p => p.trim()).filter(p => p));
-            }
-            if (row.people_to_interview && row.people_to_interview.trim()) {
-              people.push(...row.people_to_interview.split(',').map(p => p.trim()).filter(p => p));
-            }
-            
-            // Check for numbered interviewee columns (interviewees 1, interviewees 2, etc.)
-            Object.keys(row).forEach(key => {
-              if (key.trim().match(/^interviewees?\s*\d+$/i) && row[key] && row[key].trim()) {
-                people.push(row[key].trim());
-              }
-            });
-            
-            if (people.length > 0) {
-              let intervieweesAdded = 0;
-              
-              for (const person of people) {
-                try {
-                  const intervieweeResult = await client.query(
-                    'INSERT INTO interviewees (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET name = $1 RETURNING id',
-                    [person]
-                  );
-                  
-                  await client.query(
-                    'INSERT INTO story_interviewees (story_id, interviewee_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-                    [storyId, intervieweeResult.rows[0].id]
-                  );
-                  intervieweesAdded++;
-                } catch (intervieweeError) {
-                  console.log(`Warning: Failed to add interviewee "${person}" to story ${storyId}: ${intervieweeError.message}`);
-                }
-              }
-              
-              if (intervieweesAdded > 0) {
-                console.log(`  Added ${intervieweesAdded} interviewees to story ${storyId}`);
-              }
-            }
-
-            successCount++;
-            
-          } catch (rowError) {
-            console.error(`Error processing row ${rowNumber}:`, rowError.message);
-            errors.push({ 
-              row: rowNumber, 
-              title: row.idea_title || row.title || 'Unknown', 
-              error: rowError.message 
-            });
-          }
-        }
-
-        await client.query('COMMIT');
-        console.log(`📊 CSV import completed: ${successCount} stories imported, ${errors.length} errors, ${warnings.length} warnings`);
-        
-        if (hasApprovalStatus) {
-          console.log(`✅ Auto-approved ${successCount} stories from CSV import by admin ${req.user.email || req.user.username}`);
-        }
-        
-        if (warnings.length > 0) {
-          console.log(`⚠️ Warnings during import:`, warnings.slice(0, 5)); // Log first 5 warnings
-        }
-        
-        // Clean up uploaded file
-        try {
-          fs.unlinkSync(req.file.path);
-        } catch (unlinkError) {
-          console.error('Warning: Failed to clean up uploaded file:', unlinkError.message);
-        }
-        
-        res.json({
-          message: `CSV import completed ${successCount > 0 ? 'successfully' : 'with issues'}`,
-          imported: successCount,
-          total: results.length,
-          errors: errors.length > 0 ? errors.slice(0, 10) : null, // Limit errors in response
-          warnings: warnings.length > 0 ? warnings.slice(0, 10) : null, // Include warnings
-          schemaInfo: hasApprovalStatus ? 'Phase 2 schema detected' : 'Basic schema detected',
-          approval_status: hasApprovalStatus ? 'auto-approved' : 'no approval system',
-          auto_approved_count: hasApprovalStatus ? successCount : 0,
-          date_parsing: {
-            supported_formats: ['YYYY-MM-DD', 'MM/DD/YYYY', 'DD-MMM (e.g., 1-Jan)', 'ISO dates'],
-            total_warnings: warnings.length,
-            total_errors: errors.length
-          }
-        });
-        
-      } catch (error) {
-        await client.query('ROLLBACK');
-        
-        // Clean up uploaded file
-        try {
-          fs.unlinkSync(req.file.path);
-        } catch (unlinkError) {
-          console.error('Warning: Failed to clean up uploaded file during error:', unlinkError.message);
-        }
-        
-        console.error('CSV import transaction error:', error);
-        res.status(500).json({ 
-          error: 'Failed to import CSV', 
-          details: error.message,
-          imported: successCount,
-          total: results.length
-        });
-      } finally {
-        client.release();
-      }
-    })
-    .on('error', (streamError) => {
-      console.error('CSV parsing error:', streamError);
-      
-      // Clean up uploaded file
+    console.error('CSV import error:', error);
+    
+    // Clean up uploaded file if it exists
+    if (req.file?.path) {
       try {
         fs.unlinkSync(req.file.path);
       } catch (unlinkError) {
-        console.error('Warning: Failed to clean up uploaded file during stream error:', unlinkError.message);
+        console.error('Warning: Failed to clean up uploaded file during error:', unlinkError.message);
       }
-      
-      res.status(400).json({ 
-        error: 'Failed to parse CSV file', 
-        details: streamError.message 
-      });
+    }
+    
+    res.status(500).json({ 
+      error: 'Failed to import CSV', 
+      details: error.message
     });
+  }
 });
 
 // ==============================================================================
