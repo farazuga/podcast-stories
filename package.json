@@ -20,7 +20,15 @@
   "devDependencies": {
     "puppeteer": "^24.16.2"
   },
-  "keywords": ["testing", "vidpod", "puppeteer", "api-testing"],
+  "keywords": [
+    "testing",
+    "vidpod",
+    "puppeteer",
+    "api-testing"
+  ],
   "author": "VidPOD Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "form-data": "^4.0.4"
+  }
 }
