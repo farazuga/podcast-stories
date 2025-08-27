@@ -60,7 +60,7 @@ function checkAuth() {
         return false;
     }
     
-    if (user.role !== 'admin' && user.role !== 'amitrace_admin') {
+    if (user.role !== 'amitrace_admin') {
         window.location.href = '/dashboard.html';
         return false;
     }
@@ -135,7 +135,7 @@ async function loadInitialData() {
 }
 
 // Tab Management - Make function globally available
-window.showTab = function(tabName) {
+window.showTab = async function(tabName) {
     console.log('showTab called with:', tabName);
     
     try {
@@ -163,15 +163,10 @@ window.showTab = function(tabName) {
             return;
         }
         
-        // Add active class to the clicked button
+        // Add active class to the clicked button using data-tab attribute
         const buttons = document.querySelectorAll('.tab-btn');
-        buttons.forEach((btn, index) => {
-            if (btn.textContent.toLowerCase().includes(tabName) || 
-                (tabName === 'overview' && index === 0) ||
-                (tabName === 'schools' && index === 1) ||
-                (tabName === 'teachers' && index === 2) ||
-                (tabName === 'stories' && index === 3) ||
-                (tabName === 'tags' && index === 4)) {
+        buttons.forEach(btn => {
+            if (btn.dataset.tab === tabName) {
                 btn.classList.add('active');
                 console.log('Activated button:', btn.textContent);
             }
@@ -186,8 +181,15 @@ window.showTab = function(tabName) {
                 break;
             case 'teachers':
                 console.log('🔍 Loading teachers tab...');
-                window.loadTeacherRequests();
-                loadTeacherRequestStats();
+                console.log('🔍 Teacher Requests Debug - Tab activated, calling functions...');
+                try {
+                    await window.loadTeacherRequests();
+                    await loadTeacherRequestStats();
+                    console.log('🔍 Teacher Requests Debug - Tab loading completed successfully');
+                } catch (error) {
+                    console.error('❌ Teacher Requests Debug - Tab loading failed:', error);
+                    showError('Failed to load teacher requests tab. Check console for details.');
+                }
                 break;
             case 'stories':
                 console.log('🔍 Loading stories tab...');
@@ -407,22 +409,50 @@ window.deleteSchool = async function(schoolId) {
 // Teacher Requests Management
 // Make function globally available
 window.loadTeacherRequests = async function() {
+    console.log('🔍 Teacher Requests Debug - Starting to load teacher requests...');
     try {
         const statusFilter = document.getElementById('statusFilter')?.value || '';
         const url = statusFilter ? 
             `${window.API_URL}/teacher-requests?status=${statusFilter}` : 
             `${window.API_URL}/teacher-requests`;
             
+        console.log('🔍 Teacher Requests Debug - API Request:', {
+            url: url,
+            statusFilter: statusFilter,
+            token: localStorage.getItem('token') ? 'Present' : 'Missing',
+            api_url: window.API_URL
+        });
+            
         const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
-        if (response.ok) {
-            teacherRequests = await response.json();
-            displayTeacherRequests();
+        console.log('🔍 Teacher Requests Debug - API Response:', {
+            status: response.status,
+            ok: response.ok,
+            statusText: response.statusText,
+            headers: Object.fromEntries(response.headers.entries())
+        });
+        
+        if (!response.ok) {
+            const msg = response.status === 403 ? 'You are not authorized to view teacher requests.' : `Failed to load teacher requests (${response.status})`;
+            showError(msg);
+            const table = document.getElementById('teacherRequestsTable');
+            if (table) {
+                table.innerHTML = '<tr><td colspan="7">' + msg + '</td></tr>';
+            }
+            return;
         }
+        
+        teacherRequests = await response.json();
+        console.log('🔍 Teacher Requests Debug - Data loaded:', {
+            count: teacherRequests.length,
+            requests: teacherRequests
+        });
+        displayTeacherRequests();
     } catch (error) {
-        console.error('Error loading teacher requests:', error);
+        console.error('❌ Error loading teacher requests:', error);
+        showError('Network error loading teacher requests. Check console for details.');
     }
 }
 
@@ -449,17 +479,42 @@ async function loadTeacherRequestStats() {
     }
 }
 
+// HTML escape helper function to prevent XSS
+function escapeHTML(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 function displayTeacherRequests() {
+    console.log('🔍 Teacher Requests Debug - Starting to display teacher requests...');
     const table = document.getElementById('teacherRequestsTable');
-    if (!table) return;
+    
+    if (!table) {
+        console.error('❌ teacherRequestsTable element not found!');
+        showError('Teacher requests table not found in DOM. Check HTML structure.');
+        return;
+    }
+    
+    console.log('🔍 Teacher Requests Debug - Requests to display:', {
+        count: teacherRequests.length,
+        requests: teacherRequests
+    });
+    
+    if (teacherRequests.length === 0) {
+        table.innerHTML = '<tr><td colspan="7" class="no-data">No teacher requests found.</td></tr>';
+        console.log('📝 Displayed empty state for teacher requests');
+        return;
+    }
     
     table.innerHTML = teacherRequests.map(request => `
         <tr>
-            <td>${request.name}</td>
-            <td>${request.email}</td>
-            <td>${request.school_name}</td>
-            <td>${request.message || 'No message'}</td>
-            <td><span class="status-badge status-${request.status}">${request.status}</span></td>
+            <td>${escapeHTML(request.name)}</td>
+            <td>${escapeHTML(request.email)}</td>
+            <td>${escapeHTML(request.school_name)}</td>
+            <td>${escapeHTML(request.message) || 'No message'}</td>
+            <td><span class="status-badge status-${escapeHTML(request.status)}">${escapeHTML(request.status)}</span></td>
             <td>${formatDate(request.requested_at)}</td>
             <td class="table-actions">
                 ${request.status === 'pending' ? `
@@ -469,6 +524,8 @@ function displayTeacherRequests() {
             </td>
         </tr>
     `).join('');
+    
+    console.log('✅ Teacher requests displayed successfully');
 }
 
 // Make function globally available
@@ -511,7 +568,7 @@ async function approveTeacherRequest(e) {
         const result = await response.json();
         
         if (response.ok) {
-            showSuccess('Teacher request approved! Auto-generated credentials sent via email.');
+            showSuccess('Teacher request approved. Invitation link sent via email.');
             closeApprovalModal();
             await loadTeacherRequests();
             await loadTeacherRequestStats();
@@ -760,12 +817,11 @@ function setupEventListeners() {
             console.warn('⚠ Approve teacher form not found');
         }
         
-        // Add click listeners to tab buttons as backup
+        // Add click listeners to tab buttons using data-tab attribute
         const tabButtons = document.querySelectorAll('.tab-btn');
-        tabButtons.forEach((btn, index) => {
+        tabButtons.forEach((btn) => {
             btn.addEventListener('click', function() {
-                const tabNames = ['overview', 'schools', 'teachers', 'stories', 'tags'];
-                const tabName = tabNames[index];
+                const tabName = btn.getAttribute('data-tab');
                 console.log('Tab button clicked via event listener:', tabName);
                 window.showTab(tabName);
             });
@@ -773,7 +829,7 @@ function setupEventListeners() {
         console.log('✓ Tab button event listeners attached:', tabButtons.length);
         
         // Filter button listener
-        const filterButton = document.querySelector('button[onclick="loadTeacherRequests()"]');
+        const filterButton = document.getElementById('filterTeacherRequests');
         if (filterButton) {
             filterButton.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -800,8 +856,8 @@ function setupEventListeners() {
             console.warn('⚠ Reject story form not found');
         }
         
-        // Modal click outside to close
-        window.onclick = function(event) {
+        // Modal click outside to close - use addEventListener instead of global onclick
+        window.addEventListener('click', (event) => {
             const modal = document.getElementById('approvalModal');
             const storyApprovalModal = document.getElementById('storyApprovalModal');
             const storyRejectionModal = document.getElementById('storyRejectionModal');
@@ -814,7 +870,7 @@ function setupEventListeners() {
                        event.target === storyDetailsModal) {
                 window.closeStoryModal();
             }
-        }
+        });
         
         console.log('Event listeners setup completed');
         

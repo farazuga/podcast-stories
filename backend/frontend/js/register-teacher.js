@@ -91,15 +91,9 @@ async function handleTeacherRequest(e) {
         const result = await response.json();
         
         if (response.ok) {
-            showSuccess('Teacher account request submitted successfully! An administrator will review your request and contact you via email with your login credentials once approved.');
-            
-            // Clear the form
-            document.getElementById('teacherRequestForm').reset();
-            
-            // Redirect to login after a delay
-            setTimeout(() => {
-                window.location.href = '/index.html';
-            }, 5000);
+            // Hide the form and show success box
+            document.getElementById('requestForm').style.display = 'none';
+            document.getElementById('successBox').style.display = 'block';
         } else {
             showError(result.error || 'Failed to submit request');
         }
@@ -125,6 +119,10 @@ function showError(message) {
             errorDiv.style.display = 'none';
         }, 7000);
     }
+}
+
+function returnToHomepage() {
+    window.location.href = 'index.html';
 }
 
 function showSuccess(message) {

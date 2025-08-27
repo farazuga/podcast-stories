@@ -46,18 +46,39 @@ window.AppConfig = {
   // Development settings
   DEBUG: false,
   
+  // Environment detection
+  getEnvironment: function() {
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'development';
+    } else if (hostname.includes('railway.app')) {
+      return 'production';
+    } else {
+      return 'unknown';
+    }
+  },
+  
   // Initialize configuration
   init: function() {
-    // Set API_URL based on current location for development
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    const environment = this.getEnvironment();
+    
+    // Set API_URL based on environment
+    if (environment === 'development') {
       this.API_URL = `http://${window.location.hostname}:3000/api`;
       this.DEBUG = true;
+    } else if (environment === 'production') {
+      this.API_URL = 'https://podcast-stories-production.up.railway.app/api';
+      this.DEBUG = false;
     }
     
-    // Log configuration in development
-    if (this.DEBUG) {
-      console.log('AppConfig initialized:', this);
-    }
+    // Enhanced logging for debugging teacher requests
+    console.log('🔧 AppConfig initialized:', {
+      environment: environment,
+      apiUrl: this.API_URL,
+      debug: this.DEBUG,
+      hostname: window.location.hostname,
+      timestamp: new Date().toISOString()
+    });
     
     return this;
   }
@@ -69,3 +90,10 @@ window.AppConfig.init();
 // For backward compatibility, set the old API_URL variable
 // This will be removed in later refactoring phases
 window.API_URL = window.AppConfig.API_URL;
+
+// Enhanced debugging for teacher request issues
+console.log('🔧 Teacher Request Debug - Config loaded:', {
+  API_URL: window.API_URL,
+  environment: window.AppConfig.getEnvironment(),
+  timestamp: new Date().toISOString()
+});

@@ -13,6 +13,7 @@ const bcrypt = require('bcrypt');
 // Create logger instance
 const logger = createLogger('teacher-requests');
 const isProduction = process.env.NODE_ENV === 'production';
+const skipOptionalColumns = process.env.SKIP_OPTIONAL_COLUMNS === 'true';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -54,8 +55,21 @@ function createErrorResponse(error, userMessage) {
 
 // Get all teacher requests (Amitrace Admin only)
 router.get('/', verifyToken, isAmitraceAdmin, async (req, res) => {
+  logger.info('🔍 Teacher Requests API - GET / called', {
+    adminId: req.user?.id,
+    adminEmail: req.user?.email,
+    query: req.query,
+    timestamp: new Date().toISOString()
+  });
+  
   try {
     const { status, school_id } = req.query;
+    
+    // Conditionally include optional columns based on environment variable
+    const optionalFields = skipOptionalColumns ? '' : `,
+        tr.processed_at,
+        tr.action_type,
+        tr.password_set_at`;
     
     let query = `
       SELECT 
@@ -68,7 +82,7 @@ router.get('/', verifyToken, isAmitraceAdmin, async (req, res) => {
         tr.approved_at,
         s.school_name,
         s.id as school_id,
-        COALESCE(approved_by_user.name, approved_by_user.email) as approved_by_name
+        COALESCE(approved_by_user.name, approved_by_user.email) as approved_by_name${optionalFields}
       FROM teacher_requests tr
       JOIN schools s ON tr.school_id = s.id
       LEFT JOIN users approved_by_user ON tr.approved_by = approved_by_user.id
@@ -93,18 +107,45 @@ router.get('/', verifyToken, isAmitraceAdmin, async (req, res) => {
     
     query += ` ORDER BY tr.requested_at DESC`;
     
+    logger.info('🔍 Teacher Requests API - Executing query', {
+      query: query,
+      params: params
+    });
+    
+    logger.info('Fetching teacher requests', { adminId: req.user?.id, filters: req.query });
     const result = await pool.query(query, params);
+    logger.debug('Teacher requests fetched', { count: result.rows.length });
+    
+    logger.info('🔍 Teacher Requests API - Query results', {
+      count: result.rows.length,
+      requests: result.rows.map(r => ({ id: r.id, name: r.name, email: r.email, status: r.status }))
+    });
+    
     res.json(result.rows);
   } catch (error) {
-    logger.error('Error fetching teacher requests', error);
+    logger.error('❌ Error fetching teacher requests', {
+      error: error.message,
+      stack: error.stack,
+      code: error.code,
+      adminId: req.user?.id
+    });
     res.status(500).json(createErrorResponse(error, 'Failed to fetch teacher requests'));
   }
 });
+
+// Health check route for teacher-requests
+router.get('/health', (req, res) => res.json({ ok: true, time: new Date().toISOString() }));
 
 // Get teacher request by ID (Amitrace Admin only)
 router.get('/:id', verifyToken, isAmitraceAdmin, async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Conditionally include optional columns based on environment variable
+    const optionalFields = skipOptionalColumns ? '' : `,
+        tr.processed_at,
+        tr.action_type,
+        tr.password_set_at`;
     
     const result = await pool.query(`
       SELECT 
@@ -117,7 +158,7 @@ router.get('/:id', verifyToken, isAmitraceAdmin, async (req, res) => {
         tr.approved_at,
         s.school_name,
         s.id as school_id,
-        COALESCE(approved_by_user.name, approved_by_user.email) as approved_by_name
+        COALESCE(approved_by_user.name, approved_by_user.email) as approved_by_name${optionalFields}
       FROM teacher_requests tr
       JOIN schools s ON tr.school_id = s.id
       LEFT JOIN users approved_by_user ON tr.approved_by = approved_by_user.id
@@ -137,11 +178,10 @@ router.get('/:id', verifyToken, isAmitraceAdmin, async (req, res) => {
 
 // Submit teacher request (Public endpoint)
 router.post('/', async (req, res) => {
+  const { first_name, last_name, name, email, school_id, message } = req.body;
+  const normalizedEmail = (email || '').trim().toLowerCase();
+  
   try {
-    const { first_name, last_name, name, email, school_id, message } = req.body;
-    
-    // Normalize email (Comment 3)
-    const normalizedEmail = email?.trim().toLowerCase();
     
     // Use first_name/last_name if provided, otherwise fall back to name
     const finalFirstName = first_name || (name ? name.split(' ')[0] : '');
@@ -187,13 +227,11 @@ router.post('/', async (req, res) => {
     }
     
     const result = await pool.query(`
-      INSERT INTO teacher_requests (name, first_name, last_name, email, school_id, message) 
-      VALUES ($1, $2, $3, $4, $5, $6) 
-      RETURNING id, name, first_name, last_name, email, school_id, message, status, requested_at
+      INSERT INTO teacher_requests (name, email, school_id, message) 
+      VALUES ($1, $2, $3, $4) 
+      RETURNING id, name, email, school_id, message, status, requested_at
     `, [
       finalName.trim(), 
-      finalFirstName.trim(), 
-      finalLastName.trim(),
       normalizedEmail, // Use normalized email
       school_id, 
       message?.trim() || null
@@ -223,20 +261,13 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
     
     logger.info('Approving teacher request', { requestId: id, adminId: req.user.id });
     
-    // Comment 15 - Rename generatedPassword to initialPassword
-    const initialPassword = passwordGenerator.generateKidFriendlyPassword();
+    // Comment 8 - Don't store usable initial password, generate random unusable hash
+    // This forces teachers to use the invitation link to set their password
+    const crypto = require('crypto');
+    const randomBytes = crypto.randomBytes(32).toString('hex');
+    const unusablePassword = `REQUIRES_PASSWORD_RESET_${randomBytes}`;
     
-    // Comment 9 - Add password validation
-    const passwordValidation = validationHelpers.validateGeneratedPassword(initialPassword);
-    if (!passwordValidation.valid) {
-      logger.error('Generated password failed validation', passwordValidation);
-      return res.status(500).json(createErrorResponse(
-        new Error('Password generation failed'),
-        'Failed to generate secure password'
-      ));
-    }
-    
-    logger.debug('Generated initial password for teacher request', { requestId: id });
+    logger.debug('Generated unusable password hash for teacher request', { requestId: id });
     
     // Start transaction with client
     await client.query('BEGIN');
@@ -275,9 +306,9 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
       { name: request.name, school_id: request.school_id }
     );
     
-    // Hash temporary password
+    // Hash the unusable password - user cannot login until password is set via invitation
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(initialPassword, saltRounds);
+    const hashedPassword = await bcrypt.hash(unusablePassword, saltRounds);
     
     logger.info('Starting teacher approval transaction', {
       requestId: id,
@@ -286,7 +317,8 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
     });
     
     // Create user account with transaction client
-    logger.info('Creating teacher user account');
+    // Note: User has unusable password hash and MUST use invitation link to set real password
+    logger.info('Creating teacher user account with unusable password hash');
     const userResult = await client.query(`
       INSERT INTO users (email, password, role, name, school_id) 
       VALUES ($1, $2, $3, $4, $5) 
@@ -295,17 +327,30 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
     
     logger.info('User account created successfully', { userId: userResult.rows[0].id });
     
-    // Comment 12 - Update with processed_at and action_type fields
+    // Comment 12 - Update with processed_at and action_type fields (conditionally)
     logger.info('Updating teacher request status');
-    await client.query(`
-      UPDATE teacher_requests 
-      SET status = $1, 
-          approved_by = $2, 
-          approved_at = CURRENT_TIMESTAMP,
-          processed_at = CURRENT_TIMESTAMP,
-          action_type = $3
-      WHERE id = $4
-    `, ['approved', req.user.id, 'approved', id]);
+    
+    if (skipOptionalColumns) {
+      // Skip optional columns if environment variable is set
+      await client.query(`
+        UPDATE teacher_requests 
+        SET status = $1, 
+            approved_by = $2, 
+            approved_at = CURRENT_TIMESTAMP
+        WHERE id = $3
+      `, ['approved', req.user.id, id]);
+    } else {
+      // Include optional columns
+      await client.query(`
+        UPDATE teacher_requests 
+        SET status = $1, 
+            approved_by = $2, 
+            approved_at = CURRENT_TIMESTAMP,
+            processed_at = CURRENT_TIMESTAMP,
+            action_type = $3
+        WHERE id = $4
+      `, ['approved', req.user.id, 'approved', id]);
+    }
     
     logger.info('Committing transaction');
     await client.query('COMMIT');
@@ -417,17 +462,32 @@ router.post('/:id/reject', verifyToken, isAmitraceAdmin, async (req, res) => {
     const request = requestResult.rows[0];
     const normalizedEmail = request.email?.trim().toLowerCase();
     
-    // Comment 12 - Update with processed_at and action_type
-    const result = await client.query(`
-      UPDATE teacher_requests 
-      SET status = $1, 
-          approved_by = $2, 
-          approved_at = CURRENT_TIMESTAMP,
-          processed_at = CURRENT_TIMESTAMP,
-          action_type = $3 
-      WHERE id = $4 AND status = $5
-      RETURNING id, status
-    `, ['rejected', req.user.id, 'rejected', id, 'pending']);
+    // Comment 12 - Update with processed_at and action_type (conditionally)
+    let result;
+    
+    if (skipOptionalColumns) {
+      // Skip optional columns if environment variable is set
+      result = await client.query(`
+        UPDATE teacher_requests 
+        SET status = $1, 
+            approved_by = $2, 
+            approved_at = CURRENT_TIMESTAMP
+        WHERE id = $3 AND status = $4
+        RETURNING id, status
+      `, ['rejected', req.user.id, id, 'pending']);
+    } else {
+      // Include optional columns
+      result = await client.query(`
+        UPDATE teacher_requests 
+        SET status = $1, 
+            approved_by = $2, 
+            approved_at = CURRENT_TIMESTAMP,
+            processed_at = CURRENT_TIMESTAMP,
+            action_type = $3 
+        WHERE id = $4 AND status = $5
+        RETURNING id, status
+      `, ['rejected', req.user.id, 'rejected', id, 'pending']);
+    }
     
     await client.query('COMMIT');
     
@@ -582,6 +642,30 @@ router.post('/set-password', async (req, res) => {
     
     await client.query('BEGIN');
     
+    // Lock and check request status (conditionally check password_set_at)
+    const selectFields = skipOptionalColumns ? 'email, status' : 'email, status, password_set_at';
+    const reqCheck = await client.query(
+      `SELECT ${selectFields} FROM teacher_requests WHERE id=$1 FOR UPDATE`,
+      [requestId]
+    );
+    
+    if (reqCheck.rows.length === 0 || reqCheck.rows[0].status !== 'approved') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Invalid or unapproved invitation' });
+    }
+    
+    // Only check password_set_at if column exists
+    if (!skipOptionalColumns && reqCheck.rows[0].password_set_at) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Invitation link already used' });
+    }
+    
+    // Cross-check request email with token email
+    if (!reqCheck.rows.length || reqCheck.rows[0].email.toLowerCase() !== normalizedEmail) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Invalid invitation token' });
+    }
+    
     // Check if user exists and token hasn't been used
     const userResult = await client.query(
       'SELECT id, password FROM users WHERE LOWER(email) = LOWER($1) FOR UPDATE',
@@ -603,11 +687,13 @@ router.post('/set-password', async (req, res) => {
       [hashedPassword, userResult.rows[0].id]
     );
     
-    // Mark the token as used (by updating the request)
-    await client.query(
-      'UPDATE teacher_requests SET password_set_at = CURRENT_TIMESTAMP WHERE id = $1',
-      [requestId]
-    );
+    // Mark the token as used (by updating the request) - only if column exists
+    if (!skipOptionalColumns) {
+      await client.query(
+        'UPDATE teacher_requests SET password_set_at = CURRENT_TIMESTAMP WHERE id = $1',
+        [requestId]
+      );
+    }
     
     await client.query('COMMIT');
     
