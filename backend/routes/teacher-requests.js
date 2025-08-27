@@ -4,11 +4,53 @@ const { Pool } = require('pg');
 const { verifyToken, isAmitraceAdmin } = require('../middleware/auth');
 const emailService = require('../services/emailService');
 const gmailService = require('../services/gmailService');
+const passwordGenerator = require('../utils/passwordGenerator');
+const validationHelpers = require('../utils/validationHelpers');
+const tokenUtils = require('../utils/tokenUtils');
+const { createLogger } = require('../utils/logger');
+const bcrypt = require('bcrypt');
+
+// Create logger instance
+const logger = createLogger('teacher-requests');
+const isProduction = process.env.NODE_ENV === 'production';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
+
+/**
+ * Helper function to check if a user exists by email
+ * @param {object} clientOrPool - Database client or pool
+ * @param {string} email - Email to check
+ * @returns {Promise<boolean>} True if user exists
+ */
+async function userExistsByEmail(clientOrPool, email) {
+  const normalizedEmail = email?.trim().toLowerCase();
+  const result = await clientOrPool.query(
+    'SELECT id FROM users WHERE LOWER(email) = LOWER($1)',
+    [normalizedEmail]
+  );
+  return result.rows.length > 0;
+}
+
+/**
+ * Create a generic error response based on environment
+ * @param {Error} error - Error object
+ * @param {string} userMessage - Message to show to user
+ * @returns {object} Error response object
+ */
+function createErrorResponse(error, userMessage) {
+  if (isProduction) {
+    return { error: userMessage || 'An unexpected error occurred' };
+  } else {
+    return {
+      error: userMessage || error.message,
+      details: error.message,
+      code: error.code
+    };
+  }
+}
 
 // Get all teacher requests (Amitrace Admin only)
 router.get('/', verifyToken, isAmitraceAdmin, async (req, res) => {
@@ -54,8 +96,8 @@ router.get('/', verifyToken, isAmitraceAdmin, async (req, res) => {
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching teacher requests:', error);
-    res.status(500).json({ error: 'Failed to fetch teacher requests' });
+    logger.error('Error fetching teacher requests', error);
+    res.status(500).json(createErrorResponse(error, 'Failed to fetch teacher requests'));
   }
 });
 
@@ -88,8 +130,8 @@ router.get('/:id', verifyToken, isAmitraceAdmin, async (req, res) => {
     
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('Error fetching teacher request:', error);
-    res.status(500).json({ error: 'Failed to fetch teacher request' });
+    logger.error('Error fetching teacher request', error);
+    res.status(500).json(createErrorResponse(error, 'Failed to fetch teacher request'));
   }
 });
 
@@ -98,39 +140,42 @@ router.post('/', async (req, res) => {
   try {
     const { first_name, last_name, name, email, school_id, message } = req.body;
     
+    // Normalize email (Comment 3)
+    const normalizedEmail = email?.trim().toLowerCase();
+    
     // Use first_name/last_name if provided, otherwise fall back to name
     const finalFirstName = first_name || (name ? name.split(' ')[0] : '');
     const finalLastName = last_name || '';
     const finalName = name || (first_name && last_name ? `${first_name} ${last_name}` : first_name || '');
     
     // Validate required fields
-    if ((!finalFirstName && !finalName) || !email || !school_id) {
+    if ((!finalFirstName && !finalName) || !normalizedEmail || !school_id) {
       return res.status(400).json({ 
         error: 'First name (or full name), email, and school are required' 
       });
     }
     
     // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!validationHelpers.isValidEmail(normalizedEmail)) {
       return res.status(400).json({ error: 'Invalid email format' });
     }
     
-    // Check if email already exists as a user
-    const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
-    if (existingUser.rows.length > 0) {
-      return res.status(400).json({ 
+    // Check if email already exists as a user (Comment 7 - using helper)
+    if (await userExistsByEmail(pool, normalizedEmail)) {
+      // Comment 5 - Use 409 for conflicts
+      return res.status(409).json({ 
         error: 'An account with this email already exists' 
       });
     }
     
     // Check if email already has a pending request
     const existingRequest = await pool.query(
-      'SELECT id FROM teacher_requests WHERE email = $1 AND status = $2',
-      [email, 'pending']
+      'SELECT id FROM teacher_requests WHERE LOWER(email) = LOWER($1) AND status = $2',
+      [normalizedEmail, 'pending']
     );
     if (existingRequest.rows.length > 0) {
-      return res.status(400).json({ 
+      // Comment 5 - Use 409 for conflicts
+      return res.status(409).json({ 
         error: 'A pending request with this email already exists' 
       });
     }
@@ -149,40 +194,61 @@ router.post('/', async (req, res) => {
       finalName.trim(), 
       finalFirstName.trim(), 
       finalLastName.trim(),
-      email.toLowerCase().trim(), 
+      normalizedEmail, // Use normalized email
       school_id, 
       message?.trim() || null
     ]);
     
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error('Error creating teacher request:', error);
-    res.status(500).json({ error: 'Failed to submit teacher request' });
+    // Comment 13 - Check for unique constraint violation
+    if (error.code === '23505') {
+      logger.warn('Unique constraint violation on teacher request submission', { email: normalizedEmail });
+      return res.status(409).json({ 
+        error: 'An account with this email already exists' 
+      });
+    }
+    logger.error('Error creating teacher request', error);
+    res.status(500).json(createErrorResponse(error, 'Failed to submit teacher request'));
   }
 });
 
 // Approve teacher request (Amitrace Admin only)
 router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
+  // Comment 1 - Acquire a client from the pool for transaction
+  const client = await pool.connect();
+  
   try {
     const { id } = req.params;
-    const { password } = req.body;
     
-    console.log('Approving teacher request:', id);
+    logger.info('Approving teacher request', { requestId: id, adminId: req.user.id });
     
-    // Validate required fields
-    if (!password) {
-      return res.status(400).json({ 
-        error: 'Password is required for teacher account creation' 
-      });
+    // Comment 15 - Rename generatedPassword to initialPassword
+    const initialPassword = passwordGenerator.generateKidFriendlyPassword();
+    
+    // Comment 9 - Add password validation
+    const passwordValidation = validationHelpers.validateGeneratedPassword(initialPassword);
+    if (!passwordValidation.valid) {
+      logger.error('Generated password failed validation', passwordValidation);
+      return res.status(500).json(createErrorResponse(
+        new Error('Password generation failed'),
+        'Failed to generate secure password'
+      ));
     }
     
-    // Get the teacher request
-    const requestResult = await pool.query(
-      'SELECT * FROM teacher_requests WHERE id = $1 AND status = $2',
+    logger.debug('Generated initial password for teacher request', { requestId: id });
+    
+    // Start transaction with client
+    await client.query('BEGIN');
+    
+    // Comment 4 - Add FOR UPDATE row lock and re-check status
+    const requestResult = await client.query(
+      'SELECT * FROM teacher_requests WHERE id = $1 AND status = $2 FOR UPDATE',
       [id, 'pending']
     );
     
     if (requestResult.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ 
         error: 'Pending teacher request not found' 
       });
@@ -190,165 +256,237 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
     
     const request = requestResult.rows[0];
     
-    // Check if username already exists
-    const existingUser = await pool.query(
-      'SELECT id FROM users WHERE username = $1',
-      [username]
-    );
-    if (existingUser.rows.length > 0) {
-      return res.status(400).json({ error: 'Username already exists' });
+    // Comment 3 - Normalize email
+    const normalizedEmail = request.email?.trim().toLowerCase();
+    
+    // Comment 7 - Use helper function for user existence check
+    if (await userExistsByEmail(client, normalizedEmail)) {
+      await client.query('ROLLBACK');
+      // Comment 5 - Use 409 for conflicts
+      return res.status(409).json({ 
+        error: 'An account with this email already exists' 
+      });
     }
     
-    // Hash password
-    const bcrypt = require('bcrypt');
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    // Comment 14 - Generate secure token instead of sending password
+    const invitationToken = tokenUtils.generateTeacherInvitationToken(
+      normalizedEmail,
+      request.id,
+      { name: request.name, school_id: request.school_id }
+    );
     
-    // Start transaction
-    console.log('Starting teacher approval transaction for request:', id);
-    console.log('Creating user with data:', {
-      username,
-      email: request.email,
-      role: 'teacher',
-      name: request.name,
+    // Hash temporary password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(initialPassword, saltRounds);
+    
+    logger.info('Starting teacher approval transaction', {
+      requestId: id,
+      email: normalizedEmail,
       school_id: request.school_id
     });
     
-    await pool.query('BEGIN');
+    // Create user account with transaction client
+    logger.info('Creating teacher user account');
+    const userResult = await client.query(`
+      INSERT INTO users (email, password, role, name, school_id) 
+      VALUES ($1, $2, $3, $4, $5) 
+      RETURNING id, email, role, name, school_id
+    `, [normalizedEmail, hashedPassword, 'teacher', request.name, request.school_id]);
+    
+    logger.info('User account created successfully', { userId: userResult.rows[0].id });
+    
+    // Comment 12 - Update with processed_at and action_type fields
+    logger.info('Updating teacher request status');
+    await client.query(`
+      UPDATE teacher_requests 
+      SET status = $1, 
+          approved_by = $2, 
+          approved_at = CURRENT_TIMESTAMP,
+          processed_at = CURRENT_TIMESTAMP,
+          action_type = $3
+      WHERE id = $4
+    `, ['approved', req.user.id, 'approved', id]);
+    
+    logger.info('Committing transaction');
+    await client.query('COMMIT');
+    logger.info('Transaction committed successfully');
+    
+    // Comment 15 - Rename emailResult to mailResult
+    let mailResult = { success: false };
+    
+    // Comment 14 - Create secure invitation URL
+    const baseUrl = process.env.APP_BASE_URL || 'https://podcast-stories-production.up.railway.app';
+    const invitationUrl = tokenUtils.createTeacherInvitationUrl(baseUrl, invitationToken.token);
+    
+    // Comment 11 - Wrap email sending in try-catch blocks
+    logger.info('Sending teacher approval email', { email: normalizedEmail });
     
     try {
-      // Create user account
-      console.log('Attempting to create user account...');
-      const userResult = await pool.query(`
-        INSERT INTO users (email, password, role, name, school_id) 
-        VALUES ($1, $2, $3, $4, $5) 
-        RETURNING id, email, role, name, school_id
-      `, [request.email, hashedPassword, 'teacher', request.name, request.school_id]);
-      
-      console.log('User account created successfully:', userResult.rows[0]);
-      
-      // Update teacher request status
-      console.log('Updating teacher request status to approved...');
-      await pool.query(`
-        UPDATE teacher_requests 
-        SET status = $1, approved_by = $2, approved_at = CURRENT_TIMESTAMP 
-        WHERE id = $3
-      `, ['approved', req.user.id, id]);
-      
-      console.log('Teacher request status updated successfully');
-      console.log('Committing transaction...');
-      await pool.query('COMMIT');
-      console.log('Transaction committed successfully');
-      
-      // Send approval email - try Gmail API first
-      console.log('Sending teacher approval email to:', request.email);
-      let emailResult = await gmailService.sendTeacherApprovalEmail(
-        request.email,
+      // Try Gmail API first
+      mailResult = await gmailService.sendTeacherApprovalEmail(
+        normalizedEmail,
         request.name,
-        request.email, // Use email as login
-        password
+        normalizedEmail,
+        invitationUrl // Send invitation URL instead of password
       );
-      
-      // Fallback to SMTP if Gmail API fails
-      if (!emailResult.success) {
-        console.log('Gmail API failed for approval email, trying SMTP...');
-        emailResult = await emailService.sendTeacherApprovalEmail(
-          request.email,
-          request.name,
-          request.email, // Use email as login
-          password
-        );
-      }
-      
-      if (!emailResult.success) {
-        console.error('Failed to send approval email:', emailResult.error);
-        // Don't fail the request, just log the error
-      }
-      
-      res.json({
-        message: 'Teacher request approved and account created. Login credentials sent via email.',
-        teacher: userResult.rows[0],
-        emailSent: emailResult.success
-      });
-    } catch (error) {
-      console.error('Transaction failed, rolling back:', error);
-      console.error('Error details:', {
-        message: error.message,
-        code: error.code,
-        detail: error.detail,
-        constraint: error.constraint,
-        table: error.table,
-        column: error.column
-      });
-      await pool.query('ROLLBACK');
-      throw error;
+    } catch (emailError) {
+      logger.error('Gmail API failed for approval email', emailError);
+      mailResult = { success: false, error: emailError.message };
     }
-  } catch (error) {
-    console.error('Error approving teacher request:', error);
-    console.error('Full error object:', error);
-    res.status(500).json({ 
-      error: 'Failed to approve teacher request',
-      details: error.message,
-      code: error.code 
+    
+    // Fallback to SMTP if Gmail API fails
+    if (!mailResult.success) {
+      logger.info('Trying SMTP fallback for approval email');
+      try {
+        mailResult = await emailService.sendTeacherApprovalEmail(
+          normalizedEmail,
+          request.name,
+          normalizedEmail,
+          invitationUrl // Send invitation URL instead of password
+        );
+      } catch (smtpError) {
+        logger.error('SMTP fallback also failed for approval email', smtpError);
+        mailResult = { success: false, error: smtpError.message };
+      }
+    }
+    
+    if (!mailResult.success) {
+      logger.error('Failed to send approval email after all attempts', mailResult.error);
+    }
+    
+    res.json({
+      message: 'Teacher request approved and account created. Invitation link sent via email.',
+      teacher: userResult.rows[0],
+      emailSent: mailResult.success,
+      invitationSent: true
     });
+  } catch (error) {
+    // Ensure client is released if transaction failed
+    if (client) {
+      try {
+        await client.query('ROLLBACK');
+      } catch (rollbackError) {
+        logger.error('Error during rollback', rollbackError);
+      }
+    }
+    
+    // Comment 13 - Check for unique constraint violation
+    if (error.code === '23505') {
+      logger.warn('Unique constraint violation during teacher approval', error);
+      return res.status(409).json({ 
+        error: 'An account with this email already exists' 
+      });
+    }
+    
+    logger.error('Error approving teacher request', error);
+    // Comment 8 & 10 - Return generic error in production
+    res.status(500).json(createErrorResponse(error, 'Failed to approve teacher request'));
+  } finally {
+    // Comment 1 - Always release the client
+    if (client) {
+      client.release();
+    }
   }
 });
 
 // Reject teacher request (Amitrace Admin only)
 router.post('/:id/reject', verifyToken, isAmitraceAdmin, async (req, res) => {
+  // Comment 1 - Use client for transaction consistency
+  const client = await pool.connect();
+  
   try {
     const { id } = req.params;
     
-    // Get the teacher request first for email notification
-    const requestResult = await pool.query(
-      'SELECT * FROM teacher_requests WHERE id = $1 AND status = $2',
+    logger.info('Rejecting teacher request', { requestId: id, adminId: req.user.id });
+    
+    await client.query('BEGIN');
+    
+    // Comment 4 - Add FOR UPDATE lock
+    const requestResult = await client.query(
+      'SELECT * FROM teacher_requests WHERE id = $1 AND status = $2 FOR UPDATE',
       [id, 'pending']
     );
     
     if (requestResult.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ 
         error: 'Pending teacher request not found' 
       });
     }
     
     const request = requestResult.rows[0];
+    const normalizedEmail = request.email?.trim().toLowerCase();
     
-    const result = await pool.query(`
+    // Comment 12 - Update with processed_at and action_type
+    const result = await client.query(`
       UPDATE teacher_requests 
-      SET status = $1, approved_by = $2, approved_at = CURRENT_TIMESTAMP 
-      WHERE id = $3 AND status = $4
+      SET status = $1, 
+          approved_by = $2, 
+          approved_at = CURRENT_TIMESTAMP,
+          processed_at = CURRENT_TIMESTAMP,
+          action_type = $3 
+      WHERE id = $4 AND status = $5
       RETURNING id, status
-    `, ['rejected', req.user.id, id, 'pending']);
+    `, ['rejected', req.user.id, 'rejected', id, 'pending']);
     
-    // Send rejection email - try Gmail API first
-    console.log('Sending teacher rejection email to:', request.email);
-    let emailResult = await gmailService.sendTeacherRejectionEmail(
-      request.email,
-      request.name
-    );
+    await client.query('COMMIT');
     
-    // Fallback to SMTP if Gmail API fails
-    if (!emailResult.success) {
-      console.log('Gmail API failed for rejection email, trying SMTP...');
-      emailResult = await emailService.sendTeacherRejectionEmail(
-        request.email,
+    // Comment 15 - Rename emailResult to mailResult
+    let mailResult = { success: false };
+    
+    // Comment 11 - Wrap email sending in try-catch
+    logger.info('Sending teacher rejection email', { email: normalizedEmail });
+    
+    try {
+      mailResult = await gmailService.sendTeacherRejectionEmail(
+        normalizedEmail,
         request.name
       );
+    } catch (emailError) {
+      logger.error('Gmail API failed for rejection email', emailError);
+      mailResult = { success: false, error: emailError.message };
     }
     
-    if (!emailResult.success) {
-      console.error('Failed to send rejection email:', emailResult.error);
-      // Don't fail the request, just log the error
+    // Fallback to SMTP if Gmail API fails
+    if (!mailResult.success) {
+      logger.info('Trying SMTP fallback for rejection email');
+      try {
+        mailResult = await emailService.sendTeacherRejectionEmail(
+          normalizedEmail,
+          request.name
+        );
+      } catch (smtpError) {
+        logger.error('SMTP fallback also failed for rejection email', smtpError);
+        mailResult = { success: false, error: smtpError.message };
+      }
+    }
+    
+    if (!mailResult.success) {
+      logger.error('Failed to send rejection email after all attempts', mailResult.error);
     }
     
     res.json({
       message: 'Teacher request rejected. Notification sent via email.',
       id: result.rows[0].id,
-      emailSent: emailResult.success
+      emailSent: mailResult.success
     });
   } catch (error) {
-    console.error('Error rejecting teacher request:', error);
-    res.status(500).json({ error: 'Failed to reject teacher request' });
+    // Ensure rollback on error
+    if (client) {
+      try {
+        await client.query('ROLLBACK');
+      } catch (rollbackError) {
+        logger.error('Error during rollback', rollbackError);
+      }
+    }
+    
+    logger.error('Error rejecting teacher request', error);
+    res.status(500).json(createErrorResponse(error, 'Failed to reject teacher request'));
+  } finally {
+    // Always release client
+    if (client) {
+      client.release();
+    }
   }
 });
 
@@ -371,8 +509,8 @@ router.delete('/:id', verifyToken, isAmitraceAdmin, async (req, res) => {
       id: result.rows[0].id 
     });
   } catch (error) {
-    console.error('Error deleting teacher request:', error);
-    res.status(500).json({ error: 'Failed to delete teacher request' });
+    logger.error('Error deleting teacher request', error);
+    res.status(500).json(createErrorResponse(error, 'Failed to delete teacher request'));
   }
 });
 
@@ -390,8 +528,110 @@ router.get('/stats/overview', verifyToken, isAmitraceAdmin, async (req, res) => 
     
     res.json(stats.rows[0]);
   } catch (error) {
-    console.error('Error fetching teacher request stats:', error);
-    res.status(500).json({ error: 'Failed to fetch statistics' });
+    logger.error('Error fetching teacher request stats', error);
+    res.status(500).json(createErrorResponse(error, 'Failed to fetch statistics'));
+  }
+});
+
+// Set password using invitation token (Comment 14 - secure password flow)
+router.post('/set-password', async (req, res) => {
+  const client = await pool.connect();
+  
+  try {
+    const { token, password } = req.body;
+    
+    if (!token || !password) {
+      return res.status(400).json({ error: 'Token and password are required' });
+    }
+    
+    // Validate token
+    const tokenValidation = tokenUtils.validateTeacherInvitationToken(token);
+    if (!tokenValidation.valid) {
+      logger.warn('Invalid teacher invitation token attempt', { error: tokenValidation.error });
+      return res.status(400).json({ error: tokenValidation.error });
+    }
+    
+    const { email, requestId } = tokenValidation.payload;
+    const normalizedEmail = email?.trim().toLowerCase();
+    
+    // Comment 9 - Validate password strength
+    const passwordValidation = validationHelpers.validatePassword(password);
+    if (!passwordValidation.isValid) {
+      return res.status(400).json({ 
+        error: passwordValidation.message,
+        strength: passwordValidation.strength 
+      });
+    }
+    
+    // Additional password requirements check
+    if (password.length < 8) {
+      return res.status(400).json({ 
+        error: 'Password must be at least 8 characters long' 
+      });
+    }
+    
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumbers = /[0-9]/.test(password);
+    
+    if (!(hasUppercase && hasLowercase && hasNumbers)) {
+      return res.status(400).json({ 
+        error: 'Password must contain uppercase, lowercase, and numbers' 
+      });
+    }
+    
+    await client.query('BEGIN');
+    
+    // Check if user exists and token hasn't been used
+    const userResult = await client.query(
+      'SELECT id, password FROM users WHERE LOWER(email) = LOWER($1) FOR UPDATE',
+      [normalizedEmail]
+    );
+    
+    if (userResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'User account not found' });
+    }
+    
+    // Hash the new password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    
+    // Update user password
+    await client.query(
+      'UPDATE users SET password = $1 WHERE id = $2',
+      [hashedPassword, userResult.rows[0].id]
+    );
+    
+    // Mark the token as used (by updating the request)
+    await client.query(
+      'UPDATE teacher_requests SET password_set_at = CURRENT_TIMESTAMP WHERE id = $1',
+      [requestId]
+    );
+    
+    await client.query('COMMIT');
+    
+    logger.info('Teacher password successfully set', { email: normalizedEmail });
+    
+    res.json({ 
+      success: true,
+      message: 'Password set successfully. You can now log in with your email and new password.' 
+    });
+  } catch (error) {
+    if (client) {
+      try {
+        await client.query('ROLLBACK');
+      } catch (rollbackError) {
+        logger.error('Error during rollback', rollbackError);
+      }
+    }
+    
+    logger.error('Error setting teacher password', error);
+    res.status(500).json(createErrorResponse(error, 'Failed to set password'));
+  } finally {
+    if (client) {
+      client.release();
+    }
   }
 });
 

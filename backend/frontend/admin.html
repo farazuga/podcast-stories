@@ -352,19 +352,20 @@
                     <span class="close" onclick="closeApprovalModal()">&times;</span>
                 </div>
                 <div class="modal-body">
+                    <p style="margin-bottom: 1rem; color: #666;">A secure, kid-friendly password will be automatically generated and sent to the teacher via email.</p>
+                    <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <h4 style="color: #0066cc; margin-top: 0; font-size: 14px;">About Auto-Generated Passwords:</h4>
+                        <ul style="margin-bottom: 0; font-size: 13px; color: #555;">
+                            <li>Uses kid-friendly words and numbers that are easy to remember</li>
+                            <li>Example format: "BlueDolphinJump123"</li>
+                            <li>Teachers can change their password after first login</li>
+                        </ul>
+                    </div>
                     <form id="approveTeacherForm">
                         <input type="hidden" id="requestId" />
-                        <div class="form-group">
-                            <label for="teacherUsername">Username</label>
-                            <input type="text" id="teacherUsername" required placeholder="Enter username for new teacher account">
-                        </div>
-                        <div class="form-group">
-                            <label for="teacherPassword">Password</label>
-                            <input type="password" id="teacherPassword" required placeholder="Enter password for new teacher account">
-                        </div>
                         <div class="modal-actions">
                             <button type="button" class="btn btn-secondary" onclick="closeApprovalModal()">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Approve & Create Account</button>
+                            <button type="submit" class="btn btn-primary">Approve & Generate Account</button>
                         </div>
                     </form>
                 </div>

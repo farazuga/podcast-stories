@@ -477,9 +477,7 @@ window.showApprovalModal = function(requestId) {
     const modal = document.getElementById('approvalModal');
     modal.style.display = 'block';
     
-    // Clear form
-    document.getElementById('teacherUsername').value = '';
-    document.getElementById('teacherPassword').value = '';
+    // Set request ID
     document.getElementById('requestId').value = requestId;
 }
 
@@ -493,12 +491,10 @@ window.closeApprovalModal = function() {
 async function approveTeacherRequest(e) {
     e.preventDefault();
     
-    const username = document.getElementById('teacherUsername').value.trim();
-    const password = document.getElementById('teacherPassword').value;
     const requestId = currentRequestId;
     
-    if (!username || !password) {
-        showError('Username and password are required');
+    if (!requestId) {
+        showError('Request ID is required');
         return;
     }
     
@@ -509,13 +505,13 @@ async function approveTeacherRequest(e) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({}) // No password needed - auto-generated
         });
         
         const result = await response.json();
         
         if (response.ok) {
-            showSuccess('Teacher request approved and account created!');
+            showSuccess('Teacher request approved! Auto-generated credentials sent via email.');
             closeApprovalModal();
             await loadTeacherRequests();
             await loadTeacherRequestStats();

@@ -140,7 +140,7 @@ class GmailService {
         return await this.sendEmail(userEmail, subject, html);
     }
 
-    async sendTeacherApprovalEmail(teacherEmail, teacherName, username, password) {
+    async sendTeacherApprovalEmail(teacherEmail, teacherName, loginEmail, invitationUrl) {
         const subject = 'Teacher Account Approved - Podcast Stories';
         
         const html = `
@@ -154,11 +154,28 @@ class GmailService {
                 <p>Great news! Your teacher account request has been approved.</p>
                 
                 <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                    <h3 style="color: #ff6b35;">Your Login Credentials:</h3>
-                    <p><strong>Username:</strong> ${username}</p>
-                    <p><strong>Password:</strong> ${password}</p>
-                    <p><strong>Login URL:</strong> <a href="https://frontend-production-b75b.up.railway.app">https://frontend-production-b75b.up.railway.app</a></p>
+                    <h3 style="color: #ff6b35;">Complete Your Account Setup:</h3>
+                    <p>Please click the link below to set your password and activate your account:</p>
+                    <p style="margin: 20px 0;"><a href="${invitationUrl}" style="background: #ff6b35; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px; display: inline-block;">Set Your Password</a></p>
+                    <p><small>This link will expire in 7 days for security reasons.</small></p>
+                    <p><strong>Your login email:</strong> ${loginEmail}</p>
                 </div>
+                
+                <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <h4 style="color: #0066cc; margin-top: 0;">Password Requirements:</h4>
+                    <ul style="margin-bottom: 0;">
+                        <li>At least 8 characters long</li>
+                        <li>Must contain uppercase and lowercase letters</li>
+                        <li>Must include numbers</li>
+                        <li>Choose something memorable but secure</li>
+                    </ul>
+                </div>
+                
+                <p style="margin-top: 20px;">After setting your password, you can log in at any time using your email address.</p>
+                
+                <p style="color: #666; font-size: 0.9em;">
+                    <strong>Security Note:</strong> This invitation link is unique to you and can only be used once. Please do not share it with others.
+                </p>
                 
                 <p>Welcome to Podcast Stories!<br>
                 The Admin Team</p>

@@ -154,8 +154,8 @@ class EmailService {
         return html.replace(/<[^>]*>/g, '');
     }
 
-    // Teacher approval notification
-    async sendTeacherApprovalEmail(teacherEmail, teacherName, username, password) {
+    // Teacher approval notification with auto-generated password
+    async sendTeacherApprovalEmail(teacherEmail, teacherName, loginEmail, invitationUrl) {
         const subject = 'Teacher Account Approved - Podcast Stories';
         
         const html = `
@@ -169,16 +169,27 @@ class EmailService {
                 <p>Great news! Your teacher account request has been approved.</p>
                 
                 <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                    <h3 style="color: #ff6b35;">Your Login Credentials:</h3>
-                    <p><strong>Username:</strong> ${username}</p>
-                    <p><strong>Password:</strong> ${password}</p>
-                    <p><strong>Login URL:</strong> <a href="https://frontend-production-b75b.up.railway.app">https://frontend-production-b75b.up.railway.app</a></p>
+                    <h3 style="color: #ff6b35;">Complete Your Account Setup:</h3>
+                    <p>Please click the link below to set your password and activate your account:</p>
+                    <p style="margin: 20px 0;"><a href="${invitationUrl}" style="background: #ff6b35; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px; display: inline-block;">Set Your Password</a></p>
+                    <p><small>This link will expire in 7 days for security reasons.</small></p>
+                    <p><strong>Your login email:</strong> ${loginEmail}</p>
+                </div>
+                
+                <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <h4 style="color: #0066cc; margin-top: 0;">About Your Password:</h4>
+                    <ul style="margin-bottom: 0;">
+                        <li>Generated using kid-friendly words for easy memorization</li>
+                        <li>Includes numbers for security</li>
+                        <li>Please change it after your first login for personalization</li>
+                        <li>Make note of it now as this email is the only time it will be shown</li>
+                    </ul>
                 </div>
                 
                 <div style="background: #e6f4ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
                     <h4>Getting Started:</h4>
                     <ol>
-                        <li>Login with your credentials above</li>
+                        <li>Login with your email address and password above</li>
                         <li>Navigate to "My Classes" to create your first class</li>
                         <li>Share the 4-digit class code with your students</li>
                         <li>Start managing podcast story ideas with your class!</li>
@@ -186,7 +197,7 @@ class EmailService {
                 </div>
                 
                 <p style="color: #666; font-size: 0.9em;">
-                    <strong>Security Note:</strong> Please change your password after first login for security.
+                    <strong>Security Note:</strong> Your password was auto-generated for security. We recommend changing it after your first login to something personal and memorable.
                 </p>
                 
                 <p>If you have any questions, please contact your system administrator.</p>
