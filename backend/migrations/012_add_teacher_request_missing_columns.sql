@@ -33,16 +33,43 @@ CREATE INDEX IF NOT EXISTS idx_teacher_requests_action_type ON teacher_requests(
 CREATE INDEX IF NOT EXISTS idx_teacher_requests_password_set_at ON teacher_requests(password_set_at);
 
 -- Update existing approved/rejected records to have processed_at and action_type
-UPDATE teacher_requests 
-SET 
-  processed_at = COALESCE(approved_at, updated_at, requested_at),
-  action_type = CASE 
-    WHEN status = 'approved' THEN 'approved'
-    WHEN status = 'rejected' THEN 'rejected'
-    ELSE NULL
-  END
-WHERE (processed_at IS NULL OR action_type IS NULL) 
-  AND status IN ('approved', 'rejected');
+-- Use DO block to check column existence and construct UPDATE safely
+DO $$
+DECLARE
+    updated_at_exists boolean;
+BEGIN
+    -- Check if updated_at column exists
+    SELECT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'teacher_requests' 
+        AND column_name = 'updated_at'
+    ) INTO updated_at_exists;
+    
+    -- Update with fallback based on column availability
+    IF updated_at_exists THEN
+        UPDATE teacher_requests 
+        SET 
+          processed_at = COALESCE(approved_at, updated_at, requested_at),
+          action_type = CASE 
+            WHEN status = 'approved' THEN 'approved'
+            WHEN status = 'rejected' THEN 'rejected'
+            ELSE NULL
+          END
+        WHERE (processed_at IS NULL OR action_type IS NULL) 
+          AND status IN ('approved', 'rejected');
+    ELSE
+        UPDATE teacher_requests 
+        SET 
+          processed_at = COALESCE(approved_at, requested_at),
+          action_type = CASE 
+            WHEN status = 'approved' THEN 'approved'
+            WHEN status = 'rejected' THEN 'rejected'
+            ELSE NULL
+          END
+        WHERE (processed_at IS NULL OR action_type IS NULL) 
+          AND status IN ('approved', 'rejected');
+    END IF;
+END $$;
 
 -- Add comments for documentation
 COMMENT ON COLUMN teacher_requests.processed_at IS 'Timestamp when the request was processed (approved/rejected)';

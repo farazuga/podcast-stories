@@ -8,11 +8,11 @@ ADD COLUMN IF NOT EXISTS processed_at TIMESTAMP;
 
 -- Add action_type field to specify the nature of the action
 ALTER TABLE teacher_requests
-ADD COLUMN IF NOT EXISTS action_type VARCHAR(20);
+ADD COLUMN IF NOT EXISTS action_type TEXT;
 
 -- Add constraint to ensure action_type has valid values
 ALTER TABLE teacher_requests
-ADD CONSTRAINT check_action_type CHECK (action_type IN ('approved', 'rejected', NULL));
+ADD CONSTRAINT check_action_type CHECK (action_type IN ('approved','rejected') OR action_type IS NULL);
 
 -- Migrate existing data: copy approved_at to processed_at for approved requests
 UPDATE teacher_requests 

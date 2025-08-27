@@ -59,14 +59,31 @@ router.get('/', verifyToken, isAmitraceAdmin, async (req, res) => {
     adminId: req.user?.id,
     adminEmail: req.user?.email,
     query: req.query,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    skipOptionalColumns: skipOptionalColumns
   });
   
   try {
-    const { status, school_id } = req.query;
+    const { status, school_id, skip_optional } = req.query;
     
-    // Conditionally include optional columns based on environment variable
-    const optionalFields = skipOptionalColumns ? '' : `,
+    // Allow admin-only override of skipOptionalColumns via query parameter
+    const shouldSkipOptional = skipOptionalColumns || (skip_optional === 'true');
+    
+    logger.debug('Skip optional columns decision', {
+      skipOptionalColumns,
+      skip_optional_param: skip_optional,
+      shouldSkipOptional,
+      adminId: req.user?.id
+    });
+    
+    // Conditionally include optional columns based on environment variable or admin override
+    // Optional columns: processed_at, action_type, password_set_at
+    // These columns were added in migration 012_add_teacher_request_missing_columns.sql
+    // Comment 12 - Always include fields as nullable placeholders for stable API contract
+    const optionalFields = shouldSkipOptional ? `,
+        NULL::timestamp as processed_at,
+        NULL::text as action_type,
+        NULL::timestamp as password_set_at` : `,
         tr.processed_at,
         tr.action_type,
         tr.password_set_at`;
@@ -109,16 +126,36 @@ router.get('/', verifyToken, isAmitraceAdmin, async (req, res) => {
     
     logger.info('🔍 Teacher Requests API - Executing query', {
       query: query,
-      params: params
+      params: params,
+      skipOptionalColumns: skipOptionalColumns,
+      skip_optional_param: skip_optional,
+      shouldSkipOptional: shouldSkipOptional
     });
     
     logger.info('Fetching teacher requests', { adminId: req.user?.id, filters: req.query });
     const result = await pool.query(query, params);
     logger.debug('Teacher requests fetched', { count: result.rows.length });
     
+    // Comment 11 - Redact PII (emails) in production logs
+    const redactEmail = (email) => {
+      if (!isProduction || !email) return email;
+      // Keep first 2 characters + domain for debugging while protecting PII
+      const [localPart, domain] = email.split('@');
+      if (localPart && domain) {
+        const redactedLocal = localPart.substring(0, 2) + '*'.repeat(Math.max(0, localPart.length - 2));
+        return `${redactedLocal}@${domain}`;
+      }
+      return email;
+    };
+    
     logger.info('🔍 Teacher Requests API - Query results', {
       count: result.rows.length,
-      requests: result.rows.map(r => ({ id: r.id, name: r.name, email: r.email, status: r.status }))
+      requests: result.rows.map(r => ({ 
+        id: r.id, 
+        name: r.name, 
+        email: redactEmail(r.email), 
+        status: r.status 
+      }))
     });
     
     res.json(result.rows);
@@ -127,8 +164,76 @@ router.get('/', verifyToken, isAmitraceAdmin, async (req, res) => {
       error: error.message,
       stack: error.stack,
       code: error.code,
-      adminId: req.user?.id
+      adminId: req.user?.id,
+      skipOptionalColumns: skipOptionalColumns
     });
+    
+    // Enhanced error handling for database column issues (Comment 8)
+    if (error.code === '42703' && error.message.includes('does not exist')) {
+      // PostgreSQL error code 42703: undefined_column
+      const missingColumn = error.message.match(/column "([^"]+)" does not exist/)?.[1];
+      const isOptionalColumn = ['processed_at', 'action_type', 'password_set_at', 'approved_by', 'approved_at'].includes(missingColumn);
+      
+      // Specific log message for common schema issues
+      logger.error('🔧 DATABASE SCHEMA ISSUE - Missing Column Detected', {
+        missingColumn,
+        isOptionalColumn,
+        skipOptionalColumns,
+        query_param_skip_optional: req.query.skip_optional,
+        workaround: 'Use ?skip_optional=true query parameter for immediate fix',
+        permanent_fix: 'Run migration script: node backend/scripts/run-teacher-requests-migration.js --live',
+        environment_fix: 'Set SKIP_OPTIONAL_COLUMNS=true environment variable',
+        adminId: req.user?.id
+      });
+      
+      if (isOptionalColumn) {
+        // Provide helpful error message for missing optional columns
+        const errorResponse = {
+          error: isProduction 
+            ? 'Database schema needs updating. Please contact administrator.'
+            : `Missing database column: ${missingColumn}. This is a known issue.`,
+          code: 'MISSING_OPTIONAL_COLUMNS',
+          missingColumn: missingColumn,
+          workarounds: [
+            {
+              method: 'query_parameter',
+              description: 'Add ?skip_optional=true to this request URL',
+              immediate: true
+            },
+            {
+              method: 'environment_variable', 
+              description: 'Set SKIP_OPTIONAL_COLUMNS=true in deployment environment',
+              scope: 'application-wide'
+            }
+          ],
+          permanent_solution: {
+            method: 'database_migration',
+            description: 'Run: node backend/scripts/run-teacher-requests-migration.js --live',
+            file: 'backend/migrations/012_add_teacher_request_missing_columns.sql'
+          }
+        };
+
+        // Don't expose internal details in production
+        if (isProduction) {
+          delete errorResponse.workarounds;
+          delete errorResponse.permanent_solution;
+        }
+        
+        return res.status(500).json(errorResponse);
+      } else {
+        // Handle missing required columns
+        logger.error('❌ CRITICAL - Required column missing', {
+          missingColumn,
+          recommendation: 'Database schema corruption or missing migration'
+        });
+        
+        return res.status(500).json({
+          error: 'Critical database schema issue',
+          code: 'MISSING_REQUIRED_COLUMN'
+        });
+      }
+    }
+    
     res.status(500).json(createErrorResponse(error, 'Failed to fetch teacher requests'));
   }
 });
@@ -136,13 +241,178 @@ router.get('/', verifyToken, isAmitraceAdmin, async (req, res) => {
 // Health check route for teacher-requests
 router.get('/health', (req, res) => res.json({ ok: true, time: new Date().toISOString() }));
 
+// Schema check endpoint for database validation and troubleshooting
+router.get('/schema-check', verifyToken, isAmitraceAdmin, async (req, res) => {
+  logger.info('🔍 Teacher Requests Schema Check requested', { adminId: req.user?.id });
+  
+  try {
+    // Check if teacher_requests table exists
+    const tableExists = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'teacher_requests'
+      );
+    `);
+    
+    if (!tableExists.rows[0].exists) {
+      return res.status(500).json({
+        error: 'teacher_requests table does not exist',
+        tableExists: false
+      });
+    }
+    
+    // Get current table schema
+    const schemaResult = await pool.query(`
+      SELECT 
+        column_name, 
+        data_type, 
+        is_nullable,
+        column_default
+      FROM information_schema.columns 
+      WHERE table_name = 'teacher_requests' 
+      ORDER BY ordinal_position;
+    `);
+    
+    const currentColumns = schemaResult.rows.map(row => ({
+      name: row.column_name,
+      type: row.data_type,
+      nullable: row.is_nullable === 'YES',
+      default: row.column_default
+    }));
+    
+    // Define expected optional columns that can cause issues
+    const optionalColumns = [
+      { name: 'processed_at', type: 'timestamp', required: false },
+      { name: 'action_type', type: 'text', required: false },
+      { name: 'password_set_at', type: 'timestamp', required: false },
+      { name: 'approved_by', type: 'integer', required: false },
+      { name: 'approved_at', type: 'timestamp', required: false }
+    ];
+    
+    // Check which optional columns exist
+    const columnStatus = optionalColumns.map(expectedCol => {
+      const existingCol = currentColumns.find(col => col.name === expectedCol.name);
+      return {
+        name: expectedCol.name,
+        expected: true,
+        exists: !!existingCol,
+        type: existingCol?.type || null,
+        typeMatch: existingCol ? existingCol.type.includes(expectedCol.type) : false
+      };
+    });
+    
+    const missingColumns = columnStatus.filter(col => !col.exists);
+    const presentColumns = columnStatus.filter(col => col.exists);
+    
+    // Test if the main query would work
+    let queryWorks = false;
+    let queryError = null;
+    
+    try {
+      const testQuery = skipOptionalColumns ? `
+        SELECT tr.id, tr.name, tr.email, tr.status
+        FROM teacher_requests tr 
+        LIMIT 1
+      ` : `
+        SELECT 
+          tr.id, tr.name, tr.email, tr.status,
+          tr.processed_at, tr.action_type, tr.password_set_at
+        FROM teacher_requests tr 
+        LIMIT 1
+      `;
+      
+      await pool.query(testQuery);
+      queryWorks = true;
+    } catch (testError) {
+      queryError = testError.message;
+    }
+    
+    // Generate recommendations
+    const recommendations = [];
+    
+    if (missingColumns.length > 0 && !skipOptionalColumns) {
+      recommendations.push({
+        priority: 'IMMEDIATE',
+        issue: `Missing optional columns: ${missingColumns.map(c => c.name).join(', ')}`,
+        solution: 'Set SKIP_OPTIONAL_COLUMNS=true environment variable as immediate fix'
+      });
+      
+      recommendations.push({
+        priority: 'PERMANENT', 
+        issue: 'Optional columns missing from database schema',
+        solution: 'Run migration: node backend/scripts/run-teacher-requests-migration.js --live'
+      });
+    }
+    
+    if (missingColumns.length === 0 && skipOptionalColumns) {
+      recommendations.push({
+        priority: 'OPTIMIZATION',
+        issue: 'SKIP_OPTIONAL_COLUMNS is set but all columns exist',
+        solution: 'Remove SKIP_OPTIONAL_COLUMNS environment variable to enable full functionality'
+      });
+    }
+    
+    const response = {
+      tableExists: true,
+      totalColumns: currentColumns.length,
+      optionalColumnsStatus: {
+        total: optionalColumns.length,
+        present: presentColumns.length,
+        missing: missingColumns.length,
+        details: columnStatus
+      },
+      environmentStatus: {
+        skipOptionalColumns: skipOptionalColumns,
+        nodeEnv: process.env.NODE_ENV,
+        databaseUrl: process.env.DATABASE_URL ? 'Set' : 'Missing'
+      },
+      queryTest: {
+        works: queryWorks,
+        error: queryError
+      },
+      recommendations: recommendations,
+      currentSchema: currentColumns.map(col => col.name),
+      lastChecked: new Date().toISOString()
+    };
+    
+    logger.info('🔍 Schema check completed', {
+      missingColumns: missingColumns.length,
+      queryWorks,
+      recommendationCount: recommendations.length
+    });
+    
+    res.json(response);
+    
+  } catch (error) {
+    logger.error('❌ Schema check failed', {
+      error: error.message,
+      stack: error.stack,
+      adminId: req.user?.id
+    });
+    
+    res.status(500).json({
+      error: 'Schema check failed',
+      details: isProduction ? 'Internal server error' : error.message,
+      tableExists: false
+    });
+  }
+});
+
 // Get teacher request by ID (Amitrace Admin only)
 router.get('/:id', verifyToken, isAmitraceAdmin, async (req, res) => {
   try {
     const { id } = req.params;
+    const { skip_optional } = req.query;
     
-    // Conditionally include optional columns based on environment variable
-    const optionalFields = skipOptionalColumns ? '' : `,
+    // Allow admin-only override of skipOptionalColumns via query parameter
+    const shouldSkipOptional = skipOptionalColumns || (skip_optional === 'true');
+    
+    // Conditionally include optional columns based on environment variable or admin override
+    // Comment 12 - Always include fields as nullable placeholders for stable API contract
+    const optionalFields = shouldSkipOptional ? `,
+        NULL::timestamp as processed_at,
+        NULL::text as action_type,
+        NULL::timestamp as password_set_at` : `,
         tr.processed_at,
         tr.action_type,
         tr.password_set_at`;
@@ -172,6 +442,31 @@ router.get('/:id', verifyToken, isAmitraceAdmin, async (req, res) => {
     res.json(result.rows[0]);
   } catch (error) {
     logger.error('Error fetching teacher request', error);
+    
+    // Add same enhanced error handling for undefined columns (Comment 8)
+    if (error.code === '42703' && error.message.includes('does not exist')) {
+      const missingColumn = error.message.match(/column "([^"]+)" does not exist/)?.[1];
+      const isOptionalColumn = ['processed_at', 'action_type', 'password_set_at', 'approved_by', 'approved_at'].includes(missingColumn);
+      
+      logger.error('🔧 DATABASE SCHEMA ISSUE - Missing Column in GET /:id', {
+        missingColumn,
+        isOptionalColumn,
+        requestId: req.params.id,
+        workaround: 'Use ?skip_optional=true query parameter',
+        adminId: req.user?.id
+      });
+      
+      if (isOptionalColumn) {
+        return res.status(500).json({
+          error: isProduction 
+            ? 'Database schema needs updating. Please contact administrator.'
+            : `Missing database column: ${missingColumn}. Add ?skip_optional=true to request.`,
+          code: 'MISSING_OPTIONAL_COLUMNS',
+          missingColumn: missingColumn
+        });
+      }
+    }
+    
     res.status(500).json(createErrorResponse(error, 'Failed to fetch teacher request'));
   }
 });
@@ -654,10 +949,38 @@ router.post('/set-password', async (req, res) => {
       return res.status(400).json({ error: 'Invalid or unapproved invitation' });
     }
     
-    // Only check password_set_at if column exists
-    if (!skipOptionalColumns && reqCheck.rows[0].password_set_at) {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ error: 'Invitation link already used' });
+    // Check if token has already been used (Comment 9 - handle token reuse)
+    if (!skipOptionalColumns) {
+      // Use password_set_at column when available
+      if (reqCheck.rows[0].password_set_at) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'Invitation link already used' });
+      }
+    } else {
+      // Use teacher_invitation_usage table when password_set_at is not available
+      try {
+        const usageCheck = await client.query(
+          'SELECT used_at FROM teacher_invitation_usage WHERE request_id = $1',
+          [requestId]
+        );
+        
+        if (usageCheck.rows.length > 0) {
+          await client.query('ROLLBACK');
+          logger.warn('Token reuse attempt detected', { 
+            requestId, 
+            normalizedEmail,
+            previousUse: usageCheck.rows[0].used_at 
+          });
+          return res.status(400).json({ error: 'Invitation link already used' });
+        }
+      } catch (usageError) {
+        // If teacher_invitation_usage table doesn't exist, log warning but continue
+        logger.warn('teacher_invitation_usage table not available, cannot check token reuse', {
+          error: usageError.message,
+          requestId,
+          recommendation: 'Run migration 013_add_teacher_invitation_usage_table.sql'
+        });
+      }
     }
     
     // Cross-check request email with token email
@@ -687,12 +1010,30 @@ router.post('/set-password', async (req, res) => {
       [hashedPassword, userResult.rows[0].id]
     );
     
-    // Mark the token as used (by updating the request) - only if column exists
+    // Mark the token as used (Comment 9 - handle different tracking methods)
     if (!skipOptionalColumns) {
+      // Use password_set_at column when available
       await client.query(
         'UPDATE teacher_requests SET password_set_at = CURRENT_TIMESTAMP WHERE id = $1',
         [requestId]
       );
+    } else {
+      // Use teacher_invitation_usage table when password_set_at is not available
+      try {
+        await client.query(
+          'INSERT INTO teacher_invitation_usage (request_id, used_at) VALUES ($1, CURRENT_TIMESTAMP)',
+          [requestId]
+        );
+        logger.info('Token usage recorded in teacher_invitation_usage table', { requestId });
+      } catch (usageInsertError) {
+        // Log error but don't fail the password set operation
+        logger.error('Failed to record token usage in teacher_invitation_usage table', {
+          error: usageInsertError.message,
+          requestId,
+          recommendation: 'Run migration 013_add_teacher_invitation_usage_table.sql'
+        });
+        // Continue with the operation - the password set should succeed even if usage tracking fails
+      }
     }
     
     await client.query('COMMIT');
