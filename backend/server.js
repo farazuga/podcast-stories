@@ -37,6 +37,7 @@ const debugRoutes = require('./routes/debug');
 const testEmailRoutes = require('./routes/test-email-simple');
 const updatePasswordsRoutes = require('./routes/update-passwords');
 const userManagementRoutes = require('./routes/userManagement');
+const adminMigrateRoutes = require('./routes/admin-migrate');
 
 // Use routes
 app.use('/api/auth', authRoutes);
@@ -56,6 +57,7 @@ app.use('/api/debug', debugRoutes);
 app.use('/api/test-email', testEmailRoutes);
 app.use('/api/admin/update-passwords', updatePasswordsRoutes);
 app.use('/api/user-management', userManagementRoutes);
+app.use('/api/admin', adminMigrateRoutes);
 
 // Serve static files from the frontend directory (after API routes)
 app.use(express.static(path.join(__dirname, 'frontend')));

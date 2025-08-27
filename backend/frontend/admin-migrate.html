@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Migration - VidPOD Admin</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .migration-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        
+        .migration-status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        
+        .status-running {
+            background: #d4edda;
+            border: 1px solid #74b9ff;
+            color: #155724;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .migration-log {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 20px 0;
+            white-space: pre-wrap;
+        }
+        
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .button-primary {
+            background: #007bff;
+        }
+        
+        .button-danger {
+            background: #dc3545;
+        }
+        
+        .button-secondary {
+            background: #6c757d;
+        }
+        
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="migration-container">
+        <h1>🔧 Database Migration - Teacher Password Fix</h1>
+        
+        <div class="info-box">
+            <h3>📋 About This Migration</h3>
+            <p>This migration fixes the teacher password setting issue by adding missing database columns to the <code>teacher_requests</code> table.</p>
+            <p><strong>Problem:</strong> Missing columns (<code>processed_at</code>, <code>action_type</code>, <code>password_set_at</code>) are causing 500 errors when teachers try to set their passwords.</p>
+            <p><strong>Solution:</strong> Add the missing columns to support the complete teacher invitation workflow.</p>
+        </div>
+        
+        <div class="warning-box">
+            <h3>⚠️ Important</h3>
+            <ul>
+                <li>This migration is safe and uses database transactions</li>
+                <li>If any step fails, changes will be rolled back automatically</li>
+                <li>You must be logged in as an admin to use this tool</li>
+                <li>The migration will run on your production database</li>
+            </ul>
+        </div>
+
+        <div id="migration-status" class="migration-status status-pending">
+            Ready to run migration...
+        </div>
+
+        <div id="migration-controls">
+            <button id="check-status-btn" class="button button-secondary">Check Current Status</button>
+            <button id="run-migration-btn" class="button button-primary">Run Migration</button>
+            <button id="test-fix-btn" class="button button-secondary" disabled>Test Fix</button>
+            <a href="admin.html" class="button button-secondary">Back to Admin Panel</a>
+        </div>
+
+        <div id="migration-log" class="migration-log" style="display: none;"></div>
+        
+        <div id="results-section" style="display: none;">
+            <h3>📊 Migration Results</h3>
+            <div id="results-content"></div>
+        </div>
+    </div>
+
+    <script>
+        let migrationRunning = false;
+        
+        const statusDiv = document.getElementById('migration-status');
+        const logDiv = document.getElementById('migration-log');
+        const checkBtn = document.getElementById('check-status-btn');
+        const runBtn = document.getElementById('run-migration-btn');
+        const testBtn = document.getElementById('test-fix-btn');
+        const resultsSection = document.getElementById('results-section');
+        const resultsContent = document.getElementById('results-content');
+
+        function updateStatus(message, type = 'pending') {
+            statusDiv.textContent = message;
+            statusDiv.className = `migration-status status-${type}`;
+        }
+
+        function addLog(message) {
+            logDiv.style.display = 'block';
+            logDiv.textContent += message + '\n';
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            logDiv.textContent = '';
+            logDiv.style.display = 'none';
+        }
+
+        async function makeAuthenticatedRequest(endpoint, options = {}) {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('Not authenticated. Please login as admin first.');
+            }
+
+            const defaultOptions = {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            const finalOptions = {
+                ...defaultOptions,
+                ...options,
+                headers: { ...defaultOptions.headers, ...(options.headers || {}) }
+            };
+
+            const response = await fetch(endpoint, finalOptions);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`API Error (${response.status}): ${errorText}`);
+            }
+
+            return response.json();
+        }
+
+        async function checkCurrentStatus() {
+            try {
+                updateStatus('Checking current database status...', 'running');
+                clearLog();
+                addLog('🔍 Checking current database schema...');
+
+                const result = await makeAuthenticatedRequest('/api/teacher-requests/schema-check');
+                
+                addLog('✅ Schema check completed');
+                addLog(`📊 Table exists: ${result.tableExists ? 'YES' : 'NO'}`);
+                addLog(`📊 Total columns: ${result.totalColumns || 'Unknown'}`);
+                
+                if (result.optionalColumnsStatus) {
+                    const status = result.optionalColumnsStatus;
+                    addLog(`📊 Optional columns: ${status.present}/${status.total} present`);
+                    
+                    if (status.missing > 0) {
+                        addLog('⚠️  Missing columns:');
+                        status.details.forEach(col => {
+                            if (!col.exists) {
+                                addLog(`   - ${col.name}`);
+                            }
+                        });
+                        updateStatus(`Migration needed - ${status.missing} columns missing`, 'pending');
+                        runBtn.disabled = false;
+                    } else {
+                        addLog('✅ All optional columns present');
+                        updateStatus('No migration needed - all columns present', 'success');
+                        runBtn.disabled = true;
+                        testBtn.disabled = false;
+                    }
+                } else {
+                    updateStatus('Could not determine schema status', 'error');
+                }
+
+                if (result.queryTest) {
+                    addLog(`📊 API query test: ${result.queryTest.works ? 'PASSES' : 'FAILS'}`);
+                    if (!result.queryTest.works) {
+                        addLog(`   Error: ${result.queryTest.error}`);
+                    }
+                }
+
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`);
+                updateStatus('Error checking status - see log for details', 'error');
+            }
+        }
+
+        async function runMigration() {
+            if (migrationRunning) return;
+            
+            if (!confirm('Are you sure you want to run the database migration? This will modify the production database.')) {
+                return;
+            }
+
+            try {
+                migrationRunning = true;
+                runBtn.disabled = true;
+                checkBtn.disabled = true;
+                
+                updateStatus('Running database migration...', 'running');
+                clearLog();
+                addLog('🚀 Starting database migration...');
+                addLog('⚠️  This may take a few minutes...');
+
+                // Call the migration API endpoint
+                const result = await makeAuthenticatedRequest('/api/admin/migrate-teacher-requests', {
+                    method: 'POST'
+                });
+
+                addLog('✅ Migration completed successfully!');
+                addLog('📊 Results:');
+                
+                if (result.columnsAdded) {
+                    addLog(`   - Added ${result.columnsAdded.length} columns: ${result.columnsAdded.join(', ')}`);
+                }
+                
+                if (result.migrationDetails) {
+                    addLog('📋 Migration details:');
+                    result.migrationDetails.forEach(detail => {
+                        addLog(`   ${detail}`);
+                    });
+                }
+
+                updateStatus('Migration completed successfully!', 'success');
+                testBtn.disabled = false;
+
+                // Show results
+                resultsSection.style.display = 'block';
+                resultsContent.innerHTML = `
+                    <div class="status-success">
+                        <h4>✅ Migration Successful</h4>
+                        <p>The teacher password setting issue has been resolved.</p>
+                        <ul>
+                            <li>Missing database columns have been added</li>
+                            <li>Teacher invitation tokens will now work correctly</li>
+                            <li>The 500 error in admin panel should be resolved</li>
+                            <li>You can now remove the SKIP_OPTIONAL_COLUMNS environment variable if desired</li>
+                        </ul>
+                    </div>
+                `;
+
+            } catch (error) {
+                addLog(`❌ Migration failed: ${error.message}`);
+                updateStatus('Migration failed - see log for details', 'error');
+                
+                resultsSection.style.display = 'block';
+                resultsContent.innerHTML = `
+                    <div class="status-error">
+                        <h4>❌ Migration Failed</h4>
+                        <p>${error.message}</p>
+                        <p>Please check the logs above for more details.</p>
+                    </div>
+                `;
+            } finally {
+                migrationRunning = false;
+                runBtn.disabled = false;
+                checkBtn.disabled = false;
+            }
+        }
+
+        async function testFix() {
+            try {
+                updateStatus('Testing the fix...', 'running');
+                clearLog();
+                addLog('🧪 Testing teacher password functionality...');
+
+                // Test the teacher requests API
+                const result = await makeAuthenticatedRequest('/api/teacher-requests');
+                addLog('✅ Teacher requests API working');
+                addLog(`📊 Found ${result.length} teacher requests`);
+
+                // Test schema again
+                const schemaResult = await makeAuthenticatedRequest('/api/teacher-requests/schema-check');
+                if (schemaResult.queryTest?.works) {
+                    addLog('✅ Database queries working correctly');
+                } else {
+                    addLog('⚠️  Database queries still failing');
+                }
+
+                updateStatus('Fix test completed - check log for results', 'success');
+
+            } catch (error) {
+                addLog(`❌ Test failed: ${error.message}`);
+                updateStatus('Fix test failed - there may still be issues', 'error');
+            }
+        }
+
+        // Check authentication on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            
+            if (!token || user.role !== 'amitrace_admin') {
+                updateStatus('Access denied - admin authentication required', 'error');
+                document.getElementById('migration-controls').style.display = 'none';
+                return;
+            }
+
+            // Auto-check status on page load
+            checkCurrentStatus();
+        });
+
+        // Event listeners
+        checkBtn.addEventListener('click', checkCurrentStatus);
+        runBtn.addEventListener('click', runMigration);
+        testBtn.addEventListener('click', testFix);
+    </script>
+</body>
+</html>
