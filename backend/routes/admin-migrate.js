@@ -100,16 +100,70 @@ async function runTeacherRequestsMigration() {
         await client.query(migrationSQL);
         console.log('✅ Main migration executed');
         
-        // Try to load and execute the invitation usage table migration
-        const usageMigrationPath = path.join(__dirname, '../migrations/013_add_teacher_invitation_usage_table.sql');
-        
-        if (fs.existsSync(usageMigrationPath)) {
-            console.log('📄 Loading invitation usage table migration...');
-            const usageMigrationSQL = fs.readFileSync(usageMigrationPath, 'utf8');
-            await client.query(usageMigrationSQL);
-            console.log('✅ Invitation usage table migration executed');
-        } else {
-            console.log('⚠️  Invitation usage table migration not found - skipping');
+        // Try to create the invitation usage table with proper type
+        try {
+            console.log('📄 Creating invitation usage table...');
+            
+            // First, check the type of teacher_requests.id
+            const idTypeResult = await client.query(`
+                SELECT data_type 
+                FROM information_schema.columns 
+                WHERE table_name = 'teacher_requests' 
+                AND column_name = 'id'
+            `);
+            
+            if (idTypeResult.rows.length > 0) {
+                const idType = idTypeResult.rows[0].data_type;
+                console.log(`   teacher_requests.id type: ${idType}`);
+                
+                // Create the table with the correct type
+                if (idType === 'integer' || idType === 'bigint') {
+                    await client.query(`
+                        CREATE TABLE IF NOT EXISTS teacher_invitation_usage (
+                            request_id INTEGER PRIMARY KEY,
+                            used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+                        );
+                    `);
+                    
+                    // Try to add foreign key constraint
+                    await client.query(`
+                        DO $$
+                        BEGIN
+                            IF NOT EXISTS (
+                                SELECT 1 FROM information_schema.table_constraints 
+                                WHERE constraint_name = 'teacher_invitation_usage_request_id_fkey' 
+                                AND table_name = 'teacher_invitation_usage'
+                            ) THEN
+                                ALTER TABLE teacher_invitation_usage 
+                                ADD CONSTRAINT teacher_invitation_usage_request_id_fkey 
+                                FOREIGN KEY (request_id) REFERENCES teacher_requests(id) ON DELETE CASCADE;
+                            END IF;
+                        EXCEPTION
+                            WHEN others THEN
+                                -- If foreign key fails, continue without it
+                                RAISE NOTICE 'Foreign key constraint could not be added: %', SQLERRM;
+                        END $$;
+                    `);
+                } else {
+                    // For UUID or other types, create without foreign key
+                    await client.query(`
+                        CREATE TABLE IF NOT EXISTS teacher_invitation_usage (
+                            request_id TEXT PRIMARY KEY,
+                            used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+                        );
+                    `);
+                }
+                
+                console.log('✅ Invitation usage table created successfully');
+            } else {
+                console.log('⚠️  Could not determine teacher_requests.id type - skipping usage table');
+            }
+        } catch (usageTableError) {
+            console.log('⚠️  Invitation usage table creation failed:', usageTableError.message);
+            console.log('   This is non-critical - password_set_at column will be used instead');
+            // Don't throw - this is optional functionality
         }
         
         await client.query('COMMIT');
