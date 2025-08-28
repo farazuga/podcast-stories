@@ -7,11 +7,11 @@ const passwordUtils = require('../utils/password-utils');
 const tokenService = require('../utils/token-service');
 
 // Helper function to add timeout to email operations
-function withTimeout(promise, timeoutMs = 10000) {
+async function withTimeout(promise, timeoutMs = 10000) {
   return Promise.race([
     promise,
     new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Email operation timeout')), timeoutMs)
+      setTimeout(() => reject(new Error(`Email operation timeout after ${timeoutMs}ms`)), timeoutMs)
     )
   ]);
 }
@@ -47,16 +47,13 @@ router.post('/request', async (req, res) => {
     
     let emailResult;
     
-    // Try Gmail API first with proper error handling and timeout
+    // Try Gmail API first with proper error handling
     try {
       console.log('Trying Gmail API...');
-      emailResult = await withTimeout(
-        gmailService.sendPasswordResetEmail(
-          user.email, 
-          user.name || user.username, 
-          resetToken
-        ),
-        5000 // 5 second timeout for Gmail API
+      emailResult = await gmailService.sendPasswordResetEmail(
+        user.email, 
+        user.name || user.username, 
+        resetToken
       );
       console.log('Gmail API result:', emailResult);
     } catch (emailError) {
@@ -68,13 +65,10 @@ router.post('/request', async (req, res) => {
     if (!emailResult.success) {
       try {
         console.log('Gmail API failed, trying SMTP...');
-        emailResult = await withTimeout(
-          emailService.sendPasswordResetEmail(
-            user.email, 
-            user.name || user.username, 
-            resetToken
-          ),
-          8000 // 8 second timeout for SMTP (includes potential 2s delay)
+        emailResult = await emailService.sendPasswordResetEmail(
+          user.email, 
+          user.name || user.username, 
+          resetToken
         );
         console.log('SMTP result:', emailResult);
       } catch (smtpError) {
