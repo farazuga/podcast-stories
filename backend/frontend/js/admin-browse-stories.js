@@ -8,7 +8,7 @@ let currentUser = null;
 let allTags = [];
 let currentPage = 0;
 let storiesPerPage = 50;
-let currentViewMode = 'grid';
+let currentViewMode = 'list'; // Changed default from grid to list for better scanning
 let selectedStories = new Set();
 let selectionMode = false;
 let adminStats = {
@@ -55,6 +55,10 @@ async function initializeAdminBrowseStoriesPage() {
         console.log('🔍 Starting setupEventListeners...');
         setupEventListeners();
         console.log('✅ setupEventListeners complete');
+        
+        // Set default view to list
+        setViewMode('list');
+        console.log('✅ Default admin view set to list');
         
         console.log('Admin Browse Stories page initialization complete!');
     } catch (error) {

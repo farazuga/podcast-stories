@@ -261,6 +261,20 @@
             const startEnhanced = enhanceCoverageDateInput('coverage_start_date', 'Start Date');
             const endEnhanced = enhanceCoverageDateInput('coverage_end_date', 'End Date');
             
+            // Auto-update end date when start date is selected (only if end date is empty)
+            if (startEnhanced) {
+                const startInput = document.getElementById('coverage_start_date');
+                const endInput = document.getElementById('coverage_end_date');
+                if (startInput && endInput) {
+                    startInput.addEventListener('change', function() {
+                        if (this.value && !endInput.value) {
+                            endInput.value = this.value;
+                            console.log(`📅 Form auto-populated coverage end date with: ${this.value}`);
+                        }
+                    });
+                }
+            }
+            
             console.log(`📅 Coverage date enhancement complete: Start=${startEnhanced}, End=${endEnhanced}`);
             
             // Add helpful information for users

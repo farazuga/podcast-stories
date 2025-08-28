@@ -107,10 +107,10 @@
         <!-- Story Display Options -->
         <div class="display-options">
             <div class="view-controls">
-                <button class="btn btn-outline active" id="gridViewBtn" onclick="setViewMode('grid')">
+                <button class="btn btn-outline" id="gridViewBtn" onclick="setViewMode('grid')">
                     📱 Grid View
                 </button>
-                <button class="btn btn-outline" id="listViewBtn" onclick="setViewMode('list')">
+                <button class="btn btn-outline active" id="listViewBtn" onclick="setViewMode('list')">
                     📋 List View
                 </button>
             </div>
@@ -279,6 +279,20 @@
             // Enhance the admin search date inputs
             const startEnhanced = enhanceDateInput('searchStartDate', 'Coverage start date...');
             const endEnhanced = enhanceDateInput('searchEndDate', 'Coverage end date...');
+            
+            // Auto-update end date when start date is selected (only if end date is empty)
+            if (startEnhanced) {
+                const startInput = document.getElementById('searchStartDate');
+                const endInput = document.getElementById('searchEndDate');
+                if (startInput && endInput) {
+                    startInput.addEventListener('change', function() {
+                        if (this.value && !endInput.value) {
+                            endInput.value = this.value;
+                            console.log(`📅 Admin auto-populated end date with: ${this.value}`);
+                        }
+                    });
+                }
+            }
             
             console.log(`📅 Admin date input enhancement complete: Start=${startEnhanced}, End=${endEnhanced}`);
             
