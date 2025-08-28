@@ -6,16 +6,6 @@ const gmailService = require('../services/gmailService');
 const passwordUtils = require('../utils/password-utils');
 const tokenService = require('../utils/token-service');
 
-// Helper function to add timeout to email operations
-async function withTimeout(promise, timeoutMs = 10000) {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => 
-      setTimeout(() => reject(new Error(`Email operation timeout after ${timeoutMs}ms`)), timeoutMs)
-    )
-  ]);
-}
-
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
@@ -45,36 +35,25 @@ router.post('/request', async (req, res) => {
     
     console.log('Attempting to send password reset email to:', user.email);
     
-    let emailResult;
+    // Try Gmail API first, then fall back to SMTP
+    console.log('Trying Gmail API...');
+    let emailResult = await gmailService.sendPasswordResetEmail(
+      user.email, 
+      user.name || user.username, 
+      resetToken
+    );
     
-    // Try Gmail API first with proper error handling
-    try {
-      console.log('Trying Gmail API...');
-      emailResult = await gmailService.sendPasswordResetEmail(
+    console.log('Gmail API result:', emailResult);
+    
+    // If Gmail API fails, try SMTP
+    if (!emailResult.success) {
+      console.log('Gmail API failed, trying SMTP...');
+      emailResult = await emailService.sendPasswordResetEmail(
         user.email, 
         user.name || user.username, 
         resetToken
       );
-      console.log('Gmail API result:', emailResult);
-    } catch (emailError) {
-      console.log('Gmail API threw error:', emailError.message);
-      emailResult = { success: false, error: emailError.message };
-    }
-    
-    // Fallback to SMTP if Gmail API fails
-    if (!emailResult.success) {
-      try {
-        console.log('Gmail API failed, trying SMTP...');
-        emailResult = await emailService.sendPasswordResetEmail(
-          user.email, 
-          user.name || user.username, 
-          resetToken
-        );
-        console.log('SMTP result:', emailResult);
-      } catch (smtpError) {
-        console.log('SMTP also failed:', smtpError.message);
-        emailResult = { success: false, error: smtpError.message };
-      }
+      console.log('SMTP result:', emailResult);
     }
     
     if (!emailResult.success) {
