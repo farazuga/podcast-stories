@@ -558,7 +558,7 @@ router.patch('/:id/reject', verifyToken, isAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Rejection notes are required' });
     }
     
-    // Check if story exists and is in pending status
+    // Check if story exists and can be rejected
     const storyCheck = await pool.query(
       'SELECT approval_status FROM story_ideas WHERE id = $1',
       [id]
@@ -568,8 +568,9 @@ router.patch('/:id/reject', verifyToken, isAdmin, async (req, res) => {
       return res.status(404).json({ error: 'Story not found' });
     }
     
-    if (storyCheck.rows[0].approval_status !== 'pending') {
-      return res.status(400).json({ error: 'Story must be in pending status to reject' });
+    const currentStatus = storyCheck.rows[0].approval_status;
+    if (currentStatus === 'rejected') {
+      return res.status(400).json({ error: 'Story is already rejected' });
     }
     
     // Update story to rejected
