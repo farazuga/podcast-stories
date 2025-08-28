@@ -31,7 +31,14 @@ router.post('/request', async (req, res) => {
     }
     
     // Generate reset token using unified service
-    const resetToken = await tokenService.createPasswordResetToken(user.id);
+    let resetToken;
+    try {
+      resetToken = await tokenService.createPasswordResetToken(user.id);
+      console.log('Token created successfully');
+    } catch (tokenError) {
+      console.error('Token creation failed:', tokenError.message);
+      return res.status(500).json({ error: 'Failed to create reset token: ' + tokenError.message });
+    }
     
     console.log('Attempting to send password reset email to:', user.email);
     
