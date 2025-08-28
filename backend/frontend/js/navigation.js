@@ -326,22 +326,16 @@ const VidPODNav = {
 
     /**
      * Customize navigation for teacher role
-     * Rename Admin Panel to Settings (Admin Browse Stories now hidden via data-role)
+     * Hide Admin Panel since teachers don't have access to it
      */
     customizeTeacherNavigation() {
-        // Change "Admin Panel" to "Settings" for teachers
+        // Hide Admin Panel for teachers since they don't have access
         document.querySelectorAll('[href*="admin.html"]').forEach(element => {
-            const textSpan = element.querySelector('span:not(.icon)');
-            if (textSpan && textSpan.textContent.includes('Admin Panel')) {
-                textSpan.textContent = 'Settings';
-            }
+            element.style.display = 'none';
         });
         
         document.querySelectorAll('.mobile-nav [href*="admin.html"]').forEach(element => {
-            const textSpan = element.querySelector('span:not(.icon)');
-            if (textSpan && textSpan.textContent.includes('Admin Panel')) {
-                textSpan.textContent = 'Settings';
-            }
+            element.style.display = 'none';
         });
     },
 
