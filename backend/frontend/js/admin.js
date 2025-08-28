@@ -325,10 +325,13 @@ window.showTab = async function(tabName) {
             case 'stories':
                 console.log('🔍 Loading stories tab...');
                 loadStoryApprovalStats();
-                // Load stories with current filter selection (default to all stories)
-                const currentFilter = document.getElementById('storyStatusFilter')?.value;
-                const filterToUse = currentFilter !== undefined ? currentFilter : '';
-                window.loadStoriesForApproval(filterToUse);
+                // Ensure the filter is set to "All Stories" by default
+                const filterSelect = document.getElementById('storyStatusFilter');
+                if (filterSelect && filterSelect.value === 'pending') {
+                    filterSelect.value = ''; // Set to "All Stories"
+                }
+                // Load stories with current filter selection
+                window.loadStoriesForApproval();
                 break;
             case 'tags':
                 console.log('🔍 Loading tags tab...');
@@ -1185,6 +1188,7 @@ window.loadStoriesForApproval = async function(status = null) {
             
         console.log('🔍 Admin Debug - Story approval request:', {
             status: filterStatus,
+            statusType: typeof filterStatus,
             url: url,
             token: localStorage.getItem('token') ? 'Present' : 'Missing'
         });
@@ -1224,6 +1228,10 @@ function displayStoriesForApproval(stories) {
     }
     
     console.log('🔍 Admin Debug - Stories to display:', stories.length, stories);
+    
+    if (stories.length > 0) {
+        console.log('🔍 Admin Debug - Sample story data:', stories[0]);
+    }
     
     if (stories.length === 0) {
         table.innerHTML = '<tr><td colspan="6" class="no-data">No stories found for the selected status.</td></tr>';
