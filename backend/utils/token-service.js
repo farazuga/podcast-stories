@@ -31,12 +31,18 @@ async function createPasswordResetToken(userId, expirationHours = 1) {
 
     // Since unique constraint is removed, we can simply insert
     // If user already has tokens, this will create multiple (which is now allowed)
-    console.log(`Creating password reset token for user ${userId}`);
-    await pool.query(`
-        INSERT INTO password_reset_tokens (user_id, token, expires_at, used, created_at) 
-        VALUES ($1, $2, $3, false, CURRENT_TIMESTAMP)
-    `, [userId, token, expiresAt]);
-    console.log(`Token created successfully for user ${userId}, token: ${token.substring(0, 8)}...`)
+    console.log(`Creating password reset token for user ${userId}, token: ${token}, expires: ${expiresAt}`);
+    try {
+        const insertResult = await pool.query(`
+            INSERT INTO password_reset_tokens (user_id, token, expires_at, used, created_at) 
+            VALUES ($1, $2, $3, false, CURRENT_TIMESTAMP)
+            RETURNING id, created_at
+        `, [userId, token, expiresAt]);
+        console.log(`Token created successfully - ID: ${insertResult.rows[0].id}, created: ${insertResult.rows[0].created_at}, user: ${userId}, token: ${token.substring(0, 16)}...`);
+    } catch (insertError) {
+        console.error(`Token creation failed for user ${userId}:`, insertError);
+        throw insertError;
+    }
 
     return token;
 }
@@ -57,6 +63,20 @@ async function validateToken(token) {
 
     try {
         console.log(`Validating token: ${token.substring(0, 8)}...`);
+        console.log(`Full token for validation: ${token}`);
+        
+        // First, let's try a simpler query to see if the token exists at all
+        const tokenExistsResult = await pool.query(
+            'SELECT id, user_id, expires_at, used, created_at FROM password_reset_tokens WHERE token = $1',
+            [token]
+        );
+        console.log(`Simple token query returned ${tokenExistsResult.rows.length} rows`);
+        
+        if (tokenExistsResult.rows.length > 0) {
+            console.log(`Found token in database:`, tokenExistsResult.rows[0]);
+        }
+        
+        // Now try the full query with JOIN
         const result = await pool.query(`
             SELECT 
                 prt.id,
@@ -73,10 +93,13 @@ async function validateToken(token) {
             WHERE prt.token = $1
         `, [token]);
 
-        console.log(`Token validation query returned ${result.rows.length} rows`);
+        console.log(`Token validation query returned ${result.rows.length} rows for token: ${token.substring(0, 16)}...`);
         
         if (result.rows.length === 0) {
-            console.log(`Token not found in database: ${token.substring(0, 8)}...`);
+            console.log(`Token not found in database: ${token}`);
+            // Let's also check how many total tokens exist for debugging
+            const countResult = await pool.query('SELECT COUNT(*) as total FROM password_reset_tokens');
+            console.log(`Total tokens in database: ${countResult.rows[0].total}`);
             return {
                 isValid: false,
                 error: 'Invalid or expired reset token',
