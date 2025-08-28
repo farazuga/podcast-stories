@@ -46,7 +46,7 @@ class TeacherRequestsTest {
             console.log('✅ Teacher login successful');
             
             // Wait for navigation to load
-            await page.waitForTimeout(2000);
+            await new Promise(resolve => setTimeout(resolve, 2000));
             
             // Check navigation items
             const navItems = await page.evaluate(() => {
@@ -100,6 +100,13 @@ class TeacherRequestsTest {
         const page = await this.browser.newPage();
         
         try {
+            // Close teacher session first
+            await page.goto(`${this.baseUrl}/index.html`);
+            await page.evaluate(() => {
+                localStorage.clear();
+                sessionStorage.clear();
+            });
+            
             // Login as admin
             await page.goto(`${this.baseUrl}/index.html`);
             await page.waitForSelector('#email', { timeout: 10000 });
@@ -113,7 +120,7 @@ class TeacherRequestsTest {
             
             // Navigate to admin panel
             await page.goto(`${this.baseUrl}/admin.html`);
-            await page.waitForTimeout(2000);
+            await new Promise(resolve => setTimeout(resolve, 2000));
             
             // Click teacher requests tab
             const teacherTabClicked = await page.evaluate(() => {
@@ -137,7 +144,7 @@ class TeacherRequestsTest {
                 throw new Error('Could not click teacher requests tab');
             }
             
-            await page.waitForTimeout(3000); // Wait for data to load
+            await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for data to load
             console.log('✅ Teacher requests tab opened');
             
             // Test "All Status" filter
@@ -168,7 +175,7 @@ class TeacherRequestsTest {
             });
             
             console.log('   Filter selection:', filterSelected);
-            await page.waitForTimeout(2000);
+            await new Promise(resolve => setTimeout(resolve, 2000));
             
             // Check if requests are displayed
             const requestsData = await page.evaluate(() => {

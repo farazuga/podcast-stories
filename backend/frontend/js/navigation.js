@@ -326,15 +326,26 @@ const VidPODNav = {
 
     /**
      * Customize navigation for teacher role
-     * Hide Admin Panel since teachers don't have access to it
+     * Hide Admin Panel and Admin Browse Stories since teachers don't have access
      */
     customizeTeacherNavigation() {
-        // Hide Admin Panel for teachers since they don't have access
+        // Hide Admin Panel for teachers
         document.querySelectorAll('[href*="admin.html"]').forEach(element => {
             element.style.display = 'none';
         });
         
-        document.querySelectorAll('.mobile-nav [href*="admin.html"]').forEach(element => {
+        // Hide Admin Browse Stories for teachers
+        document.querySelectorAll('[href*="admin-browse-stories.html"]').forEach(element => {
+            element.style.display = 'none';
+        });
+        
+        // Also hide based on data-page attribute
+        document.querySelectorAll('[data-page="admin"], [data-page="admin-browse-stories"]').forEach(element => {
+            element.style.display = 'none';
+        });
+        
+        // Mobile menu hiding
+        document.querySelectorAll('.mobile-nav [href*="admin.html"], .mobile-nav [href*="admin-browse-stories.html"]').forEach(element => {
             element.style.display = 'none';
         });
     },
