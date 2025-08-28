@@ -144,8 +144,47 @@
     <script src="js/stories.js"></script>
     <script src="js/navigation.js"></script>
     <script src="js/include-navigation.js"></script>
-    <script src="js/rundown-utils.js"></script>
-    <script src="js/rundown-stories.js"></script>
+    
+    <!-- Conditionally load rundown scripts only for teachers/admins -->
+    <script>
+        // Check user role and conditionally load rundown scripts
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                const userRole = user.role;
+                
+                // Only load rundown scripts for teachers and admins
+                if (userRole === 'teacher' || userRole === 'amitrace_admin') {
+                    console.log('🔧 Loading rundown scripts for user role:', userRole);
+                    
+                    // Load rundown utility scripts
+                    const rundownUtilsScript = document.createElement('script');
+                    rundownUtilsScript.src = 'js/rundown-utils.js';
+                    rundownUtilsScript.onload = function() {
+                        console.log('✅ Rundown utils loaded successfully');
+                    };
+                    rundownUtilsScript.onerror = function() {
+                        console.warn('⚠️ Failed to load rundown utils - rundown features may not work');
+                    };
+                    document.head.appendChild(rundownUtilsScript);
+                    
+                    const rundownStoriesScript = document.createElement('script');
+                    rundownStoriesScript.src = 'js/rundown-stories.js';
+                    rundownStoriesScript.onload = function() {
+                        console.log('✅ Rundown stories integration loaded successfully');
+                    };
+                    rundownStoriesScript.onerror = function() {
+                        console.warn('⚠️ Failed to load rundown stories - rundown buttons may not work');
+                    };
+                    document.head.appendChild(rundownStoriesScript);
+                } else {
+                    console.log('🔧 Skipping rundown scripts for user role:', userRole || 'unknown');
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not determine user role, skipping rundown scripts:', error.message);
+            }
+        });
+    </script>
     
     <!-- Enhanced Date Input with Calendar Support -->
     <script>

@@ -272,7 +272,8 @@ class RundownStories {
             
             // Make request for PDF
             const token = localStorage.getItem('token');
-            const response = await fetch(`${API_BASE_URL}/rundown-stories/export/${targetRundownId}`, {
+            const apiBaseUrl = window.API_URL || window.AppConfig?.API_URL || '/api';
+            const response = await fetch(`${apiBaseUrl}/rundown-stories/export/${targetRundownId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

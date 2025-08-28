@@ -43,6 +43,9 @@ class RundownUtils {
             throw new Error('Authentication required');
         }
         
+        // Get API base URL from global config
+        const apiBaseUrl = window.API_URL || window.AppConfig?.API_URL || '/api';
+        
         const defaultOptions = {
             headers: {
                 'Content-Type': 'application/json',
@@ -60,7 +63,7 @@ class RundownUtils {
         };
         
         try {
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+            const response = await fetch(`${apiBaseUrl}${endpoint}`, config);
             
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ error: 'Network error' }));
