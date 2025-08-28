@@ -286,6 +286,34 @@
     left: -9999px !important;
 }
 
+/* TEACHER: Hide admin elements with maximum CSS specificity */
+.teacher-hidden-admin {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+}
+
+/* Additional CSS rules to override navigation flex display for hidden admin elements */
+.nav-item.teacher-hidden-admin {
+    display: none !important;
+}
+
+.navbar-nav .nav-item.teacher-hidden-admin {
+    display: none !important;
+}
+
+.mobile-nav .nav-item.teacher-hidden-admin {
+    display: none !important;
+}
+
 /* NUCLEAR OPTION: Hide all teacher-dashboard elements when body has amitrace-admin class */
 body.user-role-amitrace_admin [data-page="teacher-dashboard"] {
     display: none !important;
