@@ -7,10 +7,10 @@ const pool = new Pool({
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-// Run migration endpoint (one-time use)
-router.get('/fix-constraint', async (req, res) => {
+// Remove constraint endpoint (fixes password reset issue)
+router.get('/remove-constraint', async (req, res) => {
     try {
-        // Check if constraint already exists
+        // Check current constraints
         const constraintCheck = await pool.query(`
             SELECT constraint_name 
             FROM information_schema.table_constraints 
@@ -18,38 +18,42 @@ router.get('/fix-constraint', async (req, res) => {
             AND constraint_type = 'UNIQUE'
         `);
         
-        if (constraintCheck.rows.some(row => row.constraint_name === 'unique_user_id')) {
-            return res.json({ 
-                message: 'Constraint already exists!',
-                status: 'already_fixed' 
-            });
+        console.log('Found constraints:', constraintCheck.rows);
+        
+        // Remove unique_user_id constraint if it exists
+        try {
+            await pool.query(`ALTER TABLE password_reset_tokens DROP CONSTRAINT unique_user_id`);
+            console.log('Dropped unique_user_id constraint');
+        } catch (e) {
+            console.log('unique_user_id constraint not found:', e.message);
         }
         
-        // Remove duplicates
-        const deleteResult = await pool.query(`
-            DELETE FROM password_reset_tokens 
-            WHERE id NOT IN (
-                SELECT MAX(id) 
-                FROM password_reset_tokens 
-                GROUP BY user_id
-            )
-        `);
+        // Remove other possible constraint names
+        try {
+            await pool.query(`ALTER TABLE password_reset_tokens DROP CONSTRAINT password_reset_tokens_user_id_key`);
+            console.log('Dropped password_reset_tokens_user_id_key constraint');
+        } catch (e) {
+            console.log('password_reset_tokens_user_id_key constraint not found:', e.message);
+        }
         
-        // Add unique constraint
-        await pool.query(`
-            ALTER TABLE password_reset_tokens 
-            ADD CONSTRAINT unique_user_id UNIQUE (user_id)
+        // Check constraints after removal
+        const afterCheck = await pool.query(`
+            SELECT constraint_name 
+            FROM information_schema.table_constraints 
+            WHERE table_name = 'password_reset_tokens' 
+            AND constraint_type = 'UNIQUE'
         `);
         
         res.json({ 
-            message: 'Migration completed successfully!',
-            deleted_duplicates: deleteResult.rowCount,
-            status: 'fixed'
+            message: 'Constraint removal completed!',
+            constraints_before: constraintCheck.rows,
+            constraints_after: afterCheck.rows,
+            status: 'removed'
         });
     } catch (error) {
-        console.error('Migration failed:', error);
+        console.error('Constraint removal failed:', error);
         res.status(500).json({ 
-            error: 'Migration failed',
+            error: 'Constraint removal failed',
             details: error.message 
         });
     }
