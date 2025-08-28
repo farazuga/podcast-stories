@@ -31,14 +31,7 @@ router.post('/request', async (req, res) => {
     }
     
     // Generate reset token using unified service
-    let resetToken;
-    try {
-      resetToken = await tokenService.createPasswordResetToken(user.id);
-      console.log('Token created successfully');
-    } catch (tokenError) {
-      console.error('Token creation failed:', tokenError.message);
-      return res.status(500).json({ error: 'Failed to create reset token: ' + tokenError.message });
-    }
+    const resetToken = await tokenService.createPasswordResetToken(user.id);
     
     console.log('Attempting to send password reset email to:', user.email);
     
@@ -76,7 +69,7 @@ router.post('/request', async (req, res) => {
     
   } catch (error) {
     console.error('Password reset request error:', error);
-    res.status(500).json({ error: 'Failed to process password reset request: ' + error.message });
+    res.status(500).json({ error: 'Failed to process password reset request' });
   }
 });
 

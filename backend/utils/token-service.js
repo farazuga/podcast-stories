@@ -29,35 +29,12 @@ async function createPasswordResetToken(userId, expirationHours = 1) {
     const token = generateToken();
     const expiresAt = new Date(Date.now() + (expirationHours * 60 * 60 * 1000));
 
-    try {
-        await pool.query(`
-            INSERT INTO password_reset_tokens (user_id, token, expires_at) 
-            VALUES ($1, $2, $3)
-            ON CONFLICT (user_id) 
-            DO UPDATE SET 
-                token = $2, 
-                expires_at = $3, 
-                used = false, 
-                created_at = CURRENT_TIMESTAMP
-        `, [userId, token, expiresAt]);
+    await pool.query(`
+        INSERT INTO password_reset_tokens (user_id, token, expires_at, used) 
+        VALUES ($1, $2, $3, false)
+    `, [userId, token, expiresAt]);
 
-        console.log('Token created successfully for user:', userId, 'token:', token);
-        return token;
-    } catch (error) {
-        console.error('Token creation failed:', error.message);
-        // If there's a constraint error, try without ON CONFLICT
-        if (error.message.includes('unique constraint') || error.message.includes('duplicate key')) {
-            console.log('Constraint error, trying simple insert...');
-            await pool.query(`
-                INSERT INTO password_reset_tokens (user_id, token, expires_at, used) 
-                VALUES ($1, $2, $3, false)
-            `, [userId, token, expiresAt]);
-            console.log('Token created with simple insert');
-        } else {
-            throw error;
-        }
-        return token;
-    }
+    return token;
 }
 
 /**
@@ -92,9 +69,6 @@ async function validateToken(token) {
         `, [token]);
 
         if (result.rows.length === 0) {
-            // Add debug info temporarily
-            console.log('Token validation failed for token:', token);
-            console.log('Query returned 0 rows');
             return {
                 isValid: false,
                 error: 'Invalid or expired reset token',
