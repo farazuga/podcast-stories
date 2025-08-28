@@ -325,7 +325,10 @@ window.showTab = async function(tabName) {
             case 'stories':
                 console.log('🔍 Loading stories tab...');
                 loadStoryApprovalStats();
-                window.loadStoriesForApproval('pending');
+                // Load stories with current filter selection (default to all stories)
+                const currentFilter = document.getElementById('storyStatusFilter')?.value;
+                const filterToUse = currentFilter !== undefined ? currentFilter : '';
+                window.loadStoriesForApproval(filterToUse);
                 break;
             case 'tags':
                 console.log('🔍 Loading tags tab...');
@@ -1167,7 +1170,15 @@ async function loadStoryOverviewStats() {
 window.loadStoriesForApproval = async function(status = null) {
     try {
         console.log('🔍 Admin Debug - Loading stories for approval...');
-        const filterStatus = status || document.getElementById('storyStatusFilter')?.value || 'pending';
+        let filterStatus;
+        if (status !== null) {
+            filterStatus = status;
+        } else {
+            const selectElement = document.getElementById('storyStatusFilter');
+            filterStatus = selectElement ? selectElement.value : '';
+        }
+        
+        // If filterStatus is empty string, get all stories; otherwise filter by status
         const url = filterStatus ? 
             `${window.API_URL}/stories/admin/by-status/${filterStatus}` : 
             `${window.API_URL}/stories`;

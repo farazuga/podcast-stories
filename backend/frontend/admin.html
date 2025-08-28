@@ -261,11 +261,11 @@
                     <h2>Story Approval Management</h2>
                     <div class="filter-controls">
                         <select id="storyStatusFilter">
+                            <option value="" selected>All Stories</option>
                             <option value="pending">Pending Stories</option>
                             <option value="approved">Approved Stories</option>
                             <option value="rejected">Rejected Stories</option>
                             <option value="draft">Draft Stories</option>
-                            <option value="">All Stories</option>
                         </select>
                         <button onclick="loadStoriesForApproval()" class="btn btn-secondary">Filter</button>
                         <button onclick="loadStoriesForApproval('pending')" class="btn btn-primary">Show Pending</button>
