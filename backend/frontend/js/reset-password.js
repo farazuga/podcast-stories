@@ -4,16 +4,27 @@ document.addEventListener('DOMContentLoaded', function() {
     const confirmPasswordInput = document.getElementById('confirmPassword');
     const errorMessage = document.getElementById('errorMessage');
     const successMessage = document.getElementById('successMessage');
+    const loadingMessage = document.getElementById('loading-message');
+    const expiredToken = document.getElementById('expired-token');
+    const teacherWelcome = document.getElementById('teacher-welcome');
+    const infoMessage = document.getElementById('info-message');
+    const pageSubtitle = document.getElementById('page-subtitle');
+    const submitButton = document.getElementById('submit-button');
     
-    // Get token from URL
+    // Get token from URL and detect flow type
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
+    const invitation = urlParams.get('invitation'); // Check for teacher invitation
+    
+    let isTeacherInvitation = false;
     
     if (!token) {
-        showError('Invalid reset link. Please request a new password reset.');
-        form.style.display = 'none';
+        showExpiredToken('Invalid reset link. Please request a new password reset.');
         return;
     }
+    
+    // Show loading while verifying token
+    loadingMessage.style.display = 'block';
     
     // Verify token on page load
     verifyToken(token);
@@ -74,22 +85,52 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch(`/api/password-reset/verify/${token}`);
             const data = await response.json();
             
+            loadingMessage.style.display = 'none';
+            
             if (!response.ok) {
-                showError(data.error || 'Invalid or expired reset link');
-                form.style.display = 'none';
+                showExpiredToken(data.error || 'Invalid or expired reset link');
                 return;
             }
             
-            // Show user info if available
-            if (data.email) {
-                const infoMessage = document.querySelector('.info-message p');
-                infoMessage.textContent = `Resetting password for: ${data.email}`;
+            // Check if this is a teacher invitation based on user role and context
+            isTeacherInvitation = data.role === 'teacher' && data.username && data.username.includes('_temp');
+            
+            // Customize UI based on flow type
+            if (isTeacherInvitation) {
+                pageSubtitle.textContent = 'Set Your Password';
+                teacherWelcome.style.display = 'block';
+                submitButton.textContent = 'Set Password & Activate Account';
+                document.getElementById('info-text').textContent = `Welcome ${data.name || data.email}! Set your password to complete your account setup.`;
+            } else {
+                pageSubtitle.textContent = 'Reset Your Password';
+                document.getElementById('info-text').textContent = `Resetting password for: ${data.email}`;
+                submitButton.textContent = 'Update Password';
             }
+            
+            // Show the form
+            form.style.display = 'block';
+            infoMessage.style.display = 'block';
+            
         } catch (error) {
             console.error('Token verification error:', error);
-            showError('Failed to verify reset link. Please try again.');
-            form.style.display = 'none';
+            loadingMessage.style.display = 'none';
+            showExpiredToken('Failed to verify reset link. Please try again.');
         }
+    }
+    
+    function showExpiredToken(message) {
+        loadingMessage.style.display = 'none';
+        form.style.display = 'none';
+        infoMessage.style.display = 'none';
+        teacherWelcome.style.display = 'none';
+        expiredToken.style.display = 'block';
+        expiredToken.querySelector('p').textContent = message;
+        
+        // Customize instruction based on context
+        const instruction = isTeacherInvitation 
+            ? 'Please contact your administrator for a new invitation.'
+            : 'Please request a new password reset.';
+        document.getElementById('expired-instruction').textContent = instruction;
     }
     
     function showError(message) {
@@ -111,7 +152,8 @@ document.addEventListener('DOMContentLoaded', function() {
         successMessage.textContent = '';
     }
     
-    // Real-time password validation
+    // Real-time password validation with visual feedback
+    passwordInput.addEventListener('input', validatePasswordRequirements);
     confirmPasswordInput.addEventListener('input', function() {
         const password = passwordInput.value;
         const confirmPassword = confirmPasswordInput.value;
@@ -122,4 +164,23 @@ document.addEventListener('DOMContentLoaded', function() {
             confirmPasswordInput.setCustomValidity('');
         }
     });
+    
+    function validatePasswordRequirements() {
+        const password = passwordInput.value;
+        
+        // Check length requirement
+        const hasLength = password.length >= 6;
+        updateRequirement('req-length', hasLength);
+    }
+    
+    function updateRequirement(id, met) {
+        const element = document.getElementById(id);
+        if (element) {
+            if (met) {
+                element.classList.add('met');
+            } else {
+                element.classList.remove('met');
+            }
+        }
+    }
 });

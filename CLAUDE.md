@@ -109,6 +109,12 @@ podcast-stories/
 - `POST /api/auth/register` - User registration
 - `GET /api/auth/verify` - Token validation
 
+### Password Reset (Unified System)
+- `POST /api/password-reset/request` - Request password reset via email
+- `GET /api/password-reset/verify/:token` - Verify reset token validity
+- `POST /api/password-reset/reset` - Reset password with token (handles both standard reset and teacher invitations)
+- `DELETE /api/password-reset/cleanup` - Clean up expired tokens
+
 ### Stories
 - `GET /api/stories` - List with filters
 - `POST /api/stories` - Create story
@@ -275,6 +281,42 @@ student@vidpod.com / vidpod (student)
 ```
 
 ### Recent Updates - August 2025
+
+#### Unified Password Reset System Implementation (August 28, 2025)
+**Major Authentication System Overhaul Completed ✅**
+
+- **Unified Password Reset Flow** - Consolidated two separate password reset systems into one
+  - Eliminated duplicate code between standard password reset and teacher invitation flows
+  - Single API endpoint `/api/password-reset/reset` handles all password updates
+  - Unified utilities in `backend/utils/password-utils.js` and `backend/utils/token-service.js`
+  
+- **Frontend Consolidation** - Removed `set-password.html`, enhanced `reset-password.html`
+  - Dynamic UI that adapts to context (password reset vs teacher invitation)
+  - Consistent password validation with visual feedback
+  - Automatic token verification with proper error handling
+  
+- **Database Optimization** - Fixed password reset token constraints
+  - Removed unique constraint on `user_id` to allow multiple reset requests
+  - Added automatic token cleanup with 24-hour intervals
+  - Optimized indexing for better performance
+  
+- **Email Branding Update** - Comprehensive rebrand from "Podcast Stories" to "VidPOD"
+  - Updated all email templates in both `emailService.js` and `gmailService.js`
+  - Consistent sender name and subject lines across all notifications
+  - Professional email styling maintained throughout
+  
+- **Comprehensive Testing** - Created complete test suite with live email validation
+  - Tests both password reset flows with real email services
+  - Validates API endpoints, frontend functionality, and email delivery
+  - Automated verification of complete implementation
+
+**Files Updated:**
+- `backend/utils/password-utils.js` - Unified password validation (6+ chars minimum)
+- `backend/utils/token-service.js` - Centralized token management with cleanup
+- `backend/frontend/reset-password.html` - Enhanced to handle both flows
+- `backend/frontend/js/reset-password.js` - Dynamic UI based on context
+- `backend/db/fix-password-reset-unified.sql` - Database constraint optimization
+- `test-password-reset-complete.js` - Comprehensive testing suite
 
 #### Navigation System Refactoring (August 2025)
 - **Major Code Cleanup** - Removed 300+ lines of redundant navigation code

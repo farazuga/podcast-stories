@@ -134,7 +134,7 @@ class EmailService {
 
         try {
             const mailOptions = {
-                from: `"Podcast Stories" <${process.env.EMAIL_USER}>`,
+                from: `"VidPOD" <${process.env.EMAIL_USER}>`,
                 to: to,
                 subject: subject,
                 html: html,
@@ -156,12 +156,12 @@ class EmailService {
 
     // Teacher approval notification with auto-generated password
     async sendTeacherApprovalEmail(teacherEmail, teacherName, loginEmail, invitationUrl) {
-        const subject = 'Teacher Account Approved - Podcast Stories';
+        const subject = 'Teacher Account Approved - VidPOD';
         
         const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: #ff6b35; color: white; padding: 20px; text-align: center;">
-                <h1>📻 Podcast Stories</h1>
+                <h1>📻 VidPOD</h1>
                 <h2>Welcome, ${teacherName}!</h2>
             </div>
             
@@ -202,12 +202,12 @@ class EmailService {
                 
                 <p>If you have any questions, please contact your system administrator.</p>
                 
-                <p>Welcome to Podcast Stories!<br>
+                <p>Welcome to VidPOD!<br>
                 The Admin Team</p>
             </div>
             
             <div style="text-align: center; padding: 20px; color: #666; font-size: 0.8em;">
-                <p>This is an automated message from Podcast Stories.<br>
+                <p>This is an automated message from VidPOD.<br>
                 Please do not reply to this email.</p>
             </div>
         </div>
@@ -218,19 +218,19 @@ class EmailService {
 
     // Teacher rejection notification
     async sendTeacherRejectionEmail(teacherEmail, teacherName) {
-        const subject = 'Teacher Account Request Update - Podcast Stories';
+        const subject = 'Teacher Account Request Update - VidPOD';
         
         const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: #ff6b35; color: white; padding: 20px; text-align: center;">
-                <h1>📻 Podcast Stories</h1>
+                <h1>📻 VidPOD</h1>
                 <h2>Account Request Update</h2>
             </div>
             
             <div style="padding: 30px; background: #f9f9f9;">
                 <p>Dear ${teacherName},</p>
                 
-                <p>Thank you for your interest in Podcast Stories. After reviewing your teacher account request, 
+                <p>Thank you for your interest in VidPOD. After reviewing your teacher account request, 
                 we are unable to approve it at this time.</p>
                 
                 <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 8px; margin: 20px 0;">
@@ -250,7 +250,7 @@ class EmailService {
             </div>
             
             <div style="text-align: center; padding: 20px; color: #666; font-size: 0.8em;">
-                <p>This is an automated message from Podcast Stories.<br>
+                <p>This is an automated message from VidPOD.<br>
                 Please do not reply to this email.</p>
             </div>
         </div>
@@ -261,20 +261,20 @@ class EmailService {
 
     // Password reset email
     async sendPasswordResetEmail(userEmail, userName, resetToken) {
-        const subject = 'Password Reset Request - Podcast Stories';
+        const subject = 'Password Reset Request - VidPOD';
         const resetUrl = `https://frontend-production-b75b.up.railway.app/reset-password.html?token=${resetToken}`;
         
         const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: #ff6b35; color: white; padding: 20px; text-align: center;">
-                <h1>📻 Podcast Stories</h1>
+                <h1>📻 VidPOD</h1>
                 <h2>Password Reset Request</h2>
             </div>
             
             <div style="padding: 30px; background: #f9f9f9;">
                 <p>Hello ${userName},</p>
                 
-                <p>We received a request to reset your password for your Podcast Stories account.</p>
+                <p>We received a request to reset your password for your VidPOD account.</p>
                 
                 <div style="text-align: center; margin: 30px 0;">
                     <a href="${resetUrl}" 
@@ -301,11 +301,11 @@ class EmailService {
                 <p>If you didn't request this password reset, you can safely ignore this email.</p>
                 
                 <p>Best regards,<br>
-                The Podcast Stories Team</p>
+                The VidPOD Team</p>
             </div>
             
             <div style="text-align: center; padding: 20px; color: #666; font-size: 0.8em;">
-                <p>This is an automated message from Podcast Stories.<br>
+                <p>This is an automated message from VidPOD.<br>
                 Please do not reply to this email.</p>
             </div>
         </div>

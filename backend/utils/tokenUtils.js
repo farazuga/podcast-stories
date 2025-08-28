@@ -219,7 +219,7 @@ function createPasswordResetUrl(baseUrl, token) {
  */
 function createTeacherInvitationUrl(baseUrl, token) {
   const cleanBaseUrl = baseUrl.replace(/\/$/, '');
-  return `${cleanBaseUrl}/set-password.html?token=${token}`;
+  return `${cleanBaseUrl}/reset-password.html?token=${token}`;
 }
 
 module.exports = {

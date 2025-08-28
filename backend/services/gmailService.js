@@ -67,7 +67,7 @@ class GmailService {
             const message = [
                 'Content-Type: text/html; charset=utf-8',
                 'MIME-Version: 1.0',
-                `From: "Podcast Stories" <${process.env.EMAIL_USER}>`,
+                `From: "VidPOD" <${process.env.EMAIL_USER}>`,
                 `To: ${to}`,
                 `Subject: ${subject}`,
                 '',
@@ -99,20 +99,20 @@ class GmailService {
 
     // Convenience methods matching the existing emailService interface
     async sendPasswordResetEmail(userEmail, userName, resetToken) {
-        const subject = 'Password Reset Request - Podcast Stories';
+        const subject = 'Password Reset Request - VidPOD';
         const resetUrl = `https://frontend-production-b75b.up.railway.app/reset-password.html?token=${resetToken}`;
         
         const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: #ff6b35; color: white; padding: 20px; text-align: center;">
-                <h1>📻 Podcast Stories</h1>
+                <h1>📻 VidPOD</h1>
                 <h2>Password Reset Request</h2>
             </div>
             
             <div style="padding: 30px; background: #f9f9f9;">
                 <p>Hello ${userName},</p>
                 
-                <p>We received a request to reset your password for your Podcast Stories account.</p>
+                <p>We received a request to reset your password for your VidPOD account.</p>
                 
                 <div style="text-align: center; margin: 30px 0;">
                     <a href="${resetUrl}" 
@@ -132,7 +132,7 @@ class GmailService {
                 <p>If you didn't request this password reset, you can safely ignore this email.</p>
                 
                 <p>Best regards,<br>
-                The Podcast Stories Team</p>
+                The VidPOD Team</p>
             </div>
         </div>
         `;
@@ -141,12 +141,12 @@ class GmailService {
     }
 
     async sendTeacherApprovalEmail(teacherEmail, teacherName, loginEmail, invitationUrl) {
-        const subject = 'Teacher Account Approved - Podcast Stories';
+        const subject = 'Teacher Account Approved - VidPOD';
         
         const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: #ff6b35; color: white; padding: 20px; text-align: center;">
-                <h1>📻 Podcast Stories</h1>
+                <h1>📻 VidPOD</h1>
                 <h2>Welcome, ${teacherName}!</h2>
             </div>
             
@@ -177,7 +177,7 @@ class GmailService {
                     <strong>Security Note:</strong> This invitation link is unique to you and can only be used once. Please do not share it with others.
                 </p>
                 
-                <p>Welcome to Podcast Stories!<br>
+                <p>Welcome to VidPOD!<br>
                 The Admin Team</p>
             </div>
         </div>
@@ -187,19 +187,19 @@ class GmailService {
     }
 
     async sendTeacherRejectionEmail(teacherEmail, teacherName) {
-        const subject = 'Teacher Account Request Update - Podcast Stories';
+        const subject = 'Teacher Account Request Update - VidPOD';
         
         const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: #ff6b35; color: white; padding: 20px; text-align: center;">
-                <h1>📻 Podcast Stories</h1>
+                <h1>📻 VidPOD</h1>
                 <h2>Account Request Update</h2>
             </div>
             
             <div style="padding: 30px; background: #f9f9f9;">
                 <p>Dear ${teacherName},</p>
                 
-                <p>Thank you for your interest in Podcast Stories. After reviewing your teacher account request, 
+                <p>Thank you for your interest in VidPOD. After reviewing your teacher account request, 
                 we are unable to approve it at this time.</p>
                 
                 <p>If you believe this decision was made in error, please contact your system administrator.</p>

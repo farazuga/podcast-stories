@@ -33,9 +33,7 @@ class PasswordSystemDiagnostic {
         const page = await this.browser.newPage();
         
         const urlsToTest = [
-            '/set-password.html',
             '/reset-password.html',
-            '/set-password.html?token=test',
             '/reset-password.html?token=test'
         ];
 
@@ -98,14 +96,8 @@ class PasswordSystemDiagnostic {
         // Test API endpoints
         const endpointsToTest = [
             {
-                name: 'Teacher Set Password',
-                endpoint: '/api/teacher-requests/set-password',
-                method: 'POST',
-                body: { token: 'test-token', password: 'TestPass123' }
-            },
-            {
-                name: 'Password Reset',
-                endpoint: '/api/password-reset/reset', 
+                name: 'Unified Password Reset',
+                endpoint: '/api/password-reset/reset',
                 method: 'POST',
                 body: { token: 'test-token', password: 'TestPass123' }
             },
@@ -419,17 +411,14 @@ class PasswordSystemDiagnostic {
         const issues = [];
         
         // Check for URL accessibility issues
-        if (!this.results.urlAccessibility['/set-password.html']?.accessible) {
-            issues.push('set-password.html page not accessible');
-        }
         if (!this.results.urlAccessibility['/reset-password.html']?.accessible) {
             issues.push('reset-password.html page not accessible');
         }
         
         // Check for API issues
-        const teacherSetPasswordAPI = this.results.apiEndpoints['Teacher Set Password'];
-        if (teacherSetPasswordAPI && !teacherSetPasswordAPI.ok && teacherSetPasswordAPI.status === 404) {
-            issues.push('Teacher set password API endpoint missing');
+        const passwordResetAPI = this.results.apiEndpoints['Unified Password Reset'];
+        if (passwordResetAPI && !passwordResetAPI.ok && passwordResetAPI.status === 404) {
+            issues.push('Unified password reset API endpoint missing');
         }
         
         // Check for database issues
