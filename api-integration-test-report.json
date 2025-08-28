@@ -1,0 +1,143 @@
+{
+  "timestamp": "2025-08-28T21:23:34.180Z",
+  "duration": 876,
+  "summary": {
+    "total": 16,
+    "passed": 6,
+    "failed": 9,
+    "skipped": 1,
+    "successRate": 38
+  },
+  "coverage": {
+    "api_endpoints": 1,
+    "security_tests": 9,
+    "performance_tests": 0
+  },
+  "performance": {
+    "averageResponseTime": 0,
+    "slowEndpoints": 0
+  },
+  "endpoints": [
+    {
+      "endpoint": "POST /api/courses",
+      "status": 404,
+      "duration": 29
+    }
+  ],
+  "performance_metrics": [],
+  "security_findings": [],
+  "details": [
+    {
+      "name": "admin authentication",
+      "status": "PASS",
+      "details": "Token acquired",
+      "category": "auth",
+      "duration": 313
+    },
+    {
+      "name": "teacher authentication",
+      "status": "PASS",
+      "details": "Token acquired",
+      "category": "auth",
+      "duration": 118
+    },
+    {
+      "name": "student authentication",
+      "status": "PASS",
+      "details": "Token acquired",
+      "category": "auth",
+      "duration": 121
+    },
+    {
+      "name": "Token validation",
+      "status": "PASS",
+      "details": "Teacher token valid",
+      "category": "auth",
+      "duration": 39
+    },
+    {
+      "name": "Create Course (POST /api/courses)",
+      "status": "FAIL",
+      "details": "Status: 404, Data: \"<!DOCTYPE html>\\n<html lang=\\\"en\\\">\\n<head>\\n<meta charset=\\\"utf-8\\\">\\n<title>Error</title>\\n</head>\\n<body>\\n<pre>Cannot POST /api/courses</pre>\\n</body>\\n</html>\\n\"",
+      "category": "api",
+      "duration": 29
+    },
+    {
+      "name": "Unauthorized Access Prevention: Access courses without token",
+      "status": "FAIL",
+      "details": "Status: 404 (should be 401)",
+      "category": "security",
+      "duration": 26
+    },
+    {
+      "name": "Unauthorized Access Prevention: Create lesson without token",
+      "status": "FAIL",
+      "details": "Status: 404 (should be 401)",
+      "category": "security",
+      "duration": 28
+    },
+    {
+      "name": "Unauthorized Access Prevention: Access quizzes without token",
+      "status": "FAIL",
+      "details": "Status: 404 (should be 401)",
+      "category": "security",
+      "duration": 29
+    },
+    {
+      "name": "Input Validation: Malicious input \"'; DROP TABLE course...\"",
+      "status": "FAIL",
+      "details": "Unexpected response: 404",
+      "category": "security",
+      "duration": 26
+    },
+    {
+      "name": "Input Validation: Malicious input \"<script>alert('XSS')...\"",
+      "status": "FAIL",
+      "details": "Unexpected response: 404",
+      "category": "security",
+      "duration": 22
+    },
+    {
+      "name": "Input Validation: Malicious input \"' OR '1'='1...\"",
+      "status": "FAIL",
+      "details": "Unexpected response: 404",
+      "category": "security",
+      "duration": 25
+    },
+    {
+      "name": "Input Validation: Malicious input \"../../etc/passwd...\"",
+      "status": "FAIL",
+      "details": "Unexpected response: 404",
+      "category": "security",
+      "duration": 24
+    },
+    {
+      "name": "Input Validation: Malicious input \"NULL; --...\"",
+      "status": "FAIL",
+      "details": "Unexpected response: 404",
+      "category": "security",
+      "duration": 24
+    },
+    {
+      "name": "Rate Limiting Protection",
+      "status": "SKIP",
+      "details": "Rate limiting not detected (may not be configured)",
+      "category": "security",
+      "duration": 0
+    },
+    {
+      "name": "Cleanup: Delete test course (cascading)",
+      "status": "PASS",
+      "details": "Successfully deleted",
+      "category": "cleanup",
+      "duration": 0
+    },
+    {
+      "name": "Edge Case: Non-existent course",
+      "status": "PASS",
+      "details": "Properly returns 404",
+      "category": "edge_cases",
+      "duration": 42
+    }
+  ]
+}

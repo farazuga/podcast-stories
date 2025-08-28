@@ -1,0 +1,220 @@
+{
+  "timestamp": "2025-08-28T21:23:43.845Z",
+  "duration": 9519,
+  "summary": {
+    "total": 22,
+    "passed": 8,
+    "failed": 13,
+    "critical_failures": 4,
+    "successRate": 36
+  },
+  "scores": {
+    "security_score": 0,
+    "compliance_score": 80
+  },
+  "vulnerabilities": [
+    {
+      "test": "Student Access Control: Create course",
+      "severity": "high",
+      "details": "Student was allowed access (status: 404)"
+    },
+    {
+      "test": "Student Access Control: Delete course",
+      "severity": "high",
+      "details": "Student was allowed access (status: 404)"
+    },
+    {
+      "test": "Student Access Control: Teacher analytics",
+      "severity": "high",
+      "details": "Student was allowed access (status: 404)"
+    },
+    {
+      "test": "Student Access Restrictions",
+      "severity": "critical",
+      "details": "2/5 restrictions enforced"
+    },
+    {
+      "test": "Teacher Access Boundaries",
+      "severity": "high",
+      "details": "Insufficient teacher access restrictions: 2/3"
+    },
+    {
+      "test": "XSS Protection",
+      "severity": "critical",
+      "details": "Only 0/6 XSS attacks prevented"
+    },
+    {
+      "test": "SQL Injection Protection - Data Fields",
+      "severity": "critical",
+      "details": "Only 0/5 SQL attacks prevented"
+    },
+    {
+      "test": "COPPA Compliance - Age Verification",
+      "severity": "critical",
+      "details": "No age verification implemented"
+    }
+  ],
+  "compliance_issues": [
+    {
+      "type": "Data Retention",
+      "issue": "No user data deletion mechanism available",
+      "regulation": "GDPR/CCPA"
+    }
+  ],
+  "details": [
+    {
+      "name": "SQL Injection Protection - Login",
+      "status": "PASS",
+      "details": "All 5 SQL injection attempts blocked",
+      "severity": "high",
+      "duration": 0
+    },
+    {
+      "name": "Brute Force Protection",
+      "status": "FAIL",
+      "details": "No rate limiting detected for brute force attempts",
+      "severity": "medium",
+      "duration": 0
+    },
+    {
+      "name": "JWT Token Format",
+      "status": "PASS",
+      "details": "Token follows JWT standard format",
+      "severity": "low",
+      "duration": 0
+    },
+    {
+      "name": "Token Manipulation Protection",
+      "status": "PASS",
+      "details": "Manipulated tokens correctly rejected",
+      "severity": "high",
+      "duration": 0
+    },
+    {
+      "name": "Password Strength Requirements",
+      "status": "FAIL",
+      "details": "Only 0/5 weak passwords rejected",
+      "severity": "medium",
+      "duration": 0
+    },
+    {
+      "name": "Student Access Control: Create course",
+      "status": "FAIL",
+      "details": "Student was allowed access (status: 404)",
+      "severity": "high",
+      "duration": 0
+    },
+    {
+      "name": "Student Access Control: Delete course",
+      "status": "FAIL",
+      "details": "Student was allowed access (status: 404)",
+      "severity": "high",
+      "duration": 0
+    },
+    {
+      "name": "Student Access Control: Teacher analytics",
+      "status": "FAIL",
+      "details": "Student was allowed access (status: 404)",
+      "severity": "high",
+      "duration": 0
+    },
+    {
+      "name": "Student Access Restrictions",
+      "status": "FAIL",
+      "details": "2/5 restrictions enforced",
+      "severity": "critical",
+      "duration": 0
+    },
+    {
+      "name": "Teacher Access Boundaries",
+      "status": "FAIL",
+      "details": "Insufficient teacher access restrictions: 2/3",
+      "severity": "high",
+      "duration": 0
+    },
+    {
+      "name": "Cross-User Data Access Protection",
+      "status": "PASS",
+      "details": "Teachers cannot access other teachers' data",
+      "severity": "high",
+      "duration": 0
+    },
+    {
+      "name": "Privilege Escalation Protection",
+      "status": "PASS",
+      "details": "All privilege escalation attempts blocked",
+      "severity": "critical",
+      "duration": 0
+    },
+    {
+      "name": "XSS Protection",
+      "status": "FAIL",
+      "details": "Only 0/6 XSS attacks prevented",
+      "severity": "critical",
+      "duration": 0
+    },
+    {
+      "name": "SQL Injection Protection - Data Fields",
+      "status": "FAIL",
+      "details": "Only 0/5 SQL attacks prevented",
+      "severity": "critical",
+      "duration": 0
+    },
+    {
+      "name": "File Upload Security",
+      "status": "SKIP",
+      "details": "File upload endpoints need manual testing",
+      "severity": "medium",
+      "duration": 0
+    },
+    {
+      "name": "FERPA Compliance - Student Data Access",
+      "status": "PASS",
+      "details": "Student data endpoint properly protected",
+      "severity": "critical",
+      "duration": 0
+    },
+    {
+      "name": "COPPA Compliance - Age Verification",
+      "status": "FAIL",
+      "details": "No age verification implemented",
+      "severity": "critical",
+      "duration": 0
+    },
+    {
+      "name": "Data Retention Compliance",
+      "status": "FAIL",
+      "details": "No data deletion mechanism found",
+      "severity": "medium",
+      "duration": 0
+    },
+    {
+      "name": "HTTPS Enforcement",
+      "status": "PASS",
+      "details": "HTTP redirects to HTTPS",
+      "severity": "high",
+      "duration": 0
+    },
+    {
+      "name": "Security Headers",
+      "status": "FAIL",
+      "details": "Only 0/6 security headers present",
+      "severity": "medium",
+      "duration": 0
+    },
+    {
+      "name": "Content Security Policy - Inline Scripts",
+      "status": "FAIL",
+      "details": "Inline scripts can execute (CSP not restrictive enough)",
+      "severity": "medium",
+      "duration": 0
+    },
+    {
+      "name": "Local Storage Security",
+      "status": "PASS",
+      "details": "No sensitive data in localStorage",
+      "severity": "medium",
+      "duration": 0
+    }
+  ]
+}

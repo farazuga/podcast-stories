@@ -3,7 +3,7 @@
   "version": "2.1.0",
   "description": "Testing suite for VidPOD application",
   "scripts": {
-    "test": "npm run test:all",
+    "test": "npm run test:lesson:all",
     "test:all": "npm run test:navigation && npm run test:e2e && npm run test:api && npm run test:integration",
     "test:navigation": "node run-navigation-tests.js",
     "test:navigation:comprehensive": "node comprehensive-navigation-test.js",
@@ -20,7 +20,15 @@
     "debug:deployment": "node testing/debug/check-deployment.js",
     "debug:database": "node testing/debug/check-database.js",
     "debug:auth": "node testing/debug/debug-token-issue.js",
-    "verify:all": "npm run debug:deployment && npm run debug:database"
+    "verify:all": "npm run debug:deployment && npm run debug:database",
+    "test:lesson:all": "node test-lesson-comprehensive-suite.js",
+    "test:lesson:database": "node test-lesson-database-comprehensive.js",
+    "test:lesson:api": "node test-lesson-api-integration.js",
+    "test:lesson:frontend": "node test-lesson-frontend-components.js",
+    "test:lesson:teacher": "node test-teacher-lesson-workflows.js",
+    "test:lesson:student": "node test-student-learning-experience.js",
+    "test:lesson:security": "node test-lesson-security-compliance.js",
+    "test:lesson:ci": "node test-lesson-comprehensive-suite.js --suite=database,api,security"
   },
   "devDependencies": {
     "puppeteer": "^24.16.2"
