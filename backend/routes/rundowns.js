@@ -42,14 +42,26 @@ router.get('/', verifyToken, async (req, res) => {
                 ORDER BY r.updated_at DESC
             `;
             params = [];
-        } else {
-            // Teachers and students see only their rundowns
+        } else if (role === 'teacher') {
+            // Teachers see only their created rundowns
             query = `
                 SELECT r.*, u.name as creator_name, c.class_name
                 FROM rundowns r
                 LEFT JOIN users u ON r.created_by = u.id
                 LEFT JOIN classes c ON r.class_id = c.id
                 WHERE r.created_by = $1
+                ORDER BY r.updated_at DESC
+            `;
+            params = [userId];
+        } else {
+            // Students see rundowns from their enrolled classes
+            query = `
+                SELECT DISTINCT r.*, u.name as creator_name, c.class_name
+                FROM rundowns r
+                LEFT JOIN users u ON r.created_by = u.id
+                LEFT JOIN classes c ON r.class_id = c.id
+                INNER JOIN user_classes uc ON c.id = uc.class_id
+                WHERE uc.user_id = $1 AND r.class_id IS NOT NULL
                 ORDER BY r.updated_at DESC
             `;
             params = [userId];

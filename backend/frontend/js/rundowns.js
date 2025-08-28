@@ -15,8 +15,38 @@ class RundownsManager {
     
     init() {
         this.setupEventListeners();
+        this.setupRoleBasedUI();
         this.loadRundowns();
         this.loadUserClasses();
+    }
+    
+    setupRoleBasedUI() {
+        try {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const userRole = user.role;
+            
+            // Show create button only for teachers and admins
+            const createBtn = document.getElementById('createRundownBtn');
+            if (createBtn) {
+                if (userRole === 'teacher' || userRole === 'amitrace_admin') {
+                    createBtn.style.display = 'block';
+                } else {
+                    createBtn.style.display = 'none';
+                }
+            }
+            
+            // Update page header for students
+            if (userRole === 'student') {
+                const pageHeader = document.querySelector('.page-header p');
+                if (pageHeader) {
+                    pageHeader.textContent = 'View podcast rundowns from your enrolled classes';
+                }
+            }
+            
+            console.log('🔧 Role-based UI setup for:', userRole);
+        } catch (error) {
+            console.warn('⚠️ Could not setup role-based UI:', error.message);
+        }
     }
     
     setupEventListeners() {
@@ -53,6 +83,7 @@ class RundownsManager {
             this.rundowns = await RundownUtils.apiRequest('/rundowns');
             
             if (this.rundowns.length === 0) {
+                this.updateNoRundownsMessage(noRundowns);
                 noRundowns.style.display = 'block';
             } else {
                 this.renderRundowns();
@@ -62,10 +93,44 @@ class RundownsManager {
         } catch (error) {
             console.error('Error loading rundowns:', error);
             RundownUtils.showError('Failed to load rundowns: ' + error.message);
+            this.updateNoRundownsMessage(noRundowns);
             noRundowns.style.display = 'block';
         } finally {
             loadingSpinner.style.display = 'none';
             this.isLoading = false;
+        }
+    }
+    
+    updateNoRundownsMessage(noRundownsElement) {
+        try {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const userRole = user.role;
+            
+            const titleElement = noRundownsElement.querySelector('h3');
+            const messageElement = noRundownsElement.querySelector('p');
+            const buttonElement = noRundownsElement.querySelector('button');
+            
+            if (userRole === 'student') {
+                if (titleElement) titleElement.textContent = '📚 No Class Rundowns Available';
+                if (messageElement) messageElement.textContent = 'Your teachers haven\'t created any rundowns for your enrolled classes yet. Check back later or ask your teacher about upcoming podcast episodes.';
+                if (buttonElement) buttonElement.style.display = 'none';
+            } else if (userRole === 'teacher') {
+                if (titleElement) titleElement.textContent = '📝 No Rundowns Yet';
+                if (messageElement) messageElement.textContent = 'Create your first rundown to get started with podcast planning for your classes.';
+                if (buttonElement) {
+                    buttonElement.style.display = 'block';
+                    buttonElement.textContent = 'Create Rundown';
+                }
+            } else if (userRole === 'amitrace_admin') {
+                if (titleElement) titleElement.textContent = '📝 No Rundowns in System';
+                if (messageElement) messageElement.textContent = 'No teachers have created rundowns yet. Create a sample rundown or encourage teachers to start planning their podcast episodes.';
+                if (buttonElement) {
+                    buttonElement.style.display = 'block';
+                    buttonElement.textContent = 'Create Sample Rundown';
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ Could not update no-rundowns message:', error.message);
         }
     }
     

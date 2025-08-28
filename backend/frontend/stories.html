@@ -153,8 +153,8 @@
                 const user = JSON.parse(localStorage.getItem('user') || '{}');
                 const userRole = user.role;
                 
-                // Only load rundown scripts for teachers and admins
-                if (userRole === 'teacher' || userRole === 'amitrace_admin') {
+                // Load rundown scripts for all authenticated users
+                if (userRole) {
                     console.log('🔧 Loading rundown scripts for user role:', userRole);
                     
                     // Load rundown utility scripts
