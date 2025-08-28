@@ -172,11 +172,11 @@ const VidPODNav = {
 
     /**
      * Update role-based visibility of navigation elements
+     * Clean, efficient implementation using data-role attributes
      */
     updateRoleVisibility() {
         if (!this.currentUser?.role) {
             console.warn('No user role found, hiding all role-specific elements');
-            // Hide all role-specific elements if no role
             document.querySelectorAll('[data-role]').forEach(element => {
                 element.style.display = 'none';
             });
@@ -185,7 +185,7 @@ const VidPODNav = {
 
         const userRole = this.currentUser.role.toLowerCase().trim();
 
-        // Handle elements with data-role attribute
+        // Single pass through all navigation elements with data-role
         document.querySelectorAll('[data-role]').forEach(element => {
             const allowedRoles = element.getAttribute('data-role')
                 .toLowerCase()
@@ -196,33 +196,15 @@ const VidPODNav = {
             element.style.display = shouldShow ? '' : 'none';
         });
 
-        // Handle legacy role-based visibility (for backward compatibility) - FIXED FOR AMITRACE_ADMIN
-        const adminLinks = document.querySelectorAll('#adminLink, [href*="admin"]:not([data-role])');
-
-        adminLinks.forEach(link => {
+        // Handle legacy admin links without data-role (backward compatibility)
+        document.querySelectorAll('#adminLink, [href*="admin"]:not([data-role])').forEach(link => {
             const shouldShow = ['admin', 'amitrace_admin'].includes(userRole);
             link.style.display = shouldShow ? '' : 'none';
         });
 
-        // Student-specific navigation customization
-        if (userRole === 'student') {
-            this.customizeStudentNavigation();
-        }
-
-        // Teacher-specific navigation customization
-        if (userRole === 'teacher') {
-            this.customizeTeacherNavigation();
-        }
-
-        // Amitrace admin-specific customization - hide teacher-specific elements
-        if (userRole === 'amitrace_admin') {
-            // Add body class for CSS hiding
-            document.body.classList.add('user-role-amitrace_admin');
-            this.customizeAmitracAdminNavigation();
-        }
-
-        // Specific role-based validation
-        this.validateRoleBasedAccess(userRole);
+        // Add body class for CSS targeting if needed
+        document.body.className = document.body.className.replace(/user-role-\w+/g, '');
+        document.body.classList.add(`user-role-${userRole}`);
     },
 
     /**
@@ -277,232 +259,6 @@ const VidPODNav = {
         });
     },
 
-    /**
-     * Validate that role-based access is working correctly
-     * @param {string} userRole - Current user role
-     */
-    validateRoleBasedAccess(userRole) {
-        const expectations = {
-            'student': {
-                visible: ['dashboard', 'stories'],
-                hidden: ['add-story', 'teacher-dashboard', 'admin', 'admin-browse-stories']
-            },
-            'teacher': {
-                visible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard'],
-                hidden: ['admin', 'admin-browse-stories']
-            },
-            'admin': {
-                visible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard', 'admin', 'admin-browse-stories'],
-                hidden: []
-            },
-            'amitrace_admin': { // ✅ AMITRACE_ADMIN - Admin access but no teacher-specific items
-                visible: ['dashboard', 'stories', 'add-story', 'admin', 'admin-browse-stories'],
-                hidden: ['teacher-dashboard']
-            }
-        };
-
-        const expected = expectations[userRole];
-        if (!expected) {
-            console.warn(`🔧 V2 Unknown user role: ${userRole}`);
-            return;
-        }
-
-
-        // Check visible items
-        expected.visible.forEach(item => {
-            const elements = document.querySelectorAll(`[data-page="${item}"], [data-role*="${userRole}"]`);
-            elements.forEach(el => {
-                if (el.style.display === 'none') {
-                    console.error(`🔧 V2 ❌ ${item} should be visible for ${userRole} but is hidden`);
-                }
-            });
-        });
-
-        // Check hidden items
-        expected.hidden.forEach(item => {
-            const elements = document.querySelectorAll(`[data-page="${item}"]`);
-            elements.forEach(el => {
-                if (el.style.display !== 'none') {
-                    console.error(`🔧 V2 ❌ ${item} should be hidden for ${userRole} but is visible`);
-                }
-            });
-        });
-    },
-
-    /**
-     * Customize navigation for teacher role
-     * Hide Admin Panel and Admin Browse Stories since teachers don't have access
-     */
-    customizeTeacherNavigation() {
-        // NUCLEAR OPTION: Hide all admin-related elements aggressively
-        const adminSelectors = [
-            '[href*="admin.html"]',
-            '[href*="admin-browse-stories.html"]', 
-            '[data-page="admin"]',
-            '[data-page="admin-browse-stories"]',
-            '[data-role="amitrace_admin"]',
-            '.mobile-nav [href*="admin.html"]',
-            '.mobile-nav [href*="admin-browse-stories.html"]',
-            '.mobile-nav [data-page="admin"]',
-            '.mobile-nav [data-page="admin-browse-stories"]',
-            '.mobile-nav [data-role="amitrace_admin"]'
-        ];
-
-        adminSelectors.forEach(selector => {
-            document.querySelectorAll(selector).forEach(element => {
-                // Apply aggressive hiding
-                element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; left: -9999px !important;';
-                element.setAttribute('aria-hidden', 'true');
-                element.classList.add('teacher-hidden-admin');
-            });
-        });
-
-        // Additional text-based hiding for any elements that contain admin text
-        document.querySelectorAll('.nav-item').forEach(element => {
-            const textContent = element.textContent || '';
-            if (textContent.includes('Admin Browse Stories') || textContent.includes('Admin Panel')) {
-                element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; left: -9999px !important;';
-                element.setAttribute('aria-hidden', 'true');
-                element.classList.add('teacher-hidden-admin');
-            }
-        });
-
-        // Re-run after a delay to catch any dynamically loaded elements
-        setTimeout(() => {
-            adminSelectors.forEach(selector => {
-                document.querySelectorAll(selector).forEach(element => {
-                    if (element.style.display !== 'none') {
-                        element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important;';
-                    }
-                });
-            });
-        }, 100);
-    },
-
-    /**
-     * Customize navigation for student role
-     * Hide Add Story and My Classes - students should only see Dashboard and Browse Stories
-     */
-    customizeStudentNavigation() {
-        // Hide elements students shouldn't see
-        const studentHiddenSelectors = [
-            '[href*="add-story.html"]',
-            '[href*="teacher-dashboard.html"]',
-            '[href*="admin.html"]',
-            '[href*="admin-browse-stories.html"]',
-            '[data-page="add-story"]',
-            '[data-page="teacher-dashboard"]',
-            '[data-page="admin"]',
-            '[data-page="admin-browse-stories"]',
-            '[data-role="teacher"]',
-            '[data-role="amitrace_admin"]',
-            '.mobile-nav [href*="add-story.html"]',
-            '.mobile-nav [href*="teacher-dashboard.html"]',
-            '.mobile-nav [href*="admin.html"]',
-            '.mobile-nav [href*="admin-browse-stories.html"]',
-            '.mobile-nav [data-page="add-story"]',
-            '.mobile-nav [data-page="teacher-dashboard"]',
-            '.mobile-nav [data-page="admin"]',
-            '.mobile-nav [data-page="admin-browse-stories"]',
-            '.mobile-nav [data-role="teacher"]',
-            '.mobile-nav [data-role="amitrace_admin"]'
-        ];
-
-        studentHiddenSelectors.forEach(selector => {
-            document.querySelectorAll(selector).forEach(element => {
-                // Apply aggressive hiding
-                element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; left: -9999px !important;';
-                element.setAttribute('aria-hidden', 'true');
-                element.classList.add('student-hidden');
-            });
-        });
-
-        // Additional text-based hiding for any elements that contain restricted text
-        document.querySelectorAll('.nav-item').forEach(element => {
-            const textContent = element.textContent || '';
-            if (textContent.includes('Add Story') || 
-                textContent.includes('My Classes') || 
-                textContent.includes('Admin Browse Stories') || 
-                textContent.includes('Admin Panel')) {
-                element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; left: -9999px !important;';
-                element.setAttribute('aria-hidden', 'true');
-                element.classList.add('student-hidden');
-            }
-        });
-
-        // Re-run after a delay to catch any dynamically loaded elements
-        setTimeout(() => {
-            studentHiddenSelectors.forEach(selector => {
-                document.querySelectorAll(selector).forEach(element => {
-                    if (element.style.display !== 'none') {
-                        element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important;';
-                    }
-                });
-            });
-        }, 100);
-    },
-
-    /**
-     * Customize navigation for amitrace_admin role
-     * Hide teacher-specific elements like "My Classes" while keeping admin access
-     */
-    customizeAmitracAdminNavigation() {
-        // ULTIMATE HIDING: Remove teacher-specific elements from DOM completely
-        document.querySelectorAll('[data-page="teacher-dashboard"]').forEach((element, index) => {
-            // First try hiding with the most aggressive CSS override
-            element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; left: -9999px !important; width: 0 !important; height: 0 !important; overflow: hidden !important;';
-            element.setAttribute('aria-hidden', 'true');
-            element.classList.add('amitrace-admin-hidden');
-            
-            // As a last resort, remove from DOM completely after a small delay
-            setTimeout(() => {
-                if (element.parentNode) {
-                    element.parentNode.removeChild(element);
-                }
-            }, 100);
-            
-        });
-        
-        // Hide mobile version too with same approach
-        document.querySelectorAll('.mobile-nav [data-page="teacher-dashboard"]').forEach((element, index) => {
-            element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; left: -9999px !important; width: 0 !important; height: 0 !important; overflow: hidden !important;';
-            element.setAttribute('aria-hidden', 'true');
-            element.classList.add('amitrace-admin-hidden');
-            
-            setTimeout(() => {
-                if (element.parentNode) {
-                    element.parentNode.removeChild(element);
-                }
-            }, 100);
-            
-        });
-        
-        // Additional targeting - any element that contains "My Classes" text
-        document.querySelectorAll('.nav-item').forEach((element, index) => {
-            const textContent = element.textContent || '';
-            if (textContent.includes('My Classes') || textContent.includes('Teacher Dashboard')) {
-                element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; left: -9999px !important; width: 0 !important; height: 0 !important; overflow: hidden !important;';
-                element.setAttribute('aria-hidden', 'true');
-                element.classList.add('amitrace-admin-hidden');
-                
-                setTimeout(() => {
-                    if (element.parentNode) {
-                        element.parentNode.removeChild(element);
-                    }
-                }, 100);
-                
-            }
-        });
-        
-        // Also try to rerun this function after a delay to catch any late-loading elements
-        setTimeout(() => {
-            document.querySelectorAll('[data-page="teacher-dashboard"]').forEach((element, index) => {
-                if (element.parentNode) {
-                    element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important;';
-                }
-            });
-        }, 500);
-    },
 
     /**
      * Set badge count for navigation items
@@ -526,15 +282,11 @@ const VidPODNav = {
      */
     async loadBadgeCounts() {
         try {
-            // If user is teacher or admin, load class count
-            if (['teacher', 'admin', 'amitrace_admin'].includes(this.currentUser?.role)) { // ✅ FIXED
+            // Load class count for roles that can manage classes
+            if (['teacher', 'amitrace_admin'].includes(this.currentUser?.role)) {
                 const classCount = await this.getClassCount();
                 this.setBadgeCount('classBadge', classCount);
             }
-
-            // Load other badge counts as needed
-            // const storyCount = await this.getStoryCount();
-            // this.setBadgeCount('storyBadge', storyCount);
         } catch (error) {
             console.warn('Failed to load badge counts:', error);
         }
@@ -583,13 +335,13 @@ const VidPODNav = {
      * Handle CSV import action - redirect to admin browse stories page
      */
     handleCSVImport() {
-        // Check if user has permission (admin only) - FIXED FOR AMITRACE_ADMIN
-        if (!['admin', 'amitrace_admin'].includes(this.currentUser?.role)) { // ✅ FIXED
+        // Check if user has admin permission
+        if (this.currentUser?.role !== 'amitrace_admin') {
             alert('You do not have permission to import CSV files. Admin access required.');
             return;
         }
 
-        // Redirect to admin browse stories page where CSV import is now located
+        // Redirect to admin browse stories page where CSV import is located
         window.location.href = '/admin-browse-stories.html';
     },
 
