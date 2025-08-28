@@ -4,7 +4,12 @@
   "description": "Testing suite for VidPOD application",
   "scripts": {
     "test": "npm run test:all",
-    "test:all": "npm run test:e2e && npm run test:api && npm run test:integration",
+    "test:all": "npm run test:navigation && npm run test:e2e && npm run test:api && npm run test:integration",
+    "test:navigation": "node run-navigation-tests.js",
+    "test:navigation:comprehensive": "node comprehensive-navigation-test.js",
+    "test:navigation:student": "node test-student-navigation.js", 
+    "test:navigation:clean": "node test-clean-navigation.js",
+    "test:navigation:quick": "node quick-test-fixes.js",
     "test:e2e": "node testing/e2e/user-flow-tests/test-all-roles.js",
     "test:api": "node testing/api/backend-tests/test-all-fixes.js",
     "test:integration": "node testing/integration/ultimate-final-test.js",

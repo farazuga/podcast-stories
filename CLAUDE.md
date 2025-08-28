@@ -153,10 +153,10 @@ podcast-stories/
 - Import CSV data
 
 **student:**
-- Join classes
-- Create/edit own stories
+- Browse approved stories
+- View story details
 - Favorite stories
-- View approved content
+- Navigate dashboard
 
 ### JWT Implementation
 - HS256 algorithm
@@ -168,13 +168,24 @@ podcast-stories/
 
 ## 6. Key Features
 
-### Unified Navigation System
-- Single navigation component across all pages using `includes/navigation.html`
-- Role-based menu visibility controlled by `js/navigation.js`
-- Mobile responsive hamburger menu with collapsible design
-- Auto-loading navigation via `js/include-navigation.js`
-- CSV import restricted to admin only (admin-browse-stories.html)
-- Consistent user authentication and logout functionality
+### Unified Navigation System (Clean Implementation)
+- **Single source of truth**: HTML `data-role` attributes control all navigation visibility
+- **Efficient role-based visibility**: One DOM pass instead of multiple complex functions
+- **Clean architecture**: Role permissions defined declaratively in HTML template
+- **Mobile responsive**: Hamburger menu with collapsible design
+- **Auto-loading**: Navigation via `js/include-navigation.js`
+- **Performance optimized**: Removed 300+ lines of redundant hiding code
+
+#### Navigation by Role:
+- **Students**: Dashboard + Browse Stories only
+- **Teachers**: Dashboard + Browse Stories + Add Story + My Classes  
+- **Admins**: All navigation items including Admin Panel + Admin Browse Stories
+
+#### Implementation Details:
+- Navigation template: `includes/navigation.html` with `data-role` attributes
+- Role logic: Simple `updateRoleVisibility()` function in `js/navigation.js`
+- CSS support: Minimal role-based hiding rules in navigation template
+- No complex JavaScript functions or setTimeout delays needed
 
 ### Story Management
 - Rich metadata support
@@ -263,7 +274,16 @@ teacher@vidpod.com / vidpod (teacher)
 student@vidpod.com / vidpod (student)
 ```
 
-### Recent Updates - January 20, 2025
+### Recent Updates - August 2025
+
+#### Navigation System Refactoring (August 2025)
+- **Major Code Cleanup** - Removed 300+ lines of redundant navigation code
+- **Performance Optimization** - Single DOM pass instead of multiple complex functions
+- **Clean Architecture** - Declarative HTML `data-role` system replaces JavaScript complexity
+- **Role Restrictions** - Students now see only Dashboard + Browse Stories (no Add Story access)
+- **Maintainability** - Role changes only require HTML template updates
+
+#### Previous Updates - January 20, 2025
 
 #### Major Improvements
 - **Unified Navigation System** - Implemented across all authenticated pages
@@ -360,6 +380,13 @@ student@vidpod.com / vidpod (student)
 - `comprehensive-admin-test.js` - Complete admin functionality testing
 - `test-bulk-functionality.js` - Bulk operations testing
 - `test-multiselect-complete.js` - Multi-select feature testing
+
+#### Navigation Testing (August 2025)
+- `test-clean-navigation.js` - Comprehensive role-based navigation testing
+- `test-student-navigation.js` - Student navigation restriction testing
+- `test-teacher-requests-comprehensive.js` - Teacher workflow testing
+- `quick-test-fixes.js` - Rapid navigation validation
+- `debug-teacher-navigation.js` - Navigation debugging tool
 
 #### Debug Documentation
 - `frontend/ADMIN_DEBUG_GUIDE.md` - Step-by-step admin debugging
@@ -462,6 +489,11 @@ student@vidpod.com / vidpod (student)       - Story browsing and creation
 # Testing
 npm test                    # Run test suite
 node final-comprehensive-test.js  # Full system verification
+
+# Navigation Testing (August 2025)
+node test-clean-navigation.js      # Test all role-based navigation
+node test-student-navigation.js    # Test student restrictions  
+node quick-test-fixes.js          # Quick navigation validation
 
 # Deployment
 git push origin main       # Auto-deploys to Railway
