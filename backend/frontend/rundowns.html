@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD - Rundown Manager</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/rundown.css">
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+    
+    <div class="container">
+        <!-- Header -->
+        <div class="page-header">
+            <h1>📝 Rundown Manager</h1>
+            <p>Create and manage podcast rundowns for your episodes</p>
+            <div class="timing-chip" id="timingChip" style="display: none;">
+                <span class="timing-icon">⏱️</span>
+                <span id="timingDisplay">00:00</span>
+                <span class="timing-label">Total Duration</span>
+            </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="action-bar">
+            <button class="btn btn-primary" id="createRundownBtn" onclick="showCreateRundownModal()">
+                ✨ Create New Rundown
+            </button>
+            <div class="search-controls">
+                <input type="text" id="rundownSearch" placeholder="Search rundowns..." onkeyup="filterRundowns()">
+                <select id="statusFilter" onchange="filterRundowns()">
+                    <option value="">All Status</option>
+                    <option value="draft">Draft</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="archived">Archived</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Rundowns Grid -->
+        <div id="rundownsGrid" class="rundowns-grid">
+            <!-- Rundowns will be loaded here -->
+        </div>
+
+        <!-- Loading States -->
+        <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading rundowns...</p>
+        </div>
+
+        <div id="noRundowns" class="no-results" style="display: none;">
+            <div class="no-results-content">
+                <h3>📝 No Rundowns Yet</h3>
+                <p>Create your first rundown to get started with podcast planning.</p>
+                <button class="btn btn-primary" onclick="showCreateRundownModal()">Create Rundown</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Rundown Modal -->
+    <div id="createRundownModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✨ Create New Rundown</h2>
+                <span class="close" onclick="hideCreateRundownModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="createRundownForm">
+                    <div class="form-group">
+                        <label for="rundownTitle">Title *</label>
+                        <input type="text" id="rundownTitle" name="title" required 
+                               placeholder="e.g., Episode 15: Climate Change Discussion">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="rundownDescription">Description</label>
+                        <textarea id="rundownDescription" name="description" 
+                                  placeholder="Brief description of the episode content..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="rundownClass">Class (Optional)</label>
+                        <select id="rundownClass" name="class_id">
+                            <option value="">Select class...</option>
+                            <!-- Classes will be loaded here -->
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="scheduledDate">Scheduled Date (Optional)</label>
+                        <input type="datetime-local" id="scheduledDate" name="scheduled_date">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="hideCreateRundownModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="createRundown()">Create Rundown</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rundown Editor Modal -->
+    <div id="rundownEditorModal" class="modal modal-large" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="editorRundownTitle">📝 Rundown Editor</h2>
+                <div class="editor-actions">
+                    <button class="btn btn-outline btn-small" onclick="exportRundownPDF()" id="exportPDFBtn">
+                        📄 Export PDF
+                    </button>
+                    <span class="close" onclick="hideRundownEditor()">&times;</span>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="editor-layout">
+                    <!-- Sidebar -->
+                    <div class="editor-sidebar">
+                        <div class="sidebar-section">
+                            <h3>⏱️ Timing</h3>
+                            <div class="timing-summary" id="timingSummary">
+                                <div class="total-time">00:00</div>
+                                <div class="segment-count">0 segments</div>
+                            </div>
+                        </div>
+                        
+                        <div class="sidebar-section">
+                            <h3>👥 Talent <span class="talent-count" id="talentCount">(0/4)</span></h3>
+                            <div id="talentList" class="talent-list">
+                                <!-- Talent will be loaded here -->
+                            </div>
+                            <button class="btn btn-outline btn-small" onclick="showAddTalentModal()">+ Add Talent</button>
+                        </div>
+                        
+                        <div class="sidebar-section">
+                            <h3>📚 Stories <span class="story-count" id="storyCount">(0)</span></h3>
+                            <div id="storyList" class="story-list">
+                                <!-- Stories will be loaded here -->
+                            </div>
+                            <button class="btn btn-outline btn-small" onclick="showAddStoryModal()">+ Add Story</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Main Editor -->
+                    <div class="editor-main">
+                        <div class="editor-toolbar">
+                            <button class="btn btn-outline btn-small" onclick="addSegment('story')">+ Story Segment</button>
+                            <button class="btn btn-outline btn-small" onclick="addSegment('interview')">+ Interview</button>
+                            <button class="btn btn-outline btn-small" onclick="addSegment('break')">+ Break</button>
+                            <button class="btn btn-outline btn-small" onclick="addSegment('custom')">+ Custom</button>
+                        </div>
+                        
+                        <div id="segmentsList" class="segments-list">
+                            <!-- Segments will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Talent Modal -->
+    <div id="addTalentModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>👥 Add Talent</h2>
+                <span class="close" onclick="hideAddTalentModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addTalentForm">
+                    <div class="form-group">
+                        <label for="talentName">Name *</label>
+                        <input type="text" id="talentName" name="name" required placeholder="Full name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="talentRole">Role *</label>
+                        <select id="talentRole" name="role" required>
+                            <option value="">Select role...</option>
+                            <option value="host">Host</option>
+                            <option value="co-host">Co-Host</option>
+                            <option value="guest">Guest</option>
+                            <option value="expert">Expert</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="talentBio">Bio</label>
+                        <textarea id="talentBio" name="bio" placeholder="Brief biography..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="talentNotes">Notes</label>
+                        <textarea id="talentNotes" name="notes" placeholder="Additional notes..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="hideAddTalentModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addTalent()">Add Talent</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Story Modal -->
+    <div id="addStoryModal" class="modal modal-large" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📚 Add Story to Rundown</h2>
+                <span class="close" onclick="hideAddStoryModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="story-browser">
+                    <div class="browser-search">
+                        <input type="text" id="storyBrowserSearch" placeholder="Search stories..." onkeyup="searchStories()">
+                    </div>
+                    <div id="storyBrowserResults" class="browser-results">
+                        <!-- Story results will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Segment Editor Modal -->
+    <div id="segmentEditorModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="segmentEditorTitle">🎬 Edit Segment</h2>
+                <span class="close" onclick="hideSegmentEditor()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="segmentEditorForm">
+                    <div class="form-group">
+                        <label for="segmentTitle">Title *</label>
+                        <input type="text" id="segmentTitle" name="title" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="segmentDuration">Duration (MM:SS)</label>
+                        <input type="text" id="segmentDuration" name="duration" placeholder="e.g., 5:30" pattern="[0-9]+:[0-5][0-9]">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="segmentScript">Script/Questions</label>
+                        <textarea id="segmentScript" name="script" placeholder="Script content, questions, or notes..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="segmentNotes">Notes</label>
+                        <textarea id="segmentNotes" name="notes" placeholder="Additional notes..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" onclick="deleteSegment()" id="deleteSegmentBtn">Delete</button>
+                <button type="button" class="btn btn-secondary" onclick="hideSegmentEditor()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveSegment()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
+    <script src="js/rundown-utils.js"></script>
+    <script src="js/rundowns.js"></script>
+    <script src="js/rundown-segments.js"></script>
+    <script src="js/rundown-talent.js"></script>
+    <script src="js/rundown-stories.js"></script>
+</body>
+</html>

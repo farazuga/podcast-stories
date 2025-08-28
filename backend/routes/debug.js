@@ -218,6 +218,85 @@ router.post('/test-approval-flow', async (req, res) => {
     }
 });
 
+// Debug password reset token flow
+router.post('/test-token-flow', async (req, res) => {
+    try {
+        const tokenService = require('../utils/token-service');
+        const { Pool } = require('pg');
+        
+        const pool = new Pool({
+            connectionString: process.env.DATABASE_URL,
+            ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+        });
+        
+        console.log('🧪 DEBUG: Starting token flow test');
+        
+        // Step 1: Get admin user
+        const userResult = await pool.query('SELECT id, email FROM users WHERE email = $1', ['admin@vidpod.com']);
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Admin user not found' });
+        }
+        
+        const user = userResult.rows[0];
+        console.log('🧪 DEBUG: Found user:', user);
+        
+        // Step 2: Count existing tokens
+        const beforeCount = await pool.query('SELECT COUNT(*) as count FROM password_reset_tokens WHERE user_id = $1', [user.id]);
+        console.log('🧪 DEBUG: Tokens before creation:', beforeCount.rows[0].count);
+        
+        // Step 3: Create token
+        const token = await tokenService.createPasswordResetToken(user.id);
+        console.log('🧪 DEBUG: Token creation completed, returned token:', token.substring(0, 16) + '...');
+        
+        // Step 4: Count tokens after creation
+        const afterCount = await pool.query('SELECT COUNT(*) as count FROM password_reset_tokens WHERE user_id = $1', [user.id]);
+        console.log('🧪 DEBUG: Tokens after creation:', afterCount.rows[0].count);
+        
+        // Step 5: Try to find the exact token
+        const findResult = await pool.query('SELECT id, token, expires_at, created_at FROM password_reset_tokens WHERE token = $1', [token]);
+        console.log('🧪 DEBUG: Direct token lookup result:', findResult.rows.length);
+        
+        // Step 6: Test validation
+        const validation = await tokenService.validateToken(token);
+        console.log('🧪 DEBUG: Token validation result:', validation.isValid);
+        
+        // Step 7: Get recent tokens for comparison
+        const recentTokens = await pool.query(`
+            SELECT id, user_id, token, expires_at, used, created_at 
+            FROM password_reset_tokens 
+            WHERE user_id = $1 
+            ORDER BY created_at DESC 
+            LIMIT 5
+        `, [user.id]);
+        
+        res.json({
+            message: 'Token flow debug test completed',
+            user: { id: user.id, email: user.email },
+            tokensBefore: parseInt(beforeCount.rows[0].count),
+            tokensAfter: parseInt(afterCount.rows[0].count),
+            createdToken: token.substring(0, 16) + '...',
+            directLookup: findResult.rows.length > 0,
+            validationResult: validation.isValid,
+            validationError: validation.error,
+            recentTokens: recentTokens.rows.map(t => ({
+                id: t.id,
+                token: t.token.substring(0, 16) + '...',
+                expires: t.expires_at,
+                used: t.used,
+                created: t.created_at
+            }))
+        });
+        
+    } catch (error) {
+        console.error('🧪 DEBUG: Token flow test error:', error);
+        res.status(500).json({
+            error: 'Debug test failed',
+            details: error.message,
+            stack: error.stack
+        });
+    }
+});
+
 // Get password generation statistics
 router.get('/password-stats', (req, res) => {
     const stats = passwordGenerator.getPasswordStats();

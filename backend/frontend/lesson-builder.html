@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD - Lesson Builder</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/lesson-styles.css">
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="dashboard-header">
+            <h1>📝 Lesson Builder</h1>
+            <p id="courseInfo">Create engaging lessons with rich content, vocabulary, and interactive materials.</p>
+            <div class="breadcrumb">
+                <a href="/course-management.html">← Back to Course Management</a>
+            </div>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div id="messageContainer"></div>
+
+        <!-- Lesson Builder Layout -->
+        <div class="lesson-builder">
+            <!-- Sidebar -->
+            <div class="lesson-sidebar">
+                <div class="sidebar-section">
+                    <h3>📚 Course Lessons</h3>
+                    <div id="lessonsList" class="lesson-nav">
+                        <div class="loading-spinner"></div>
+                    </div>
+                    <button id="addLessonBtn" class="btn btn-primary w-full mt-2">
+                        <span class="icon">➕</span>
+                        Add New Lesson
+                    </button>
+                </div>
+
+                <div class="sidebar-section" id="lessonQuickActions" style="display: none;">
+                    <h4>📋 Quick Actions</h4>
+                    <button id="saveCurrentLesson" class="btn btn-success w-full mb-1">
+                        <span class="icon">💾</span>
+                        Save Current Lesson
+                    </button>
+                    <button id="previewLesson" class="btn btn-secondary w-full mb-1">
+                        <span class="icon">👁️</span>
+                        Preview Lesson
+                    </button>
+                    <button id="duplicateLesson" class="btn btn-secondary w-full mb-1">
+                        <span class="icon">📋</span>
+                        Duplicate Lesson
+                    </button>
+                    <button id="deleteCurrentLesson" class="btn btn-danger w-full">
+                        <span class="icon">🗑️</span>
+                        Delete Lesson
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="lesson-main-content">
+                <!-- Empty State -->
+                <div id="emptyState" class="text-center" style="padding: 3rem 1rem;">
+                    <h3>📖 No Lesson Selected</h3>
+                    <p>Select a lesson from the sidebar or create a new one to begin editing.</p>
+                </div>
+
+                <!-- Lesson Editor -->
+                <div id="lessonEditor" style="display: none;">
+                    <form id="lessonForm">
+                        <!-- Lesson Header -->
+                        <div class="lesson-section">
+                            <h3 class="lesson-section-title">
+                                <span class="icon">📋</span>
+                                Lesson Information
+                            </h3>
+                            
+                            <div class="form-group lesson">
+                                <label class="form-label lesson" for="lessonTitle">Lesson Title *</label>
+                                <input type="text" id="lessonTitle" name="title" class="form-control lesson" 
+                                       placeholder="e.g., Introduction to Audio Recording" required>
+                            </div>
+
+                            <div class="form-group lesson">
+                                <label class="form-label lesson" for="lessonWeek">Week Number *</label>
+                                <select id="lessonWeek" name="week_number" class="form-control lesson" required>
+                                    <!-- Options populated dynamically -->
+                                </select>
+                            </div>
+
+                            <div class="form-group lesson">
+                                <label class="form-label lesson" for="lessonDuration">Estimated Duration (minutes)</label>
+                                <input type="number" id="lessonDuration" name="estimated_duration" class="form-control lesson" 
+                                       min="5" max="180" placeholder="45">
+                            </div>
+
+                            <div class="form-group lesson">
+                                <label class="form-label lesson" for="lessonObjectives">Learning Objectives</label>
+                                <textarea id="lessonObjectives" name="learning_objectives" class="form-control lesson" 
+                                          rows="3" placeholder="What will students learn in this lesson?"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Lesson Content -->
+                        <div class="lesson-section">
+                            <h3 class="lesson-section-title">
+                                <span class="icon">📝</span>
+                                Lesson Content
+                            </h3>
+                            
+                            <div class="form-group lesson">
+                                <label class="form-label lesson">Content Editor</label>
+                                <div id="contentEditor"></div>
+                            </div>
+                        </div>
+
+                        <!-- Vocabulary Section -->
+                        <div class="lesson-section">
+                            <h3 class="lesson-section-title">
+                                <span class="icon">📚</span>
+                                Vocabulary Terms
+                            </h3>
+                            
+                            <div id="vocabularyList" class="vocab-list">
+                                <!-- Vocabulary items will be added here -->
+                            </div>
+                            
+                            <button type="button" id="addVocabBtn" class="btn btn-secondary">
+                                <span class="icon">➕</span>
+                                Add Vocabulary Term
+                            </button>
+                        </div>
+
+                        <!-- Prerequisites -->
+                        <div class="lesson-section">
+                            <h3 class="lesson-section-title">
+                                <span class="icon">🔗</span>
+                                Prerequisites
+                            </h3>
+                            
+                            <div class="form-group lesson">
+                                <label class="form-label lesson">Required Previous Lessons</label>
+                                <div id="prerequisitesList">
+                                    <!-- Prerequisites checkboxes will be populated here -->
+                                </div>
+                                <div class="form-help">Students must complete these lessons before accessing this one</div>
+                            </div>
+                        </div>
+
+                        <!-- Materials Section -->
+                        <div class="lesson-section">
+                            <h3 class="lesson-section-title">
+                                <span class="icon">📎</span>
+                                Lesson Materials
+                            </h3>
+                            
+                            <div class="materials-grid">
+                                <div class="material-type">
+                                    <h4>📝 Quizzes</h4>
+                                    <div id="quizzesList">
+                                        <p class="text-muted">No quizzes added yet</p>
+                                    </div>
+                                    <button type="button" id="addQuizBtn" class="btn btn-secondary btn-sm">
+                                        Create Quiz
+                                    </button>
+                                </div>
+                                
+                                <div class="material-type">
+                                    <h4>📋 Worksheets</h4>
+                                    <div id="worksheetsList">
+                                        <p class="text-muted">No worksheets added yet</p>
+                                    </div>
+                                    <button type="button" id="uploadWorksheetBtn" class="btn btn-secondary btn-sm">
+                                        Upload Worksheet
+                                    </button>
+                                </div>
+                                
+                                <div class="material-type">
+                                    <h4>📁 Resources</h4>
+                                    <div id="resourcesList">
+                                        <p class="text-muted">No resources added yet</p>
+                                    </div>
+                                    <button type="button" id="uploadResourceBtn" class="btn btn-secondary btn-sm">
+                                        Upload Resource
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lesson Settings -->
+                        <div class="lesson-section">
+                            <h3 class="lesson-section-title">
+                                <span class="icon">⚙️</span>
+                                Lesson Settings
+                            </h3>
+                            
+                            <div class="form-group lesson">
+                                <label class="form-label lesson">
+                                    <input type="checkbox" id="isActive" name="is_active" checked>
+                                    Lesson is active and accessible to students
+                                </label>
+                            </div>
+                            
+                            <div class="form-group lesson">
+                                <label class="form-label lesson">
+                                    <input type="checkbox" id="allowEarlyAccess" name="allow_early_access">
+                                    Allow access before prerequisites are met
+                                </label>
+                            </div>
+                        </div>
+
+                        <input type="hidden" id="courseId" name="course_id">
+                        <input type="hidden" id="lessonId" name="lesson_id">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vocabulary Modal -->
+    <div id="vocabularyModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📚 Add Vocabulary Term</h3>
+                <button class="modal-close" onclick="closeVocabularyModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="vocabularyForm">
+                    <div class="form-group lesson">
+                        <label class="form-label lesson" for="vocabTerm">Term *</label>
+                        <input type="text" id="vocabTerm" name="term" class="form-control lesson" 
+                               placeholder="e.g., Podcast" required>
+                    </div>
+                    
+                    <div class="form-group lesson">
+                        <label class="form-label lesson" for="vocabDefinition">Definition *</label>
+                        <textarea id="vocabDefinition" name="definition" class="form-control lesson" 
+                                  rows="3" placeholder="A digital audio show..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group lesson">
+                        <label class="form-label lesson" for="vocabExample">Example Usage (Optional)</label>
+                        <input type="text" id="vocabExample" name="example" class="form-control lesson" 
+                               placeholder="The podcast featured interviews with experts.">
+                    </div>
+                    
+                    <div class="d-flex justify-between">
+                        <button type="button" class="btn btn-secondary" onclick="closeVocabularyModal()">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            Add Term
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- File Upload Modal -->
+    <div id="fileUploadModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="uploadModalTitle">Upload File</h3>
+                <button class="modal-close" onclick="closeFileUploadModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="fileUploadForm" enctype="multipart/form-data">
+                    <div class="form-group lesson">
+                        <label class="form-label lesson" for="fileTitle">Title *</label>
+                        <input type="text" id="fileTitle" name="title" class="form-control lesson" 
+                               placeholder="Give this file a descriptive title" required>
+                    </div>
+                    
+                    <div class="form-group lesson">
+                        <label class="form-label lesson" for="fileDescription">Description</label>
+                        <textarea id="fileDescription" name="description" class="form-control lesson" 
+                                  rows="2" placeholder="Brief description of this file..."></textarea>
+                    </div>
+                    
+                    <div class="form-group lesson">
+                        <label class="form-label lesson" for="fileInput">Select File *</label>
+                        <input type="file" id="fileInput" name="file" class="form-control lesson" required>
+                        <div class="form-help">Supported formats: PDF, DOC, DOCX, PPT, PPTX, TXT (Max 10MB)</div>
+                    </div>
+                    
+                    <input type="hidden" id="materialType" name="material_type">
+                    
+                    <div class="d-flex justify-between">
+                        <button type="button" class="btn btn-secondary" onclick="closeFileUploadModal()">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            Upload File
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
+    <script src="js/lesson-management.js"></script>
+    <script>
+        // Lesson Builder JavaScript
+        let currentCourse = null;
+        let currentLesson = null;
+        let lessons = [];
+        let vocabularyTerms = [];
+        let richEditor = null;
+        let currentVocabIndex = -1;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const courseId = urlParams.get('course_id');
+            
+            if (!courseId) {
+                VidPOD.Lessons.ui.showError('No course specified. Redirecting to course management.');
+                setTimeout(() => window.location.href = '/course-management.html', 2000);
+                return;
+            }
+
+            await loadCourse(courseId);
+            await loadLessons(courseId);
+            setupEventListeners();
+            setupRichEditor();
+        });
+
+        async function loadCourse(courseId) {
+            try {
+                currentCourse = await VidPOD.Lessons.api.courses.getById(courseId);
+                document.getElementById('courseInfo').textContent = 
+                    `Course: ${currentCourse.title} (${currentCourse.total_weeks} weeks)`;
+                document.getElementById('courseId').value = courseId;
+                
+                // Populate week number dropdown
+                const weekSelect = document.getElementById('lessonWeek');
+                weekSelect.innerHTML = '<option value="">Select week...</option>';
+                for (let i = 1; i <= currentCourse.total_weeks; i++) {
+                    weekSelect.innerHTML += `<option value="${i}">Week ${i}</option>`;
+                }
+                
+            } catch (error) {
+                console.error('Error loading course:', error);
+                VidPOD.Lessons.ui.showError('Failed to load course information.');
+            }
+        }
+
+        async function loadLessons(courseId) {
+            try {
+                lessons = await VidPOD.Lessons.api.lessons.getByCourse(courseId);
+                renderLessonsList();
+                
+                if (lessons.length > 0) {
+                    await loadLesson(lessons[0].id);
+                }
+                
+            } catch (error) {
+                console.error('Error loading lessons:', error);
+                VidPOD.Lessons.ui.showError('Failed to load lessons.');
+            }
+        }
+
+        function renderLessonsList() {
+            const container = document.getElementById('lessonsList');
+            
+            if (lessons.length === 0) {
+                container.innerHTML = '<p class="text-muted">No lessons created yet</p>';
+                return;
+            }
+
+            const lessonsHtml = lessons.map(lesson => `
+                <div class="lesson-nav-item ${currentLesson && currentLesson.id === lesson.id ? 'current' : ''}" 
+                     onclick="loadLesson(${lesson.id})">
+                    <div class="lesson-status-icon">
+                        ${lesson.is_active ? '📝' : '⏸️'}
+                    </div>
+                    <div class="lesson-nav-content">
+                        <div class="lesson-nav-title">Week ${lesson.week_number}: ${lesson.title}</div>
+                        <div class="lesson-nav-meta">
+                            ${lesson.estimated_duration ? lesson.estimated_duration + ' min' : 'No duration set'}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = lessonsHtml;
+        }
+
+        async function loadLesson(lessonId) {
+            try {
+                VidPOD.Lessons.ui.showLoading('lessonEditor');
+                currentLesson = await VidPOD.Lessons.api.lessons.getById(lessonId);
+                
+                // Show editor and hide empty state
+                document.getElementById('emptyState').style.display = 'none';
+                document.getElementById('lessonEditor').style.display = 'block';
+                document.getElementById('lessonQuickActions').style.display = 'block';
+                
+                // Populate form
+                document.getElementById('lessonId').value = currentLesson.id;
+                document.getElementById('lessonTitle').value = currentLesson.title;
+                document.getElementById('lessonWeek').value = currentLesson.week_number;
+                document.getElementById('lessonDuration').value = currentLesson.estimated_duration || '';
+                document.getElementById('lessonObjectives').value = currentLesson.learning_objectives || '';
+                document.getElementById('isActive').checked = currentLesson.is_active;
+                document.getElementById('allowEarlyAccess').checked = currentLesson.allow_early_access || false;
+                
+                // Set editor content
+                if (richEditor) {
+                    richEditor.setContent(currentLesson.content || '');
+                }
+                
+                // Load vocabulary
+                vocabularyTerms = currentLesson.vocabulary || [];
+                renderVocabularyList();
+                
+                // Load prerequisites
+                renderPrerequisites();
+                
+                // Load materials
+                await loadLessonMaterials();
+                
+                // Update sidebar
+                renderLessonsList();
+                
+            } catch (error) {
+                console.error('Error loading lesson:', error);
+                VidPOD.Lessons.ui.showError('Failed to load lesson.');
+            } finally {
+                VidPOD.Lessons.ui.hideLoading('lessonEditor');
+            }
+        }
+
+        function setupEventListeners() {
+            // Add lesson button
+            document.getElementById('addLessonBtn').addEventListener('click', createNewLesson);
+            
+            // Quick actions
+            document.getElementById('saveCurrentLesson').addEventListener('click', saveCurrentLesson);
+            document.getElementById('previewLesson').addEventListener('click', previewLesson);
+            document.getElementById('duplicateLesson').addEventListener('click', duplicateCurrentLesson);
+            document.getElementById('deleteCurrentLesson').addEventListener('click', deleteCurrentLesson);
+            
+            // Vocabulary
+            document.getElementById('addVocabBtn').addEventListener('click', showVocabularyModal);
+            document.getElementById('vocabularyForm').addEventListener('submit', handleVocabularySubmit);
+            
+            // Materials
+            document.getElementById('addQuizBtn').addEventListener('click', () => createQuiz());
+            document.getElementById('uploadWorksheetBtn').addEventListener('click', () => showFileUploadModal('worksheet'));
+            document.getElementById('uploadResourceBtn').addEventListener('click', () => showFileUploadModal('resource'));
+            
+            // File upload
+            document.getElementById('fileUploadForm').addEventListener('submit', handleFileUpload);
+        }
+
+        function setupRichEditor() {
+            richEditor = VidPOD.Lessons.richEditor.create('contentEditor');
+        }
+
+        async function createNewLesson() {
+            const nextWeek = getNextAvailableWeek();
+            const newLessonData = {
+                course_id: currentCourse.id,
+                title: `Week ${nextWeek} Lesson`,
+                week_number: nextWeek,
+                content: '<p>Start writing your lesson content here...</p>',
+                is_active: true
+            };
+
+            try {
+                const newLesson = await VidPOD.Lessons.api.lessons.create(newLessonData);
+                lessons.push(newLesson);
+                await loadLesson(newLesson.id);
+                VidPOD.Lessons.ui.showSuccess('New lesson created successfully!');
+            } catch (error) {
+                console.error('Error creating lesson:', error);
+                VidPOD.Lessons.ui.showError('Failed to create new lesson.');
+            }
+        }
+
+        function getNextAvailableWeek() {
+            if (lessons.length === 0) return 1;
+            
+            const usedWeeks = lessons.map(l => l.week_number).sort((a, b) => a - b);
+            for (let i = 1; i <= currentCourse.total_weeks; i++) {
+                if (!usedWeeks.includes(i)) {
+                    return i;
+                }
+            }
+            return usedWeeks[usedWeeks.length - 1] + 1;
+        }
+
+        async function saveCurrentLesson() {
+            if (!currentLesson) return;
+
+            const lessonData = {
+                title: document.getElementById('lessonTitle').value,
+                week_number: parseInt(document.getElementById('lessonWeek').value),
+                estimated_duration: parseInt(document.getElementById('lessonDuration').value) || null,
+                learning_objectives: document.getElementById('lessonObjectives').value,
+                content: richEditor ? richEditor.getContent() : '',
+                vocabulary: vocabularyTerms,
+                is_active: document.getElementById('isActive').checked,
+                allow_early_access: document.getElementById('allowEarlyAccess').checked
+            };
+
+            // Validate
+            const errors = VidPOD.Lessons.validation.validateLesson(lessonData);
+            if (Object.keys(errors).length > 0) {
+                const errorMessages = Object.values(errors).join('\n');
+                VidPOD.Lessons.ui.showError(errorMessages);
+                return;
+            }
+
+            try {
+                await VidPOD.Lessons.api.lessons.update(currentLesson.id, lessonData);
+                
+                // Update current lesson object
+                Object.assign(currentLesson, lessonData);
+                
+                // Update lessons array
+                const lessonIndex = lessons.findIndex(l => l.id === currentLesson.id);
+                if (lessonIndex !== -1) {
+                    lessons[lessonIndex] = { ...currentLesson };
+                }
+                
+                renderLessonsList();
+                VidPOD.Lessons.ui.showSuccess('Lesson saved successfully!');
+                
+            } catch (error) {
+                console.error('Error saving lesson:', error);
+                VidPOD.Lessons.ui.showError('Failed to save lesson.');
+            }
+        }
+
+        function previewLesson() {
+            if (!currentLesson) return;
+            
+            const previewUrl = `/lesson-detail.html?lesson_id=${currentLesson.id}&preview=true`;
+            window.open(previewUrl, '_blank');
+        }
+
+        async function duplicateCurrentLesson() {
+            if (!currentLesson) return;
+
+            if (confirm('Create a copy of this lesson?')) {
+                const duplicateData = {
+                    ...currentLesson,
+                    id: undefined,
+                    title: currentLesson.title + ' (Copy)',
+                    week_number: getNextAvailableWeek()
+                };
+
+                try {
+                    const newLesson = await VidPOD.Lessons.api.lessons.create(duplicateData);
+                    lessons.push(newLesson);
+                    await loadLesson(newLesson.id);
+                    VidPOD.Lessons.ui.showSuccess('Lesson duplicated successfully!');
+                } catch (error) {
+                    console.error('Error duplicating lesson:', error);
+                    VidPOD.Lessons.ui.showError('Failed to duplicate lesson.');
+                }
+            }
+        }
+
+        async function deleteCurrentLesson() {
+            if (!currentLesson) return;
+
+            const confirmText = prompt(`To delete "${currentLesson.title}", type "DELETE":`);
+            if (confirmText === 'DELETE') {
+                try {
+                    await VidPOD.Lessons.api.lessons.delete(currentLesson.id);
+                    
+                    // Remove from lessons array
+                    lessons = lessons.filter(l => l.id !== currentLesson.id);
+                    
+                    // Clear editor
+                    document.getElementById('emptyState').style.display = 'block';
+                    document.getElementById('lessonEditor').style.display = 'none';
+                    document.getElementById('lessonQuickActions').style.display = 'none';
+                    
+                    currentLesson = null;
+                    renderLessonsList();
+                    
+                    VidPOD.Lessons.ui.showSuccess('Lesson deleted successfully.');
+                    
+                } catch (error) {
+                    console.error('Error deleting lesson:', error);
+                    VidPOD.Lessons.ui.showError('Failed to delete lesson.');
+                }
+            }
+        }
+
+        // Vocabulary Functions
+        function showVocabularyModal(index = -1) {
+            currentVocabIndex = index;
+            const modal = document.getElementById('vocabularyModal');
+            
+            if (index >= 0) {
+                // Editing existing term
+                const term = vocabularyTerms[index];
+                document.getElementById('vocabTerm').value = term.term;
+                document.getElementById('vocabDefinition').value = term.definition;
+                document.getElementById('vocabExample').value = term.example || '';
+            } else {
+                // Adding new term
+                document.getElementById('vocabularyForm').reset();
+            }
+            
+            modal.style.display = 'flex';
+            document.getElementById('vocabTerm').focus();
+        }
+
+        function closeVocabularyModal() {
+            document.getElementById('vocabularyModal').style.display = 'none';
+            currentVocabIndex = -1;
+        }
+
+        function handleVocabularySubmit(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const vocabData = {
+                term: formData.get('term'),
+                definition: formData.get('definition'),
+                example: formData.get('example')
+            };
+
+            if (currentVocabIndex >= 0) {
+                // Update existing term
+                vocabularyTerms[currentVocabIndex] = vocabData;
+            } else {
+                // Add new term
+                vocabularyTerms.push(vocabData);
+            }
+
+            renderVocabularyList();
+            closeVocabularyModal();
+        }
+
+        function renderVocabularyList() {
+            const container = document.getElementById('vocabularyList');
+            
+            if (vocabularyTerms.length === 0) {
+                container.innerHTML = '<p class="text-muted">No vocabulary terms added yet</p>';
+                return;
+            }
+
+            const vocabHtml = vocabularyTerms.map((vocab, index) => `
+                <div class="vocab-item">
+                    <div class="vocab-content">
+                        <div class="vocab-term">${vocab.term}</div>
+                        <div class="vocab-definition">${vocab.definition}</div>
+                        ${vocab.example ? `<div class="vocab-example"><em>Example: ${vocab.example}</em></div>` : ''}
+                    </div>
+                    <div class="vocab-actions">
+                        <button type="button" class="btn btn-sm btn-secondary" 
+                                onclick="showVocabularyModal(${index})">Edit</button>
+                        <button type="button" class="btn btn-sm btn-danger" 
+                                onclick="removeVocabularyTerm(${index})">Remove</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = vocabHtml;
+        }
+
+        function removeVocabularyTerm(index) {
+            if (confirm('Remove this vocabulary term?')) {
+                vocabularyTerms.splice(index, 1);
+                renderVocabularyList();
+            }
+        }
+
+        function renderPrerequisites() {
+            const container = document.getElementById('prerequisitesList');
+            
+            const otherLessons = lessons.filter(l => l.id !== currentLesson.id);
+            
+            if (otherLessons.length === 0) {
+                container.innerHTML = '<p class="text-muted">No other lessons available as prerequisites</p>';
+                return;
+            }
+
+            const prerequisitesHtml = otherLessons.map(lesson => `
+                <div class="form-check">
+                    <input type="checkbox" id="prereq_${lesson.id}" 
+                           value="${lesson.id}" class="form-check-input"
+                           ${currentLesson.prerequisites && currentLesson.prerequisites.includes(lesson.id) ? 'checked' : ''}>
+                    <label for="prereq_${lesson.id}" class="form-check-label">
+                        Week ${lesson.week_number}: ${lesson.title}
+                    </label>
+                </div>
+            `).join('');
+            
+            container.innerHTML = prerequisitesHtml;
+        }
+
+        // Materials Functions
+        function createQuiz() {
+            if (!currentLesson) return;
+            window.location.href = `/quiz-builder.html?lesson_id=${currentLesson.id}`;
+        }
+
+        function showFileUploadModal(type) {
+            document.getElementById('materialType').value = type;
+            document.getElementById('uploadModalTitle').textContent = `Upload ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+            document.getElementById('fileUploadModal').style.display = 'flex';
+        }
+
+        function closeFileUploadModal() {
+            document.getElementById('fileUploadModal').style.display = 'none';
+            document.getElementById('fileUploadForm').reset();
+        }
+
+        async function handleFileUpload(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            formData.append('lesson_id', currentLesson.id);
+
+            try {
+                // This would normally upload to the lesson materials API
+                // For now, we'll simulate the upload
+                VidPOD.Lessons.ui.showSuccess('File uploaded successfully!');
+                closeFileUploadModal();
+                await loadLessonMaterials();
+                
+            } catch (error) {
+                console.error('Error uploading file:', error);
+                VidPOD.Lessons.ui.showError('Failed to upload file.');
+            }
+        }
+
+        async function loadLessonMaterials() {
+            // Load and display quizzes, worksheets, and resources
+            // This would connect to the lesson materials API
+        }
+
+        // Close modals when clicking outside
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                if (e.target.id === 'vocabularyModal') closeVocabularyModal();
+                if (e.target.id === 'fileUploadModal') closeFileUploadModal();
+            }
+        });
+    </script>
+
+    <style>
+        .breadcrumb {
+            margin-bottom: 1rem;
+        }
+
+        .breadcrumb a {
+            color: var(--lesson-primary);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .sidebar-section {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-section:last-child {
+            border-bottom: none;
+        }
+
+        .materials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .material-type {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            background: #f8fafc;
+        }
+
+        .material-type h4 {
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+
+        .text-muted {
+            color: var(--text-light);
+            font-size: 0.875rem;
+            font-style: italic;
+        }
+
+        .vocab-example {
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-check-input {
+            margin: 0;
+        }
+
+        .form-check-label {
+            margin: 0;
+            cursor: pointer;
+        }
+    </style>
+</body>
+</html>

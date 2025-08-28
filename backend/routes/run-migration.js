@@ -308,4 +308,158 @@ router.get('/fix-password-reset-force', async (req, res) => {
     }
 });
 
+// Run rundown system migration
+router.get('/rundown-system', async (req, res) => {
+    try {
+        console.log('Running rundown system migration...');
+        
+        // Check if migration already applied
+        const checkResult = await pool.query(`
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_name IN ('rundowns', 'rundown_segments', 'rundown_talent', 'rundown_stories')
+            AND table_schema = 'public'
+        `);
+        
+        if (checkResult.rows.length >= 4) {
+            return res.json({ 
+                message: 'Rundown system migration already applied!',
+                existing_tables: checkResult.rows.map(r => r.table_name),
+                status: 'already_applied' 
+            });
+        }
+        
+        const migrationSQL = `
+            -- Migration 014: Create Rundown Management System
+            -- VidPOD Rundown System Database Schema
+            
+            -- Create rundowns table
+            CREATE TABLE IF NOT EXISTS rundowns (
+                id SERIAL PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL,
+                status VARCHAR(50) DEFAULT 'draft' CHECK (status IN ('draft', 'in_progress', 'completed', 'archived')),
+                scheduled_date TIMESTAMP,
+                total_duration INTEGER DEFAULT 0, -- Duration in seconds
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            
+            -- Create rundown_segments table
+            CREATE TABLE IF NOT EXISTS rundown_segments (
+                id SERIAL PRIMARY KEY,
+                rundown_id INTEGER NOT NULL REFERENCES rundowns(id) ON DELETE CASCADE,
+                title VARCHAR(255) NOT NULL,
+                type VARCHAR(50) NOT NULL CHECK (type IN ('intro', 'story', 'interview', 'break', 'outro', 'custom')),
+                content JSONB DEFAULT '{}',
+                duration INTEGER DEFAULT 0, -- Duration in seconds
+                order_index INTEGER NOT NULL,
+                is_pinned BOOLEAN DEFAULT FALSE,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(rundown_id, order_index)
+            );
+            
+            -- Create rundown_talent table
+            CREATE TABLE IF NOT EXISTS rundown_talent (
+                id SERIAL PRIMARY KEY,
+                rundown_id INTEGER NOT NULL REFERENCES rundowns(id) ON DELETE CASCADE,
+                name VARCHAR(255) NOT NULL,
+                role VARCHAR(50) NOT NULL CHECK (role IN ('host', 'co-host', 'guest', 'expert')),
+                bio TEXT,
+                contact_info JSONB DEFAULT '{}',
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(rundown_id, name)
+            );
+            
+            -- Create rundown_stories table (junction table for story integration)
+            CREATE TABLE IF NOT EXISTS rundown_stories (
+                id SERIAL PRIMARY KEY,
+                rundown_id INTEGER NOT NULL REFERENCES rundowns(id) ON DELETE CASCADE,
+                story_id INTEGER NOT NULL REFERENCES story_ideas(id) ON DELETE CASCADE,
+                segment_id INTEGER REFERENCES rundown_segments(id) ON DELETE SET NULL,
+                order_index INTEGER,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(rundown_id, story_id)
+            );
+            
+            -- Create indexes for performance
+            CREATE INDEX IF NOT EXISTS idx_rundowns_created_by ON rundowns(created_by);
+            CREATE INDEX IF NOT EXISTS idx_rundowns_class_id ON rundowns(class_id);
+            CREATE INDEX IF NOT EXISTS idx_rundowns_status ON rundowns(status);
+            CREATE INDEX IF NOT EXISTS idx_rundowns_scheduled_date ON rundowns(scheduled_date);
+            
+            CREATE INDEX IF NOT EXISTS idx_rundown_segments_rundown_id ON rundown_segments(rundown_id);
+            CREATE INDEX IF NOT EXISTS idx_rundown_segments_order ON rundown_segments(rundown_id, order_index);
+            CREATE INDEX IF NOT EXISTS idx_rundown_segments_type ON rundown_segments(type);
+            
+            CREATE INDEX IF NOT EXISTS idx_rundown_talent_rundown_id ON rundown_talent(rundown_id);
+            CREATE INDEX IF NOT EXISTS idx_rundown_talent_role ON rundown_talent(role);
+            
+            CREATE INDEX IF NOT EXISTS idx_rundown_stories_rundown_id ON rundown_stories(rundown_id);
+            CREATE INDEX IF NOT EXISTS idx_rundown_stories_story_id ON rundown_stories(story_id);
+            
+            -- Create or replace trigger function for updating timestamps
+            CREATE OR REPLACE FUNCTION update_updated_at_column()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                NEW.updated_at = CURRENT_TIMESTAMP;
+                RETURN NEW;
+            END;
+            $$ language 'plpgsql';
+            
+            -- Create triggers for updated_at timestamps
+            CREATE TRIGGER update_rundowns_updated_at BEFORE UPDATE ON rundowns 
+                FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+            
+            CREATE TRIGGER update_rundown_segments_updated_at BEFORE UPDATE ON rundown_segments 
+                FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+        `;
+        
+        await pool.query(migrationSQL);
+        
+        // Verify tables were created
+        const verificationResult = await pool.query(`
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_name IN ('rundowns', 'rundown_segments', 'rundown_talent', 'rundown_stories')
+            AND table_schema = 'public'
+            ORDER BY table_name
+        `);
+        
+        // Test table accessibility
+        const testQueries = await Promise.all([
+            pool.query('SELECT COUNT(*) FROM rundowns'),
+            pool.query('SELECT COUNT(*) FROM rundown_segments'),
+            pool.query('SELECT COUNT(*) FROM rundown_talent'),
+            pool.query('SELECT COUNT(*) FROM rundown_stories')
+        ]);
+        
+        res.json({ 
+            success: true,
+            message: 'Rundown system migration completed successfully!',
+            tables_created: verificationResult.rows.map(r => r.table_name),
+            table_counts: {
+                rundowns: testQueries[0].rows[0].count,
+                rundown_segments: testQueries[1].rows[0].count,
+                rundown_talent: testQueries[2].rows[0].count,
+                rundown_stories: testQueries[3].rows[0].count
+            },
+            status: 'completed'
+        });
+    } catch (error) {
+        console.error('Rundown system migration failed:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message,
+            status: 'failed'
+        });
+    }
+});
+
 module.exports = router;

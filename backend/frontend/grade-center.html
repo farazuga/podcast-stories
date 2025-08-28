@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD - Grade Center</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/lesson-styles.css">
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="dashboard-header">
+            <h1>📊 Grade Center</h1>
+            <p id="courseInfo">Monitor student progress, review quiz results, and manage grades.</p>
+            <div class="breadcrumb">
+                <a href="/course-management.html">← Back to Course Management</a>
+            </div>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div id="messageContainer"></div>
+
+        <!-- Grade Center Layout -->
+        <div class="grade-center">
+            <!-- Sidebar -->
+            <div class="grade-sidebar">
+                <div class="sidebar-section">
+                    <h3>📈 Course Overview</h3>
+                    <div class="course-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Enrolled Students:</span>
+                            <span id="enrolledCount" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Active Lessons:</span>
+                            <span id="activeLessons" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Quizzes:</span>
+                            <span id="totalQuizzes" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Avg Progress:</span>
+                            <span id="avgProgress" class="stat-value">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h4>👥 Students</h4>
+                    <div class="filter-controls mb-2">
+                        <input type="text" id="studentSearch" class="form-control lesson" 
+                               placeholder="Search students...">
+                        <select id="progressFilter" class="form-control lesson">
+                            <option value="">All Students</option>
+                            <option value="behind">Behind Schedule</option>
+                            <option value="on-track">On Track</option>
+                            <option value="ahead">Ahead of Schedule</option>
+                        </select>
+                    </div>
+                    <div id="studentsList" class="student-list">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h4>📊 Quick Actions</h4>
+                    <button id="exportGrades" class="btn btn-secondary w-full mb-1">
+                        <span class="icon">📤</span>
+                        Export Grades
+                    </button>
+                    <button id="sendReminders" class="btn btn-secondary w-full mb-1">
+                        <span class="icon">📧</span>
+                        Send Progress Reminders
+                    </button>
+                    <button id="generateReport" class="btn btn-secondary w-full">
+                        <span class="icon">📋</span>
+                        Generate Progress Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="grade-main">
+                <!-- View Toggle -->
+                <div class="view-controls">
+                    <div class="view-toggle">
+                        <button id="overviewTab" class="view-btn active" data-view="overview">
+                            📈 Overview
+                        </button>
+                        <button id="gradesTab" class="view-btn" data-view="grades">
+                            📊 Detailed Grades
+                        </button>
+                        <button id="individualTab" class="view-btn" data-view="individual">
+                            👤 Individual Student
+                        </button>
+                    </div>
+                    
+                    <div class="grade-filters">
+                        <select id="lessonFilter" class="form-control lesson">
+                            <option value="">All Lessons</option>
+                        </select>
+                        <select id="sortBy" class="form-control lesson">
+                            <option value="name">Sort by Name</option>
+                            <option value="progress">Sort by Progress</option>
+                            <option value="grade">Sort by Grade</option>
+                            <option value="recent">Sort by Recent Activity</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Overview View -->
+                <div id="overviewView" class="grade-view active">
+                    <div class="progress-summary">
+                        <h3>📈 Class Progress Summary</h3>
+                        <div class="progress-charts">
+                            <div class="chart-container">
+                                <h4>Lesson Completion Rates</h4>
+                                <div id="lessonProgressChart" class="chart-placeholder">
+                                    <canvas id="lessonChart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-container">
+                                <h4>Grade Distribution</h4>
+                                <div id="gradeDistributionChart" class="chart-placeholder">
+                                    <canvas id="gradeChart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="recent-activity">
+                        <h3>🕐 Recent Activity</h3>
+                        <div id="recentActivityList" class="activity-list">
+                            <!-- Recent activity items will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Grades View -->
+                <div id="gradesView" class="grade-view">
+                    <div class="grades-header">
+                        <h3>📊 Detailed Grade Book</h3>
+                        <div class="bulk-actions">
+                            <button id="selectAllStudents" class="btn btn-secondary">Select All</button>
+                            <button id="bulkGradeUpdate" class="btn btn-primary" disabled>Update Selected</button>
+                        </div>
+                    </div>
+                    
+                    <div class="grade-table-container">
+                        <table id="gradeTable" class="grade-table">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="selectAllCheckbox"></th>
+                                    <th>Student</th>
+                                    <th>Progress</th>
+                                    <th>Lessons Completed</th>
+                                    <th>Quiz Average</th>
+                                    <th>Overall Grade</th>
+                                    <th>Last Activity</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gradeTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center">
+                                        <div class="loading-spinner"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Individual Student View -->
+                <div id="individualView" class="grade-view">
+                    <div id="noStudentSelected" class="text-center" style="padding: 3rem;">
+                        <h3>👤 Select a Student</h3>
+                        <p>Choose a student from the sidebar to view their detailed progress and grades.</p>
+                    </div>
+
+                    <div id="studentDetailView" style="display: none;">
+                        <div class="student-header">
+                            <div class="student-info">
+                                <h3 id="selectedStudentName">Student Name</h3>
+                                <div class="student-meta">
+                                    <span id="selectedStudentEmail" class="text-muted"></span>
+                                    <span id="selectedStudentId" class="text-muted"></span>
+                                </div>
+                            </div>
+                            <div class="student-stats">
+                                <div class="stat-card">
+                                    <div class="stat-value" id="studentProgress">0%</div>
+                                    <div class="stat-label">Progress</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="studentGrade">--</div>
+                                    <div class="stat-label">Overall Grade</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="studentLessonsComplete">0/0</div>
+                                    <div class="stat-label">Lessons</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="student-progress-detail">
+                            <h4>📚 Lesson Progress</h4>
+                            <div id="studentLessonProgress" class="lesson-progress-list">
+                                <!-- Student lesson progress will be populated here -->
+                            </div>
+                        </div>
+
+                        <div class="student-quiz-results">
+                            <h4>🧩 Quiz Results</h4>
+                            <div id="studentQuizResults" class="quiz-results-list">
+                                <!-- Student quiz results will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grade Update Modal -->
+    <div id="gradeModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✏️ Update Grade</h3>
+                <button class="modal-close" onclick="closeGradeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="gradeUpdateForm">
+                    <div class="form-group lesson">
+                        <label class="form-label lesson">Student</label>
+                        <input type="text" id="gradeStudentName" class="form-control lesson" readonly>
+                    </div>
+                    
+                    <div class="form-group lesson">
+                        <label class="form-label lesson">Assessment</label>
+                        <input type="text" id="gradeAssessment" class="form-control lesson" readonly>
+                    </div>
+                    
+                    <div class="form-group lesson">
+                        <label class="form-label lesson" for="newGrade">Grade (0-100)</label>
+                        <input type="number" id="newGrade" name="grade" class="form-control lesson" 
+                               min="0" max="100" required>
+                    </div>
+                    
+                    <div class="form-group lesson">
+                        <label class="form-label lesson" for="gradeNotes">Notes (Optional)</label>
+                        <textarea id="gradeNotes" name="notes" class="form-control lesson" 
+                                  rows="3" placeholder="Add feedback or notes..."></textarea>
+                    </div>
+
+                    <input type="hidden" id="gradeStudentId">
+                    <input type="hidden" id="gradeAssessmentId">
+                    <input type="hidden" id="gradeAssessmentType">
+
+                    <div class="d-flex justify-between">
+                        <button type="button" class="btn btn-secondary" onclick="closeGradeModal()">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            Update Grade
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
+    <script src="js/lesson-management.js"></script>
+    <script>
+        // Grade Center JavaScript
+        let currentCourse = null;
+        let students = [];
+        let lessons = [];
+        let selectedStudent = null;
+        let currentView = 'overview';
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const courseId = urlParams.get('course_id');
+            const view = urlParams.get('view') || 'overview';
+            
+            if (!courseId) {
+                VidPOD.Lessons.ui.showError('No course specified. Redirecting to course management.');
+                setTimeout(() => window.location.href = '/course-management.html', 2000);
+                return;
+            }
+
+            await loadCourse(courseId);
+            await loadStudents(courseId);
+            await loadLessons(courseId);
+            setupEventListeners();
+            switchView(view);
+        });
+
+        async function loadCourse(courseId) {
+            try {
+                currentCourse = await VidPOD.Lessons.api.courses.getById(courseId);
+                document.getElementById('courseInfo').textContent = 
+                    `Grade Center for: ${currentCourse.title}`;
+            } catch (error) {
+                console.error('Error loading course:', error);
+                VidPOD.Lessons.ui.showError('Failed to load course information.');
+            }
+        }
+
+        async function loadStudents(courseId) {
+            try {
+                students = await VidPOD.Lessons.api.progress.getStudentsProgress(courseId);
+                renderStudentsList();
+                updateCourseStats();
+            } catch (error) {
+                console.error('Error loading students:', error);
+                VidPOD.Lessons.ui.showError('Failed to load student data.');
+            }
+        }
+
+        async function loadLessons(courseId) {
+            try {
+                lessons = await VidPOD.Lessons.api.lessons.getByCourse(courseId);
+                populateLessonFilter();
+                updateCourseStats();
+            } catch (error) {
+                console.error('Error loading lessons:', error);
+                VidPOD.Lessons.ui.showError('Failed to load lessons.');
+            }
+        }
+
+        function setupEventListeners() {
+            // View toggle buttons
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const view = btn.dataset.view;
+                    switchView(view);
+                });
+            });
+
+            // Search and filters
+            document.getElementById('studentSearch').addEventListener('input', filterStudents);
+            document.getElementById('progressFilter').addEventListener('change', filterStudents);
+            document.getElementById('lessonFilter').addEventListener('change', filterGrades);
+            document.getElementById('sortBy').addEventListener('change', sortGrades);
+
+            // Quick actions
+            document.getElementById('exportGrades').addEventListener('click', exportGrades);
+            document.getElementById('sendReminders').addEventListener('click', sendProgressReminders);
+            document.getElementById('generateReport').addEventListener('click', generateProgressReport);
+
+            // Bulk actions
+            document.getElementById('selectAllStudents').addEventListener('click', toggleSelectAll);
+            document.getElementById('bulkGradeUpdate').addEventListener('click', showBulkGradeUpdate);
+            document.getElementById('selectAllCheckbox').addEventListener('change', handleSelectAllChange);
+
+            // Grade update form
+            document.getElementById('gradeUpdateForm').addEventListener('submit', handleGradeUpdate);
+        }
+
+        function switchView(view) {
+            currentView = view;
+            
+            // Update tab buttons
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === view);
+            });
+
+            // Show/hide views
+            document.querySelectorAll('.grade-view').forEach(viewEl => {
+                viewEl.classList.toggle('active', viewEl.id === view + 'View');
+            });
+
+            // Load view-specific data
+            switch (view) {
+                case 'overview':
+                    loadOverviewData();
+                    break;
+                case 'grades':
+                    loadGradesData();
+                    break;
+                case 'individual':
+                    loadIndividualView();
+                    break;
+            }
+        }
+
+        function renderStudentsList() {
+            const container = document.getElementById('studentsList');
+            
+            if (students.length === 0) {
+                container.innerHTML = '<p class="text-muted">No students enrolled yet</p>';
+                return;
+            }
+
+            const studentsHtml = students.map(student => `
+                <div class="student-item ${selectedStudent && selectedStudent.id === student.id ? 'selected' : ''}" 
+                     onclick="selectStudent(${student.id})">
+                    <div class="student-info">
+                        <div class="student-name">${student.name || student.email}</div>
+                        <div class="student-progress">
+                            ${student.progress_percentage || 0}% complete
+                            ${VidPOD.Lessons.ui.createProgressBar(student.progress_percentage || 0)}
+                        </div>
+                    </div>
+                    <div class="student-status">
+                        <span class="grade-badge ${VidPOD.Lessons.progress.getGradeColor(student.overall_grade || 0)}">
+                            ${student.overall_grade ? VidPOD.Lessons.ui.formatScore(student.overall_grade) + '%' : '--'}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = studentsHtml;
+        }
+
+        function updateCourseStats() {
+            document.getElementById('enrolledCount').textContent = students.length;
+            document.getElementById('activeLessons').textContent = lessons.filter(l => l.is_active).length;
+            document.getElementById('totalQuizzes').textContent = lessons.reduce((sum, l) => sum + (l.quiz_count || 0), 0);
+            
+            const avgProgress = students.length > 0 
+                ? students.reduce((sum, s) => sum + (s.progress_percentage || 0), 0) / students.length
+                : 0;
+            document.getElementById('avgProgress').textContent = Math.round(avgProgress) + '%';
+        }
+
+        function populateLessonFilter() {
+            const select = document.getElementById('lessonFilter');
+            select.innerHTML = '<option value="">All Lessons</option>';
+            
+            lessons.forEach(lesson => {
+                select.innerHTML += `<option value="${lesson.id}">Week ${lesson.week_number}: ${lesson.title}</option>`;
+            });
+        }
+
+        function filterStudents() {
+            const searchTerm = document.getElementById('studentSearch').value.toLowerCase();
+            const progressFilter = document.getElementById('progressFilter').value;
+            
+            let filteredStudents = students;
+            
+            if (searchTerm) {
+                filteredStudents = filteredStudents.filter(student => 
+                    (student.name || student.email).toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (progressFilter) {
+                filteredStudents = filteredStudents.filter(student => {
+                    const progress = student.progress_percentage || 0;
+                    switch (progressFilter) {
+                        case 'behind': return progress < 70;
+                        case 'on-track': return progress >= 70 && progress < 90;
+                        case 'ahead': return progress >= 90;
+                        default: return true;
+                    }
+                });
+            }
+            
+            // Temporarily replace students array for rendering
+            const originalStudents = students;
+            students = filteredStudents;
+            renderStudentsList();
+            students = originalStudents;
+        }
+
+        function selectStudent(studentId) {
+            selectedStudent = students.find(s => s.id === studentId);
+            renderStudentsList();
+            
+            if (currentView === 'individual') {
+                loadIndividualStudentData();
+            }
+        }
+
+        // View-specific loading functions
+        async function loadOverviewData() {
+            await loadRecentActivity();
+            // In a real implementation, you would load chart data here
+            drawProgressCharts();
+        }
+
+        async function loadGradesData() {
+            renderGradesTable();
+        }
+
+        async function loadIndividualView() {
+            if (selectedStudent) {
+                await loadIndividualStudentData();
+            } else {
+                document.getElementById('noStudentSelected').style.display = 'block';
+                document.getElementById('studentDetailView').style.display = 'none';
+            }
+        }
+
+        async function loadIndividualStudentData() {
+            if (!selectedStudent) return;
+            
+            document.getElementById('noStudentSelected').style.display = 'none';
+            document.getElementById('studentDetailView').style.display = 'block';
+            
+            // Populate student header
+            document.getElementById('selectedStudentName').textContent = selectedStudent.name || selectedStudent.email;
+            document.getElementById('selectedStudentEmail').textContent = selectedStudent.email;
+            document.getElementById('selectedStudentId').textContent = `ID: ${selectedStudent.student_id || selectedStudent.id}`;
+            
+            // Populate stats
+            document.getElementById('studentProgress').textContent = (selectedStudent.progress_percentage || 0) + '%';
+            document.getElementById('studentGrade').textContent = selectedStudent.overall_grade 
+                ? VidPOD.Lessons.ui.formatScore(selectedStudent.overall_grade) + '%' 
+                : '--';
+            document.getElementById('studentLessonsComplete').textContent = 
+                `${selectedStudent.completed_lessons || 0}/${lessons.length}`;
+            
+            // Load detailed progress
+            await loadStudentLessonProgress();
+            await loadStudentQuizResults();
+        }
+
+        async function loadStudentLessonProgress() {
+            try {
+                // This would normally fetch from the API
+                const progressData = selectedStudent.lesson_progress || [];
+                
+                const progressHtml = lessons.map(lesson => {
+                    const progress = progressData.find(p => p.lesson_id === lesson.id);
+                    const isCompleted = progress && progress.completed;
+                    const percentage = progress ? progress.progress_percentage : 0;
+                    
+                    return `
+                        <div class="lesson-progress-item">
+                            <div class="lesson-info">
+                                <div class="lesson-title">
+                                    <span class="lesson-status-icon">${isCompleted ? '✅' : '⏳'}</span>
+                                    Week ${lesson.week_number}: ${lesson.title}
+                                </div>
+                                <div class="lesson-progress-bar">
+                                    ${VidPOD.Lessons.ui.createProgressBar(percentage)}
+                                </div>
+                            </div>
+                            <div class="lesson-actions">
+                                <span class="progress-text">${percentage}%</span>
+                                ${progress && progress.last_accessed ? 
+                                    `<span class="last-accessed">Last: ${VidPOD.Lessons.ui.formatDate(progress.last_accessed)}</span>` : 
+                                    '<span class="not-started">Not started</span>'
+                                }
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                document.getElementById('studentLessonProgress').innerHTML = progressHtml;
+                
+            } catch (error) {
+                console.error('Error loading student lesson progress:', error);
+            }
+        }
+
+        async function loadStudentQuizResults() {
+            try {
+                // This would normally fetch from the API
+                const quizResults = selectedStudent.quiz_results || [];
+                
+                if (quizResults.length === 0) {
+                    document.getElementById('studentQuizResults').innerHTML = 
+                        '<p class="text-muted">No quiz attempts yet</p>';
+                    return;
+                }
+                
+                const resultsHtml = quizResults.map(result => `
+                    <div class="quiz-result-item">
+                        <div class="quiz-info">
+                            <div class="quiz-title">${result.quiz_title}</div>
+                            <div class="quiz-meta">
+                                <span>Attempt ${result.attempt_number}</span>
+                                <span>${VidPOD.Lessons.ui.formatDate(result.completed_at)}</span>
+                            </div>
+                        </div>
+                        <div class="quiz-grade">
+                            <span class="grade-badge ${VidPOD.Lessons.progress.getGradeColor(result.score)}">
+                                ${VidPOD.Lessons.ui.formatScore(result.score)}%
+                            </span>
+                            <button class="btn btn-sm btn-secondary" 
+                                    onclick="reviewQuizAttempt(${result.id})">
+                                Review
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('studentQuizResults').innerHTML = resultsHtml;
+                
+            } catch (error) {
+                console.error('Error loading student quiz results:', error);
+            }
+        }
+
+        function renderGradesTable() {
+            const tbody = document.getElementById('gradeTableBody');
+            
+            if (students.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">
+                            No students enrolled in this course
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const rowsHtml = students.map(student => `
+                <tr data-student-id="${student.id}">
+                    <td>
+                        <input type="checkbox" class="student-checkbox" value="${student.id}">
+                    </td>
+                    <td>
+                        <div class="student-name">${student.name || student.email}</div>
+                        <div class="student-email text-muted">${student.email}</div>
+                    </td>
+                    <td>
+                        <div class="progress-cell">
+                            ${VidPOD.Lessons.ui.createProgressBar(student.progress_percentage || 0)}
+                            <span class="progress-text">${student.progress_percentage || 0}%</span>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        ${student.completed_lessons || 0}/${lessons.length}
+                    </td>
+                    <td class="text-center">
+                        <span class="grade-badge ${VidPOD.Lessons.progress.getGradeColor(student.quiz_average || 0)}">
+                            ${student.quiz_average ? VidPOD.Lessons.ui.formatScore(student.quiz_average) + '%' : '--'}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <span class="grade-badge ${VidPOD.Lessons.progress.getGradeColor(student.overall_grade || 0)}">
+                            ${student.overall_grade ? VidPOD.Lessons.ui.formatScore(student.overall_grade) + '%' : '--'}
+                        </span>
+                    </td>
+                    <td class="text-center text-muted">
+                        ${student.last_activity ? VidPOD.Lessons.ui.formatDate(student.last_activity) : 'Never'}
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-secondary" onclick="viewStudentDetails(${student.id})">
+                            View
+                        </button>
+                        <button class="btn btn-sm btn-primary" onclick="showGradeUpdate(${student.id})">
+                            Grade
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            tbody.innerHTML = rowsHtml;
+            
+            // Setup checkbox listeners
+            document.querySelectorAll('.student-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', updateBulkActions);
+            });
+        }
+
+        async function loadRecentActivity() {
+            // Simulate loading recent activity
+            const activities = [
+                { type: 'quiz_complete', student: 'John Doe', item: 'Week 1 Quiz', time: '2 hours ago', score: 85 },
+                { type: 'lesson_complete', student: 'Jane Smith', item: 'Introduction to Podcasting', time: '4 hours ago' },
+                { type: 'quiz_complete', student: 'Bob Johnson', item: 'Week 2 Quiz', time: '6 hours ago', score: 92 },
+                { type: 'lesson_start', student: 'Alice Brown', item: 'Audio Production Basics', time: '1 day ago' }
+            ];
+            
+            const activitiesHtml = activities.map(activity => {
+                const icon = activity.type.includes('quiz') ? '🧩' : '📚';
+                const action = activity.type.includes('complete') ? 'completed' : 'started';
+                
+                return `
+                    <div class="activity-item">
+                        <div class="activity-icon">${icon}</div>
+                        <div class="activity-content">
+                            <div class="activity-text">
+                                <strong>${activity.student}</strong> ${action} <em>${activity.item}</em>
+                                ${activity.score ? `(${activity.score}%)` : ''}
+                            </div>
+                            <div class="activity-time">${activity.time}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('recentActivityList').innerHTML = activitiesHtml;
+        }
+
+        function drawProgressCharts() {
+            // In a real implementation, you would use Chart.js or similar
+            // For now, we'll show placeholder text
+            document.getElementById('lessonProgressChart').innerHTML = 
+                '<div class="chart-placeholder">Chart showing lesson completion rates would appear here</div>';
+            document.getElementById('gradeDistributionChart').innerHTML = 
+                '<div class="chart-placeholder">Chart showing grade distribution would appear here</div>';
+        }
+
+        // Action handlers
+        function viewStudentDetails(studentId) {
+            selectStudent(studentId);
+            switchView('individual');
+        }
+
+        function showGradeUpdate(studentId, assessmentId = null, assessmentType = 'manual') {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+            
+            document.getElementById('gradeStudentName').value = student.name || student.email;
+            document.getElementById('gradeAssessment').value = assessmentType === 'manual' ? 'Manual Grade Entry' : 'Quiz/Assignment';
+            document.getElementById('gradeStudentId').value = studentId;
+            document.getElementById('gradeAssessmentId').value = assessmentId || '';
+            document.getElementById('gradeAssessmentType').value = assessmentType;
+            
+            document.getElementById('gradeModal').style.display = 'flex';
+            document.getElementById('newGrade').focus();
+        }
+
+        function closeGradeModal() {
+            document.getElementById('gradeModal').style.display = 'none';
+            document.getElementById('gradeUpdateForm').reset();
+        }
+
+        async function handleGradeUpdate(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const gradeData = {
+                student_id: formData.get('student_id') || document.getElementById('gradeStudentId').value,
+                assessment_id: formData.get('assessment_id') || document.getElementById('gradeAssessmentId').value,
+                assessment_type: formData.get('assessment_type') || document.getElementById('gradeAssessmentType').value,
+                grade: parseFloat(formData.get('grade')),
+                notes: formData.get('notes')
+            };
+
+            try {
+                // In a real implementation, this would call the API
+                console.log('Updating grade:', gradeData);
+                
+                VidPOD.Lessons.ui.showSuccess('Grade updated successfully!');
+                closeGradeModal();
+                
+                // Reload data
+                await loadStudents(currentCourse.id);
+                if (currentView === 'grades') {
+                    renderGradesTable();
+                }
+                
+            } catch (error) {
+                console.error('Error updating grade:', error);
+                VidPOD.Lessons.ui.showError('Failed to update grade.');
+            }
+        }
+
+        function updateBulkActions() {
+            const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
+            const bulkButton = document.getElementById('bulkGradeUpdate');
+            
+            bulkButton.disabled = checkedBoxes.length === 0;
+            bulkButton.textContent = checkedBoxes.length > 0 
+                ? `Update Selected (${checkedBoxes.length})` 
+                : 'Update Selected';
+        }
+
+        function handleSelectAllChange() {
+            const selectAll = document.getElementById('selectAllCheckbox').checked;
+            document.querySelectorAll('.student-checkbox').forEach(checkbox => {
+                checkbox.checked = selectAll;
+            });
+            updateBulkActions();
+        }
+
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            selectAllCheckbox.checked = !selectAllCheckbox.checked;
+            handleSelectAllChange();
+        }
+
+        function showBulkGradeUpdate() {
+            const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
+            if (checkedBoxes.length === 0) return;
+            
+            alert(`Bulk grade update functionality would allow updating grades for ${checkedBoxes.length} selected students.`);
+        }
+
+        async function exportGrades() {
+            try {
+                // In a real implementation, this would generate and download a CSV/Excel file
+                alert('Grade export functionality would generate a downloadable CSV file with all student grades.');
+            } catch (error) {
+                console.error('Error exporting grades:', error);
+                VidPOD.Lessons.ui.showError('Failed to export grades.');
+            }
+        }
+
+        async function sendProgressReminders() {
+            try {
+                // This would send email reminders to students behind schedule
+                alert('Progress reminder emails would be sent to students who are behind schedule.');
+            } catch (error) {
+                console.error('Error sending reminders:', error);
+                VidPOD.Lessons.ui.showError('Failed to send reminders.');
+            }
+        }
+
+        async function generateProgressReport() {
+            try {
+                // This would generate a comprehensive progress report
+                alert('Progress report generation would create a detailed PDF report of class performance.');
+            } catch (error) {
+                console.error('Error generating report:', error);
+                VidPOD.Lessons.ui.showError('Failed to generate report.');
+            }
+        }
+
+        function reviewQuizAttempt(attemptId) {
+            // This would open a detailed view of the quiz attempt
+            alert(`Quiz attempt review would show detailed answers and feedback for attempt ID: ${attemptId}`);
+        }
+
+        function filterGrades() {
+            // Filter grades table by lesson
+            const lessonId = document.getElementById('lessonFilter').value;
+            // Implementation would filter the grades table
+            console.log('Filtering grades by lesson:', lessonId);
+        }
+
+        function sortGrades() {
+            // Sort grades table
+            const sortBy = document.getElementById('sortBy').value;
+            // Implementation would sort the grades table
+            console.log('Sorting grades by:', sortBy);
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'gradeModal') {
+                closeGradeModal();
+            }
+        });
+    </script>
+
+    <style>
+        .view-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .view-toggle {
+            display: flex;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .view-btn {
+            padding: 0.75rem 1rem;
+            border: none;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .view-btn:last-child {
+            border-right: none;
+        }
+
+        .view-btn:hover {
+            background: #f8fafc;
+        }
+
+        .view-btn.active {
+            background: var(--lesson-primary);
+            color: white;
+        }
+
+        .grade-filters {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .grade-view {
+            display: none;
+        }
+
+        .grade-view.active {
+            display: block;
+        }
+
+        .progress-charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .chart-placeholder {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            border-radius: 6px;
+            color: var(--text-light);
+            font-style: italic;
+        }
+
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .activity-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            text-align: center;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-text {
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-time {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .grades-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .bulk-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .grade-table-container {
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .progress-cell {
+            min-width: 120px;
+        }
+
+        .progress-text {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        .student-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .student-meta {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .student-stats {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .lesson-progress-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .lesson-progress-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .lesson-info {
+            flex: 1;
+            margin-right: 1rem;
+        }
+
+        .lesson-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .lesson-progress-bar {
+            max-width: 200px;
+        }
+
+        .lesson-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.25rem;
+        }
+
+        .last-accessed,
+        .not-started {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .quiz-results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .quiz-result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .quiz-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        .quiz-grade {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .view-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .grade-filters {
+                flex-direction: column;
+            }
+
+            .progress-charts {
+                grid-template-columns: 1fr;
+            }
+
+            .student-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .student-stats {
+                flex-wrap: wrap;
+            }
+
+            .lesson-progress-item,
+            .quiz-result-item {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+        }
+    </style>
+</body>
+</html>

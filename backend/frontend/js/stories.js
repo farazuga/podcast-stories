@@ -331,6 +331,11 @@ function renderStoryCard(story) {
                     <button class="btn btn-primary btn-small" onclick="event.stopPropagation(); viewStory(${story.id})">
                         View
                     </button>
+                    ${(currentUser?.role === 'teacher' || currentUser?.role === 'amitrace_admin') ? `
+                        <button class="btn btn-success btn-small" onclick="event.stopPropagation(); addToRundown(${story.id})" title="Add to rundown">
+                            📝 Rundown
+                        </button>
+                    ` : ''}
                     ${story.uploaded_by === currentUser?.id ? `
                         <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); editStory(${story.id})">
                             Edit
@@ -365,6 +370,14 @@ function renderStoryCard(story) {
             ${interviewees ? `<div class="story-interviewees-compact">🎤 ${interviewees}</div>` : ''}
             
             <div class="story-actions-compact">
+                <button class="btn btn-primary btn-small" onclick="event.stopPropagation(); viewStory(${story.id})">
+                    View
+                </button>
+                ${(currentUser?.role === 'teacher' || currentUser?.role === 'amitrace_admin') ? `
+                    <button class="btn btn-success btn-small" onclick="event.stopPropagation(); addToRundown(${story.id})" title="Add to rundown">
+                        📝 Rundown
+                    </button>
+                ` : ''}
                 ${story.uploaded_by === currentUser?.id ? `
                     <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); editStory(${story.id})">
                         Edit
@@ -960,6 +973,22 @@ async function bulkDelete() {
     clearSelection();
 }
 
+// Add story to rundown integration
+async function addToRundown(storyId) {
+    try {
+        // Use the static method from RundownStories
+        if (window.RundownStories && window.RundownStories.openRundownSelector) {
+            await window.RundownStories.openRundownSelector(storyId);
+        } else {
+            // Fallback: redirect to rundowns page with story parameter
+            window.location.href = `/rundowns.html?addStory=${storyId}`;
+        }
+    } catch (error) {
+        console.error('Failed to add story to rundown:', error);
+        showNotification('Failed to add story to rundown', 'error');
+    }
+}
+
 // Notification system
 function showNotification(message, type = 'info') {
     // Create notification element
@@ -1002,6 +1031,7 @@ window.bulkFavorite = bulkFavorite;
 window.bulkExport = bulkExport;
 window.bulkDelete = bulkDelete;
 window.rateStory = rateStory;
+window.addToRundown = addToRundown;
 window.showNotification = showNotification;
 
 // Utility function

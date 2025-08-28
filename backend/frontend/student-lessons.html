@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD - My Learning</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/lesson-styles.css">
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="dashboard-header">
+            <h1>🎓 My Learning</h1>
+            <p>Explore courses, track your progress, and continue your learning journey.</p>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div id="messageContainer"></div>
+
+        <!-- Learning Dashboard Overview -->
+        <div class="learning-overview">
+            <div class="overview-cards">
+                <div class="overview-card">
+                    <div class="card-icon">📚</div>
+                    <div class="card-content">
+                        <h3 id="enrolledCoursesCount">0</h3>
+                        <p>Enrolled Courses</p>
+                        <div class="card-progress">
+                            <span id="activeCoursesText">0 active</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="overview-card">
+                    <div class="card-icon">✅</div>
+                    <div class="card-content">
+                        <h3 id="completedLessonsCount">0</h3>
+                        <p>Lessons Completed</p>
+                        <div class="card-progress">
+                            <span id="totalLessonsText">of 0 total</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="overview-card">
+                    <div class="card-icon">🏆</div>
+                    <div class="card-content">
+                        <h3 id="averageGrade">--</h3>
+                        <p>Average Grade</p>
+                        <div class="card-progress">
+                            <span id="gradeStatusText">--</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="overview-card">
+                    <div class="card-icon">🔥</div>
+                    <div class="card-content">
+                        <h3 id="streakCount">0</h3>
+                        <p>Day Streak</p>
+                        <div class="card-progress">
+                            <span id="streakText">Keep it up!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions-section">
+            <h2>🚀 Quick Actions</h2>
+            <div class="action-grid">
+                <button class="action-card primary" onclick="showCourseLibrary()">
+                    <div class="action-icon">🔍</div>
+                    <h3>Browse Courses</h3>
+                    <p>Discover new learning opportunities</p>
+                </button>
+                
+                <button class="action-card" onclick="continueLearning()" id="continueAction" style="display: none;">
+                    <div class="action-icon">▶️</div>
+                    <h3>Continue Learning</h3>
+                    <p id="continueText">Resume where you left off</p>
+                </button>
+                
+                <button class="action-card" onclick="showProgress()">
+                    <div class="action-icon">📊</div>
+                    <h3>View Progress</h3>
+                    <p>See your learning achievements</p>
+                </button>
+                
+                <button class="action-card" onclick="takeQuiz()" id="quizAction" style="display: none;">
+                    <div class="action-icon">🧩</div>
+                    <h3>Take Quiz</h3>
+                    <p id="quizText">Test your knowledge</p>
+                </button>
+            </div>
+        </div>
+
+        <!-- Content Sections -->
+        <div class="learning-content">
+            <!-- My Courses Section -->
+            <div id="myCoursesSection" class="content-section active">
+                <div class="section-header">
+                    <h2>📚 My Courses</h2>
+                    <div class="section-filters">
+                        <select id="courseStatusFilter" class="form-control lesson">
+                            <option value="">All Courses</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="not-started">Not Started</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="enrolledCoursesList" class="course-grid">
+                    <div class="loading-spinner"></div>
+                </div>
+
+                <div id="noCoursesMessage" class="empty-state" style="display: none;">
+                    <h3>📖 No Courses Yet</h3>
+                    <p>You haven't enrolled in any courses yet. Browse our course library to get started!</p>
+                    <button class="btn btn-primary" onclick="showCourseLibrary()">
+                        Browse Courses
+                    </button>
+                </div>
+            </div>
+
+            <!-- Course Library Section -->
+            <div id="courseLibrarySection" class="content-section">
+                <div class="section-header">
+                    <h2>🔍 Course Library</h2>
+                    <div class="section-filters">
+                        <input type="text" id="courseSearch" class="form-control lesson" 
+                               placeholder="Search courses...">
+                        <select id="difficultyFilter" class="form-control lesson">
+                            <option value="">All Levels</option>
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                        </select>
+                        <select id="durationFilter" class="form-control lesson">
+                            <option value="">Any Duration</option>
+                            <option value="short">Short (1-4 weeks)</option>
+                            <option value="medium">Medium (5-8 weeks)</option>
+                            <option value="long">Long (9+ weeks)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="availableCoursesList" class="course-grid">
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
+
+            <!-- Progress Section -->
+            <div id="progressSection" class="content-section">
+                <div class="section-header">
+                    <h2>📊 My Progress</h2>
+                    <button id="progressBackBtn" class="btn btn-secondary" onclick="showMyCourses()">
+                        ← Back to My Courses
+                    </button>
+                </div>
+
+                <div class="progress-dashboard">
+                    <div class="progress-summary">
+                        <div class="progress-chart">
+                            <h3>Overall Progress</h3>
+                            <div class="progress-circle">
+                                <div class="circle-progress" id="overallProgressCircle">
+                                    <span id="overallProgressText">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="progress-stats">
+                            <div class="progress-stat">
+                                <div class="stat-number" id="completedLessonsProgress">0</div>
+                                <div class="stat-label">Lessons Completed</div>
+                            </div>
+                            <div class="progress-stat">
+                                <div class="stat-number" id="totalQuizzesCompleted">0</div>
+                                <div class="stat-label">Quizzes Taken</div>
+                            </div>
+                            <div class="progress-stat">
+                                <div class="stat-number" id="totalTimeSpent">0h</div>
+                                <div class="stat-label">Time Spent Learning</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="detailedProgressList" class="detailed-progress">
+                        <!-- Detailed progress will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Enrollment Modal -->
+    <div id="enrollmentModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📚 Course Enrollment</h3>
+                <button class="modal-close" onclick="closeEnrollmentModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="coursePreview">
+                    <!-- Course details will be populated here -->
+                </div>
+                
+                <div class="enrollment-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEnrollmentModal()">
+                        Cancel
+                    </button>
+                    <button type="button" id="enrollButton" class="btn btn-primary" onclick="enrollInCourse()">
+                        <span class="icon">🎓</span>
+                        Enroll in Course
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
+    <script src="js/lesson-management.js"></script>
+    <script>
+        // Student Learning Dashboard JavaScript
+        let enrolledCourses = [];
+        let availableCourses = [];
+        let userProgress = [];
+        let selectedCourse = null;
+        let currentSection = 'myCoursesSection';
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadStudentData();
+            setupEventListeners();
+            updateOverviewCards();
+        });
+
+        async function loadStudentData() {
+            try {
+                await Promise.all([
+                    loadEnrolledCourses(),
+                    loadAvailableCourses(),
+                    loadUserProgress()
+                ]);
+            } catch (error) {
+                console.error('Error loading student data:', error);
+                VidPOD.Lessons.ui.showError('Failed to load learning data. Please refresh the page.');
+            }
+        }
+
+        async function loadEnrolledCourses() {
+            try {
+                VidPOD.Lessons.ui.showLoading('enrolledCoursesList');
+                enrolledCourses = await VidPOD.Lessons.api.courses.getAll({ enrolled: true });
+                renderEnrolledCourses();
+            } catch (error) {
+                console.error('Error loading enrolled courses:', error);
+                showNoCoursesMessage();
+            }
+        }
+
+        async function loadAvailableCourses() {
+            try {
+                VidPOD.Lessons.ui.showLoading('availableCoursesList');
+                availableCourses = await VidPOD.Lessons.api.courses.getAll({ available: true });
+                renderAvailableCourses();
+            } catch (error) {
+                console.error('Error loading available courses:', error);
+                document.getElementById('availableCoursesList').innerHTML = 
+                    '<p class="text-center text-muted">Unable to load course library</p>';
+            }
+        }
+
+        async function loadUserProgress() {
+            try {
+                userProgress = await VidPOD.Lessons.api.progress.getUserProgress();
+            } catch (error) {
+                console.error('Error loading user progress:', error);
+            }
+        }
+
+        function setupEventListeners() {
+            // Search and filters
+            document.getElementById('courseStatusFilter').addEventListener('change', filterEnrolledCourses);
+            document.getElementById('courseSearch').addEventListener('input', filterAvailableCourses);
+            document.getElementById('difficultyFilter').addEventListener('change', filterAvailableCourses);
+            document.getElementById('durationFilter').addEventListener('change', filterAvailableCourses);
+        }
+
+        function updateOverviewCards() {
+            // Enrolled courses count
+            document.getElementById('enrolledCoursesCount').textContent = enrolledCourses.length;
+            const activeCourses = enrolledCourses.filter(c => c.status === 'in-progress' || !c.status).length;
+            document.getElementById('activeCoursesText').textContent = `${activeCourses} active`;
+
+            // Lessons completed
+            const totalCompleted = userProgress.reduce((sum, p) => sum + (p.completed_lessons || 0), 0);
+            const totalLessons = enrolledCourses.reduce((sum, c) => sum + (c.lesson_count || 0), 0);
+            document.getElementById('completedLessonsCount').textContent = totalCompleted;
+            document.getElementById('totalLessonsText').textContent = `of ${totalLessons} total`;
+
+            // Average grade
+            const grades = userProgress.filter(p => p.average_grade && p.average_grade > 0);
+            if (grades.length > 0) {
+                const avgGrade = grades.reduce((sum, p) => sum + p.average_grade, 0) / grades.length;
+                document.getElementById('averageGrade').textContent = Math.round(avgGrade) + '%';
+                document.getElementById('gradeStatusText').textContent = VidPOD.Lessons.progress.getGradeText(avgGrade);
+            }
+
+            // Streak (simulated)
+            const streak = 7; // This would come from the API
+            document.getElementById('streakCount').textContent = streak;
+            document.getElementById('streakText').textContent = streak > 0 ? 'Keep it up!' : 'Start learning!';
+
+            // Update quick actions
+            updateQuickActions();
+        }
+
+        function updateQuickActions() {
+            // Show continue learning if there's progress
+            if (userProgress.length > 0) {
+                const lastProgress = userProgress.find(p => p.last_accessed);
+                if (lastProgress) {
+                    document.getElementById('continueAction').style.display = 'block';
+                    document.getElementById('continueText').textContent = `Resume: ${lastProgress.course_title}`;
+                }
+            }
+
+            // Show quiz action if there are available quizzes
+            const hasQuizzes = enrolledCourses.some(c => c.available_quizzes > 0);
+            if (hasQuizzes) {
+                document.getElementById('quizAction').style.display = 'block';
+                document.getElementById('quizText').textContent = 'Continue your assessment';
+            }
+        }
+
+        function renderEnrolledCourses() {
+            const container = document.getElementById('enrolledCoursesList');
+            
+            if (enrolledCourses.length === 0) {
+                showNoCoursesMessage();
+                return;
+            }
+
+            document.getElementById('noCoursesMessage').style.display = 'none';
+            
+            const coursesHtml = enrolledCourses.map(course => {
+                const progress = userProgress.find(p => p.course_id === course.id);
+                const progressPercentage = progress?.progress_percentage || 0;
+                const status = getEnrollmentStatus(course, progress);
+                
+                return `
+                    <div class="course-card student-course animate-slide-in" onclick="viewCourse(${course.id})">
+                        <div class="course-header">
+                            <h3 class="course-title">${course.title}</h3>
+                            <span class="course-status ${status.class}">${status.text}</span>
+                        </div>
+                        
+                        <p class="course-description">
+                            ${VidPOD.Lessons.ui.truncateText(course.description, 100)}
+                        </p>
+                        
+                        <div class="course-meta">
+                            <span class="course-duration">${course.total_weeks} weeks</span>
+                            <span class="course-difficulty">${course.difficulty_level || 'beginner'}</span>
+                        </div>
+                        
+                        <div class="course-progress-section">
+                            <div class="progress-header">
+                                <span class="progress-label">Progress</span>
+                                <span class="progress-percentage">${progressPercentage}%</span>
+                            </div>
+                            ${VidPOD.Lessons.ui.createProgressBar(progressPercentage, 'course-progress')}
+                        </div>
+                        
+                        <div class="course-actions">
+                            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); continueCourse(${course.id})">
+                                ${progressPercentage > 0 ? 'Continue' : 'Start'} Course
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewProgress(${course.id})">
+                                View Progress
+                            </button>
+                        </div>
+                        
+                        ${progress && progress.next_lesson ? `
+                            <div class="next-lesson">
+                                <span class="next-label">Next:</span>
+                                <span class="next-title">${progress.next_lesson}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = coursesHtml;
+        }
+
+        function renderAvailableCourses() {
+            const container = document.getElementById('availableCoursesList');
+            
+            if (availableCourses.length === 0) {
+                container.innerHTML = '<p class="text-center text-muted">No courses available at this time</p>';
+                return;
+            }
+
+            const coursesHtml = availableCourses.map(course => {
+                const isEnrolled = enrolledCourses.some(ec => ec.id === course.id);
+                
+                return `
+                    <div class="course-card available-course animate-slide-in" onclick="showCoursePreview(${course.id})">
+                        <div class="course-header">
+                            <h3 class="course-title">${course.title}</h3>
+                            <div class="course-badges">
+                                <span class="course-difficulty ${course.difficulty_level || 'beginner'}">${course.difficulty_level || 'beginner'}</span>
+                                ${isEnrolled ? '<span class="enrolled-badge">Enrolled</span>' : ''}
+                            </div>
+                        </div>
+                        
+                        <p class="course-description">
+                            ${VidPOD.Lessons.ui.truncateText(course.description, 120)}
+                        </p>
+                        
+                        <div class="course-details">
+                            <div class="course-meta">
+                                <div class="meta-item">
+                                    <span class="meta-icon">📅</span>
+                                    <span>${course.total_weeks} weeks</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-icon">📚</span>
+                                    <span>${course.lesson_count || 0} lessons</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-icon">👥</span>
+                                    <span>${course.student_count || 0} students</span>
+                                </div>
+                            </div>
+                            
+                            ${course.learning_objectives && course.learning_objectives.length > 0 ? `
+                                <div class="learning-objectives">
+                                    <h4>What you'll learn:</h4>
+                                    <ul>
+                                        ${course.learning_objectives.slice(0, 3).map(obj => 
+                                            `<li>${obj}</li>`
+                                        ).join('')}
+                                        ${course.learning_objectives.length > 3 ? '<li>...and more</li>' : ''}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="course-actions">
+                            ${isEnrolled ? `
+                                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); viewCourse(${course.id})">
+                                    Go to Course
+                                </button>
+                            ` : `
+                                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); showEnrollmentModal(${course.id})">
+                                    Enroll Now
+                                </button>
+                            `}
+                            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); showCoursePreview(${course.id})">
+                                Learn More
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = coursesHtml;
+        }
+
+        function getEnrollmentStatus(course, progress) {
+            if (!progress) return { text: 'Not Started', class: 'not-started' };
+            
+            if (progress.completed) {
+                return { text: 'Completed', class: 'completed' };
+            }
+            
+            if (progress.progress_percentage > 0) {
+                return { text: 'In Progress', class: 'in-progress' };
+            }
+            
+            return { text: 'Enrolled', class: 'enrolled' };
+        }
+
+        function showNoCoursesMessage() {
+            document.getElementById('enrolledCoursesList').innerHTML = '';
+            document.getElementById('noCoursesMessage').style.display = 'block';
+        }
+
+        // Navigation functions
+        function showMyCourses() {
+            showSection('myCoursesSection');
+        }
+
+        function showCourseLibrary() {
+            showSection('courseLibrarySection');
+        }
+
+        function showProgress() {
+            showSection('progressSection');
+            loadProgressDetails();
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.toggle('active', section.id === sectionId);
+            });
+            currentSection = sectionId;
+        }
+
+        // Course interaction functions
+        function viewCourse(courseId) {
+            window.location.href = `/lesson-detail.html?course_id=${courseId}`;
+        }
+
+        function continueCourse(courseId) {
+            const progress = userProgress.find(p => p.course_id === courseId);
+            if (progress && progress.current_lesson_id) {
+                window.location.href = `/lesson-detail.html?lesson_id=${progress.current_lesson_id}`;
+            } else {
+                viewCourse(courseId);
+            }
+        }
+
+        function continueLearning() {
+            if (userProgress.length > 0) {
+                const lastProgress = userProgress.find(p => p.last_accessed);
+                if (lastProgress) {
+                    continueCourse(lastProgress.course_id);
+                }
+            }
+        }
+
+        function takeQuiz() {
+            // Find the next available quiz
+            const courseWithQuiz = enrolledCourses.find(c => c.available_quizzes > 0);
+            if (courseWithQuiz) {
+                window.location.href = `/take-quiz.html?course_id=${courseWithQuiz.id}`;
+            }
+        }
+
+        function viewProgress(courseId) {
+            window.location.href = `/student-progress.html?course_id=${courseId}`;
+        }
+
+        // Course preview and enrollment
+        function showCoursePreview(courseId) {
+            const course = availableCourses.find(c => c.id === courseId);
+            if (!course) return;
+            
+            // For now, just show enrollment modal
+            // In a full implementation, this could show a detailed preview
+            showEnrollmentModal(courseId);
+        }
+
+        function showEnrollmentModal(courseId) {
+            selectedCourse = availableCourses.find(c => c.id === courseId);
+            if (!selectedCourse) return;
+            
+            const previewContainer = document.getElementById('coursePreview');
+            previewContainer.innerHTML = `
+                <div class="course-preview">
+                    <h3>${selectedCourse.title}</h3>
+                    <p class="course-description">${selectedCourse.description}</p>
+                    
+                    <div class="course-details">
+                        <div class="detail-item">
+                            <strong>Duration:</strong> ${selectedCourse.total_weeks} weeks
+                        </div>
+                        <div class="detail-item">
+                            <strong>Level:</strong> ${selectedCourse.difficulty_level || 'Beginner'}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Lessons:</strong> ${selectedCourse.lesson_count || 0} lessons
+                        </div>
+                    </div>
+                    
+                    ${selectedCourse.learning_objectives && selectedCourse.learning_objectives.length > 0 ? `
+                        <div class="learning-objectives">
+                            <h4>Learning Objectives:</h4>
+                            <ul>
+                                ${selectedCourse.learning_objectives.map(obj => `<li>${obj}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            document.getElementById('enrollmentModal').style.display = 'flex';
+        }
+
+        function closeEnrollmentModal() {
+            document.getElementById('enrollmentModal').style.display = 'none';
+            selectedCourse = null;
+        }
+
+        async function enrollInCourse() {
+            if (!selectedCourse) return;
+            
+            try {
+                VidPOD.Lessons.ui.showLoading('enrollButton');
+                await VidPOD.Lessons.api.courses.enroll(selectedCourse.id);
+                
+                VidPOD.Lessons.ui.showSuccess(`Successfully enrolled in ${selectedCourse.title}!`);
+                closeEnrollmentModal();
+                
+                // Reload data
+                await loadStudentData();
+                updateOverviewCards();
+                renderEnrolledCourses();
+                renderAvailableCourses();
+                
+                // Switch to my courses view
+                showMyCourses();
+                
+            } catch (error) {
+                console.error('Error enrolling in course:', error);
+                VidPOD.Lessons.ui.showError('Failed to enroll in course. Please try again.');
+            } finally {
+                VidPOD.Lessons.ui.hideLoading('enrollButton');
+            }
+        }
+
+        // Filter functions
+        function filterEnrolledCourses() {
+            const statusFilter = document.getElementById('courseStatusFilter').value;
+            
+            let filteredCourses = enrolledCourses;
+            
+            if (statusFilter) {
+                filteredCourses = enrolledCourses.filter(course => {
+                    const progress = userProgress.find(p => p.course_id === course.id);
+                    const status = getEnrollmentStatus(course, progress);
+                    
+                    switch (statusFilter) {
+                        case 'in-progress':
+                            return status.class === 'in-progress';
+                        case 'completed':
+                            return status.class === 'completed';
+                        case 'not-started':
+                            return status.class === 'not-started' || status.class === 'enrolled';
+                        default:
+                            return true;
+                    }
+                });
+            }
+            
+            // Temporarily replace array for rendering
+            const originalCourses = enrolledCourses;
+            enrolledCourses = filteredCourses;
+            renderEnrolledCourses();
+            enrolledCourses = originalCourses;
+        }
+
+        function filterAvailableCourses() {
+            const searchTerm = document.getElementById('courseSearch').value.toLowerCase();
+            const difficultyFilter = document.getElementById('difficultyFilter').value;
+            const durationFilter = document.getElementById('durationFilter').value;
+            
+            let filteredCourses = availableCourses;
+            
+            if (searchTerm) {
+                filteredCourses = filteredCourses.filter(course => 
+                    course.title.toLowerCase().includes(searchTerm) ||
+                    course.description.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (difficultyFilter) {
+                filteredCourses = filteredCourses.filter(course => 
+                    (course.difficulty_level || 'beginner') === difficultyFilter
+                );
+            }
+            
+            if (durationFilter) {
+                filteredCourses = filteredCourses.filter(course => {
+                    const weeks = course.total_weeks || 0;
+                    switch (durationFilter) {
+                        case 'short': return weeks >= 1 && weeks <= 4;
+                        case 'medium': return weeks >= 5 && weeks <= 8;
+                        case 'long': return weeks >= 9;
+                        default: return true;
+                    }
+                });
+            }
+            
+            // Temporarily replace array for rendering
+            const originalCourses = availableCourses;
+            availableCourses = filteredCourses;
+            renderAvailableCourses();
+            availableCourses = originalCourses;
+        }
+
+        async function loadProgressDetails() {
+            const container = document.getElementById('detailedProgressList');
+            
+            // Update overall progress circle
+            const totalProgress = userProgress.length > 0 
+                ? userProgress.reduce((sum, p) => sum + (p.progress_percentage || 0), 0) / userProgress.length
+                : 0;
+            
+            document.getElementById('overallProgressText').textContent = Math.round(totalProgress) + '%';
+            document.getElementById('overallProgressCircle').style.background = 
+                `conic-gradient(var(--lesson-primary) 0deg ${totalProgress * 3.6}deg, var(--progress-bg) ${totalProgress * 3.6}deg 360deg)`;
+            
+            // Update progress stats
+            const totalCompleted = userProgress.reduce((sum, p) => sum + (p.completed_lessons || 0), 0);
+            const totalQuizzes = userProgress.reduce((sum, p) => sum + (p.completed_quizzes || 0), 0);
+            const totalTime = userProgress.reduce((sum, p) => sum + (p.time_spent || 0), 0);
+            
+            document.getElementById('completedLessonsProgress').textContent = totalCompleted;
+            document.getElementById('totalQuizzesCompleted').textContent = totalQuizzes;
+            document.getElementById('totalTimeSpent').textContent = Math.round(totalTime / 60) + 'h';
+            
+            // Render detailed progress
+            if (enrolledCourses.length === 0) {
+                container.innerHTML = '<p class="text-center text-muted">No course progress to display</p>';
+                return;
+            }
+            
+            const progressHtml = enrolledCourses.map(course => {
+                const progress = userProgress.find(p => p.course_id === course.id) || {};
+                
+                return `
+                    <div class="course-progress-detail">
+                        <div class="course-progress-header">
+                            <h4>${course.title}</h4>
+                            <span class="progress-percentage">${progress.progress_percentage || 0}%</span>
+                        </div>
+                        
+                        ${VidPOD.Lessons.ui.createProgressBar(progress.progress_percentage || 0)}
+                        
+                        <div class="progress-metrics">
+                            <div class="metric">
+                                <span class="metric-label">Lessons:</span>
+                                <span class="metric-value">${progress.completed_lessons || 0}/${course.lesson_count || 0}</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Quizzes:</span>
+                                <span class="metric-value">${progress.completed_quizzes || 0}/${progress.total_quizzes || 0}</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Grade:</span>
+                                <span class="metric-value ${VidPOD.Lessons.progress.getGradeColor(progress.average_grade || 0)}">
+                                    ${progress.average_grade ? VidPOD.Lessons.ui.formatScore(progress.average_grade) + '%' : '--'}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        ${progress.last_accessed ? `
+                            <div class="last-activity">
+                                Last activity: ${VidPOD.Lessons.ui.formatDate(progress.last_accessed)}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = progressHtml;
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'enrollmentModal') {
+                closeEnrollmentModal();
+            }
+        });
+    </script>
+
+    <style>
+        .learning-overview {
+            margin-bottom: 3rem;
+        }
+
+        .overview-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .overview-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .overview-card:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--lesson-primary);
+            border-radius: 50%;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .card-content h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--lesson-primary);
+        }
+
+        .card-content p {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .card-progress {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .quick-actions-section {
+            margin-bottom: 3rem;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .action-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 2rem;
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--text-color);
+        }
+
+        .action-card:hover {
+            border-color: var(--lesson-primary);
+            background: #fff7ed;
+            transform: translateY(-4px);
+        }
+
+        .action-card.primary {
+            border-color: var(--lesson-primary);
+            background: var(--lesson-primary);
+            color: white;
+        }
+
+        .action-card.primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .action-icon {
+            font-size: 2.5rem;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .action-card:not(.primary) .action-icon {
+            background: var(--lesson-primary);
+            color: white;
+        }
+
+        .action-card h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1.25rem;
+        }
+
+        .action-card p {
+            text-align: center;
+            margin: 0;
+            opacity: 0.8;
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .section-filters {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .section-filters input,
+        .section-filters select {
+            min-width: 200px;
+        }
+
+        .student-course {
+            position: relative;
+        }
+
+        .course-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .course-status.completed {
+            background: var(--quiz-correct);
+            color: var(--lesson-success);
+        }
+
+        .course-status.in-progress {
+            background: #dbeafe;
+            color: #3b82f6;
+        }
+
+        .course-status.not-started,
+        .course-status.enrolled {
+            background: var(--progress-bg);
+            color: var(--text-light);
+        }
+
+        .course-progress-section {
+            margin: 1rem 0;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-label {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .progress-percentage {
+            font-weight: 700;
+            color: var(--lesson-primary);
+        }
+
+        .course-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .next-lesson {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: #f0f9ff;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        .next-label {
+            font-weight: 600;
+            color: var(--lesson-info);
+        }
+
+        .next-title {
+            color: var(--text-color);
+        }
+
+        .available-course .course-badges {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .course-difficulty {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .course-difficulty.beginner {
+            background: var(--quiz-correct);
+            color: var(--lesson-success);
+        }
+
+        .course-difficulty.intermediate {
+            background: #fef3c7;
+            color: var(--lesson-warning);
+        }
+
+        .course-difficulty.advanced {
+            background: var(--quiz-incorrect);
+            color: var(--danger-color);
+        }
+
+        .enrolled-badge {
+            background: var(--lesson-primary);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .course-details {
+            margin: 1rem 0;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .meta-icon {
+            width: 20px;
+        }
+
+        .learning-objectives {
+            margin-top: 1rem;
+        }
+
+        .learning-objectives h4 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .learning-objectives ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .learning-objectives li {
+            padding: 0.25rem 0;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .learning-objectives li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--lesson-success);
+            font-weight: bold;
+        }
+
+        .progress-dashboard {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+        }
+
+        .progress-chart {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .progress-circle {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .circle-progress {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--lesson-primary);
+            background: conic-gradient(var(--lesson-primary) 0deg 0deg, var(--progress-bg) 0deg 360deg);
+        }
+
+        .course-progress-detail {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .course-progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .progress-metrics {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+
+        .metric {
+            text-align: center;
+        }
+
+        .metric-label {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-value {
+            font-weight: 600;
+        }
+
+        .last-activity {
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+
+        .empty-state p {
+            margin-bottom: 2rem;
+            color: var(--text-light);
+        }
+
+        .course-preview {
+            text-align: left;
+        }
+
+        .course-preview h3 {
+            margin-bottom: 1rem;
+        }
+
+        .course-preview .course-description {
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .enrollment-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .progress-dashboard {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .overview-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .action-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .section-filters {
+                flex-direction: column;
+            }
+
+            .section-filters input,
+            .section-filters select {
+                min-width: auto;
+                width: 100%;
+            }
+
+            .course-actions {
+                flex-direction: column;
+            }
+
+            .progress-metrics {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .overview-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .action-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html>

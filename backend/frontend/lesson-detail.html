@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD - Lesson</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/lesson-styles.css">
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+
+    <div class="container">
+        <!-- Success/Error Messages -->
+        <div id="messageContainer"></div>
+
+        <!-- Lesson Layout -->
+        <div class="lesson-viewer-layout">
+            <!-- Sidebar Navigation -->
+            <div class="lesson-sidebar">
+                <!-- Course Navigation -->
+                <div class="sidebar-section">
+                    <div class="course-header">
+                        <h3 id="courseTitle">Course Title</h3>
+                        <div class="course-progress">
+                            <div class="progress-text">
+                                <span id="courseProgressText">0% Complete</span>
+                            </div>
+                            <div id="courseProgressBar" class="progress-bar">
+                                <div class="progress-bar-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="breadcrumb">
+                        <a href="/student-lessons.html">← Back to My Learning</a>
+                    </div>
+                </div>
+
+                <!-- Lesson Navigation -->
+                <div class="sidebar-section">
+                    <h4>📚 Course Lessons</h4>
+                    <div id="lessonNavigation" class="lesson-nav">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="sidebar-section">
+                    <h4>⚡ Quick Actions</h4>
+                    <button id="markCompleteBtn" class="btn btn-success w-full mb-1" style="display: none;">
+                        <span class="icon">✅</span>
+                        Mark Complete
+                    </button>
+                    <button id="takeQuizBtn" class="btn btn-primary w-full mb-1" style="display: none;">
+                        <span class="icon">🧩</span>
+                        Take Quiz
+                    </button>
+                    <button id="downloadMaterialsBtn" class="btn btn-secondary w-full mb-1" style="display: none;">
+                        <span class="icon">📥</span>
+                        Download Materials
+                    </button>
+                    <button id="askQuestionBtn" class="btn btn-secondary w-full">
+                        <span class="icon">❓</span>
+                        Ask Question
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="lesson-content">
+                <!-- Lesson Header -->
+                <div id="lessonHeader" class="lesson-header" style="display: none;">
+                    <div class="lesson-title-section">
+                        <h1 id="lessonTitle">Lesson Title</h1>
+                        <div class="lesson-meta">
+                            <span id="lessonWeek" class="lesson-week">Week 1</span>
+                            <span id="lessonDuration" class="lesson-duration">45 minutes</span>
+                            <span id="lessonStatus" class="lesson-status">Not Started</span>
+                        </div>
+                    </div>
+                    
+                    <div class="lesson-controls">
+                        <button id="prevLessonBtn" class="btn btn-secondary" onclick="navigateLesson('prev')" disabled>
+                            ← Previous
+                        </button>
+                        <button id="nextLessonBtn" class="btn btn-primary" onclick="navigateLesson('next')" disabled>
+                            Next →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lesson Prerequisites -->
+                <div id="prerequisitesWarning" class="alert alert-warning" style="display: none;">
+                    <h4>📋 Prerequisites Required</h4>
+                    <p>You need to complete the following lessons before accessing this one:</p>
+                    <ul id="prerequisitesList"></ul>
+                </div>
+
+                <!-- Learning Objectives -->
+                <div id="objectivesSection" class="lesson-section" style="display: none;">
+                    <h3 class="lesson-section-title">
+                        <span class="icon">🎯</span>
+                        Learning Objectives
+                    </h3>
+                    <div id="learningObjectives" class="objectives-list">
+                        <!-- Objectives will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Main Lesson Content -->
+                <div id="lessonContentSection" class="lesson-section" style="display: none;">
+                    <h3 class="lesson-section-title">
+                        <span class="icon">📖</span>
+                        Lesson Content
+                    </h3>
+                    <div id="lessonContentBody" class="lesson-content-body">
+                        <!-- Lesson content will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Vocabulary Section -->
+                <div id="vocabularySection" class="lesson-section" style="display: none;">
+                    <h3 class="lesson-section-title">
+                        <span class="icon">📚</span>
+                        Key Vocabulary
+                    </h3>
+                    <div id="vocabularyList" class="vocabulary-grid">
+                        <!-- Vocabulary terms will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Materials Section -->
+                <div id="materialsSection" class="lesson-section" style="display: none;">
+                    <h3 class="lesson-section-title">
+                        <span class="icon">📎</span>
+                        Lesson Materials
+                    </h3>
+                    
+                    <div class="materials-tabs">
+                        <button class="material-tab active" data-tab="quizzes">
+                            <span class="icon">🧩</span>
+                            Quizzes
+                        </button>
+                        <button class="material-tab" data-tab="worksheets">
+                            <span class="icon">📋</span>
+                            Worksheets
+                        </button>
+                        <button class="material-tab" data-tab="resources">
+                            <span class="icon">📁</span>
+                            Resources
+                        </button>
+                    </div>
+                    
+                    <div class="materials-content">
+                        <div id="quizzesTab" class="material-content active">
+                            <div id="quizzesList" class="materials-list">
+                                <p class="text-muted">No quizzes available for this lesson</p>
+                            </div>
+                        </div>
+                        
+                        <div id="worksheetsTab" class="material-content">
+                            <div id="worksheetsList" class="materials-list">
+                                <p class="text-muted">No worksheets available for this lesson</p>
+                            </div>
+                        </div>
+                        
+                        <div id="resourcesTab" class="material-content">
+                            <div id="resourcesList" class="materials-list">
+                                <p class="text-muted">No additional resources for this lesson</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Tracking -->
+                <div id="progressSection" class="lesson-section" style="display: none;">
+                    <h3 class="lesson-section-title">
+                        <span class="icon">📊</span>
+                        Your Progress
+                    </h3>
+                    
+                    <div class="progress-tracking">
+                        <div class="progress-item">
+                            <div class="progress-item-header">
+                                <span class="progress-label">Reading Progress</span>
+                                <span id="readingProgress" class="progress-value">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div id="readingProgressBar" class="progress-bar-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="progress-item">
+                            <div class="progress-item-header">
+                                <span class="progress-label">Time Spent</span>
+                                <span id="timeSpent" class="progress-value">0 min</span>
+                            </div>
+                        </div>
+                        
+                        <div class="progress-item">
+                            <div class="progress-item-header">
+                                <span class="progress-label">Completion Status</span>
+                                <span id="completionStatus" class="progress-value status-incomplete">In Progress</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="empty-lesson-state">
+                    <h3>📖 Select a Lesson</h3>
+                    <p>Choose a lesson from the sidebar to begin your learning journey.</p>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="loading-lesson-state" style="display: none;">
+                    <div class="loading-spinner large"></div>
+                    <p>Loading lesson content...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question Modal -->
+    <div id="questionModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>❓ Ask a Question</h3>
+                <button class="modal-close" onclick="closeQuestionModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="questionForm">
+                    <div class="form-group lesson">
+                        <label class="form-label lesson" for="questionSubject">Subject</label>
+                        <input type="text" id="questionSubject" name="subject" class="form-control lesson" 
+                               placeholder="Brief subject for your question" required>
+                    </div>
+                    
+                    <div class="form-group lesson">
+                        <label class="form-label lesson" for="questionText">Your Question</label>
+                        <textarea id="questionText" name="question" class="form-control lesson" 
+                                  rows="4" placeholder="Ask your question about this lesson..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group lesson">
+                        <label class="form-label lesson">
+                            <input type="checkbox" name="anonymous" value="1">
+                            Ask anonymously
+                        </label>
+                    </div>
+
+                    <div class="d-flex justify-between">
+                        <button type="button" class="btn btn-secondary" onclick="closeQuestionModal()">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            Submit Question
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
+    <script src="js/lesson-management.js"></script>
+    <script>
+        // Lesson Viewer JavaScript
+        let currentCourse = null;
+        let currentLesson = null;
+        let lessons = [];
+        let userProgress = {};
+        let lessonStartTime = null;
+        let scrollProgress = 0;
+        let isPreviewMode = false;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const lessonId = urlParams.get('lesson_id');
+            const courseId = urlParams.get('course_id');
+            isPreviewMode = urlParams.get('preview') === 'true';
+            
+            if (lessonId) {
+                await loadLessonById(lessonId);
+            } else if (courseId) {
+                await loadCourseFirstLesson(courseId);
+            } else {
+                showEmptyState();
+                return;
+            }
+
+            setupEventListeners();
+            startTimeTracking();
+        });
+
+        async function loadLessonById(lessonId) {
+            try {
+                showLoadingState();
+                currentLesson = await VidPOD.Lessons.api.lessons.getById(lessonId);
+                
+                if (currentLesson.course_id) {
+                    await loadCourseData(currentLesson.course_id);
+                }
+                
+                await loadLessonContent();
+                
+            } catch (error) {
+                console.error('Error loading lesson:', error);
+                VidPOD.Lessons.ui.showError('Failed to load lesson. Please try again.');
+                showEmptyState();
+            }
+        }
+
+        async function loadCourseFirstLesson(courseId) {
+            try {
+                showLoadingState();
+                await loadCourseData(courseId);
+                
+                if (lessons.length > 0) {
+                    // Find first accessible lesson
+                    const firstLesson = getNextAccessibleLesson();
+                    if (firstLesson) {
+                        currentLesson = firstLesson;
+                        await loadLessonContent();
+                    } else {
+                        VidPOD.Lessons.ui.showError('No accessible lessons found in this course.');
+                        showEmptyState();
+                    }
+                } else {
+                    VidPOD.Lessons.ui.showError('No lessons found in this course.');
+                    showEmptyState();
+                }
+                
+            } catch (error) {
+                console.error('Error loading course:', error);
+                VidPOD.Lessons.ui.showError('Failed to load course. Please try again.');
+                showEmptyState();
+            }
+        }
+
+        async function loadCourseData(courseId) {
+            try {
+                currentCourse = await VidPOD.Lessons.api.courses.getById(courseId);
+                lessons = await VidPOD.Lessons.api.lessons.getByCourse(courseId);
+                
+                if (!isPreviewMode) {
+                    const progressData = await VidPOD.Lessons.api.progress.getCourseProgress(courseId);
+                    userProgress = progressData || {};
+                }
+                
+                updateCourseHeader();
+                renderLessonNavigation();
+                
+            } catch (error) {
+                console.error('Error loading course data:', error);
+                throw error;
+            }
+        }
+
+        async function loadLessonContent() {
+            try {
+                // Check prerequisites
+                if (!isPreviewMode && !checkPrerequisites()) {
+                    showPrerequisitesWarning();
+                    return;
+                }
+
+                // Load lesson materials
+                await loadLessonMaterials();
+                
+                // Display lesson content
+                displayLessonContent();
+                
+                // Update progress tracking
+                updateProgressTracking();
+                
+                // Update navigation
+                updateLessonNavigation();
+                
+                hideLoadingState();
+                
+            } catch (error) {
+                console.error('Error loading lesson content:', error);
+                VidPOD.Lessons.ui.showError('Failed to load lesson content.');
+            }
+        }
+
+        function setupEventListeners() {
+            // Material tabs
+            document.querySelectorAll('.material-tab').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    const tabName = e.target.closest('.material-tab').dataset.tab;
+                    switchMaterialTab(tabName);
+                });
+            });
+
+            // Quick actions
+            document.getElementById('markCompleteBtn').addEventListener('click', markLessonComplete);
+            document.getElementById('takeQuizBtn').addEventListener('click', takeQuiz);
+            document.getElementById('downloadMaterialsBtn').addEventListener('click', downloadMaterials);
+            document.getElementById('askQuestionBtn').addEventListener('click', showQuestionModal);
+
+            // Question form
+            document.getElementById('questionForm').addEventListener('submit', handleQuestionSubmit);
+
+            // Scroll tracking for reading progress
+            window.addEventListener('scroll', trackScrollProgress);
+            
+            // Keyboard navigation
+            document.addEventListener('keydown', handleKeyboardNavigation);
+        }
+
+        function updateCourseHeader() {
+            if (!currentCourse) return;
+            
+            document.getElementById('courseTitle').textContent = currentCourse.title;
+            
+            const progress = userProgress.progress_percentage || 0;
+            document.getElementById('courseProgressText').textContent = `${Math.round(progress)}% Complete`;
+            document.querySelector('#courseProgressBar .progress-bar-fill').style.width = `${progress}%`;
+        }
+
+        function renderLessonNavigation() {
+            const container = document.getElementById('lessonNavigation');
+            
+            if (lessons.length === 0) {
+                container.innerHTML = '<p class="text-muted">No lessons available</p>';
+                return;
+            }
+
+            const lessonsHtml = lessons.map(lesson => {
+                const isCompleted = userProgress.completed_lessons?.includes(lesson.id);
+                const isCurrent = currentLesson && currentLesson.id === lesson.id;
+                const isAccessible = isPreviewMode || isLessonAccessible(lesson);
+                
+                return `
+                    <div class="lesson-nav-item ${isCurrent ? 'current' : ''} ${isCompleted ? 'completed' : ''} ${!isAccessible ? 'locked' : ''}" 
+                         onclick="${isAccessible ? `loadLessonById(${lesson.id})` : ''}">
+                        <div class="lesson-status-icon">
+                            ${isCompleted ? '✅' : isCurrent ? '▶️' : !isAccessible ? '🔒' : '⏳'}
+                        </div>
+                        <div class="lesson-nav-content">
+                            <div class="lesson-nav-title">Week ${lesson.week_number}: ${lesson.title}</div>
+                            <div class="lesson-nav-meta">
+                                ${lesson.estimated_duration ? VidPOD.Lessons.ui.formatTime(lesson.estimated_duration) : 'No duration'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = lessonsHtml;
+        }
+
+        function displayLessonContent() {
+            if (!currentLesson) return;
+
+            // Show main content sections
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('lessonHeader').style.display = 'flex';
+            
+            // Update lesson header
+            document.getElementById('lessonTitle').textContent = currentLesson.title;
+            document.getElementById('lessonWeek').textContent = `Week ${currentLesson.week_number}`;
+            
+            if (currentLesson.estimated_duration) {
+                document.getElementById('lessonDuration').textContent = 
+                    VidPOD.Lessons.ui.formatTime(currentLesson.estimated_duration);
+            }
+            
+            const isCompleted = userProgress.completed_lessons?.includes(currentLesson.id);
+            document.getElementById('lessonStatus').textContent = isCompleted ? 'Completed' : 'In Progress';
+            document.getElementById('lessonStatus').className = `lesson-status ${isCompleted ? 'completed' : 'in-progress'}`;
+
+            // Show learning objectives
+            if (currentLesson.learning_objectives) {
+                document.getElementById('objectivesSection').style.display = 'block';
+                document.getElementById('learningObjectives').innerHTML = 
+                    `<p>${currentLesson.learning_objectives}</p>`;
+            }
+
+            // Show lesson content
+            if (currentLesson.content) {
+                document.getElementById('lessonContentSection').style.display = 'block';
+                document.getElementById('lessonContentBody').innerHTML = currentLesson.content;
+            }
+
+            // Show vocabulary
+            if (currentLesson.vocabulary && currentLesson.vocabulary.length > 0) {
+                displayVocabulary();
+            }
+
+            // Show materials section
+            document.getElementById('materialsSection').style.display = 'block';
+
+            // Show progress section
+            if (!isPreviewMode) {
+                document.getElementById('progressSection').style.display = 'block';
+            }
+
+            // Update quick actions
+            updateQuickActions();
+        }
+
+        function displayVocabulary() {
+            document.getElementById('vocabularySection').style.display = 'block';
+            
+            const vocabHtml = currentLesson.vocabulary.map(vocab => `
+                <div class="vocab-card">
+                    <div class="vocab-term">${vocab.term}</div>
+                    <div class="vocab-definition">${vocab.definition}</div>
+                    ${vocab.example ? `<div class="vocab-example">"${vocab.example}"</div>` : ''}
+                </div>
+            `).join('');
+            
+            document.getElementById('vocabularyList').innerHTML = vocabHtml;
+        }
+
+        async function loadLessonMaterials() {
+            try {
+                // Load quizzes
+                const quizzes = await VidPOD.Lessons.api.quizzes.getByLesson(currentLesson.id);
+                displayQuizzes(quizzes);
+                
+                // Load worksheets and resources
+                // These would be loaded from the lesson materials API
+                displayWorksheets([]);
+                displayResources([]);
+                
+            } catch (error) {
+                console.error('Error loading lesson materials:', error);
+            }
+        }
+
+        function displayQuizzes(quizzes) {
+            const container = document.getElementById('quizzesList');
+            
+            if (!quizzes || quizzes.length === 0) {
+                container.innerHTML = '<p class="text-muted">No quizzes available for this lesson</p>';
+                return;
+            }
+
+            const quizzesHtml = quizzes.map(quiz => `
+                <div class="material-item quiz-item">
+                    <div class="material-icon">🧩</div>
+                    <div class="material-content">
+                        <h4 class="material-title">${quiz.title}</h4>
+                        <p class="material-description">${quiz.description || 'Test your knowledge with this quiz'}</p>
+                        <div class="material-meta">
+                            <span>${quiz.question_count || 0} questions</span>
+                            ${quiz.time_limit ? `<span>${quiz.time_limit} minutes</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="material-actions">
+                        ${userProgress.quiz_attempts?.[quiz.id] ? 
+                            `<button class="btn btn-secondary btn-sm" onclick="viewQuizResults(${quiz.id})">
+                                View Results
+                            </button>` : ''
+                        }
+                        <button class="btn btn-primary btn-sm" onclick="startQuiz(${quiz.id})">
+                            ${userProgress.quiz_attempts?.[quiz.id] ? 'Retake' : 'Start'} Quiz
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = quizzesHtml;
+        }
+
+        function displayWorksheets(worksheets) {
+            const container = document.getElementById('worksheetsList');
+            
+            if (!worksheets || worksheets.length === 0) {
+                container.innerHTML = '<p class="text-muted">No worksheets available for this lesson</p>';
+                return;
+            }
+
+            // Implementation for worksheets display
+        }
+
+        function displayResources(resources) {
+            const container = document.getElementById('resourcesList');
+            
+            if (!resources || resources.length === 0) {
+                container.innerHTML = '<p class="text-muted">No additional resources for this lesson</p>';
+                return;
+            }
+
+            // Implementation for resources display
+        }
+
+        function switchMaterialTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.material-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.tab === tabName);
+            });
+
+            // Show/hide content
+            document.querySelectorAll('.material-content').forEach(content => {
+                content.classList.toggle('active', content.id === tabName + 'Tab');
+            });
+        }
+
+        function updateQuickActions() {
+            const isCompleted = userProgress.completed_lessons?.includes(currentLesson.id);
+            
+            // Show/hide mark complete button
+            if (!isPreviewMode && !isCompleted) {
+                document.getElementById('markCompleteBtn').style.display = 'block';
+            } else {
+                document.getElementById('markCompleteBtn').style.display = 'none';
+            }
+
+            // Show quiz button if quizzes are available
+            if (document.querySelector('.quiz-item')) {
+                document.getElementById('takeQuizBtn').style.display = 'block';
+            }
+
+            // Show download button if materials are available
+            if (document.querySelector('.material-item')) {
+                document.getElementById('downloadMaterialsBtn').style.display = 'block';
+            }
+        }
+
+        function updateProgressTracking() {
+            if (isPreviewMode) return;
+
+            // Update reading progress
+            document.getElementById('readingProgress').textContent = `${Math.round(scrollProgress)}%`;
+            document.getElementById('readingProgressBar').style.width = `${scrollProgress}%`;
+
+            // Update time spent
+            const timeSpent = lessonStartTime ? Math.floor((Date.now() - lessonStartTime) / 60000) : 0;
+            document.getElementById('timeSpent').textContent = `${timeSpent} min`;
+
+            // Update completion status
+            const isCompleted = userProgress.completed_lessons?.includes(currentLesson.id);
+            const statusEl = document.getElementById('completionStatus');
+            statusEl.textContent = isCompleted ? 'Completed' : 'In Progress';
+            statusEl.className = `progress-value ${isCompleted ? 'status-complete' : 'status-incomplete'}`;
+        }
+
+        function updateLessonNavigation() {
+            const currentIndex = lessons.findIndex(l => l.id === currentLesson.id);
+            
+            // Update navigation buttons
+            const prevBtn = document.getElementById('prevLessonBtn');
+            const nextBtn = document.getElementById('nextLessonBtn');
+            
+            prevBtn.disabled = currentIndex <= 0;
+            nextBtn.disabled = currentIndex >= lessons.length - 1;
+            
+            if (currentIndex > 0) {
+                prevBtn.textContent = `← ${lessons[currentIndex - 1].title}`;
+            }
+            
+            if (currentIndex < lessons.length - 1) {
+                nextBtn.textContent = `${lessons[currentIndex + 1].title} →`;
+            }
+        }
+
+        // Progress tracking functions
+        function startTimeTracking() {
+            lessonStartTime = Date.now();
+            
+            // Update time every minute
+            setInterval(() => {
+                if (!isPreviewMode && currentLesson) {
+                    updateProgressTracking();
+                }
+            }, 60000);
+        }
+
+        function trackScrollProgress() {
+            const contentBody = document.getElementById('lessonContentBody');
+            if (!contentBody) return;
+
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            scrollProgress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+            scrollProgress = Math.min(100, Math.max(0, scrollProgress));
+
+            updateProgressTracking();
+        }
+
+        // Action handlers
+        async function markLessonComplete() {
+            if (!currentLesson || isPreviewMode) return;
+
+            try {
+                await VidPOD.Lessons.api.lessons.markComplete(currentLesson.id);
+                
+                // Update local progress
+                if (!userProgress.completed_lessons) {
+                    userProgress.completed_lessons = [];
+                }
+                userProgress.completed_lessons.push(currentLesson.id);
+                
+                VidPOD.Lessons.ui.showSuccess('Lesson marked as complete!');
+                updateProgressTracking();
+                updateQuickActions();
+                renderLessonNavigation();
+                
+                // Check if we should auto-advance
+                if (scrollProgress >= 90) {
+                    setTimeout(() => {
+                        if (confirm('Great job! Would you like to continue to the next lesson?')) {
+                            navigateLesson('next');
+                        }
+                    }, 1000);
+                }
+                
+            } catch (error) {
+                console.error('Error marking lesson complete:', error);
+                VidPOD.Lessons.ui.showError('Failed to mark lesson complete.');
+            }
+        }
+
+        function takeQuiz() {
+            const quizItem = document.querySelector('.quiz-item');
+            if (quizItem) {
+                const quizButton = quizItem.querySelector('button[onclick*="startQuiz"]');
+                if (quizButton) {
+                    quizButton.click();
+                }
+            }
+        }
+
+        function startQuiz(quizId) {
+            window.location.href = `/take-quiz.html?quiz_id=${quizId}&lesson_id=${currentLesson.id}`;
+        }
+
+        function viewQuizResults(quizId) {
+            window.location.href = `/take-quiz.html?quiz_id=${quizId}&lesson_id=${currentLesson.id}&view=results`;
+        }
+
+        function downloadMaterials() {
+            // Implementation for bulk materials download
+            alert('Material download functionality would create a ZIP file with all lesson materials.');
+        }
+
+        function navigateLesson(direction) {
+            const currentIndex = lessons.findIndex(l => l.id === currentLesson.id);
+            let targetIndex;
+            
+            if (direction === 'next') {
+                targetIndex = currentIndex + 1;
+            } else {
+                targetIndex = currentIndex - 1;
+            }
+            
+            if (targetIndex >= 0 && targetIndex < lessons.length) {
+                const targetLesson = lessons[targetIndex];
+                if (isPreviewMode || isLessonAccessible(targetLesson)) {
+                    loadLessonById(targetLesson.id);
+                }
+            }
+        }
+
+        function handleKeyboardNavigation(event) {
+            if (event.ctrlKey || event.metaKey) return;
+            
+            switch (event.key) {
+                case 'ArrowLeft':
+                    if (!document.getElementById('prevLessonBtn').disabled) {
+                        navigateLesson('prev');
+                    }
+                    break;
+                case 'ArrowRight':
+                    if (!document.getElementById('nextLessonBtn').disabled) {
+                        navigateLesson('next');
+                    }
+                    break;
+                case ' ':
+                    if (event.target.tagName === 'BODY') {
+                        event.preventDefault();
+                        markLessonComplete();
+                    }
+                    break;
+            }
+        }
+
+        // Helper functions
+        function checkPrerequisites() {
+            if (!currentLesson.prerequisites || currentLesson.prerequisites.length === 0) {
+                return true;
+            }
+            
+            return currentLesson.prerequisites.every(prereqId => 
+                userProgress.completed_lessons?.includes(prereqId)
+            );
+        }
+
+        function showPrerequisitesWarning() {
+            const prerequisitesList = document.getElementById('prerequisitesList');
+            const prerequisiteNames = currentLesson.prerequisites.map(prereqId => {
+                const lesson = lessons.find(l => l.id === prereqId);
+                return lesson ? `Week ${lesson.week_number}: ${lesson.title}` : 'Unknown lesson';
+            });
+            
+            prerequisitesList.innerHTML = prerequisiteNames.map(name => `<li>${name}</li>`).join('');
+            document.getElementById('prerequisitesWarning').style.display = 'block';
+        }
+
+        function isLessonAccessible(lesson) {
+            if (!lesson.prerequisites || lesson.prerequisites.length === 0) {
+                return true;
+            }
+            
+            return lesson.prerequisites.every(prereqId => 
+                userProgress.completed_lessons?.includes(prereqId)
+            );
+        }
+
+        function getNextAccessibleLesson() {
+            return lessons.find(lesson => isLessonAccessible(lesson));
+        }
+
+        function showEmptyState() {
+            document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('loadingState').style.display = 'none';
+        }
+
+        function showLoadingState() {
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('loadingState').style.display = 'block';
+        }
+
+        function hideLoadingState() {
+            document.getElementById('loadingState').style.display = 'none';
+        }
+
+        // Question modal functions
+        function showQuestionModal() {
+            document.getElementById('questionModal').style.display = 'flex';
+            document.getElementById('questionSubject').focus();
+        }
+
+        function closeQuestionModal() {
+            document.getElementById('questionModal').style.display = 'none';
+            document.getElementById('questionForm').reset();
+        }
+
+        async function handleQuestionSubmit(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const questionData = {
+                lesson_id: currentLesson.id,
+                subject: formData.get('subject'),
+                question: formData.get('question'),
+                anonymous: formData.has('anonymous')
+            };
+
+            try {
+                // This would submit to a questions/support API
+                VidPOD.Lessons.ui.showSuccess('Your question has been submitted! We\'ll get back to you soon.');
+                closeQuestionModal();
+                
+            } catch (error) {
+                console.error('Error submitting question:', error);
+                VidPOD.Lessons.ui.showError('Failed to submit question. Please try again.');
+            }
+        }
+
+        // Close modals when clicking outside
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'questionModal') {
+                closeQuestionModal();
+            }
+        });
+
+        // Auto-save progress periodically
+        setInterval(async () => {
+            if (!isPreviewMode && currentLesson && scrollProgress > 0) {
+                try {
+                    // This would save reading progress to the API
+                    console.log('Auto-saving progress:', {
+                        lesson_id: currentLesson.id,
+                        reading_progress: scrollProgress,
+                        time_spent: lessonStartTime ? Math.floor((Date.now() - lessonStartTime) / 60000) : 0
+                    });
+                } catch (error) {
+                    console.error('Error auto-saving progress:', error);
+                }
+            }
+        }, 30000); // Save every 30 seconds
+    </script>
+
+    <style>
+        .lesson-viewer-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            min-height: calc(100vh - 120px);
+        }
+
+        .lesson-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .lesson-title-section h1 {
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .lesson-meta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .lesson-week,
+        .lesson-duration {
+            padding: 0.25rem 0.75rem;
+            background: var(--progress-bg);
+            border-radius: 12px;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .lesson-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .lesson-status.completed {
+            background: var(--quiz-correct);
+            color: var(--lesson-success);
+        }
+
+        .lesson-status.in-progress {
+            background: #dbeafe;
+            color: #3b82f6;
+        }
+
+        .lesson-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .course-header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .course-header h3 {
+            margin-bottom: 0.5rem;
+            color: var(--lesson-primary);
+        }
+
+        .course-progress {
+            margin-bottom: 1rem;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .lesson-content-body {
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        .lesson-content-body h2 {
+            color: var(--lesson-primary);
+            margin: 2rem 0 1rem 0;
+        }
+
+        .lesson-content-body h3 {
+            color: var(--lesson-secondary);
+            margin: 1.5rem 0 0.75rem 0;
+        }
+
+        .lesson-content-body p {
+            margin-bottom: 1.5rem;
+        }
+
+        .lesson-content-body ul,
+        .lesson-content-body ol {
+            margin-bottom: 1.5rem;
+            padding-left: 2rem;
+        }
+
+        .lesson-content-body li {
+            margin-bottom: 0.5rem;
+        }
+
+        .objectives-list {
+            background: #f0f9ff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--lesson-info);
+        }
+
+        .vocabulary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .vocab-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        .vocab-term {
+            font-weight: 700;
+            font-size: 1.125rem;
+            color: var(--lesson-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .vocab-definition {
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+        }
+
+        .vocab-example {
+            font-style: italic;
+            color: var(--text-light);
+            border-left: 3px solid var(--lesson-primary);
+            padding-left: 1rem;
+        }
+
+        .materials-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .material-tab {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-light);
+        }
+
+        .material-tab:hover {
+            color: var(--text-color);
+            background: #f8fafc;
+        }
+
+        .material-tab.active {
+            color: var(--lesson-primary);
+            border-bottom-color: var(--lesson-primary);
+            background: #fff7ed;
+        }
+
+        .material-content {
+            display: none;
+        }
+
+        .material-content.active {
+            display: block;
+        }
+
+        .materials-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .material-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .material-item:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .material-icon {
+            font-size: 2rem;
+            width: 60px;
+            text-align: center;
+        }
+
+        .material-content {
+            flex: 1;
+        }
+
+        .material-title {
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .material-description {
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .material-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .material-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .progress-tracking {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .progress-item {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .progress-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .progress-label {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .progress-value {
+            font-weight: 700;
+        }
+
+        .status-complete {
+            color: var(--lesson-success);
+        }
+
+        .status-incomplete {
+            color: var(--lesson-warning);
+        }
+
+        .empty-lesson-state,
+        .loading-lesson-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            text-align: center;
+        }
+
+        .loading-spinner.large {
+            width: 60px;
+            height: 60px;
+            border-width: 6px;
+        }
+
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+        }
+
+        .alert h4 {
+            margin-bottom: 0.5rem;
+        }
+
+        .alert ul {
+            margin: 0.5rem 0 0 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .lesson-viewer-layout {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .lesson-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .vocabulary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .material-item {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .material-actions {
+                flex-direction: row;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .lesson-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .lesson-controls {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .materials-tabs {
+                flex-wrap: wrap;
+            }
+
+            .material-tab {
+                flex: 1;
+                min-width: 120px;
+                justify-content: center;
+            }
+        }
+    </style>
+</body>
+</html>

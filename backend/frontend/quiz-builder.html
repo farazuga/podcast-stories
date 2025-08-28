@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD - Quiz Builder</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/lesson-styles.css">
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="dashboard-header">
+            <h1>🧩 Quiz Builder</h1>
+            <p id="quizInfo">Create interactive quizzes to test student understanding and knowledge retention.</p>
+            <div class="breadcrumb">
+                <a href="javascript:history.back()">← Back to Lesson Builder</a>
+            </div>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div id="messageContainer"></div>
+
+        <!-- Quiz Builder Layout -->
+        <div class="quiz-builder">
+            <!-- Sidebar -->
+            <div class="quiz-sidebar">
+                <div class="sidebar-section">
+                    <h3>📋 Quiz Information</h3>
+                    <form id="quizInfoForm">
+                        <div class="form-group lesson">
+                            <label class="form-label lesson" for="quizTitle">Quiz Title *</label>
+                            <input type="text" id="quizTitle" name="title" class="form-control lesson" 
+                                   placeholder="e.g., Week 1 Vocabulary Quiz" required>
+                        </div>
+
+                        <div class="form-group lesson">
+                            <label class="form-label lesson" for="quizDescription">Description</label>
+                            <textarea id="quizDescription" name="description" class="form-control lesson" 
+                                      rows="3" placeholder="Brief description of this quiz..."></textarea>
+                        </div>
+
+                        <div class="form-group lesson">
+                            <label class="form-label lesson" for="timeLimit">Time Limit (minutes)</label>
+                            <input type="number" id="timeLimit" name="time_limit" class="form-control lesson" 
+                                   min="1" max="300" placeholder="No time limit">
+                            <div class="form-help">Leave empty for no time limit</div>
+                        </div>
+
+                        <div class="form-group lesson">
+                            <label class="form-label lesson" for="maxAttempts">Max Attempts</label>
+                            <select id="maxAttempts" name="max_attempts" class="form-control lesson">
+                                <option value="1">1 attempt</option>
+                                <option value="2">2 attempts</option>
+                                <option value="3">3 attempts</option>
+                                <option value="-1">Unlimited attempts</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group lesson">
+                            <label class="form-label lesson" for="passingScore">Passing Score (%)</label>
+                            <input type="number" id="passingScore" name="passing_score" class="form-control lesson" 
+                                   min="0" max="100" value="70" placeholder="70">
+                        </div>
+
+                        <div class="form-group lesson">
+                            <label class="form-label lesson">
+                                <input type="checkbox" id="randomizeQuestions" name="randomize_questions">
+                                Randomize question order
+                            </label>
+                        </div>
+
+                        <div class="form-group lesson">
+                            <label class="form-label lesson">
+                                <input type="checkbox" id="showResults" name="show_results" checked>
+                                Show results after completion
+                            </label>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="sidebar-section">
+                    <h4>📊 Quiz Statistics</h4>
+                    <div class="quiz-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Questions:</span>
+                            <span id="questionCount" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Points:</span>
+                            <span id="totalPoints" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Est. Time:</span>
+                            <span id="estimatedTime" class="stat-value">0 min</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h4>⚡ Quick Actions</h4>
+                    <button id="saveQuiz" class="btn btn-success w-full mb-1">
+                        <span class="icon">💾</span>
+                        Save Quiz
+                    </button>
+                    <button id="previewQuiz" class="btn btn-secondary w-full mb-1">
+                        <span class="icon">👁️</span>
+                        Preview Quiz
+                    </button>
+                    <button id="importQuestions" class="btn btn-secondary w-full mb-1">
+                        <span class="icon">📥</span>
+                        Import Questions
+                    </button>
+                    <button id="clearQuiz" class="btn btn-danger w-full">
+                        <span class="icon">🗑️</span>
+                        Clear All Questions
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="quiz-content">
+                <!-- Question Type Selection -->
+                <div class="lesson-section">
+                    <h3 class="lesson-section-title">
+                        <span class="icon">➕</span>
+                        Add New Question
+                    </h3>
+                    
+                    <div class="question-types" id="questionTypes">
+                        <button type="button" class="question-type-btn" data-type="multiple_choice">
+                            <div class="question-type-icon">☑️</div>
+                            <div class="question-type-name">Multiple Choice</div>
+                        </button>
+                        <button type="button" class="question-type-btn" data-type="multiple_select">
+                            <div class="question-type-icon">☑️</div>
+                            <div class="question-type-name">Multiple Select</div>
+                        </button>
+                        <button type="button" class="question-type-btn" data-type="true_false">
+                            <div class="question-type-icon">✅</div>
+                            <div class="question-type-name">True/False</div>
+                        </button>
+                        <button type="button" class="question-type-btn" data-type="short_answer">
+                            <div class="question-type-icon">📝</div>
+                            <div class="question-type-name">Short Answer</div>
+                        </button>
+                        <button type="button" class="question-type-btn" data-type="essay">
+                            <div class="question-type-icon">📄</div>
+                            <div class="question-type-name">Essay</div>
+                        </button>
+                        <button type="button" class="question-type-btn" data-type="matching">
+                            <div class="question-type-icon">🔗</div>
+                            <div class="question-type-name">Matching</div>
+                        </button>
+                        <button type="button" class="question-type-btn" data-type="fill_blank">
+                            <div class="question-type-icon">📋</div>
+                            <div class="question-type-name">Fill in the Blank</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Questions List -->
+                <div class="lesson-section">
+                    <h3 class="lesson-section-title">
+                        <span class="icon">📋</span>
+                        Quiz Questions
+                    </h3>
+                    
+                    <div id="questionsList" class="question-list">
+                        <div class="empty-questions">
+                            <h4>📝 No Questions Yet</h4>
+                            <p>Select a question type above to start building your quiz.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question Editor Modal -->
+    <div id="questionModal" class="modal" style="display: none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="questionModalTitle">Add Question</h3>
+                <button class="modal-close" onclick="closeQuestionModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="questionForm">
+                    <div class="form-group lesson">
+                        <label class="form-label lesson" for="questionText">Question Text *</label>
+                        <textarea id="questionText" name="question_text" class="form-control lesson" 
+                                  rows="3" placeholder="Enter your question..." required></textarea>
+                    </div>
+
+                    <!-- Question-specific content will be inserted here -->
+                    <div id="questionSpecificContent"></div>
+
+                    <div class="form-group lesson">
+                        <label class="form-label lesson" for="questionPoints">Points</label>
+                        <input type="number" id="questionPoints" name="points" class="form-control lesson" 
+                               min="1" max="10" value="1">
+                    </div>
+
+                    <div class="form-group lesson">
+                        <label class="form-label lesson" for="questionExplanation">Explanation (Optional)</label>
+                        <textarea id="questionExplanation" name="explanation" class="form-control lesson" 
+                                  rows="2" placeholder="Explain the correct answer..."></textarea>
+                    </div>
+
+                    <input type="hidden" id="questionType" name="question_type">
+                    <input type="hidden" id="questionIndex" name="question_index" value="-1">
+
+                    <div class="d-flex justify-between">
+                        <button type="button" class="btn btn-secondary" onclick="closeQuestionModal()">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <span id="questionSubmitText">Add Question</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
+    <script src="js/lesson-management.js"></script>
+    <script>
+        // Quiz Builder JavaScript
+        let currentLesson = null;
+        let currentQuiz = null;
+        let editingQuestionIndex = -1;
+
+        // Initialize quiz builder
+        VidPOD.Lessons.quizBuilder.currentQuiz = {
+            title: '',
+            description: '',
+            lesson_id: null,
+            time_limit: null,
+            max_attempts: 1,
+            passing_score: 70,
+            randomize_questions: false,
+            show_results: true,
+            questions: []
+        };
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const lessonId = urlParams.get('lesson_id');
+            const quizId = urlParams.get('quiz_id');
+            
+            if (lessonId) {
+                await loadLesson(lessonId);
+                VidPOD.Lessons.quizBuilder.currentQuiz.lesson_id = lessonId;
+            }
+            
+            if (quizId) {
+                await loadQuiz(quizId);
+            }
+            
+            setupEventListeners();
+            updateQuizStats();
+        });
+
+        async function loadLesson(lessonId) {
+            try {
+                currentLesson = await VidPOD.Lessons.api.lessons.getById(lessonId);
+                document.getElementById('quizInfo').textContent = 
+                    `Creating quiz for: ${currentLesson.title}`;
+            } catch (error) {
+                console.error('Error loading lesson:', error);
+                VidPOD.Lessons.ui.showError('Failed to load lesson information.');
+            }
+        }
+
+        async function loadQuiz(quizId) {
+            try {
+                currentQuiz = await VidPOD.Lessons.api.quizzes.getById(quizId);
+                VidPOD.Lessons.quizBuilder.currentQuiz = currentQuiz;
+                
+                // Populate form
+                populateQuizForm(currentQuiz);
+                renderQuestionsList();
+                updateQuizStats();
+                
+            } catch (error) {
+                console.error('Error loading quiz:', error);
+                VidPOD.Lessons.ui.showError('Failed to load quiz.');
+            }
+        }
+
+        function populateQuizForm(quiz) {
+            document.getElementById('quizTitle').value = quiz.title || '';
+            document.getElementById('quizDescription').value = quiz.description || '';
+            document.getElementById('timeLimit').value = quiz.time_limit || '';
+            document.getElementById('maxAttempts').value = quiz.max_attempts || 1;
+            document.getElementById('passingScore').value = quiz.passing_score || 70;
+            document.getElementById('randomizeQuestions').checked = quiz.randomize_questions || false;
+            document.getElementById('showResults').checked = quiz.show_results !== false;
+        }
+
+        function setupEventListeners() {
+            // Question type buttons
+            document.querySelectorAll('.question-type-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const questionType = btn.dataset.type;
+                    showQuestionModal(questionType);
+                });
+            });
+
+            // Quiz info form changes
+            document.getElementById('quizInfoForm').addEventListener('change', updateQuizInfo);
+
+            // Quick actions
+            document.getElementById('saveQuiz').addEventListener('click', saveQuiz);
+            document.getElementById('previewQuiz').addEventListener('click', previewQuiz);
+            document.getElementById('importQuestions').addEventListener('click', importQuestions);
+            document.getElementById('clearQuiz').addEventListener('click', clearAllQuestions);
+
+            // Question form
+            document.getElementById('questionForm').addEventListener('submit', handleQuestionSubmit);
+        }
+
+        function updateQuizInfo() {
+            const formData = new FormData(document.getElementById('quizInfoForm'));
+            
+            VidPOD.Lessons.quizBuilder.currentQuiz.title = formData.get('title') || '';
+            VidPOD.Lessons.quizBuilder.currentQuiz.description = formData.get('description') || '';
+            VidPOD.Lessons.quizBuilder.currentQuiz.time_limit = formData.get('time_limit') ? parseInt(formData.get('time_limit')) : null;
+            VidPOD.Lessons.quizBuilder.currentQuiz.max_attempts = parseInt(formData.get('max_attempts')) || 1;
+            VidPOD.Lessons.quizBuilder.currentQuiz.passing_score = parseInt(formData.get('passing_score')) || 70;
+            VidPOD.Lessons.quizBuilder.currentQuiz.randomize_questions = formData.has('randomize_questions');
+            VidPOD.Lessons.quizBuilder.currentQuiz.show_results = formData.has('show_results');
+        }
+
+        function showQuestionModal(questionType, questionIndex = -1) {
+            editingQuestionIndex = questionIndex;
+            const modal = document.getElementById('questionModal');
+            const isEditing = questionIndex >= 0;
+            
+            document.getElementById('questionModalTitle').textContent = 
+                isEditing ? 'Edit Question' : 'Add Question';
+            document.getElementById('questionSubmitText').textContent = 
+                isEditing ? 'Update Question' : 'Add Question';
+            document.getElementById('questionType').value = questionType;
+            document.getElementById('questionIndex').value = questionIndex;
+
+            // Clear form
+            document.getElementById('questionForm').reset();
+            document.getElementById('questionType').value = questionType;
+            document.getElementById('questionIndex').value = questionIndex;
+
+            // If editing, populate with existing data
+            if (isEditing) {
+                const question = VidPOD.Lessons.quizBuilder.currentQuiz.questions[questionIndex];
+                document.getElementById('questionText').value = question.question_text;
+                document.getElementById('questionPoints').value = question.points;
+                document.getElementById('questionExplanation').value = question.explanation || '';
+            }
+
+            // Render question-specific content
+            renderQuestionSpecificContent(questionType, isEditing ? VidPOD.Lessons.quizBuilder.currentQuiz.questions[questionIndex] : null);
+
+            modal.style.display = 'flex';
+            document.getElementById('questionText').focus();
+        }
+
+        function renderQuestionSpecificContent(questionType, existingQuestion = null) {
+            const container = document.getElementById('questionSpecificContent');
+            
+            switch (questionType) {
+                case 'multiple_choice':
+                case 'multiple_select':
+                    renderMultipleChoiceContent(container, questionType, existingQuestion);
+                    break;
+                case 'true_false':
+                    renderTrueFalseContent(container, existingQuestion);
+                    break;
+                case 'short_answer':
+                    renderShortAnswerContent(container, existingQuestion);
+                    break;
+                case 'essay':
+                    renderEssayContent(container, existingQuestion);
+                    break;
+                case 'matching':
+                    renderMatchingContent(container, existingQuestion);
+                    break;
+                case 'fill_blank':
+                    renderFillBlankContent(container, existingQuestion);
+                    break;
+            }
+        }
+
+        function renderMultipleChoiceContent(container, questionType, existingQuestion) {
+            const isMultipleSelect = questionType === 'multiple_select';
+            const inputType = isMultipleSelect ? 'checkbox' : 'radio';
+            const options = existingQuestion?.options || ['', '', '', ''];
+            const correctAnswers = existingQuestion?.correct_answer || [];
+
+            container.innerHTML = `
+                <div class="form-group lesson">
+                    <label class="form-label lesson">Answer Options *</label>
+                    <div class="form-help">
+                        ${isMultipleSelect ? 'Check all correct answers' : 'Select the correct answer'}
+                    </div>
+                    <div id="answerOptions" class="answer-options">
+                        ${options.map((option, index) => `
+                            <div class="answer-option">
+                                <input type="${inputType}" name="correct_answer" value="${index}" 
+                                       ${correctAnswers.includes(index.toString()) || correctAnswers.includes(index) ? 'checked' : ''}>
+                                <input type="text" name="option_${index}" value="${option}" 
+                                       placeholder="Option ${index + 1}" class="form-control lesson" required>
+                                <button type="button" class="btn btn-danger btn-sm" 
+                                        onclick="removeOption(this)" ${options.length <= 2 ? 'disabled' : ''}>×</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button type="button" id="addOptionBtn" class="btn btn-secondary btn-sm mt-2">
+                        Add Option
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('addOptionBtn').addEventListener('click', addOption);
+        }
+
+        function renderTrueFalseContent(container, existingQuestion) {
+            const correctAnswer = existingQuestion?.correct_answer || 'true';
+            
+            container.innerHTML = `
+                <div class="form-group lesson">
+                    <label class="form-label lesson">Correct Answer *</label>
+                    <div class="answer-options">
+                        <div class="answer-option">
+                            <input type="radio" name="correct_answer" value="true" 
+                                   ${correctAnswer === 'true' ? 'checked' : ''} required>
+                            <span>True</span>
+                        </div>
+                        <div class="answer-option">
+                            <input type="radio" name="correct_answer" value="false" 
+                                   ${correctAnswer === 'false' ? 'checked' : ''}>
+                            <span>False</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderShortAnswerContent(container, existingQuestion) {
+            const correctAnswer = existingQuestion?.correct_answer || '';
+            
+            container.innerHTML = `
+                <div class="form-group lesson">
+                    <label class="form-label lesson" for="shortAnswerCorrect">Correct Answer *</label>
+                    <input type="text" id="shortAnswerCorrect" name="correct_answer" 
+                           value="${correctAnswer}" class="form-control lesson" 
+                           placeholder="Expected answer..." required>
+                    <div class="form-help">Students' answers will be compared against this (case-insensitive)</div>
+                </div>
+                
+                <div class="form-group lesson">
+                    <label class="form-label lesson" for="acceptableAnswers">Alternative Acceptable Answers (Optional)</label>
+                    <textarea id="acceptableAnswers" name="acceptable_answers" class="form-control lesson" 
+                              rows="2" placeholder="One answer per line...">${existingQuestion?.acceptable_answers?.join('\n') || ''}</textarea>
+                    <div class="form-help">One answer per line. All will be accepted as correct.</div>
+                </div>
+            `;
+        }
+
+        function renderEssayContent(container, existingQuestion) {
+            container.innerHTML = `
+                <div class="form-group lesson">
+                    <label class="form-label lesson" for="essayGuidance">Grading Guidance (Optional)</label>
+                    <textarea id="essayGuidance" name="grading_guidance" class="form-control lesson" 
+                              rows="3" placeholder="Provide guidance for manual grading...">${existingQuestion?.grading_guidance || ''}</textarea>
+                    <div class="form-help">This will help you grade essay responses consistently</div>
+                </div>
+                
+                <div class="form-group lesson">
+                    <label class="form-label lesson" for="wordLimit">Word Limit (Optional)</label>
+                    <input type="number" id="wordLimit" name="word_limit" value="${existingQuestion?.word_limit || ''}" 
+                           class="form-control lesson" min="10" placeholder="No limit">
+                </div>
+            `;
+        }
+
+        function renderMatchingContent(container, existingQuestion) {
+            const leftItems = existingQuestion?.left_items || ['', ''];
+            const rightItems = existingQuestion?.right_items || ['', ''];
+            
+            container.innerHTML = `
+                <div class="matching-container">
+                    <div class="matching-column">
+                        <label class="form-label lesson">Left Column (Items to match)</label>
+                        <div id="leftItems">
+                            ${leftItems.map((item, index) => `
+                                <div class="matching-item">
+                                    <input type="text" name="left_item_${index}" value="${item}" 
+                                           placeholder="Item ${index + 1}" class="form-control lesson" required>
+                                    <button type="button" class="btn btn-danger btn-sm" 
+                                            onclick="removeMatchingItem(this, 'left')" ${leftItems.length <= 2 ? 'disabled' : ''}>×</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="addMatchingItem('left')">
+                            Add Left Item
+                        </button>
+                    </div>
+                    
+                    <div class="matching-column">
+                        <label class="form-label lesson">Right Column (Matching options)</label>
+                        <div id="rightItems">
+                            ${rightItems.map((item, index) => `
+                                <div class="matching-item">
+                                    <input type="text" name="right_item_${index}" value="${item}" 
+                                           placeholder="Match ${index + 1}" class="form-control lesson" required>
+                                    <button type="button" class="btn btn-danger btn-sm" 
+                                            onclick="removeMatchingItem(this, 'right')" ${rightItems.length <= 2 ? 'disabled' : ''}>×</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="addMatchingItem('right')">
+                            Add Right Item
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-help mt-2">
+                    The correct matches will be determined by the order of items (first left item matches first right item, etc.)
+                </div>
+            `;
+        }
+
+        function renderFillBlankContent(container, existingQuestion) {
+            const correctAnswer = existingQuestion?.correct_answer || '';
+            
+            container.innerHTML = `
+                <div class="form-group lesson">
+                    <label class="form-label lesson" for="fillBlankAnswer">Answer for the blank *</label>
+                    <input type="text" id="fillBlankAnswer" name="correct_answer" 
+                           value="${correctAnswer}" class="form-control lesson" 
+                           placeholder="The word/phrase that fills the blank" required>
+                </div>
+                
+                <div class="form-group lesson">
+                    <label class="form-label lesson" for="blankAlternatives">Alternative Answers (Optional)</label>
+                    <textarea id="blankAlternatives" name="alternative_answers" class="form-control lesson" 
+                              rows="2" placeholder="One answer per line...">${existingQuestion?.alternative_answers?.join('\n') || ''}</textarea>
+                    <div class="form-help">One answer per line. All will be accepted as correct.</div>
+                </div>
+                
+                <div class="form-help">
+                    <strong>Tip:</strong> In your question text, use underscores (____) or the phrase "[BLANK]" to indicate where the answer goes.
+                </div>
+            `;
+        }
+
+        function addOption() {
+            const container = document.getElementById('answerOptions');
+            const optionCount = container.children.length;
+            const questionType = document.getElementById('questionType').value;
+            const inputType = questionType === 'multiple_select' ? 'checkbox' : 'radio';
+            
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'answer-option';
+            optionDiv.innerHTML = `
+                <input type="${inputType}" name="correct_answer" value="${optionCount}">
+                <input type="text" name="option_${optionCount}" 
+                       placeholder="Option ${optionCount + 1}" class="form-control lesson" required>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeOption(this)">×</button>
+            `;
+            
+            container.appendChild(optionDiv);
+        }
+
+        function removeOption(button) {
+            const container = document.getElementById('answerOptions');
+            if (container.children.length > 2) {
+                button.parentElement.remove();
+                
+                // Re-index remaining options
+                Array.from(container.children).forEach((option, index) => {
+                    const radio = option.querySelector('input[type="radio"], input[type="checkbox"]');
+                    const text = option.querySelector('input[type="text"]');
+                    if (radio) radio.value = index;
+                    if (text) {
+                        text.name = `option_${index}`;
+                        text.placeholder = `Option ${index + 1}`;
+                    }
+                });
+            }
+        }
+
+        function addMatchingItem(side) {
+            const container = document.getElementById(`${side}Items`);
+            const itemCount = container.children.length;
+            
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'matching-item';
+            itemDiv.innerHTML = `
+                <input type="text" name="${side}_item_${itemCount}" 
+                       placeholder="${side === 'left' ? 'Item' : 'Match'} ${itemCount + 1}" 
+                       class="form-control lesson" required>
+                <button type="button" class="btn btn-danger btn-sm" 
+                        onclick="removeMatchingItem(this, '${side}')">×</button>
+            `;
+            
+            container.appendChild(itemDiv);
+        }
+
+        function removeMatchingItem(button, side) {
+            const container = document.getElementById(`${side}Items`);
+            if (container.children.length > 2) {
+                button.parentElement.remove();
+                
+                // Re-index remaining items
+                Array.from(container.children).forEach((item, index) => {
+                    const input = item.querySelector('input[type="text"]');
+                    if (input) {
+                        input.name = `${side}_item_${index}`;
+                        input.placeholder = `${side === 'left' ? 'Item' : 'Match'} ${index + 1}`;
+                    }
+                });
+            }
+        }
+
+        function handleQuestionSubmit(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const questionType = formData.get('question_type');
+            const questionIndex = parseInt(formData.get('question_index'));
+            
+            const questionData = {
+                question_type: questionType,
+                question_text: formData.get('question_text'),
+                points: parseInt(formData.get('points')),
+                explanation: formData.get('explanation') || ''
+            };
+
+            // Process question-specific data
+            switch (questionType) {
+                case 'multiple_choice':
+                case 'multiple_select':
+                    const options = [];
+                    const correctAnswers = [];
+                    
+                    // Get all options
+                    let optionIndex = 0;
+                    while (formData.has(`option_${optionIndex}`)) {
+                        options.push(formData.get(`option_${optionIndex}`));
+                        optionIndex++;
+                    }
+                    
+                    // Get correct answers
+                    const selectedCorrect = formData.getAll('correct_answer');
+                    selectedCorrect.forEach(answer => {
+                        correctAnswers.push(parseInt(answer));
+                    });
+                    
+                    questionData.options = options;
+                    questionData.correct_answer = correctAnswers;
+                    break;
+                    
+                case 'true_false':
+                    questionData.correct_answer = formData.get('correct_answer');
+                    break;
+                    
+                case 'short_answer':
+                    questionData.correct_answer = formData.get('correct_answer');
+                    const acceptableAnswers = formData.get('acceptable_answers');
+                    if (acceptableAnswers) {
+                        questionData.acceptable_answers = acceptableAnswers.split('\n').filter(a => a.trim());
+                    }
+                    break;
+                    
+                case 'essay':
+                    questionData.grading_guidance = formData.get('grading_guidance');
+                    const wordLimit = formData.get('word_limit');
+                    if (wordLimit) {
+                        questionData.word_limit = parseInt(wordLimit);
+                    }
+                    break;
+                    
+                case 'matching':
+                    const leftItems = [];
+                    const rightItems = [];
+                    
+                    // Get left items
+                    let leftIndex = 0;
+                    while (formData.has(`left_item_${leftIndex}`)) {
+                        leftItems.push(formData.get(`left_item_${leftIndex}`));
+                        leftIndex++;
+                    }
+                    
+                    // Get right items
+                    let rightIndex = 0;
+                    while (formData.has(`right_item_${rightIndex}`)) {
+                        rightItems.push(formData.get(`right_item_${rightIndex}`));
+                        rightIndex++;
+                    }
+                    
+                    questionData.left_items = leftItems;
+                    questionData.right_items = rightItems;
+                    // Correct answer is implicit in the order
+                    questionData.correct_answer = leftItems.map((_, index) => index);
+                    break;
+                    
+                case 'fill_blank':
+                    questionData.correct_answer = formData.get('correct_answer');
+                    const alternatives = formData.get('alternative_answers');
+                    if (alternatives) {
+                        questionData.alternative_answers = alternatives.split('\n').filter(a => a.trim());
+                    }
+                    break;
+            }
+
+            // Add or update question
+            if (questionIndex >= 0) {
+                VidPOD.Lessons.quizBuilder.currentQuiz.questions[questionIndex] = questionData;
+            } else {
+                VidPOD.Lessons.quizBuilder.currentQuiz.questions.push(questionData);
+            }
+
+            renderQuestionsList();
+            updateQuizStats();
+            closeQuestionModal();
+            
+            VidPOD.Lessons.ui.showSuccess(
+                questionIndex >= 0 ? 'Question updated!' : 'Question added!'
+            );
+        }
+
+        function renderQuestionsList() {
+            const container = document.getElementById('questionsList');
+            const questions = VidPOD.Lessons.quizBuilder.currentQuiz.questions;
+            
+            if (questions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-questions">
+                        <h4>📝 No Questions Yet</h4>
+                        <p>Select a question type above to start building your quiz.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const questionsHtml = questions.map((question, index) => {
+                const typeConfig = VidPOD.Lessons.questionTypes[question.question_type];
+                
+                return `
+                    <div class="question-item animate-slide-in">
+                        <div class="question-header">
+                            <span class="question-number">Question ${index + 1}</span>
+                            <span class="question-type-badge">${typeConfig.name}</span>
+                            <div class="question-actions">
+                                <button type="button" class="btn btn-sm btn-secondary" 
+                                        onclick="editQuestion(${index})">Edit</button>
+                                <button type="button" class="btn btn-sm btn-danger" 
+                                        onclick="deleteQuestion(${index})">Delete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="question-content">
+                            <div class="question-text">${question.question_text}</div>
+                            
+                            ${renderQuestionPreview(question)}
+                            
+                            <div class="question-meta">
+                                <span class="question-points">${question.points} point${question.points !== 1 ? 's' : ''}</span>
+                                ${question.explanation ? '<span class="question-has-explanation">Has explanation</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = questionsHtml;
+        }
+
+        function renderQuestionPreview(question) {
+            switch (question.question_type) {
+                case 'multiple_choice':
+                case 'multiple_select':
+                    const correctIndices = Array.isArray(question.correct_answer) 
+                        ? question.correct_answer 
+                        : [question.correct_answer];
+                    
+                    return `
+                        <div class="answer-options">
+                            ${question.options.map((option, index) => `
+                                <div class="answer-option ${correctIndices.includes(index) ? 'correct' : ''}">
+                                    <input type="${question.question_type === 'multiple_select' ? 'checkbox' : 'radio'}" 
+                                           ${correctIndices.includes(index) ? 'checked' : ''} disabled>
+                                    <span>${option}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    
+                case 'true_false':
+                    return `
+                        <div class="answer-options">
+                            <div class="answer-option ${question.correct_answer === 'true' ? 'correct' : ''}">
+                                <input type="radio" ${question.correct_answer === 'true' ? 'checked' : ''} disabled>
+                                <span>True</span>
+                            </div>
+                            <div class="answer-option ${question.correct_answer === 'false' ? 'correct' : ''}">
+                                <input type="radio" ${question.correct_answer === 'false' ? 'checked' : ''} disabled>
+                                <span>False</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                case 'short_answer':
+                    return `<div class="correct-answer"><strong>Answer:</strong> ${question.correct_answer}</div>`;
+                    
+                case 'essay':
+                    return `<div class="essay-info">Essay question - Manual grading required</div>`;
+                    
+                case 'matching':
+                    return `
+                        <div class="matching-preview">
+                            <div class="matching-column">
+                                <strong>Items:</strong>
+                                ${question.left_items.map(item => `<div>${item}</div>`).join('')}
+                            </div>
+                            <div class="matching-column">
+                                <strong>Matches:</strong>
+                                ${question.right_items.map(item => `<div>${item}</div>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                    
+                case 'fill_blank':
+                    return `<div class="correct-answer"><strong>Answer:</strong> ${question.correct_answer}</div>`;
+                    
+                default:
+                    return '';
+            }
+        }
+
+        function updateQuizStats() {
+            const questions = VidPOD.Lessons.quizBuilder.currentQuiz.questions;
+            const totalPoints = questions.reduce((sum, q) => sum + q.points, 0);
+            const estimatedTime = Math.max(1, Math.ceil(questions.length * 1.5)); // 1.5 min per question
+
+            document.getElementById('questionCount').textContent = questions.length;
+            document.getElementById('totalPoints').textContent = totalPoints;
+            document.getElementById('estimatedTime').textContent = `${estimatedTime} min`;
+        }
+
+        function editQuestion(index) {
+            const question = VidPOD.Lessons.quizBuilder.currentQuiz.questions[index];
+            showQuestionModal(question.question_type, index);
+        }
+
+        function deleteQuestion(index) {
+            if (confirm('Delete this question?')) {
+                VidPOD.Lessons.quizBuilder.currentQuiz.questions.splice(index, 1);
+                renderQuestionsList();
+                updateQuizStats();
+                VidPOD.Lessons.ui.showSuccess('Question deleted!');
+            }
+        }
+
+        function closeQuestionModal() {
+            document.getElementById('questionModal').style.display = 'none';
+            editingQuestionIndex = -1;
+        }
+
+        async function saveQuiz() {
+            updateQuizInfo();
+            const quiz = VidPOD.Lessons.quizBuilder.currentQuiz;
+            
+            // Validate quiz
+            const errors = VidPOD.Lessons.validation.validateQuiz(quiz);
+            if (Object.keys(errors).length > 0) {
+                const errorMessages = Object.values(errors).join('\n');
+                VidPOD.Lessons.ui.showError(errorMessages);
+                return;
+            }
+
+            try {
+                if (currentQuiz && currentQuiz.id) {
+                    // Update existing quiz
+                    await VidPOD.Lessons.api.quizzes.update(currentQuiz.id, quiz);
+                    VidPOD.Lessons.ui.showSuccess('Quiz updated successfully!');
+                } else {
+                    // Create new quiz
+                    const newQuiz = await VidPOD.Lessons.api.quizzes.create(quiz);
+                    currentQuiz = newQuiz;
+                    VidPOD.Lessons.ui.showSuccess('Quiz created successfully!');
+                }
+            } catch (error) {
+                console.error('Error saving quiz:', error);
+                VidPOD.Lessons.ui.showError('Failed to save quiz. Please try again.');
+            }
+        }
+
+        function previewQuiz() {
+            if (VidPOD.Lessons.quizBuilder.currentQuiz.questions.length === 0) {
+                VidPOD.Lessons.ui.showError('Add some questions before previewing.');
+                return;
+            }
+            
+            // For now, show a preview window - in production this would open the take-quiz interface
+            alert('Quiz preview functionality would open in a new window showing the student view.');
+        }
+
+        function importQuestions() {
+            // Placeholder for import functionality
+            alert('Question import functionality would allow uploading questions from CSV/JSON files.');
+        }
+
+        function clearAllQuestions() {
+            if (confirm('Clear all questions? This cannot be undone.')) {
+                VidPOD.Lessons.quizBuilder.currentQuiz.questions = [];
+                renderQuestionsList();
+                updateQuizStats();
+                VidPOD.Lessons.ui.showSuccess('All questions cleared.');
+            }
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'questionModal') {
+                closeQuestionModal();
+            }
+        });
+    </script>
+
+    <style>
+        .modal-large .modal-content {
+            max-width: 900px;
+            width: 95%;
+        }
+
+        .quiz-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: var(--lesson-primary);
+        }
+
+        .empty-questions {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-light);
+        }
+
+        .question-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .question-meta {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.875rem;
+        }
+
+        .question-points {
+            background: var(--lesson-primary);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .question-has-explanation {
+            color: var(--lesson-info);
+        }
+
+        .matching-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .matching-column {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .matching-item {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .matching-preview {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 6px;
+        }
+
+        .correct-answer {
+            background: var(--quiz-correct);
+            padding: 0.75rem;
+            border-radius: 6px;
+            border: 1px solid var(--lesson-success);
+        }
+
+        .essay-info {
+            background: #fff3cd;
+            padding: 0.75rem;
+            border-radius: 6px;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        @media (max-width: 768px) {
+            .matching-container,
+            .matching-preview {
+                grid-template-columns: 1fr;
+            }
+            
+            .question-types {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html>

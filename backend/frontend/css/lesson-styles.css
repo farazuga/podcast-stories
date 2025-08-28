@@ -1,0 +1,987 @@
+/* VidPOD Lesson Management Styles */
+/* Extends the main VidPOD design system for lesson-specific components */
+
+/* Import main VidPOD CSS variables for consistency */
+:root {
+    /* Lesson-specific color extensions */
+    --lesson-primary: #f79b5b;
+    --lesson-secondary: #04362a;
+    --lesson-success: #10b981;
+    --lesson-warning: #f59e0b;
+    --lesson-info: #3b82f6;
+    --lesson-purple: #8b5cf6;
+    
+    /* Progress indicators */
+    --progress-bg: #e5e7eb;
+    --progress-fill: var(--lesson-primary);
+    --progress-complete: var(--lesson-success);
+    
+    /* Content areas */
+    --lesson-content-bg: #ffffff;
+    --lesson-sidebar-bg: #f9fafb;
+    --lesson-header-bg: #ffffff;
+    
+    /* Interactive elements */
+    --quiz-correct: #dcfce7;
+    --quiz-incorrect: #fef2f2;
+    --quiz-selected: #eff6ff;
+    
+    /* Card spacing */
+    --card-padding: 1.5rem;
+    --card-margin: 1rem;
+    --card-border-radius: 12px;
+}
+
+/* Layout Components */
+
+/* Course Management Grid */
+.course-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--card-margin);
+    margin-top: 1.5rem;
+}
+
+.course-card {
+    background: var(--lesson-content-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-border-radius);
+    padding: var(--card-padding);
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.course-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+}
+
+.course-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.course-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.course-meta {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.course-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.course-badge.active {
+    background: var(--quiz-correct);
+    color: var(--lesson-success);
+}
+
+.course-badge.inactive {
+    background: var(--progress-bg);
+    color: var(--text-light);
+}
+
+.course-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-top: 1px solid var(--border-color);
+    margin-top: 1rem;
+}
+
+.course-stat {
+    text-align: center;
+}
+
+.course-stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--lesson-primary);
+}
+
+.course-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Lesson Builder Interface */
+.lesson-builder {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 2rem;
+    min-height: calc(100vh - 120px);
+}
+
+.lesson-sidebar {
+    background: var(--lesson-sidebar-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-border-radius);
+    padding: var(--card-padding);
+    height: fit-content;
+    position: sticky;
+    top: 80px;
+}
+
+.lesson-main-content {
+    background: var(--lesson-content-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-border-radius);
+    padding: var(--card-padding);
+}
+
+.lesson-section {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.lesson-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.lesson-section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Rich Text Editor Styles */
+.rich-editor {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    min-height: 200px;
+    position: relative;
+}
+
+.editor-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    background: #f8fafc;
+}
+
+.editor-btn {
+    padding: 0.5rem;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-light);
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.editor-btn:hover {
+    background: var(--border-color);
+    color: var(--text-color);
+}
+
+.editor-btn.active {
+    background: var(--lesson-primary);
+    color: white;
+}
+
+.editor-content {
+    padding: 1rem;
+    min-height: 150px;
+    outline: none;
+    line-height: 1.6;
+}
+
+/* Vocabulary Management */
+.vocab-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.vocab-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.vocab-content {
+    flex: 1;
+}
+
+.vocab-term {
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.25rem;
+}
+
+.vocab-definition {
+    font-size: 0.875rem;
+    color: var(--text-light);
+}
+
+.vocab-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Quiz Builder Components */
+.quiz-builder {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 2rem;
+}
+
+.quiz-sidebar {
+    background: var(--lesson-sidebar-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-border-radius);
+    padding: var(--card-padding);
+    height: fit-content;
+    position: sticky;
+    top: 80px;
+}
+
+.quiz-content {
+    background: var(--lesson-content-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-border-radius);
+    padding: var(--card-padding);
+}
+
+.question-types {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.question-type-btn {
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--lesson-content-bg);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.question-type-btn:hover {
+    border-color: var(--lesson-primary);
+    background: #fff7ed;
+}
+
+.question-type-btn.selected {
+    border-color: var(--lesson-primary);
+    background: var(--lesson-primary);
+    color: white;
+}
+
+.question-type-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.question-type-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.question-builder {
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: var(--card-padding);
+    margin-bottom: 1.5rem;
+}
+
+.question-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.question-item {
+    background: var(--lesson-content-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    position: relative;
+}
+
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.question-number {
+    font-weight: 600;
+    color: var(--lesson-primary);
+}
+
+.question-type-badge {
+    background: var(--lesson-info);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.question-content {
+    margin-bottom: 1rem;
+}
+
+.question-text {
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+}
+
+/* Answer Options */
+.answer-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.answer-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: #f8fafc;
+}
+
+.answer-option.correct {
+    background: var(--quiz-correct);
+    border-color: var(--lesson-success);
+}
+
+.answer-option input[type="radio"],
+.answer-option input[type="checkbox"] {
+    margin: 0;
+}
+
+/* Quiz Taking Interface */
+.quiz-interface {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.quiz-header {
+    background: var(--lesson-content-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-border-radius);
+    padding: var(--card-padding);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.quiz-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.quiz-meta {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 1rem;
+}
+
+.quiz-meta-item {
+    text-align: center;
+}
+
+.quiz-meta-label {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.quiz-meta-value {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--lesson-primary);
+}
+
+.quiz-progress {
+    width: 100%;
+    height: 8px;
+    background: var(--progress-bg);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.quiz-progress-fill {
+    height: 100%;
+    background: var(--lesson-primary);
+    transition: width 0.3s ease;
+}
+
+.quiz-question {
+    background: var(--lesson-content-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-border-radius);
+    padding: var(--card-padding);
+    margin-bottom: 1.5rem;
+}
+
+.quiz-question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.quiz-question-counter {
+    background: var(--lesson-primary);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.quiz-question-text {
+    font-size: 1.125rem;
+    font-weight: 500;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.quiz-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--lesson-content-bg);
+}
+
+.quiz-option:hover {
+    border-color: var(--lesson-primary);
+    background: #fff7ed;
+}
+
+.quiz-option.selected {
+    border-color: var(--lesson-primary);
+    background: var(--quiz-selected);
+}
+
+.quiz-option.correct {
+    border-color: var(--lesson-success);
+    background: var(--quiz-correct);
+}
+
+.quiz-option.incorrect {
+    border-color: var(--danger-color);
+    background: var(--quiz-incorrect);
+}
+
+.quiz-option input[type="radio"],
+.quiz-option input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+
+.quiz-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+}
+
+/* Progress Visualization */
+.progress-container {
+    background: var(--lesson-content-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-border-radius);
+    padding: var(--card-padding);
+    margin-bottom: 1.5rem;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.progress-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.progress-percentage {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--lesson-primary);
+}
+
+.progress-bar {
+    width: 100%;
+    height: 12px;
+    background: var(--progress-bg);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--lesson-primary), var(--lesson-success));
+    transition: width 0.5s ease;
+    border-radius: 6px;
+}
+
+.progress-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+.progress-stat {
+    text-align: center;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.progress-stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.progress-stat-label {
+    font-size: 0.875rem;
+    color: var(--text-light);
+}
+
+/* Lesson Navigation */
+.lesson-nav {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.lesson-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--lesson-content-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.lesson-nav-item:hover {
+    border-color: var(--lesson-primary);
+    background: #fff7ed;
+    text-decoration: none;
+    color: var(--text-color);
+}
+
+.lesson-nav-item.completed {
+    border-color: var(--lesson-success);
+    background: var(--quiz-correct);
+}
+
+.lesson-nav-item.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f8fafc;
+}
+
+.lesson-nav-item.current {
+    border-color: var(--lesson-primary);
+    background: var(--lesson-primary);
+    color: white;
+}
+
+.lesson-status-icon {
+    font-size: 1.25rem;
+    width: 24px;
+    text-align: center;
+}
+
+.lesson-nav-content {
+    flex: 1;
+}
+
+.lesson-nav-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.lesson-nav-meta {
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+/* Grade Center Styles */
+.grade-center {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 2rem;
+}
+
+.grade-sidebar {
+    background: var(--lesson-sidebar-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-border-radius);
+    padding: var(--card-padding);
+    height: fit-content;
+    position: sticky;
+    top: 80px;
+}
+
+.grade-main {
+    background: var(--lesson-content-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-border-radius);
+    padding: var(--card-padding);
+}
+
+.student-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.student-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.student-item:hover {
+    border-color: var(--lesson-primary);
+    background: #fff7ed;
+}
+
+.student-item.selected {
+    border-color: var(--lesson-primary);
+    background: var(--quiz-selected);
+}
+
+.student-info {
+    flex: 1;
+}
+
+.student-name {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.student-progress {
+    font-size: 0.875rem;
+    color: var(--text-light);
+}
+
+.grade-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--lesson-content-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.grade-table th {
+    background: #f8fafc;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.grade-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.grade-table tr:hover {
+    background: #f8fafc;
+}
+
+.grade-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: center;
+    min-width: 50px;
+}
+
+.grade-badge.excellent {
+    background: var(--quiz-correct);
+    color: var(--lesson-success);
+}
+
+.grade-badge.good {
+    background: #fef3c7;
+    color: var(--lesson-warning);
+}
+
+.grade-badge.needs-improvement {
+    background: var(--quiz-incorrect);
+    color: var(--danger-color);
+}
+
+.grade-badge.incomplete {
+    background: var(--progress-bg);
+    color: var(--text-light);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .lesson-builder,
+    .quiz-builder,
+    .grade-center {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .lesson-sidebar,
+    .quiz-sidebar,
+    .grade-sidebar {
+        position: relative;
+        top: auto;
+    }
+    
+    .course-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .quiz-meta {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .quiz-controls {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .lesson-nav {
+        grid-template-columns: 1fr;
+    }
+    
+    .progress-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .question-types {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .course-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .progress-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .quiz-option {
+        padding: 0.75rem;
+    }
+    
+    .lesson-nav-item {
+        padding: 0.75rem;
+    }
+}
+
+/* Form Styles Extension */
+.form-group.lesson {
+    margin-bottom: 1.5rem;
+}
+
+.form-label.lesson {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.form-control.lesson {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-control.lesson:focus {
+    outline: none;
+    border-color: var(--lesson-primary);
+    box-shadow: 0 0 0 3px rgba(247, 155, 91, 0.1);
+}
+
+.form-control.lesson.error {
+    border-color: var(--danger-color);
+}
+
+.form-help {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+}
+
+.form-error {
+    font-size: 0.75rem;
+    color: var(--danger-color);
+    margin-top: 0.25rem;
+}
+
+/* Animation and Transitions */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* Loading States */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--progress-bg);
+    border-radius: 50%;
+    border-top-color: var(--lesson-primary);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--card-border-radius);
+}
+
+/* Utility Classes */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.mt-0 { margin-top: 0; }
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+
+.mb-0 { margin-bottom: 0; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.mb-3 { margin-bottom: 1.5rem; }
+
+.d-none { display: none; }
+.d-block { display: block; }
+.d-flex { display: flex; }
+.d-grid { display: grid; }
+
+.flex-1 { flex: 1; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+
+.gap-1 { gap: 0.5rem; }
+.gap-2 { gap: 1rem; }
+.gap-3 { gap: 1.5rem; }
+
+.w-full { width: 100%; }
+.h-full { height: 100%; }

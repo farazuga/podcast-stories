@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD - Course Management</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/lesson-styles.css">
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="dashboard-header">
+            <h1>📚 Course Management</h1>
+            <p>Create and manage your educational courses with the VidPOD lesson system.</p>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div id="messageContainer"></div>
+
+        <!-- Course Creation Section -->
+        <div class="course-section">
+            <div class="section-header">
+                <h2>🎯 Quick Actions</h2>
+                <button id="createCourseBtn" class="btn btn-primary">
+                    <span class="icon">➕</span>
+                    Create New Course
+                </button>
+            </div>
+
+            <!-- Course Creation Form (Initially Hidden) -->
+            <div id="courseCreationForm" class="lesson-main-content" style="display: none;">
+                <form id="newCourseForm">
+                    <div class="lesson-section">
+                        <h3 class="lesson-section-title">
+                            <span class="icon">📋</span>
+                            Course Information
+                        </h3>
+                        
+                        <div class="form-group lesson">
+                            <label class="form-label lesson" for="courseTitle">Course Title *</label>
+                            <input type="text" id="courseTitle" name="title" class="form-control lesson" 
+                                   placeholder="e.g., Introduction to Podcast Journalism" required>
+                            <div class="form-help">Choose a clear, descriptive title for your course</div>
+                        </div>
+
+                        <div class="form-group lesson">
+                            <label class="form-label lesson" for="courseDescription">Course Description *</label>
+                            <textarea id="courseDescription" name="description" class="form-control lesson" 
+                                      rows="4" placeholder="Describe what students will learn in this course..." required></textarea>
+                            <div class="form-help">Provide a comprehensive overview of the course content and objectives</div>
+                        </div>
+
+                        <div class="form-group lesson">
+                            <label class="form-label lesson" for="totalWeeks">Course Duration (Weeks) *</label>
+                            <select id="totalWeeks" name="total_weeks" class="form-control lesson" required>
+                                <option value="">Select duration...</option>
+                                <option value="4">4 weeks (Monthly Course)</option>
+                                <option value="6">6 weeks (Short Term)</option>
+                                <option value="8">8 weeks (Standard)</option>
+                                <option value="9">9 weeks (Semester)</option>
+                                <option value="12">12 weeks (Quarter)</option>
+                                <option value="16">16 weeks (Full Semester)</option>
+                                <option value="20">20 weeks (Extended)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group lesson">
+                            <label class="form-label lesson" for="difficultyLevel">Difficulty Level</label>
+                            <select id="difficultyLevel" name="difficulty_level" class="form-control lesson">
+                                <option value="beginner">Beginner - No prior experience needed</option>
+                                <option value="intermediate">Intermediate - Some background knowledge helpful</option>
+                                <option value="advanced">Advanced - Requires solid foundation</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="lesson-section">
+                        <h3 class="lesson-section-title">
+                            <span class="icon">🎯</span>
+                            Learning Objectives
+                        </h3>
+                        
+                        <div id="objectivesContainer">
+                            <div class="form-group lesson">
+                                <label class="form-label lesson">Learning Objective 1</label>
+                                <input type="text" name="objectives[]" class="form-control lesson" 
+                                       placeholder="Students will be able to...">
+                            </div>
+                        </div>
+                        
+                        <button type="button" id="addObjectiveBtn" class="btn btn-secondary">
+                            Add Another Objective
+                        </button>
+                    </div>
+
+                    <div class="lesson-section">
+                        <h3 class="lesson-section-title">
+                            <span class="icon">⚙️</span>
+                            Course Settings
+                        </h3>
+                        
+                        <div class="form-group lesson">
+                            <label class="form-label lesson">
+                                <input type="checkbox" name="is_public" value="1"> 
+                                Make this course publicly available
+                            </label>
+                            <div class="form-help">Public courses can be enrolled in by any student</div>
+                        </div>
+                        
+                        <div class="form-group lesson">
+                            <label class="form-label lesson">
+                                <input type="checkbox" name="auto_enroll" value="1"> 
+                                Auto-enroll students from my classes
+                            </label>
+                            <div class="form-help">Automatically enroll students from your existing VidPOD classes</div>
+                        </div>
+                    </div>
+
+                    <div class="lesson-section">
+                        <div class="d-flex justify-between items-center">
+                            <button type="button" id="cancelCourseBtn" class="btn btn-secondary">
+                                Cancel
+                            </button>
+                            <button type="submit" id="saveCourseBtn" class="btn btn-primary">
+                                <span class="icon">💾</span>
+                                Create Course
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Course Filters and Search -->
+        <div class="course-filters">
+            <div class="filters-header">
+                <h2>📖 My Courses</h2>
+                <div class="filter-controls">
+                    <input type="text" id="courseSearch" class="form-control lesson" 
+                           placeholder="Search courses...">
+                    <select id="statusFilter" class="form-control lesson">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="draft">Draft</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Course Grid -->
+        <div id="courseGrid" class="course-grid">
+            <div class="loading-spinner" id="coursesLoading"></div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center" style="display: none;">
+            <div class="empty-state-content">
+                <h3>🎓 No Courses Yet</h3>
+                <p>Create your first course to start teaching with VidPOD's lesson management system.</p>
+                <button id="createFirstCourseBtn" class="btn btn-primary">
+                    Create Your First Course
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Actions Modal -->
+    <div id="courseModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Course Actions</h3>
+                <button class="modal-close" onclick="closeCourseModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="course-actions">
+                    <button class="action-btn" onclick="editCourse()">
+                        <span class="icon">✏️</span>
+                        <div>
+                            <strong>Edit Course</strong>
+                            <p>Modify course details and settings</p>
+                        </div>
+                    </button>
+                    
+                    <button class="action-btn" onclick="manageLessons()">
+                        <span class="icon">📚</span>
+                        <div>
+                            <strong>Manage Lessons</strong>
+                            <p>Create and organize course lessons</p>
+                        </div>
+                    </button>
+                    
+                    <button class="action-btn" onclick="viewStudents()">
+                        <span class="icon">👥</span>
+                        <div>
+                            <strong>View Students</strong>
+                            <p>See enrolled students and progress</p>
+                        </div>
+                    </button>
+                    
+                    <button class="action-btn" onclick="viewGrades()">
+                        <span class="icon">📊</span>
+                        <div>
+                            <strong>Grade Center</strong>
+                            <p>Monitor student performance</p>
+                        </div>
+                    </button>
+                    
+                    <button class="action-btn" onclick="duplicateCourse()">
+                        <span class="icon">📋</span>
+                        <div>
+                            <strong>Duplicate Course</strong>
+                            <p>Create a copy of this course</p>
+                        </div>
+                    </button>
+                    
+                    <button class="action-btn danger" onclick="deleteCourse()">
+                        <span class="icon">🗑️</span>
+                        <div>
+                            <strong>Delete Course</strong>
+                            <p>Permanently remove this course</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
+    <script src="js/lesson-management.js"></script>
+    <script>
+        // Course Management JavaScript
+        let courses = [];
+        let currentCourse = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadCourses();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Create course button
+            document.getElementById('createCourseBtn').addEventListener('click', showCourseForm);
+            document.getElementById('createFirstCourseBtn')?.addEventListener('click', showCourseForm);
+            
+            // Form handling
+            document.getElementById('newCourseForm').addEventListener('submit', handleCreateCourse);
+            document.getElementById('cancelCourseBtn').addEventListener('click', hideCourseForm);
+            
+            // Add objective button
+            document.getElementById('addObjectiveBtn').addEventListener('click', addObjectiveField);
+            
+            // Search and filters
+            document.getElementById('courseSearch').addEventListener('input', filterCourses);
+            document.getElementById('statusFilter').addEventListener('change', filterCourses);
+        }
+
+        async function loadCourses() {
+            try {
+                VidPOD.Lessons.ui.showLoading('courseGrid');
+                courses = await VidPOD.Lessons.api.courses.getAll();
+                renderCourseGrid();
+            } catch (error) {
+                console.error('Error loading courses:', error);
+                VidPOD.Lessons.ui.showError('Failed to load courses. Please try again.');
+                showEmptyState();
+            }
+        }
+
+        function renderCourseGrid() {
+            const grid = document.getElementById('courseGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (!courses || courses.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            
+            const coursesHtml = courses.map(course => `
+                <div class="course-card animate-slide-in" onclick="openCourseModal('${course.id}')">
+                    <div class="course-card-header">
+                        <h3 class="course-title">${course.title}</h3>
+                        <div class="course-badge ${course.status || 'active'}">
+                            ${(course.status || 'active').charAt(0).toUpperCase() + (course.status || 'active').slice(1)}
+                        </div>
+                    </div>
+                    
+                    <div class="course-meta">
+                        <span class="course-badge">${course.total_weeks} weeks</span>
+                        <span class="course-badge">${course.difficulty_level || 'beginner'}</span>
+                    </div>
+                    
+                    <p class="course-description">
+                        ${VidPOD.Lessons.ui.truncateText(course.description, 120)}
+                    </p>
+                    
+                    <div class="course-stats">
+                        <div class="course-stat">
+                            <div class="course-stat-number">${course.lesson_count || 0}</div>
+                            <div class="course-stat-label">Lessons</div>
+                        </div>
+                        <div class="course-stat">
+                            <div class="course-stat-number">${course.student_count || 0}</div>
+                            <div class="course-stat-label">Students</div>
+                        </div>
+                        <div class="course-stat">
+                            <div class="course-stat-number">${course.completion_rate || 0}%</div>
+                            <div class="course-stat-label">Completion</div>
+                        </div>
+                    </div>
+                    
+                    <div class="course-progress">
+                        ${VidPOD.Lessons.ui.createProgressBar(course.avg_progress || 0)}
+                    </div>
+                </div>
+            `).join('');
+            
+            grid.innerHTML = coursesHtml;
+        }
+
+        function showEmptyState() {
+            document.getElementById('courseGrid').innerHTML = '';
+            document.getElementById('emptyState').style.display = 'block';
+        }
+
+        function showCourseForm() {
+            document.getElementById('courseCreationForm').style.display = 'block';
+            document.getElementById('courseTitle').focus();
+            
+            // Scroll to form
+            document.getElementById('courseCreationForm').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        }
+
+        function hideCourseForm() {
+            document.getElementById('courseCreationForm').style.display = 'none';
+            document.getElementById('newCourseForm').reset();
+            
+            // Clear objectives except the first one
+            const container = document.getElementById('objectivesContainer');
+            const objectives = container.querySelectorAll('.form-group');
+            for (let i = 1; i < objectives.length; i++) {
+                objectives[i].remove();
+            }
+        }
+
+        function addObjectiveField() {
+            const container = document.getElementById('objectivesContainer');
+            const objectiveCount = container.children.length + 1;
+            
+            const objectiveGroup = document.createElement('div');
+            objectiveGroup.className = 'form-group lesson';
+            objectiveGroup.innerHTML = `
+                <label class="form-label lesson">Learning Objective ${objectiveCount}</label>
+                <div class="d-flex gap-2">
+                    <input type="text" name="objectives[]" class="form-control lesson" 
+                           placeholder="Students will be able to...">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeObjective(this)">
+                        Remove
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(objectiveGroup);
+        }
+
+        function removeObjective(button) {
+            button.closest('.form-group').remove();
+            
+            // Renumber remaining objectives
+            const container = document.getElementById('objectivesContainer');
+            const objectives = container.querySelectorAll('.form-group');
+            objectives.forEach((group, index) => {
+                const label = group.querySelector('.form-label');
+                label.textContent = `Learning Objective ${index + 1}`;
+            });
+        }
+
+        async function handleCreateCourse(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const courseData = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                total_weeks: parseInt(formData.get('total_weeks')),
+                difficulty_level: formData.get('difficulty_level'),
+                is_public: formData.has('is_public'),
+                auto_enroll: formData.has('auto_enroll'),
+                learning_objectives: Array.from(formData.getAll('objectives[]')).filter(obj => obj.trim())
+            };
+
+            // Validate form
+            const errors = VidPOD.Lessons.validation.validateCourse(courseData);
+            if (Object.keys(errors).length > 0) {
+                const errorMessages = Object.values(errors).join('\n');
+                VidPOD.Lessons.ui.showError(errorMessages);
+                return;
+            }
+
+            try {
+                VidPOD.Lessons.ui.showLoading('saveCourseBtn');
+                const newCourse = await VidPOD.Lessons.api.courses.create(courseData);
+                
+                VidPOD.Lessons.ui.showSuccess('Course created successfully!');
+                hideCourseForm();
+                await loadCourses();
+                
+                // Optionally redirect to lesson builder
+                if (confirm('Course created! Would you like to start adding lessons?')) {
+                    window.location.href = `/lesson-builder.html?course_id=${newCourse.id}`;
+                }
+                
+            } catch (error) {
+                console.error('Error creating course:', error);
+                VidPOD.Lessons.ui.showError('Failed to create course. Please try again.');
+            } finally {
+                VidPOD.Lessons.ui.hideLoading('saveCourseBtn');
+            }
+        }
+
+        function filterCourses() {
+            const searchTerm = document.getElementById('courseSearch').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            let filteredCourses = courses;
+            
+            if (searchTerm) {
+                filteredCourses = filteredCourses.filter(course => 
+                    course.title.toLowerCase().includes(searchTerm) ||
+                    course.description.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (statusFilter) {
+                filteredCourses = filteredCourses.filter(course => 
+                    (course.status || 'active') === statusFilter
+                );
+            }
+            
+            // Temporarily replace courses array for rendering
+            const originalCourses = courses;
+            courses = filteredCourses;
+            renderCourseGrid();
+            courses = originalCourses;
+        }
+
+        // Modal Functions
+        function openCourseModal(courseId) {
+            currentCourse = courses.find(c => c.id == courseId);
+            if (!currentCourse) return;
+            
+            document.getElementById('modalTitle').textContent = currentCourse.title;
+            document.getElementById('courseModal').style.display = 'flex';
+        }
+
+        function closeCourseModal() {
+            document.getElementById('courseModal').style.display = 'none';
+            currentCourse = null;
+        }
+
+        function editCourse() {
+            if (currentCourse) {
+                closeCourseModal();
+                // Populate form with current course data and show
+                populateEditForm(currentCourse);
+                showCourseForm();
+            }
+        }
+
+        function manageLessons() {
+            if (currentCourse) {
+                window.location.href = `/lesson-builder.html?course_id=${currentCourse.id}`;
+            }
+        }
+
+        function viewStudents() {
+            if (currentCourse) {
+                window.location.href = `/grade-center.html?course_id=${currentCourse.id}&view=students`;
+            }
+        }
+
+        function viewGrades() {
+            if (currentCourse) {
+                window.location.href = `/grade-center.html?course_id=${currentCourse.id}`;
+            }
+        }
+
+        async function duplicateCourse() {
+            if (!currentCourse) return;
+            
+            if (confirm(`Create a copy of "${currentCourse.title}"?`)) {
+                try {
+                    const duplicateData = {
+                        ...currentCourse,
+                        title: `${currentCourse.title} (Copy)`,
+                        id: undefined // Remove ID so a new one is generated
+                    };
+                    
+                    await VidPOD.Lessons.api.courses.create(duplicateData);
+                    VidPOD.Lessons.ui.showSuccess('Course duplicated successfully!');
+                    closeCourseModal();
+                    await loadCourses();
+                } catch (error) {
+                    console.error('Error duplicating course:', error);
+                    VidPOD.Lessons.ui.showError('Failed to duplicate course.');
+                }
+            }
+        }
+
+        async function deleteCourse() {
+            if (!currentCourse) return;
+            
+            const confirmText = prompt(`To delete "${currentCourse.title}", type "DELETE" below:`);
+            if (confirmText === 'DELETE') {
+                try {
+                    await VidPOD.Lessons.api.courses.delete(currentCourse.id);
+                    VidPOD.Lessons.ui.showSuccess('Course deleted successfully.');
+                    closeCourseModal();
+                    await loadCourses();
+                } catch (error) {
+                    console.error('Error deleting course:', error);
+                    VidPOD.Lessons.ui.showError('Failed to delete course.');
+                }
+            }
+        }
+
+        function populateEditForm(course) {
+            document.getElementById('courseTitle').value = course.title;
+            document.getElementById('courseDescription').value = course.description;
+            document.getElementById('totalWeeks').value = course.total_weeks;
+            document.getElementById('difficultyLevel').value = course.difficulty_level || 'beginner';
+            
+            // Handle objectives if they exist
+            if (course.learning_objectives && course.learning_objectives.length > 0) {
+                const container = document.getElementById('objectivesContainer');
+                container.innerHTML = '';
+                
+                course.learning_objectives.forEach((objective, index) => {
+                    const objectiveGroup = document.createElement('div');
+                    objectiveGroup.className = 'form-group lesson';
+                    objectiveGroup.innerHTML = `
+                        <label class="form-label lesson">Learning Objective ${index + 1}</label>
+                        <div class="d-flex gap-2">
+                            <input type="text" name="objectives[]" class="form-control lesson" 
+                                   value="${objective}" placeholder="Students will be able to...">
+                            ${index > 0 ? `<button type="button" class="btn btn-danger btn-sm" onclick="removeObjective(this)">Remove</button>` : ''}
+                        </div>
+                    `;
+                    container.appendChild(objectiveGroup);
+                });
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('courseModal').addEventListener('click', (e) => {
+            if (e.target.id === 'courseModal') {
+                closeCourseModal();
+            }
+        });
+    </script>
+
+    <style>
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .course-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--text-color);
+        }
+
+        .action-btn:hover {
+            border-color: var(--lesson-primary);
+            background: #fff7ed;
+        }
+
+        .action-btn.danger:hover {
+            border-color: var(--danger-color);
+            background: #fef2f2;
+        }
+
+        .action-btn .icon {
+            font-size: 1.5rem;
+            width: 40px;
+            text-align: center;
+        }
+
+        .action-btn strong {
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .action-btn p {
+            margin: 0;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .filters-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .filter-controls input,
+        .filter-controls select {
+            min-width: 200px;
+        }
+
+        .empty-state-content {
+            padding: 3rem 1rem;
+        }
+
+        .empty-state-content h3 {
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+
+        .empty-state-content p {
+            margin-bottom: 2rem;
+            color: var(--text-light);
+        }
+
+        @media (max-width: 768px) {
+            .filters-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-controls {
+                flex-direction: column;
+            }
+
+            .filter-controls input,
+            .filter-controls select {
+                min-width: auto;
+                width: 100%;
+            }
+        }
+    </style>
+</body>
+</html>
