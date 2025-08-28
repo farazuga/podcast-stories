@@ -311,7 +311,8 @@ async function deleteStory(storyId) {
 // Utility functions
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString();
+    // Use date-utils.js function for consistent year-less formatting of coverage dates
+    return formatDateSafeWithoutYear(dateString.split('T')[0]);
 }
 
 function formatSingleDayCoverage(dateString) {

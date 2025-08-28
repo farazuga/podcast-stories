@@ -148,14 +148,29 @@ function displayStory() {
         if (isSingleDay) {
             coverageTitleElement.textContent = 'Single day';
             const startDatePart = dateOnly(startDate);
-            coverageContainer.innerHTML = `<div>${formatDateSafeWithOptions(startDatePart, { month: 'long', day: 'numeric' })}</div>`;
+            // Display coverage dates without year for cleaner appearance
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            const parts = startDatePart.split('-');
+            const month = parseInt(parts[1]);
+            const day = parseInt(parts[2]);
+            coverageContainer.innerHTML = `<div>${monthNames[month - 1]} ${day}</div>`;
         } else {
             coverageTitleElement.textContent = 'Coverage Period';
             const startDatePart = dateOnly(startDate);
             const endDatePart = dateOnly(endDate);
+            // Display coverage dates without year for cleaner appearance
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            const startParts = startDatePart.split('-');
+            const startMonth = parseInt(startParts[1]);
+            const startDay = parseInt(startParts[2]);
+            const endParts = endDatePart.split('-');
+            const endMonth = parseInt(endParts[1]);
+            const endDay = parseInt(endParts[2]);
             coverageContainer.innerHTML = `
-                <div><strong>Start:</strong> ${formatDateSafeWithOptions(startDatePart, { month: 'long', day: 'numeric' })}</div>
-                <div><strong>End:</strong> ${formatDateSafeWithOptions(endDatePart, { month: 'long', day: 'numeric' })}</div>
+                <div><strong>Start:</strong> ${monthNames[startMonth - 1]} ${startDay}</div>
+                <div><strong>End:</strong> ${monthNames[endMonth - 1]} ${endDay}</div>
             `;
         }
     }

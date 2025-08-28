@@ -148,17 +148,42 @@ function populateTagsDropdown() {
     StoryFilters.setupTagsDropdown('searchTags', allTags, 'All Tags');
 }
 
-async function loadStories() {
+async function loadStories(filterParams = {}) {
     try {
         // Choose endpoint based on mode
-        const endpoint = showFavoritesOnly ? `${API_URL}/favorites` : `${API_URL}/stories`;
-        console.log(`Loading from endpoint: ${endpoint}`);
+        const baseEndpoint = showFavoritesOnly ? `${API_URL}/favorites` : `${API_URL}/stories`;
+        
+        // Build query string from filter parameters for server-side filtering
+        const queryParams = new URLSearchParams();
+        
+        // Add filter parameters to query string for ALL database stories filtering
+        if (filterParams.search) {
+            queryParams.append('search', filterParams.search);
+        }
+        if (filterParams.startDate) {
+            queryParams.append('startDate', filterParams.startDate);
+        }
+        if (filterParams.endDate) {
+            queryParams.append('endDate', filterParams.endDate);
+        }
+        if (filterParams.tags && filterParams.tags.length > 0) {
+            filterParams.tags.forEach(tag => queryParams.append('tags', tag));
+        }
+        if (filterParams.interviewee) {
+            queryParams.append('interviewee', filterParams.interviewee);
+        }
+        
+        const endpoint = queryParams.toString() ? 
+            `${baseEndpoint}?${queryParams.toString()}` : baseEndpoint;
+            
+        console.log(`Loading from endpoint with server-side filtering: ${endpoint}`);
         
         const response = await fetch(endpoint, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         
         if (response.ok) {
+            // Server returns pre-filtered results - no need for client-side filtering
             allStories = await response.json();
             
             // For favorites, mark all stories as favorited
@@ -169,7 +194,7 @@ async function loadStories() {
                 }));
             }
             
-            filteredStories = [...allStories];
+            filteredStories = [...allStories]; // Server already filtered, so filtered = all loaded
             currentPage = 0;
             displayStories();
             updateResultsCount();
@@ -217,8 +242,10 @@ function renderStoryCard(story) {
     const isSelected = selectedStories.has(story.id);
     
     // Format dates using safe date formatting to prevent timezone offset issues
-    const startDate = story.coverage_start_date ? formatDateSafe(story.coverage_start_date.split('T')[0]) : '';
-    const endDate = story.coverage_end_date ? formatDateSafe(story.coverage_end_date.split('T')[0]) : '';
+    // Coverage dates display WITHOUT year for cleaner appearance
+    const startDate = story.coverage_start_date ? formatDateSafeWithoutYear(story.coverage_start_date.split('T')[0]) : '';
+    const endDate = story.coverage_end_date ? formatDateSafeWithoutYear(story.coverage_end_date.split('T')[0]) : '';
+    // Upload dates keep year for context since they're administrative
     const uploadedDate = story.uploaded_date ? formatDateSafe(story.uploaded_date.split('T')[0]) : '';
     
     // Determine the most applicable date for display in list view
@@ -442,36 +469,37 @@ function setupEventListeners() {
     // Search form
     const searchForm = document.getElementById('searchForm');
     if (searchForm) {
-        searchForm.addEventListener('submit', (e) => {
+        searchForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            applyFilters();
+            await applyFilters();
         });
     }
     
 }
 
-function applyFilters() {
+async function applyFilters() {
     // Build filters from form using shared component
     const filters = StoryFilters.buildFiltersFromForm('searchForm');
     
-    console.log('Applying story filters:', filters);
+    console.log('Applying story filters with server-side filtering:', filters);
     
-    // Apply all filters using shared component
-    filteredStories = StoryFilters.applyAllFilters(allStories, filters);
-    
-    currentPage = 0;
-    displayStories();
-    updateResultsCount();
+    // Use server-side filtering by reloading stories with filter parameters
+    // This applies filters to ALL stories in the database, not just loaded ones
+    await loadStories({
+        search: filters.search,
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+        tags: filters.tags,
+        interviewee: filters.interviewee
+    });
 }
 
-function clearFilters() {
+async function clearFilters() {
     // Clear all filter inputs using shared component
     StoryFilters.clearAllFilters('searchForm');
     
-    filteredStories = [...allStories];
-    currentPage = 0;
-    displayStories();
-    updateResultsCount();
+    // Reload all stories without any filters (server-side reset)
+    await loadStories();
 }
 
 function sortStories() {

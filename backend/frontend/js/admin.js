@@ -1035,9 +1035,14 @@ function formatSingleDayCoverage(dateString) {
 function formatCoverageDisplay(startDate, endDate) {
     if (!startDate) return 'No coverage date specified';
     if (endDate) {
-        return `${formatDate(startDate)} to ${formatDate(endDate)}`;
+        // Use year-less formatting for coverage dates
+        const startPart = startDate.split('T')[0];
+        const endPart = endDate.split('T')[0];
+        return `${formatDateSafeWithoutYear(startPart)} to ${formatDateSafeWithoutYear(endPart)}`;
     }
-    return formatSingleDayCoverage(startDate);
+    // Single day coverage - also use year-less formatting
+    const startPart = startDate.split('T')[0];
+    return `Single Day: ${formatDateSafeWithoutYear(startPart)}`;
 }
 
 function showError(message) {

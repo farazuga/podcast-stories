@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VidPOD - Add Story</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/calendar-widget.css">
 </head>
 <body>
     <!-- Navigation will auto-load here -->
@@ -110,6 +111,8 @@
 
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/date-utils.js"></script>
+    <script src="js/calendar-widget.js"></script>
     <script src="js/add-story.js"></script>
     <script src="js/navigation.js"></script>
     <script src="js/include-navigation.js"></script>
@@ -199,5 +202,112 @@
         }
     }, 2000); // Wait 2 seconds for page to fully load
     </script>
+
+    <!-- Enhanced Coverage Date Inputs -->
+    <script>
+        // Enhanced coverage date input functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 Initializing enhanced coverage date inputs...');
+            
+            // Enhance coverage date inputs
+            function enhanceCoverageDateInput(inputId, label) {
+                const input = document.getElementById(inputId);
+                if (input) {
+                    // Set default to current year for start date
+                    if (inputId === 'coverage_start_date') {
+                        const today = new Date();
+                        const currentDate = today.toISOString().split('T')[0];
+                        input.value = currentDate;
+                    }
+                    
+                    // Add helpful title
+                    input.title = `Select ${label.toLowerCase()} using the date picker. The form stores the complete date while the system displays coverage dates without years for cleaner viewing.`;
+                    
+                    // Add CSS class for styling
+                    input.classList.add('enhanced-date-input');
+                    
+                    // Add event listener for validation and UX
+                    input.addEventListener('change', function() {
+                        if (this.value) {
+                            console.log(`📅 Coverage ${label.toLowerCase()} selected: ${this.value}`);
+                            
+                            // Validate date range if both dates are set
+                            const startInput = document.getElementById('coverage_start_date');
+                            const endInput = document.getElementById('coverage_end_date');
+                            
+                            if (startInput.value && endInput.value) {
+                                const startDate = new Date(startInput.value);
+                                const endDate = new Date(endInput.value);
+                                
+                                if (startDate > endDate) {
+                                    alert('Coverage end date must be after start date.');
+                                    if (this === endInput) {
+                                        this.value = '';
+                                    }
+                                } else {
+                                    console.log('✅ Valid date range selected');
+                                }
+                            }
+                        }
+                    });
+                    
+                    console.log(`✅ Enhanced coverage date input: ${inputId}`);
+                    return true;
+                }
+                return false;
+            }
+            
+            // Enhance both coverage date inputs
+            const startEnhanced = enhanceCoverageDateInput('coverage_start_date', 'Start Date');
+            const endEnhanced = enhanceCoverageDateInput('coverage_end_date', 'End Date');
+            
+            console.log(`📅 Coverage date enhancement complete: Start=${startEnhanced}, End=${endEnhanced}`);
+            
+            // Add helpful information for users
+            const coverageDateSection = document.querySelector('.form-row');
+            if (coverageDateSection && (startEnhanced || endEnhanced)) {
+                const helpText = document.createElement('div');
+                helpText.className = 'coverage-date-help';
+                helpText.style.cssText = 'font-size: 12px; color: #666; margin-top: 8px; font-style: italic;';
+                helpText.innerHTML = '💡 <strong>Note:</strong> Coverage dates will be displayed without years throughout the system for cleaner appearance, but the complete date is stored for accurate filtering and organization.';
+                
+                coverageDateSection.appendChild(helpText);
+            }
+        });
+    </script>
+    
+    <!-- Additional CSS for enhanced coverage date inputs -->
+    <style>
+        .enhanced-date-input {
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 14px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            width: 100%;
+        }
+        
+        .enhanced-date-input:focus {
+            border-color: #007cba;
+            box-shadow: 0 0 0 3px rgba(0, 124, 186, 0.1);
+            outline: none;
+        }
+        
+        .enhanced-date-input:valid {
+            border-color: #28a745;
+        }
+        
+        .coverage-date-help {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin-top: 10px;
+        }
+        
+        .form-row {
+            position: relative;
+        }
+    </style>
 </body>
 </html>

@@ -177,8 +177,9 @@ function renderStoryCard(story) {
     const isSelected = selectedStories.has(story.id);
     
     // Format dates using safe date formatting to prevent timezone offset issues
-    const startDate = story.coverage_start_date ? formatDateSafe(story.coverage_start_date.split('T')[0]) : '';
-    const endDate = story.coverage_end_date ? formatDateSafe(story.coverage_end_date.split('T')[0]) : '';
+    // Coverage dates display WITHOUT year for cleaner appearance
+    const startDate = story.coverage_start_date ? formatDateSafeWithoutYear(story.coverage_start_date.split('T')[0]) : '';
+    const endDate = story.coverage_end_date ? formatDateSafeWithoutYear(story.coverage_end_date.split('T')[0]) : '';
     const uploadedDate = story.uploaded_date ? formatDateSafe(story.uploaded_date.split('T')[0]) : '';
     const submittedDate = story.created_at ? formatDateSafe(story.created_at.split('T')[0]) : '';
     

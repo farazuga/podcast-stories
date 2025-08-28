@@ -243,5 +243,95 @@
     <script src="js/admin-browse-stories.js"></script>
     <script src="js/navigation.js"></script>
     <script src="js/include-navigation.js"></script>
+    
+    <!-- Enhanced Date Input with Year-less Display Support -->
+    <script>
+        // Enhanced date inputs for admin filtering
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 Initializing enhanced date inputs for admin...');
+            
+            // Enhance date inputs with better user experience
+            function enhanceDateInput(inputId, placeholder) {
+                const input = document.getElementById(inputId);
+                if (input) {
+                    // Add helpful placeholder
+                    input.placeholder = placeholder;
+                    
+                    // Add title with instructions
+                    input.title = 'Select date using the calendar picker. Filtering applies to all database stories.';
+                    
+                    // Add CSS class for styling
+                    input.classList.add('enhanced-date-input');
+                    
+                    // Add event listener for better UX
+                    input.addEventListener('change', function() {
+                        if (this.value) {
+                            console.log(`📅 Admin filter date selected for ${inputId}: ${this.value}`);
+                        }
+                    });
+                    
+                    console.log(`✅ Enhanced admin date input: ${inputId}`);
+                    return true;
+                }
+                return false;
+            }
+            
+            // Enhance the admin search date inputs
+            const startEnhanced = enhanceDateInput('searchStartDate', 'Coverage start date...');
+            const endEnhanced = enhanceDateInput('searchEndDate', 'Coverage end date...');
+            
+            console.log(`📅 Admin date input enhancement complete: Start=${startEnhanced}, End=${endEnhanced}`);
+            
+            // Add helper text for admin users
+            const searchSection = document.querySelector('.search-section');
+            if (searchSection && (startEnhanced || endEnhanced)) {
+                const helpText = document.createElement('div');
+                helpText.className = 'filter-help-text';
+                helpText.style.cssText = 'font-size: 12px; color: #666; margin-top: 10px; font-style: italic;';
+                helpText.innerHTML = '💡 <strong>Admin Tip:</strong> Date filtering searches ALL stories in the database. Coverage dates are displayed without years for cleaner viewing.';
+                
+                const searchActions = document.querySelector('.search-actions');
+                if (searchActions) {
+                    searchActions.appendChild(helpText);
+                }
+            }
+        });
+    </script>
+    
+    <!-- Additional CSS for enhanced date inputs -->
+    <style>
+        .enhanced-date-input {
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 14px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .enhanced-date-input:focus {
+            border-color: #007cba;
+            box-shadow: 0 0 0 3px rgba(0, 124, 186, 0.1);
+            outline: none;
+        }
+        
+        .enhanced-date-input:valid {
+            border-color: #28a745;
+        }
+        
+        .filter-help-text {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin-top: 10px;
+        }
+        
+        /* Ensure admin story cards show coverage dates properly */
+        .admin-story-card .story-coverage-compact {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
 </body>
 </html>
