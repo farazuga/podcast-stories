@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD - Rundowns</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/rundown.css">
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+
+    <div class="container">
+        <!-- Rundowns Header -->
+        <div class="page-header">
+            <h1>📝 Rundowns</h1>
+            <p>Create and manage podcast show rundowns with drag-and-drop segments</p>
+        </div>
+
+        <!-- Rundown Selector & Actions -->
+        <div class="rundown-controls">
+            <div class="rundown-selector">
+                <label for="rundownPicker">Select Rundown:</label>
+                <select id="rundownPicker">
+                    <option value="">Select a rundown...</option>
+                </select>
+                <button id="newRundownBtn" class="btn btn-primary">+ New Rundown</button>
+            </div>
+
+            <div class="rundown-actions">
+                <button id="expandAllBtn" class="btn btn-secondary">Expand All</button>
+                <button id="collapseAllBtn" class="btn btn-secondary">Collapse All</button>
+                <button id="addSegmentBtn" class="btn btn-primary">Add Segment</button>
+                <button id="printPdfBtn" class="btn btn-success">Print PDF</button>
+            </div>
+        </div>
+
+        <!-- Current Rundown Display -->
+        <div id="rundownDisplay" class="rundown-display" style="display: none;">
+            <!-- Rundown Header -->
+            <div class="rundown-header">
+                <div class="rundown-info">
+                    <div class="form-group">
+                        <label for="showName">Show Name:</label>
+                        <input type="text" id="showName" placeholder="Enter show name">
+                    </div>
+                    <div class="form-group">
+                        <label for="airDate">Air Date:</label>
+                        <input type="date" id="airDate">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="shareWithClass"> Share with class
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Timing Chip -->
+                <div class="timing-chip" id="timingChip">
+                    <div class="timing-display">
+                        <div class="target-time">
+                            <label>Target:</label>
+                            <input type="text" id="targetDuration" placeholder="MM:SS" pattern="[0-9]{1,2}:[0-9]{2}">
+                        </div>
+                        <div class="total-time">
+                            <label>Total:</label>
+                            <span id="totalDuration">00:00</span>
+                        </div>
+                        <div class="time-diff">
+                            <span id="timeDifference">Balanced</span>
+                        </div>
+                    </div>
+                    <div class="timing-ring" id="timingRing"></div>
+                </div>
+            </div>
+
+            <!-- Talent Section -->
+            <div class="talent-section">
+                <h3>Talent</h3>
+                <div class="talent-cards">
+                    <div class="talent-group">
+                        <h4>Hosts (<span id="hostCount">0</span>/4)</h4>
+                        <div id="hostsList" class="talent-list"></div>
+                        <button id="addHostBtn" class="btn btn-small">+ Add Host</button>
+                    </div>
+                    <div class="talent-group">
+                        <h4>Guests (<span id="guestCount">0</span>/4)</h4>
+                        <div id="guestsList" class="talent-list"></div>
+                        <button id="addGuestBtn" class="btn btn-small">+ Add Guest</button>
+                    </div>
+                </div>
+                <div class="talent-limit">
+                    Total: <span id="totalTalent">0</span>/4
+                </div>
+            </div>
+
+            <!-- Segments Section -->
+            <div class="segments-section">
+                <h3>Segments</h3>
+                <div id="segmentsList" class="segments-list">
+                    <!-- Segments will be dynamically loaded here -->
+                </div>
+            </div>
+
+            <!-- Story Integration Panel -->
+            <div id="storyPanel" class="story-panel" style="display: none;">
+                <div class="panel-header">
+                    <h3>Add Story to Rundown</h3>
+                    <button id="closeStoryPanel" class="btn btn-close">×</button>
+                </div>
+                <div class="panel-content">
+                    <div class="story-search">
+                        <input type="text" id="storySearch" placeholder="Search stories...">
+                        <button id="searchStoriesBtn" class="btn btn-primary">Search</button>
+                    </div>
+                    <div id="availableStories" class="available-stories">
+                        <!-- Stories will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    
+    <!-- New Rundown Modal -->
+    <div id="newRundownModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Rundown</h3>
+                <span class="modal-close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="newRundownForm">
+                    <div class="form-group">
+                        <label for="newShowName">Show Name *</label>
+                        <input type="text" id="newShowName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newAirDate">Air Date *</label>
+                        <input type="date" id="newAirDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newTargetDuration">Target Duration (MM:SS)</label>
+                        <input type="text" id="newTargetDuration" placeholder="20:00" pattern="[0-9]{1,2}:[0-9]{2}">
+                    </div>
+                    <div class="form-group">
+                        <label for="newClassId">Class (optional)</label>
+                        <select id="newClassId">
+                            <option value="">No class assigned</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="newShareWithClass"> Share with class
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+                <button type="submit" form="newRundownForm" class="btn btn-primary">Create Rundown</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Segment Edit Modal -->
+    <div id="segmentModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="segmentModalTitle">Edit Segment</h3>
+                <span class="modal-close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="segmentForm">
+                    <input type="hidden" id="segmentId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="segmentTitle">Title *</label>
+                            <input type="text" id="segmentTitle" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="segmentDuration">Duration (MM:SS)</label>
+                            <input type="text" id="segmentDuration" placeholder="05:00" pattern="[0-9]{1,2}:[0-9]{2}">
+                        </div>
+                        <div class="form-group">
+                            <label for="segmentStatus">Status</label>
+                            <select id="segmentStatus">
+                                <option value="Draft">Draft</option>
+                                <option value="Needs Review">Needs Review</option>
+                                <option value="Ready">Ready</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="segmentIntro">Segment Intro</label>
+                        <textarea id="segmentIntro" rows="3" placeholder="Opening remarks for this segment..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Questions</label>
+                        <div id="questionsList">
+                            <!-- Questions will be dynamically added here -->
+                        </div>
+                        <button type="button" id="addQuestionBtn" class="btn btn-small">+ Add Question</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="segmentClose">Topic Close</label>
+                        <textarea id="segmentClose" rows="3" placeholder="Closing remarks for this segment..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="segmentNotes">Production Notes</label>
+                        <textarea id="segmentNotes" rows="3" placeholder="Internal notes for production..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+                <button type="submit" form="segmentForm" class="btn btn-primary">Save Segment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Talent Tag Panel -->
+    <div id="talentTagPanel" class="talent-tag-panel" style="display: none;">
+        <div class="panel-header">
+            <h4>Insert Talent Tag</h4>
+            <button class="panel-close">×</button>
+        </div>
+        <div class="panel-content">
+            <div id="availableTalent">
+                <!-- Talent tags will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
+    <script src="js/rundown-utils.js"></script>
+    <script src="js/rundown-segments.js"></script>
+    <script src="js/rundown-talent.js"></script>
+    <script src="js/rundown-stories.js"></script>
+    <script src="js/rundowns.js"></script>
+</body>
+</html>

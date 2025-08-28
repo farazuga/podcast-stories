@@ -39,6 +39,18 @@ const updatePasswordsRoutes = require('./routes/update-passwords');
 const userManagementRoutes = require('./routes/userManagement');
 const adminMigrateRoutes = require('./routes/admin-migrate');
 
+// Rundown system routes
+const rundownsRoutes = require('./routes/rundowns');
+const rundownSegmentsRoutes = require('./routes/rundown-segments');
+const rundownTalentRoutes = require('./routes/rundown-talent');
+const rundownStoriesRoutes = require('./routes/rundown-stories');
+
+// Lesson management system routes
+const coursesRoutes = require('./routes/courses');
+const lessonsRoutes = require('./routes/lessons');
+const quizzesRoutes = require('./routes/quizzes');
+const progressRoutes = require('./routes/progress');
+
 // Use routes
 app.use('/api/auth', authRoutes);
 app.use('/api/stories', storiesRoutes);
@@ -58,6 +70,18 @@ app.use('/api/test-email', testEmailRoutes);
 app.use('/api/admin/update-passwords', updatePasswordsRoutes);
 app.use('/api/user-management', userManagementRoutes);
 app.use('/api/admin', adminMigrateRoutes);
+
+// Rundown system routes
+app.use('/api/rundowns', rundownsRoutes);
+app.use('/api/rundown-segments', rundownSegmentsRoutes);
+app.use('/api/rundown-talent', rundownTalentRoutes);
+app.use('/api/rundown-stories', rundownStoriesRoutes);
+
+// Lesson management system routes
+app.use('/api/courses', coursesRoutes);
+app.use('/api/lessons', lessonsRoutes);
+app.use('/api/quizzes', quizzesRoutes);
+app.use('/api/progress', progressRoutes);
 
 // Serve static files from the frontend directory (after API routes)
 app.use(express.static(path.join(__dirname, 'frontend')));
