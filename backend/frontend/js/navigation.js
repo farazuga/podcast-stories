@@ -329,25 +329,49 @@ const VidPODNav = {
      * Hide Admin Panel and Admin Browse Stories since teachers don't have access
      */
     customizeTeacherNavigation() {
-        // Hide Admin Panel for teachers
-        document.querySelectorAll('[href*="admin.html"]').forEach(element => {
-            element.style.display = 'none';
+        // NUCLEAR OPTION: Hide all admin-related elements aggressively
+        const adminSelectors = [
+            '[href*="admin.html"]',
+            '[href*="admin-browse-stories.html"]', 
+            '[data-page="admin"]',
+            '[data-page="admin-browse-stories"]',
+            '[data-role="amitrace_admin"]',
+            '.mobile-nav [href*="admin.html"]',
+            '.mobile-nav [href*="admin-browse-stories.html"]',
+            '.mobile-nav [data-page="admin"]',
+            '.mobile-nav [data-page="admin-browse-stories"]',
+            '.mobile-nav [data-role="amitrace_admin"]'
+        ];
+
+        adminSelectors.forEach(selector => {
+            document.querySelectorAll(selector).forEach(element => {
+                // Apply aggressive hiding
+                element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; left: -9999px !important;';
+                element.setAttribute('aria-hidden', 'true');
+                element.classList.add('teacher-hidden-admin');
+            });
         });
-        
-        // Hide Admin Browse Stories for teachers
-        document.querySelectorAll('[href*="admin-browse-stories.html"]').forEach(element => {
-            element.style.display = 'none';
+
+        // Additional text-based hiding for any elements that contain admin text
+        document.querySelectorAll('.nav-item').forEach(element => {
+            const textContent = element.textContent || '';
+            if (textContent.includes('Admin Browse Stories') || textContent.includes('Admin Panel')) {
+                element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; left: -9999px !important;';
+                element.setAttribute('aria-hidden', 'true');
+                element.classList.add('teacher-hidden-admin');
+            }
         });
-        
-        // Also hide based on data-page attribute
-        document.querySelectorAll('[data-page="admin"], [data-page="admin-browse-stories"]').forEach(element => {
-            element.style.display = 'none';
-        });
-        
-        // Mobile menu hiding
-        document.querySelectorAll('.mobile-nav [href*="admin.html"], .mobile-nav [href*="admin-browse-stories.html"]').forEach(element => {
-            element.style.display = 'none';
-        });
+
+        // Re-run after a delay to catch any dynamically loaded elements
+        setTimeout(() => {
+            adminSelectors.forEach(selector => {
+                document.querySelectorAll(selector).forEach(element => {
+                    if (element.style.display !== 'none') {
+                        element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important;';
+                    }
+                });
+            });
+        }, 100);
     },
 
     /**
