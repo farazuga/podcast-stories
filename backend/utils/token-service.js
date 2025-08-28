@@ -29,30 +29,14 @@ async function createPasswordResetToken(userId, expirationHours = 1) {
     const token = generateToken();
     const expiresAt = new Date(Date.now() + (expirationHours * 60 * 60 * 1000));
 
-    try {
-        console.log(`Creating token for user ${userId}`);
-        await pool.query(`
-            INSERT INTO password_reset_tokens (user_id, token, expires_at, used) 
-            VALUES ($1, $2, $3, false)
-        `, [userId, token, expiresAt]);
-        console.log(`Token created successfully for user ${userId}`);
-    } catch (error) {
-        console.log(`Token creation failed for user ${userId}:`, error.message);
-        // If constraint error, delete existing token and try again
-        if (error.message.includes('unique constraint') || error.message.includes('duplicate key')) {
-            console.log('Constraint error detected, deleting existing token and retrying...');
-            await pool.query('DELETE FROM password_reset_tokens WHERE user_id = $1', [userId]);
-            console.log(`Deleted existing tokens for user ${userId}`);
-            await pool.query(`
-                INSERT INTO password_reset_tokens (user_id, token, expires_at, used) 
-                VALUES ($1, $2, $3, false)
-            `, [userId, token, expiresAt]);
-            console.log(`Token created successfully on retry for user ${userId}`);
-        } else {
-            console.error(`Unexpected error creating token for user ${userId}:`, error);
-            throw error;
-        }
-    }
+    // Since unique constraint is removed, we can simply insert
+    // If user already has tokens, this will create multiple (which is now allowed)
+    console.log(`Creating password reset token for user ${userId}`);
+    await pool.query(`
+        INSERT INTO password_reset_tokens (user_id, token, expires_at, used, created_at) 
+        VALUES ($1, $2, $3, false, CURRENT_TIMESTAMP)
+    `, [userId, token, expiresAt]);
+    console.log(`Token created successfully for user ${userId}, token: ${token.substring(0, 8)}...`)
 
     return token;
 }
@@ -72,6 +56,7 @@ async function validateToken(token) {
     }
 
     try {
+        console.log(`Validating token: ${token.substring(0, 8)}...`);
         const result = await pool.query(`
             SELECT 
                 prt.id,
@@ -88,7 +73,10 @@ async function validateToken(token) {
             WHERE prt.token = $1
         `, [token]);
 
+        console.log(`Token validation query returned ${result.rows.length} rows`);
+        
         if (result.rows.length === 0) {
+            console.log(`Token not found in database: ${token.substring(0, 8)}...`);
             return {
                 isValid: false,
                 error: 'Invalid or expired reset token',
@@ -99,7 +87,12 @@ async function validateToken(token) {
         const tokenData = result.rows[0];
 
         // Check if token is expired
-        if (new Date() > new Date(tokenData.expires_at)) {
+        const now = new Date();
+        const expiresAt = new Date(tokenData.expires_at);
+        console.log(`Token expires at: ${expiresAt}, current time: ${now}`);
+        
+        if (now > expiresAt) {
+            console.log(`Token expired: ${token.substring(0, 8)}...`);
             return {
                 isValid: false,
                 error: 'Reset token has expired. Please request a new one.',
@@ -109,6 +102,7 @@ async function validateToken(token) {
 
         // Check if token has been used
         if (tokenData.used) {
+            console.log(`Token already used: ${token.substring(0, 8)}...`);
             return {
                 isValid: false,
                 error: 'Reset token has already been used. Please request a new one.',
@@ -116,6 +110,7 @@ async function validateToken(token) {
             };
         }
 
+        console.log(`Token validation successful for user ${tokenData.email}`);
         return {
             isValid: true,
             error: null,
