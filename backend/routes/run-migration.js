@@ -213,37 +213,30 @@ router.get('/first-last-names', async (req, res) => {
     }
 });
 
-// Fix unified password reset system migration
-router.get('/fix-password-reset-unified', async (req, res) => {
+// Fix unified password reset system migration (force drop all constraints)
+router.get('/fix-password-reset-force', async (req, res) => {
     try {
         console.log('Applying unified password reset migration...');
         
         const migrationSQL = `
             -- Fix password_reset_tokens table for unified system
-            -- Remove unique constraint on user_id to allow multiple reset requests
+            -- Force drop ALL unique constraints on user_id
             
-            -- Drop the existing unique constraint on user_id if it exists
+            -- Get all unique constraints on password_reset_tokens and drop them
             DO $$ 
+            DECLARE
+                constraint_record RECORD;
             BEGIN
-                -- Check if the constraint exists and drop it
-                IF EXISTS (
-                    SELECT 1 FROM information_schema.table_constraints 
-                    WHERE constraint_name = 'password_reset_tokens_user_id_key' 
-                    AND table_name = 'password_reset_tokens'
-                ) THEN
-                    ALTER TABLE password_reset_tokens DROP CONSTRAINT password_reset_tokens_user_id_key;
-                    RAISE NOTICE 'Dropped unique constraint on user_id';
-                END IF;
-                
-                -- Also check for the other constraint name that might exist
-                IF EXISTS (
-                    SELECT 1 FROM information_schema.table_constraints 
-                    WHERE constraint_name = 'unique_user_id' 
-                    AND table_name = 'password_reset_tokens'
-                ) THEN
-                    ALTER TABLE password_reset_tokens DROP CONSTRAINT unique_user_id;
-                    RAISE NOTICE 'Dropped unique_user_id constraint';
-                END IF;
+                -- Drop all unique constraints on the table
+                FOR constraint_record IN 
+                    SELECT constraint_name 
+                    FROM information_schema.table_constraints 
+                    WHERE table_name = 'password_reset_tokens' 
+                    AND constraint_type = 'UNIQUE'
+                LOOP
+                    EXECUTE format('ALTER TABLE password_reset_tokens DROP CONSTRAINT %I', constraint_record.constraint_name);
+                    RAISE NOTICE 'Dropped constraint: %', constraint_record.constraint_name;
+                END LOOP;
             END $$;
             
             -- Add composite index for better performance
