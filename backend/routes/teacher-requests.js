@@ -845,6 +845,156 @@ router.post('/:id/reject', verifyToken, isAmitraceAdmin, async (req, res) => {
   }
 });
 
+// Update teacher request (Amitrace Admin only)
+router.put('/:id', verifyToken, isAmitraceAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, status } = req.body;
+    
+    // Validate input
+    if (!name || !email || !status) {
+      return res.status(400).json({ error: 'Name, email, and status are required' });
+    }
+    
+    if (!['pending', 'approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status value' });
+    }
+    
+    const normalizedEmail = email.trim().toLowerCase();
+    
+    // Update the teacher request
+    const result = await pool.query(
+      `UPDATE teacher_requests 
+       SET name = $1, email = $2, status = $3, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $4
+       RETURNING id, name, email, status`,
+      [name, normalizedEmail, status, id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Teacher request not found' });
+    }
+    
+    logger.info('Teacher request updated', { 
+      adminId: req.user.id,
+      requestId: id,
+      changes: { name, email: normalizedEmail, status }
+    });
+    
+    res.json({ 
+      message: 'Teacher request updated successfully',
+      request: result.rows[0] 
+    });
+  } catch (error) {
+    logger.error('Error updating teacher request', error);
+    res.status(500).json(createErrorResponse(error, 'Failed to update teacher request'));
+  }
+});
+
+// Reset teacher password (Amitrace Admin only)
+router.post('/:id/reset-password', verifyToken, isAmitraceAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Get the teacher request details
+    const requestResult = await pool.query(
+      'SELECT email, status FROM teacher_requests WHERE id = $1',
+      [id]
+    );
+    
+    if (requestResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Teacher request not found' });
+    }
+    
+    const request = requestResult.rows[0];
+    
+    if (request.status !== 'approved') {
+      return res.status(400).json({ error: 'Can only reset password for approved teachers' });
+    }
+    
+    const normalizedEmail = request.email?.trim().toLowerCase();
+    
+    // Check if user exists
+    const userResult = await pool.query(
+      'SELECT id, name FROM users WHERE LOWER(email) = LOWER($1)',
+      [normalizedEmail]
+    );
+    
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Teacher account not found' });
+    }
+    
+    const user = userResult.rows[0];
+    
+    // Generate new invitation token
+    const invitationToken = tokenUtils.generateTeacherInvitationToken(
+      normalizedEmail,
+      id,
+      { userId: user.id }
+    );
+    
+    // Create password reset URL
+    const baseUrl = process.env.APP_BASE_URL || 'https://podcast-stories-production.up.railway.app';
+    const invitationUrl = tokenUtils.createTeacherInvitationUrl(baseUrl, invitationToken.token);
+    
+    // Send password reset email
+    const mailResult = await sendPasswordResetEmail(normalizedEmail, user.name, invitationUrl);
+    
+    logger.info('Password reset link sent', {
+      adminId: req.user.id,
+      teacherId: user.id,
+      requestId: id,
+      emailSent: mailResult.success
+    });
+    
+    res.json({ 
+      message: 'Password reset link sent successfully',
+      emailSent: mailResult.success
+    });
+  } catch (error) {
+    logger.error('Error resetting teacher password', error);
+    res.status(500).json(createErrorResponse(error, 'Failed to reset password'));
+  }
+});
+
+// Helper function to send password reset email
+async function sendPasswordResetEmail(email, name, resetUrl) {
+  try {
+    // Try Gmail service first
+    if (gmailService.hasOAuthCredentials()) {
+      const subject = 'Reset Your VidPOD Password';
+      const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Password Reset Request</h2>
+          <p>Hello ${name || 'Teacher'},</p>
+          <p>An administrator has requested a password reset for your VidPOD account.</p>
+          <p>Click the link below to set a new password:</p>
+          <div style="margin: 30px 0;">
+            <a href="${resetUrl}" style="background: #ff6b35; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Reset Password
+            </a>
+          </div>
+          <p>Or copy and paste this link into your browser:</p>
+          <p style="word-break: break-all; color: #666;">${resetUrl}</p>
+          <p>This link will expire in 7 days.</p>
+          <p>If you didn't expect this email, you can safely ignore it.</p>
+        </div>
+      `;
+      return await gmailService.sendEmail(email, subject, html);
+    }
+    
+    // Fallback to SMTP
+    if (emailService.isConfigured()) {
+      return await emailService.sendPasswordResetEmail(email, name, resetUrl);
+    }
+    
+    return { success: false, error: 'Email service not configured' };
+  } catch (error) {
+    logger.error('Error sending password reset email', error);
+    return { success: false, error: error.message };
+  }
+}
+
 // Delete teacher request (Amitrace Admin only)
 router.delete('/:id', verifyToken, isAmitraceAdmin, async (req, res) => {
   try {

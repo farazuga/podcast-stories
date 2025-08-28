@@ -12,6 +12,137 @@ let currentRequestId = null;
 let selectedAdminStories = new Set();
 let adminStoriesForBulkAction = [];
 
+// Teacher Request Action Functions
+window.editTeacherRequest = async function(requestId) {
+    const request = teacherRequests.find(r => r.id === requestId);
+    if (!request) {
+        showError('Teacher request not found');
+        return;
+    }
+    
+    // Create edit modal
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Teacher Request</h3>
+                <span class="modal-close" onclick="this.closest('.modal').remove()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="editTeacherForm">
+                    <div class="form-group">
+                        <label>Name:</label>
+                        <input type="text" id="editName" value="${escapeHTML(request.name)}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <input type="email" id="editEmail" value="${escapeHTML(request.email)}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Status:</label>
+                        <select id="editStatus">
+                            <option value="pending" ${request.status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="approved" ${request.status === 'approved' ? 'selected' : ''}>Approved</option>
+                            <option value="rejected" ${request.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Handle form submission
+    document.getElementById('editTeacherForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const updatedData = {
+            name: document.getElementById('editName').value,
+            email: document.getElementById('editEmail').value,
+            status: document.getElementById('editStatus').value
+        };
+        
+        try {
+            const response = await fetch(`${window.API_URL}/teacher-requests/${requestId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedData)
+            });
+            
+            if (response.ok) {
+                showSuccess('Teacher request updated successfully');
+                modal.remove();
+                await loadTeacherRequests();
+            } else {
+                const error = await response.json();
+                showError(error.error || 'Failed to update teacher request');
+            }
+        } catch (error) {
+            showError('Network error. Please try again.');
+        }
+    });
+}
+
+window.resetTeacherPassword = async function(requestId, email) {
+    if (!confirm(`Reset password for ${email}? A new invitation link will be sent.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${window.API_URL}/teacher-requests/${requestId}/reset-password`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            showSuccess(`Password reset link sent to ${email}`);
+        } else {
+            const error = await response.json();
+            showError(error.error || 'Failed to reset password');
+        }
+    } catch (error) {
+        showError('Network error. Please try again.');
+    }
+}
+
+window.deleteTeacherRequest = async function(requestId) {
+    if (!confirm('Are you sure you want to permanently delete this teacher request?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${window.API_URL}/teacher-requests/${requestId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            showSuccess('Teacher request deleted successfully');
+            await loadTeacherRequests();
+            await loadTeacherRequestStats();
+        } else {
+            const error = await response.json();
+            showError(error.error || 'Failed to delete teacher request');
+        }
+    } catch (error) {
+        showError('Network error. Please try again.');
+    }
+}
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Admin page loading...');
@@ -516,11 +647,14 @@ function displayTeacherRequests() {
             <td>${escapeHTML(request.message) || 'No message'}</td>
             <td><span class="status-badge status-${escapeHTML(request.status)}">${escapeHTML(request.status)}</span></td>
             <td>${formatDate(request.requested_at)}</td>
-            <td class="table-actions">
+            <td class="table-actions" style="white-space: nowrap;">
                 ${request.status === 'pending' ? `
-                    <button class="btn btn-small btn-approve" onclick="showApprovalModal(${request.id})">Approve</button>
-                    <button class="btn btn-small btn-reject" onclick="rejectTeacherRequest(${request.id})">Reject</button>
-                ` : '—'}
+                    <button class="btn btn-small btn-approve" onclick="showApprovalModal(${request.id})" title="Approve">✓</button>
+                    <button class="btn btn-small btn-reject" onclick="rejectTeacherRequest(${request.id})" title="Reject">✗</button>
+                ` : ''}
+                <button class="btn btn-small btn-primary" onclick="editTeacherRequest(${request.id})" title="Edit">✏️</button>
+                <button class="btn btn-small btn-warning" onclick="resetTeacherPassword(${request.id}, '${escapeHTML(request.email)}')" title="Reset Password">🔑</button>
+                <button class="btn btn-small btn-danger" onclick="deleteTeacherRequest(${request.id})" title="Delete">🗑️</button>
             </td>
         </tr>
     `).join('');
