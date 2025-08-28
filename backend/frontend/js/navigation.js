@@ -204,6 +204,11 @@ const VidPODNav = {
             link.style.display = shouldShow ? '' : 'none';
         });
 
+        // Student-specific navigation customization
+        if (userRole === 'student') {
+            this.customizeStudentNavigation();
+        }
+
         // Teacher-specific navigation customization
         if (userRole === 'teacher') {
             this.customizeTeacherNavigation();
@@ -365,6 +370,69 @@ const VidPODNav = {
         // Re-run after a delay to catch any dynamically loaded elements
         setTimeout(() => {
             adminSelectors.forEach(selector => {
+                document.querySelectorAll(selector).forEach(element => {
+                    if (element.style.display !== 'none') {
+                        element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important;';
+                    }
+                });
+            });
+        }, 100);
+    },
+
+    /**
+     * Customize navigation for student role
+     * Hide Add Story and My Classes - students should only see Dashboard and Browse Stories
+     */
+    customizeStudentNavigation() {
+        // Hide elements students shouldn't see
+        const studentHiddenSelectors = [
+            '[href*="add-story.html"]',
+            '[href*="teacher-dashboard.html"]',
+            '[href*="admin.html"]',
+            '[href*="admin-browse-stories.html"]',
+            '[data-page="add-story"]',
+            '[data-page="teacher-dashboard"]',
+            '[data-page="admin"]',
+            '[data-page="admin-browse-stories"]',
+            '[data-role="teacher"]',
+            '[data-role="amitrace_admin"]',
+            '.mobile-nav [href*="add-story.html"]',
+            '.mobile-nav [href*="teacher-dashboard.html"]',
+            '.mobile-nav [href*="admin.html"]',
+            '.mobile-nav [href*="admin-browse-stories.html"]',
+            '.mobile-nav [data-page="add-story"]',
+            '.mobile-nav [data-page="teacher-dashboard"]',
+            '.mobile-nav [data-page="admin"]',
+            '.mobile-nav [data-page="admin-browse-stories"]',
+            '.mobile-nav [data-role="teacher"]',
+            '.mobile-nav [data-role="amitrace_admin"]'
+        ];
+
+        studentHiddenSelectors.forEach(selector => {
+            document.querySelectorAll(selector).forEach(element => {
+                // Apply aggressive hiding
+                element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; left: -9999px !important;';
+                element.setAttribute('aria-hidden', 'true');
+                element.classList.add('student-hidden');
+            });
+        });
+
+        // Additional text-based hiding for any elements that contain restricted text
+        document.querySelectorAll('.nav-item').forEach(element => {
+            const textContent = element.textContent || '';
+            if (textContent.includes('Add Story') || 
+                textContent.includes('My Classes') || 
+                textContent.includes('Admin Browse Stories') || 
+                textContent.includes('Admin Panel')) {
+                element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; left: -9999px !important;';
+                element.setAttribute('aria-hidden', 'true');
+                element.classList.add('student-hidden');
+            }
+        });
+
+        // Re-run after a delay to catch any dynamically loaded elements
+        setTimeout(() => {
+            studentHiddenSelectors.forEach(selector => {
                 document.querySelectorAll(selector).forEach(element => {
                     if (element.style.display !== 'none') {
                         element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important;';
