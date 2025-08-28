@@ -262,7 +262,7 @@ class EmailService {
     // Password reset email
     async sendPasswordResetEmail(userEmail, userName, resetToken) {
         const subject = 'Password Reset Request - VidPOD';
-        const resetUrl = `https://frontend-production-b75b.up.railway.app/reset-password.html?token=${resetToken}`;
+        const resetUrl = `https://podcast-stories-production.up.railway.app/reset-password.html?token=${resetToken}`;
         
         const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
