@@ -228,7 +228,7 @@ async function updateUserPassword(userId, hashedPassword) {
         
         // Update password
         await client.query(
-            'UPDATE users SET password_hash = $1 WHERE id = $2',
+            'UPDATE users SET password = $1 WHERE id = $2',
             [hashedPassword, userId]
         );
         
