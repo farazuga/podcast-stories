@@ -284,8 +284,8 @@ const VidPODNav = {
     validateRoleBasedAccess(userRole) {
         const expectations = {
             'student': {
-                visible: ['dashboard', 'stories', 'add-story'],
-                hidden: ['teacher-dashboard', 'admin', 'admin-browse-stories']
+                visible: ['dashboard', 'stories'],
+                hidden: ['add-story', 'teacher-dashboard', 'admin', 'admin-browse-stories']
             },
             'teacher': {
                 visible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard'],
