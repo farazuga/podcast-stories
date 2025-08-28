@@ -2,6 +2,16 @@
 
 *Comprehensive technical reference for the VidPOD application*
 
+## 📚 Documentation Index
+
+For complete technical details, see our comprehensive documentation:
+
+- **[TECHNICAL_REFERENCE.md](TECHNICAL_REFERENCE.md)** - Complete database schema, API endpoints, environment variables, and configuration details
+- **[docs/API_QUICK_REFERENCE.md](docs/API_QUICK_REFERENCE.md)** - Quick API reference with curl examples for testing
+- **[docs/DATABASE_QUICK_REFERENCE.md](docs/DATABASE_QUICK_REFERENCE.md)** - Database queries, relationships, and maintenance commands
+
+*This document provides architectural overview and system design. For specific technical details like column names, API request/response formats, and environment variables, use the references above.*
+
 ---
 
 ## 1. Application Overview
@@ -281,6 +291,24 @@ student@vidpod.com / vidpod (student)
 ```
 
 ### Recent Updates - August 2025
+
+#### Password Reset System Fix (August 28, 2025)
+**Critical Password Reset Issues Resolved ✅**
+
+- **Domain Mismatch Fix** - Resolved "Link Expired" error that affected all password resets
+  - Fixed hardcoded URLs in `gmailService.js` and `emailService.js` pointing to wrong domain
+  - Updated from `frontend-production-b75b.up.railway.app` to `podcast-stories-production.up.railway.app`
+  - Reset emails now correctly direct users to working application domain
+  
+- **Database Column Fix** - Fixed password update failures
+  - Corrected `updateUserPassword` function to use `password` column instead of `password_hash`
+  - Password resets now successfully update user accounts
+  - Fixed in `backend/utils/token-service.js`
+  
+- **Enhanced Debug Logging** - Added comprehensive logging for troubleshooting
+  - Full token lifecycle tracking (creation, validation, usage)
+  - Database insert confirmation with returned IDs
+  - Production-safe logging (no sensitive data exposure)
 
 #### Unified Password Reset System Implementation (August 28, 2025)
 **Major Authentication System Overhaul Completed ✅**

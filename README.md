@@ -38,6 +38,11 @@ open http://localhost:3000
 
 ## 📚 Documentation
 
+### 🔧 Technical Reference (New!)
+- **[TECHNICAL_REFERENCE.md](TECHNICAL_REFERENCE.md)** - Complete database schema, API endpoints, environment variables, and configuration details
+- **[docs/API_QUICK_REFERENCE.md](docs/API_QUICK_REFERENCE.md)** - Quick API reference with curl examples for testing
+- **[docs/DATABASE_QUICK_REFERENCE.md](docs/DATABASE_QUICK_REFERENCE.md)** - Database queries, relationships, and maintenance commands
+
 ### 🏗️ Architecture
 - **[System Overview](./docs/architecture/system-overview.md)** - Comprehensive architecture with Mermaid diagrams
 - **[Database Schema](./docs/architecture/system-overview.md#database-schema-relationships)** - Entity relationships and design
