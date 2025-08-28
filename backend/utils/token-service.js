@@ -30,20 +30,26 @@ async function createPasswordResetToken(userId, expirationHours = 1) {
     const expiresAt = new Date(Date.now() + (expirationHours * 60 * 60 * 1000));
 
     try {
+        console.log(`Creating token for user ${userId}`);
         await pool.query(`
             INSERT INTO password_reset_tokens (user_id, token, expires_at, used) 
             VALUES ($1, $2, $3, false)
         `, [userId, token, expiresAt]);
+        console.log(`Token created successfully for user ${userId}`);
     } catch (error) {
+        console.log(`Token creation failed for user ${userId}:`, error.message);
         // If constraint error, delete existing token and try again
         if (error.message.includes('unique constraint') || error.message.includes('duplicate key')) {
-            console.log('Constraint error, deleting existing token and retrying...');
+            console.log('Constraint error detected, deleting existing token and retrying...');
             await pool.query('DELETE FROM password_reset_tokens WHERE user_id = $1', [userId]);
+            console.log(`Deleted existing tokens for user ${userId}`);
             await pool.query(`
                 INSERT INTO password_reset_tokens (user_id, token, expires_at, used) 
                 VALUES ($1, $2, $3, false)
             `, [userId, token, expiresAt]);
+            console.log(`Token created successfully on retry for user ${userId}`);
         } else {
+            console.error(`Unexpected error creating token for user ${userId}:`, error);
             throw error;
         }
     }
