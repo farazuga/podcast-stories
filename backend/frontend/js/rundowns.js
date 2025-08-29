@@ -376,11 +376,144 @@ function filterRundowns() {
     }
 }
 
-function openRundownEditor(rundownId) {
-    // This function will be implemented when we create the editor
+async function openRundownEditor(rundownId) {
     console.log('Opening rundown editor for ID:', rundownId);
-    // For now, show a placeholder
-    RundownUtils.showSuccess(`Opening rundown editor for ID ${rundownId} (Editor coming soon)`);
+    
+    try {
+        // Show loading indicator
+        RundownUtils.showLoading('Loading rundown editor...');
+        
+        // Fetch rundown details
+        const response = await fetch(`${window.API_URL || '/api'}/rundowns/${rundownId}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch rundown details');
+        }
+        
+        const rundown = await response.json();
+        console.log('Loaded rundown data:', rundown);
+        
+        // Populate editor modal
+        document.getElementById('editorRundownTitle').textContent = `📝 ${rundown.title}`;
+        
+        // Update timing summary
+        const totalDuration = rundown.segments?.reduce((total, seg) => total + (seg.duration || 0), 0) || 0;
+        const formatTime = (seconds) => {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        };
+        
+        const timingSummaryEl = document.getElementById('timingSummary');
+        if (timingSummaryEl) {
+            timingSummaryEl.innerHTML = `
+                <div class="total-time">${formatTime(totalDuration)}</div>
+                <div class="segment-count">${rundown.segments?.length || 0} segments</div>
+            `;
+        }
+        
+        // Update talent list
+        const talentListEl = document.getElementById('talentList');
+        const talentCountEl = document.getElementById('talentCount');
+        if (talentListEl && talentCountEl) {
+            talentCountEl.textContent = `(${rundown.talent?.length || 0}/4)`;
+            talentListEl.innerHTML = '';
+            
+            if (rundown.talent && rundown.talent.length > 0) {
+                rundown.talent.forEach(talent => {
+                    const talentItem = document.createElement('div');
+                    talentItem.className = 'talent-item';
+                    talentItem.innerHTML = `
+                        <div class="talent-info">
+                            <span class="talent-name">${talent.name}</span>
+                            <span class="talent-role">${talent.role}</span>
+                        </div>
+                    `;
+                    talentListEl.appendChild(talentItem);
+                });
+            } else {
+                talentListEl.innerHTML = '<div class="empty-state">No talent added yet</div>';
+            }
+        }
+        
+        // Update story list
+        const storyListEl = document.getElementById('storyList');
+        const storyCountEl = document.getElementById('storyCount');
+        if (storyListEl && storyCountEl) {
+            storyCountEl.textContent = `(${rundown.stories?.length || 0})`;
+            storyListEl.innerHTML = '';
+            
+            if (rundown.stories && rundown.stories.length > 0) {
+                rundown.stories.forEach(story => {
+                    const storyItem = document.createElement('div');
+                    storyItem.className = 'story-item';
+                    storyItem.innerHTML = `
+                        <div class="story-info">
+                            <span class="story-title">${story.idea_title}</span>
+                            <span class="story-author">${story.story_author || 'Unknown'}</span>
+                        </div>
+                    `;
+                    storyListEl.appendChild(storyItem);
+                });
+            } else {
+                storyListEl.innerHTML = '<div class="empty-state">No stories added yet</div>';
+            }
+        }
+        
+        // Update segments in main editor area
+        const segmentsContainer = document.getElementById('segmentsList');
+        if (segmentsContainer) {
+            segmentsContainer.innerHTML = '';
+            
+            if (rundown.segments && rundown.segments.length > 0) {
+                rundown.segments.forEach((segment, index) => {
+                    const segmentEl = document.createElement('div');
+                    segmentEl.className = 'segment-item';
+                    segmentEl.innerHTML = `
+                        <div class="segment-header">
+                            <span class="segment-number">${index + 1}</span>
+                            <span class="segment-title">${segment.title}</span>
+                            <span class="segment-type">${segment.type}</span>
+                            <span class="segment-duration">${formatTime(segment.duration || 0)}</span>
+                        </div>
+                        <div class="segment-content">
+                            ${segment.notes || 'No notes'}
+                        </div>
+                    `;
+                    segmentsContainer.appendChild(segmentEl);
+                });
+            } else {
+                segmentsContainer.innerHTML = '<div class="empty-state">No segments created yet</div>';
+            }
+        }
+        
+        // Store current rundown data globally
+        window.currentRundown = rundown;
+        window.currentRundownId = rundownId;
+        
+        // Hide loading and show editor modal
+        RundownUtils.hideLoading();
+        document.getElementById('rundownEditorModal').style.display = 'block';
+        
+        console.log('✅ Rundown editor opened successfully');
+        
+    } catch (error) {
+        console.error('Error opening rundown editor:', error);
+        RundownUtils.hideLoading();
+        RundownUtils.showError('Failed to open rundown editor: ' + error.message);
+    }
+}
+
+function hideRundownEditor() {
+    document.getElementById('rundownEditorModal').style.display = 'none';
+    window.currentRundown = null;
+    window.currentRundownId = null;
+    console.log('Rundown editor closed');
 }
 
 function exportRundownPDF() {

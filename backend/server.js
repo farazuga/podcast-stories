@@ -38,6 +38,7 @@ const testEmailRoutes = require('./routes/test-email-simple');
 const updatePasswordsRoutes = require('./routes/update-passwords');
 const userManagementRoutes = require('./routes/userManagement');
 const fixPasswordResetTokensRoutes = require('./routes/fix-password-reset-tokens');
+const emergencyFixRoutes = require('./routes/emergency-fix');
 const adminMigrateRoutes = require('./routes/admin-migrate');
 
 // Rundown system routes
@@ -70,6 +71,7 @@ app.use('/api/students', studentRegistrationRoutes);
 app.use('/api/test', testConstraintsRoutes);
 app.use('/api/migration', migrationRoutes);
 app.use('/api/fix', fixPasswordResetTokensRoutes);
+app.use('/api/emergency-fix', emergencyFixRoutes);
 app.use('/api/debug', debugRoutes);
 app.use('/api/test-email', testEmailRoutes);
 app.use('/api/admin/update-passwords', updatePasswordsRoutes);
