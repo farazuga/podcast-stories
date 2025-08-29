@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD - Rundown Editor</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/rundown.css">
+    <link rel="stylesheet" href="css/rundown-print.css">
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+    
+    <div class="container">
+        <!-- Loading Screen -->
+        <div id="loadingScreen" class="loading-screen">
+            <div class="loading-spinner"></div>
+            <p>Loading rundown editor...</p>
+        </div>
+
+        <!-- Error Screen -->
+        <div id="errorScreen" class="error-screen" style="display: none;">
+            <div class="error-content">
+                <h2>⚠️ Error Loading Rundown</h2>
+                <p id="errorMessage">Unable to load rundown data.</p>
+                <div class="error-actions">
+                    <button onclick="window.history.back()" class="btn btn-secondary">Go Back</button>
+                    <button onclick="location.reload()" class="btn btn-primary">Try Again</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Editor Interface -->
+        <div id="editorInterface" class="rundown-editor" style="display: none;">
+            <!-- Editor Header -->
+            <div class="editor-header">
+                <div class="rundown-info">
+                    <h1 id="rundownTitle" class="rundown-title" contenteditable="true"></h1>
+                    <p id="rundownDescription" class="rundown-description" contenteditable="true"></p>
+                    <div class="rundown-meta">
+                        <span id="rundownStatus" class="status-badge">Draft</span>
+                        <span id="rundownDuration" class="duration-badge">00:00</span>
+                        <span id="rundownUpdated" class="updated-badge">Just now</span>
+                    </div>
+                </div>
+                
+                <div class="editor-actions">
+                    <div class="action-group">
+                        <button id="expandAllSegments" class="btn btn-sm btn-ghost">
+                            📖 Expand All
+                        </button>
+                        <button id="collapseAllSegments" class="btn btn-sm btn-ghost">
+                            📋 Collapse All
+                        </button>
+                    </div>
+                    
+                    <div class="action-group">
+                        <button id="autoSaveToggle" class="btn btn-sm btn-ghost">
+                            💾 Auto-save: ON
+                        </button>
+                        <button id="manualSaveBtn" class="btn btn-sm btn-secondary">
+                            💾 Save Now
+                        </button>
+                    </div>
+                    
+                    <div class="action-group">
+                        <button id="printRundown" class="btn btn-sm btn-primary">
+                            🖨️ Print
+                        </button>
+                        <button id="exportPDFBtn" class="btn btn-sm btn-primary" style="display: none;">
+                            📄 Export PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Editor Toolbar -->
+            <div class="editor-toolbar">
+                <div class="toolbar-section">
+                    <h3>Add Segments</h3>
+                    <div class="toolbar-buttons">
+                        <button id="addStorySegment" class="btn btn-sm btn-outline">
+                            📰 Story
+                        </button>
+                        <button id="addInterviewSegment" class="btn btn-sm btn-outline">
+                            🎤 Interview
+                        </button>
+                        <button id="addBreakSegment" class="btn btn-sm btn-outline">
+                            ⏸️ Break
+                        </button>
+                        <button id="addCustomSegment" class="btn btn-sm btn-outline">
+                            ⭐ Custom
+                        </button>
+                    </div>
+                </div>
+
+                <div class="toolbar-section">
+                    <h3>Manage</h3>
+                    <div class="toolbar-buttons">
+                        <button id="addTalentBtn" class="btn btn-sm btn-secondary">
+                            👥 Add Talent
+                        </button>
+                        <button id="linkStoryBtn" class="btn btn-sm btn-secondary">
+                            🔗 Link Story
+                        </button>
+                        <button id="bulkEditBtn" class="btn btn-sm btn-ghost">
+                            ⚡ Bulk Edit
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Editor Content -->
+            <div class="editor-content">
+                <!-- Segments List -->
+                <div class="segments-container">
+                    <div class="segments-header">
+                        <h2>📋 Rundown Segments</h2>
+                        <div class="segments-stats">
+                            <span id="segmentCount">0 segments</span>
+                            <span id="totalDuration">00:00 total</span>
+                        </div>
+                    </div>
+
+                    <div id="segmentsList" class="segments-list">
+                        <!-- Segments will be loaded here -->
+                    </div>
+
+                    <div class="segments-footer">
+                        <button id="addSegmentAtEnd" class="add-segment-btn">
+                            ➕ Add Segment
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="editor-sidebar">
+                    <!-- Talent Panel -->
+                    <div class="sidebar-panel">
+                        <div class="panel-header">
+                            <h3>👥 Talent</h3>
+                            <button id="addTalentSidebarBtn" class="btn btn-sm btn-ghost">+</button>
+                        </div>
+                        <div id="talentList" class="talent-list">
+                            <!-- Talent will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Stories Panel -->
+                    <div class="sidebar-panel">
+                        <div class="panel-header">
+                            <h3>📚 Linked Stories</h3>
+                            <button id="linkStorySidebarBtn" class="btn btn-sm btn-ghost">+</button>
+                        </div>
+                        <div id="linkedStoriesList" class="stories-list">
+                            <!-- Linked stories will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Quick Notes -->
+                    <div class="sidebar-panel">
+                        <div class="panel-header">
+                            <h3>📝 Quick Notes</h3>
+                        </div>
+                        <textarea id="quickNotes" class="quick-notes" placeholder="Add your notes here..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    
+    <!-- Talent Modal -->
+    <div id="talentModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>👥 Add/Edit Talent</h2>
+                <button class="modal-close" onclick="closeTalentModal()">&times;</button>
+            </div>
+            <form id="talentForm" class="modal-form">
+                <div class="form-group">
+                    <label for="talentName">Name *</label>
+                    <input type="text" id="talentName" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="talentRole">Role *</label>
+                    <select id="talentRole" name="role" required>
+                        <option value="">Select role...</option>
+                        <option value="host">Host</option>
+                        <option value="co-host">Co-Host</option>
+                        <option value="guest">Guest</option>
+                        <option value="expert">Expert</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="talentBio">Bio</label>
+                    <textarea id="talentBio" name="bio" rows="3" placeholder="Brief bio or background..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="talentNotes">Notes</label>
+                    <textarea id="talentNotes" name="notes" rows="2" placeholder="Internal notes..."></textarea>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeTalentModal()">Cancel</button>
+                    <button type="submit" id="saveTalentBtn" class="btn btn-primary">Save Talent</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Story Linking Modal -->
+    <div id="storyLinkModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔗 Link Story to Rundown</h2>
+                <button class="modal-close" onclick="closeStoryLinkModal()">&times;</button>
+            </div>
+            <div class="modal-form">
+                <div class="search-container">
+                    <input type="text" id="storySearch" placeholder="Search stories...">
+                    <button id="searchStoriesBtn" class="btn btn-sm btn-primary">Search</button>
+                </div>
+                
+                <div id="availableStoriesList" class="available-stories">
+                    <!-- Available stories will be loaded here -->
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeStoryLinkModal()">Cancel</button>
+                    <button type="button" id="linkSelectedStoryBtn" class="btn btn-primary" disabled>Link Selected</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Segment Edit Modal -->
+    <div id="segmentModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="segmentModalTitle">Edit Segment</h2>
+                <button class="modal-close" onclick="closeSegmentModal()">&times;</button>
+            </div>
+            <form id="segmentForm" class="modal-form">
+                <div class="form-group">
+                    <label for="segmentTitle">Title *</label>
+                    <input type="text" id="segmentTitle" name="title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="segmentType">Type</label>
+                    <select id="segmentType" name="type">
+                        <option value="story">Story</option>
+                        <option value="interview">Interview</option>
+                        <option value="break">Break</option>
+                        <option value="intro">Intro</option>
+                        <option value="outro">Outro</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="segmentDuration">Duration (seconds)</label>
+                        <input type="number" id="segmentDuration" name="duration" min="0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="segmentOrder">Order</label>
+                        <input type="number" id="segmentOrder" name="order_index" min="0">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="segmentNotes">Notes</label>
+                    <textarea id="segmentNotes" name="notes" rows="3" placeholder="Segment notes, scripts, or instructions..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="segmentPinned" name="is_pinned">
+                        Pin segment position (prevents drag & drop)
+                    </label>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-danger" id="deleteSegmentBtn">Delete</button>
+                    <div class="action-spacer"></div>
+                    <button type="button" class="btn btn-secondary" onclick="closeSegmentModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Segment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Auto-save Indicator -->
+    <div id="autoSaveIndicator" class="auto-save-indicator" style="display: none;">
+        <span class="save-icon">💾</span>
+        <span id="saveStatus">Saving...</span>
+    </div>
+
+    <!-- Keyboard Shortcuts Help -->
+    <div id="shortcutsHelp" class="shortcuts-help" style="display: none;">
+        <div class="shortcuts-content">
+            <h3>⌨️ Keyboard Shortcuts</h3>
+            <div class="shortcut-group">
+                <div class="shortcut-item">
+                    <kbd>Ctrl</kbd> + <kbd>S</kbd> <span>Save rundown</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>Ctrl</kbd> + <kbd>P</kbd> <span>Print rundown</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>Ctrl</kbd> + <kbd>N</kbd> <span>New segment</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>Esc</kbd> <span>Close modal</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>↑</kbd> / <kbd>↓</kbd> <span>Navigate segments</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>Enter</kbd> <span>Edit selected segment</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>Delete</kbd> <span>Delete selected segment</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
+    <script src="js/rundown-utils.js"></script>
+    <script src="js/rundown-database-mapping.js"></script>
+    <script src="js/rundown-auto-save.js"></script>
+    <script src="js/rundown-segments.js"></script>
+    <script src="js/rundown-talent.js"></script>
+    <script src="js/rundown-stories.js"></script>
+    <script src="js/rundown-editor.js"></script>
+
+    <script>
+        // Initialize editor when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get rundown ID from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const rundownId = urlParams.get('id');
+            
+            if (!rundownId) {
+                showError('No rundown ID provided. Redirecting to rundowns list...');
+                setTimeout(() => {
+                    window.location.href = '/rundowns.html';
+                }, 3000);
+                return;
+            }
+            
+            // Initialize the rundown editor
+            window.rundownEditor = new RundownEditor(rundownId);
+        });
+
+        // Utility functions
+        function showError(message) {
+            const errorScreen = document.getElementById('errorScreen');
+            const errorMessage = document.getElementById('errorMessage');
+            const loadingScreen = document.getElementById('loadingScreen');
+            const editorInterface = document.getElementById('editorInterface');
+            
+            if (errorMessage) errorMessage.textContent = message;
+            if (loadingScreen) loadingScreen.style.display = 'none';
+            if (editorInterface) editorInterface.style.display = 'none';
+            if (errorScreen) errorScreen.style.display = 'block';
+        }
+
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const editorInterface = document.getElementById('editorInterface');
+            
+            if (loadingScreen) loadingScreen.style.display = 'none';
+            if (editorInterface) editorInterface.style.display = 'block';
+        }
+
+        // Modal control functions
+        function closeTalentModal() {
+            const modal = document.getElementById('talentModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function closeStoryLinkModal() {
+            const modal = document.getElementById('storyLinkModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function closeSegmentModal() {
+            const modal = document.getElementById('segmentModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        // Global keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            // Close modals with Escape
+            if (event.key === 'Escape') {
+                closeTalentModal();
+                closeStoryLinkModal();
+                closeSegmentModal();
+                
+                const shortcutsHelp = document.getElementById('shortcutsHelp');
+                if (shortcutsHelp && shortcutsHelp.style.display !== 'none') {
+                    shortcutsHelp.style.display = 'none';
+                }
+            }
+            
+            // Show shortcuts help with ?
+            if (event.key === '?' && !event.ctrlKey && !event.altKey && !event.metaKey) {
+                const shortcutsHelp = document.getElementById('shortcutsHelp');
+                if (shortcutsHelp) {
+                    shortcutsHelp.style.display = shortcutsHelp.style.display === 'none' ? 'block' : 'none';
+                }
+            }
+        });
+
+        // Prevent accidental navigation away
+        window.addEventListener('beforeunload', function(event) {
+            if (window.rundownEditor && window.rundownEditor.isDirty) {
+                event.preventDefault();
+                event.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+                return 'You have unsaved changes. Are you sure you want to leave?';
+            }
+        });
+    </script>
+</body>
+</html>
