@@ -7,7 +7,7 @@
     "test:all": "npm run test:navigation && npm run test:e2e && npm run test:api && npm run test:integration",
     "test:navigation": "node run-navigation-tests.js",
     "test:navigation:comprehensive": "node comprehensive-navigation-test.js",
-    "test:navigation:student": "node test-student-navigation.js", 
+    "test:navigation:student": "node test-student-navigation.js",
     "test:navigation:clean": "node test-clean-navigation.js",
     "test:navigation:quick": "node quick-test-fixes.js",
     "test:e2e": "node testing/e2e/user-flow-tests/test-all-roles.js",
@@ -42,6 +42,7 @@
   "author": "VidPOD Team",
   "license": "MIT",
   "dependencies": {
-    "form-data": "^4.0.4"
+    "form-data": "^4.0.4",
+    "node-fetch": "^3.3.2"
   }
 }

@@ -53,6 +53,7 @@ const coursesRoutes = require('./routes/courses');
 const lessonsRoutes = require('./routes/lessons');
 const quizzesRoutes = require('./routes/quizzes');
 const progressRoutes = require('./routes/progress');
+const lessonMigrationRoutes = require('./routes/lesson-management-migration');
 
 // Use routes
 app.use('/api/auth', authRoutes);
@@ -88,6 +89,7 @@ app.use('/api/courses', coursesRoutes);
 app.use('/api/lessons', lessonsRoutes);
 app.use('/api/quizzes', quizzesRoutes);
 app.use('/api/progress', progressRoutes);
+app.use('/api/lesson-migration', lessonMigrationRoutes);
 
 // Serve static files from the frontend directory (after API routes)
 app.use(express.static(path.join(__dirname, 'frontend')));

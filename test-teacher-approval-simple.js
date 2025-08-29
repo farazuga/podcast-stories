@@ -38,7 +38,13 @@ async function testTeacherApproval() {
     try {
         console.log('1️⃣ Login as admin...');
         await page.goto('https://podcast-stories-production.up.railway.app/index.html');
-        await page.evaluate(() => { localStorage.clear(); });
+        
+        // Force cache refresh
+        await page.reload({ waitUntil: 'networkidle0' });
+        await page.evaluate(() => { 
+            localStorage.clear(); 
+            sessionStorage.clear();
+        });
         
         await page.waitForSelector('#email');
         await page.type('#email', 'admin@vidpod.com');

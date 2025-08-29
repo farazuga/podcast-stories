@@ -8,8 +8,13 @@ let myClasses = [];
 let currentClassId = null;
 let currentClassData = null;
 
-// Initialize page
+// Initialize page - ONLY on teacher dashboard
 document.addEventListener('DOMContentLoaded', async () => {
+    // Only run on teacher dashboard page
+    if (!window.location.pathname.includes('teacher-dashboard')) {
+        return;
+    }
+    
     if (!checkAuth()) return;
     
     await loadUserInfo();
@@ -116,12 +121,22 @@ async function loadUserInfo() {
         const firstName = getFirstName(user);
         const fullDisplayName = user.name || user.email;
         
-        document.getElementById('userInfo').textContent = fullDisplayName;
-        document.getElementById('teacherName').textContent = firstName;
+        // Only update DOM elements if they exist (teacher dashboard specific)
+        const userInfoElement = document.getElementById('userInfo');
+        const teacherNameElement = document.getElementById('teacherName');
+        const schoolNameElement = document.getElementById('schoolName');
+        
+        if (userInfoElement) {
+            userInfoElement.textContent = fullDisplayName;
+        }
+        
+        if (teacherNameElement) {
+            teacherNameElement.textContent = firstName;
+        }
         
         // If user has a school, display it
-        if (user.school) {
-            document.getElementById('schoolName').textContent = user.school;
+        if (user.school && schoolNameElement) {
+            schoolNameElement.textContent = user.school;
         }
     } catch (error) {
         console.error('Error loading user info:', error);
