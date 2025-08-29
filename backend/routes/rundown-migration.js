@@ -55,7 +55,7 @@ router.post('/run-migration', verifyToken, async (req, res) => {
     console.log('⏳ Executing migration...');
     
     // Execute the migration in a transaction
-    const client = await db.connect();
+    const client = await db.getPool().connect();
     
     try {
       await client.query('BEGIN');
