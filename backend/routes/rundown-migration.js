@@ -185,7 +185,7 @@ router.post('/run-migration', verifyToken, async (req, res) => {
 router.get('/status', verifyToken, async (req, res) => {
   try {
     // Check if rundown tables exist
-    const tablesCheck = await db.query(`
+    const tablesCheck = await pool.query(`
       SELECT table_name, 
              (SELECT COUNT(*) FROM information_schema.columns WHERE table_name = t.table_name) as column_count
       FROM information_schema.tables t
@@ -200,7 +200,7 @@ router.get('/status', verifyToken, async (req, res) => {
     }));
     
     // Check indexes
-    const indexCheck = await db.query(`
+    const indexCheck = await pool.query(`
       SELECT COUNT(*) as index_count
       FROM pg_indexes 
       WHERE tablename LIKE 'rundown%'
@@ -212,7 +212,7 @@ router.get('/status', verifyToken, async (req, res) => {
     let rundownCount = 0;
     if (existingTables.some(t => t.name === 'rundowns')) {
       try {
-        const countCheck = await db.query('SELECT COUNT(*) as count FROM rundowns');
+        const countCheck = await pool.query('SELECT COUNT(*) as count FROM rundowns');
         rundownCount = parseInt(countCheck.rows[0].count);
       } catch (e) {
         console.warn('Could not count rundowns:', e.message);
