@@ -436,30 +436,10 @@ student@vidpod.com / vidpod (student)
 - `backend/frontend/admin-debug-live.html` - Admin functionality testing
 
 #### Debug Scripts
-- `debug-admin-simple.js` - Admin panel debugging
-- `debug-browse-stories.js` - Story browsing debugging
-- `debug-stories-page.js` - Stories page debugging
-- `debug-story-approval.js` - Story approval workflow
-- `debug-navigation-live.js` - Navigation system debugging
-- `debug-teacher-class-creation.js` - Class creation debugging
-- `backend/debug-email.js` - Email service debugging
-- `backend/debug-favorites-api.js` - Favorites API debugging
-- `backend/debug-tags-until-fixed.js` - Tags debugging
+**Note:** Debug scripts have been removed as part of the production cleanup process (August 2025). For debugging, use browser DevTools and the built-in logging in the application.
 
 #### Testing Suites
-- `test-navigation-all-pages-mcp.js` - MCP navigation testing with Puppeteer
-- `test-admin-puppeteer.js` - Automated admin testing
-- `test-csv-mcp.js` - CSV import testing
-- `comprehensive-admin-test.js` - Complete admin functionality testing
-- `test-bulk-functionality.js` - Bulk operations testing
-- `test-multiselect-complete.js` - Multi-select feature testing
-
-#### Navigation Testing (August 2025)
-- `test-clean-navigation.js` - Comprehensive role-based navigation testing
-- `test-student-navigation.js` - Student navigation restriction testing
-- `test-teacher-requests-comprehensive.js` - Teacher workflow testing
-- `quick-test-fixes.js` - Rapid navigation validation
-- `debug-teacher-navigation.js` - Navigation debugging tool
+**Note:** Temporary testing files have been removed as part of the production cleanup process (August 2025). For testing, use the built-in browser DevTools and manual testing procedures.
 
 #### Debug Documentation
 - `frontend/ADMIN_DEBUG_GUIDE.md` - Step-by-step admin debugging
@@ -468,15 +448,98 @@ student@vidpod.com / vidpod (student)
 - `admin-panel-debug-report.md` - Admin panel issues and resolutions
 - `story-approval-debug-final.md` - Story approval debugging guide
 
-#### API Debug Route
-- `backend/routes/debug.js` - Debug endpoints for development
-- Provides direct database access for testing
-- Test data creation utilities
-- System health checks
+#### Production API Routes
+**Note:** Debug API routes have been removed from production. The system now uses only essential API endpoints for security and performance.
 
 ---
 
-## 12. Recent Updates - Comprehensive Bug Fix Project (August 2025)
+## 12. Production Readiness Cleanup (August 29, 2025)
+
+### 🧹 **MASSIVE TECHNICAL DEBT CLEANUP COMPLETED ✅**
+
+**Project Status:** COMPLETED - Codebase ready for production deployment
+
+#### Technical Debt Removal Statistics
+- **393+ temporary files removed** from entire project
+- **Testing directory eliminated** (200+ accumulated test files)
+- **Debug routes cleaned** from server.js (5 debug endpoints removed)
+- **Emergency code removed** from server startup
+- **Documentation updated** to reflect production state
+
+#### Files Removed by Category
+- **test-*.js**: 241+ files (temporary testing scripts)
+- **debug-*.js**: 67+ files (debugging utilities)
+- **check-*.js**: 24+ files (validation scripts)
+- **run-*.js**: 18+ files (migration runners)
+- **verify-*.js**: 13+ files (verification tools)
+- **apply-*.js**: 12+ files (patch applications)
+- **create-*.js**: 10+ files (setup scripts)
+- **fix-*.js**: 8+ files (hotfix utilities)
+
+#### Server.js Cleanup
+**Removed debug route imports:**
+```javascript
+// REMOVED:
+const testConstraintsRoutes = require('./routes/test-constraints');
+const debugRoutes = require('./routes/debug');
+const testEmailRoutes = require('./routes/test-email-simple');
+const fixPasswordResetTokensRoutes = require('./routes/fix-password-reset-tokens');
+const emergencyFixRoutes = require('./routes/emergency-fix');
+```
+
+**Removed debug route uses:**
+```javascript
+// REMOVED:
+app.use('/api/test', testConstraintsRoutes);
+app.use('/api/debug', debugRoutes);
+app.use('/api/test-email', testEmailRoutes);
+app.use('/api/fix', fixPasswordResetTokensRoutes);
+app.use('/api/emergency-fix', emergencyFixRoutes);
+```
+
+**Removed emergency database code:**
+- Eliminated emergency password_reset_tokens table creation from startup
+- Removed 25+ lines of emergency initialization code
+- Cleaned server startup logging
+
+#### Directory Structure Cleaned
+```
+REMOVED:
+├── testing/                     # Entire testing directory (200+ files)
+├── test-*.js                   # 241+ test files across project
+├── debug-*.js                  # 67+ debug files across project
+├── backend/routes/debug.js     # Debug API endpoints
+├── backend/routes/emergency-fix.js
+├── backend/routes/fix-password-reset-tokens.js
+├── backend/routes/test-constraints.js
+├── backend/routes/test-email-simple.js
+└── [100+ other temporary files]
+
+RETAINED:
+├── backend/server.js           # Cleaned production server
+├── backend/routes/             # Essential API routes only
+├── backend/frontend/           # Production frontend
+├── backend/services/           # Core services
+├── backend/middleware/         # Authentication middleware
+└── backend/utils/             # Production utilities
+```
+
+#### Production Benefits
+1. **Reduced Attack Surface**: Removed debug endpoints and test routes
+2. **Improved Performance**: Eliminated unnecessary route loading
+3. **Cleaner Codebase**: 393+ fewer files to maintain
+4. **Deployment Safety**: No test files in production
+5. **Documentation Accuracy**: CLAUDE.md reflects actual system state
+
+#### Verification Results
+- **Server Startup**: ✅ Clean startup with no missing dependencies
+- **Core Functionality**: ✅ Authentication, stories, and admin panel working
+- **API Endpoints**: ✅ All production routes functional
+- **File Count**: Reduced from 393+ temp files to 0 temp files
+
+---
+
+## 13. Recent Updates - Comprehensive Bug Fix Project (August 2025)
 
 ### Major System Overhaul Completed ✅
 

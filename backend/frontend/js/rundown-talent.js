@@ -1,11 +1,13 @@
 /**
  * VidPOD Rundown Talent Management
  * Handles talent (hosts, guests, experts) for rundowns
+ * Based on prototype v4-8 with host/guest separation and @tagging system
  */
 
 class RundownTalent {
     constructor() {
-        this.talent = [];
+        this.hosts = [];
+        this.guests = [];
         this.currentRundownId = null;
         
         this.init();
@@ -13,19 +15,53 @@ class RundownTalent {
     
     init() {
         this.setupEventListeners();
+        this.setupTagPanel();
     }
     
     setupEventListeners() {
-        // Talent actions
+        // Add host button
         document.addEventListener('click', (e) => {
-            if (e.target.matches('.edit-talent-btn')) {
-                const talentId = parseInt(e.target.dataset.talentId);
-                this.editTalent(talentId);
+            if (e.target.matches('#addHostBtn')) {
+                e.preventDefault();
+                this.addTalentSlot('host');
             }
             
-            if (e.target.matches('.delete-talent-btn')) {
-                const talentId = parseInt(e.target.dataset.talentId);
-                this.deleteTalentConfirm(talentId);
+            if (e.target.matches('#addGuestBtn')) {
+                e.preventDefault();
+                this.addTalentSlot('guest');
+            }
+            
+            if (e.target.matches('.talent-remove-btn')) {
+                e.preventDefault();
+                const index = parseInt(e.target.dataset.index);
+                const type = e.target.dataset.type;
+                this.removeTalent(type, index);
+            }
+        });
+
+        // Handle talent input changes
+        document.addEventListener('input', (e) => {
+            if (e.target.matches('.talent-input')) {
+                const index = parseInt(e.target.dataset.index);
+                const type = e.target.dataset.type;
+                this.updateTalentName(type, index, e.target.value);
+            }
+        });
+    }
+
+    setupTagPanel() {
+        // Setup @tagging functionality for questions
+        document.addEventListener('focus', (e) => {
+            if (e.target.matches('textarea.qarea')) {
+                this.activeQuestionInput = e.target;
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target.matches('.tag-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.toggleTagPanel(e.target);
             }
         });
     }
@@ -34,7 +70,12 @@ class RundownTalent {
         this.currentRundownId = rundownId;
         
         try {
-            this.talent = await RundownUtils.apiRequest(`/rundown-talent/rundown/${rundownId}`);
+            const talent = await RundownUtils.apiRequest(`/rundown-talent/rundown/${rundownId}`);
+            
+            // Separate hosts and guests based on role
+            this.hosts = talent.filter(t => t.role === 'host' || t.role === 'co-host').map(t => t.name);
+            this.guests = talent.filter(t => t.role === 'guest' || t.role === 'expert').map(t => t.name);
+            
             this.renderTalent();
             this.updateTalentCount();
         } catch (error) {
@@ -44,250 +85,278 @@ class RundownTalent {
     }
     
     renderTalent() {
-        const container = document.getElementById('talentList');
-        if (!container) return;
-        
-        if (this.talent.length === 0) {
-            container.innerHTML = `
-                <div class="no-talent">
-                    <p>No talent added yet. Add hosts, guests, or experts.</p>
-                </div>
-            `;
-            return;
-        }
-        
-        container.innerHTML = this.talent.map(person => this.createTalentHTML(person)).join('');
+        this.renderHosts();
+        this.renderGuests();
+        this.updateTalentControls();
     }
-    
-    createTalentHTML(person) {
-        const roleColors = {
-            host: '#007cba',
-            'co-host': '#17a2b8',
-            guest: '#28a745',
-            expert: '#fd7e14'
-        };
+
+    renderHosts() {
+        const hostStack = document.getElementById('hostStack');
+        if (!hostStack) return;
         
-        return `
-            <div class="talent-item" data-talent-id="${person.id}">
-                <div class="talent-info">
-                    <div class="talent-name">${RundownUtils.sanitizeHtml(person.name)}</div>
-                    <div class="talent-role" style="color: ${roleColors[person.role] || '#666'}">
-                        ${person.role.replace('-', ' ')}
-                    </div>
-                    ${person.bio ? `<div class="talent-bio">${RundownUtils.truncateText(RundownUtils.sanitizeHtml(person.bio), 100)}</div>` : ''}
-                </div>
-                <div class="talent-actions">
-                    <button class="btn btn-small edit-talent-btn" data-talent-id="${person.id}" title="Edit talent">
-                        ✏️
-                    </button>
-                    <button class="btn btn-small delete-talent-btn" data-talent-id="${person.id}" title="Remove talent">
-                        🗑️
-                    </button>
-                </div>
-            </div>
-        `;
+        hostStack.innerHTML = '';
+        this.hosts.forEach((host, index) => {
+            hostStack.appendChild(this.createTalentChip(host, index, 'host'));
+        });
+    }
+
+    renderGuests() {
+        const guestStack = document.getElementById('guestStack');
+        if (!guestStack) return;
+        
+        guestStack.innerHTML = '';
+        this.guests.forEach((guest, index) => {
+            guestStack.appendChild(this.createTalentChip(guest, index, 'guest'));
+        });
+    }
+
+    createTalentChip(name, index, type) {
+        const wrap = document.createElement('div');
+        wrap.className = 'talent-chip';
+        
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'talent-input';
+        input.placeholder = 'Full name';
+        input.value = name || '';
+        input.dataset.index = index;
+        input.dataset.type = type;
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'mini-btn talent-remove-btn';
+        removeBtn.textContent = '×';
+        removeBtn.title = 'Remove';
+        removeBtn.dataset.index = index;
+        removeBtn.dataset.type = type;
+        
+        wrap.appendChild(input);
+        wrap.appendChild(removeBtn);
+        
+        return wrap;
     }
     
     updateTalentCount() {
-        const talentCount = document.getElementById('talentCount');
-        if (talentCount) {
-            talentCount.textContent = `(${this.talent.length}/4)`;
+        const total = this.getTotalPeople();
+        const peopleCount = document.getElementById('peopleCount');
+        if (peopleCount) {
+            peopleCount.textContent = `${total}/4`;
+        }
+    }
+
+    updateTalentControls() {
+        const total = this.getTotalPeople();
+        const atMax = total >= 4;
+        
+        const addHostBtn = document.getElementById('addHostBtn');
+        const addGuestBtn = document.getElementById('addGuestBtn');
+        
+        if (addHostBtn) {
+            addHostBtn.disabled = atMax;
+            addHostBtn.title = atMax ? 'Max 4 people total' : 'Add host';
         }
         
-        // Update add button state
-        const addButton = document.querySelector('button[onclick="showAddTalentModal()"]');
-        if (addButton) {
-            if (this.talent.length >= 4) {
-                addButton.disabled = true;
-                addButton.textContent = '+ Talent Full (4/4)';
-                addButton.title = 'Maximum 4 talent members allowed';
-            } else {
-                addButton.disabled = false;
-                addButton.textContent = '+ Add Talent';
-                addButton.title = 'Add new talent member';
+        if (addGuestBtn) {
+            addGuestBtn.disabled = atMax;
+            addGuestBtn.title = atMax ? 'Max 4 people total' : 'Add guest';
+        }
+    }
+
+    getTotalPeople() {
+        return this.hosts.length + this.guests.length;
+    }
+    
+    addTalentSlot(type) {
+        if (this.getTotalPeople() >= 4) {
+            RundownUtils.showError('Maximum 4 people total');
+            return;
+        }
+        
+        if (type === 'host') {
+            this.hosts.push('');
+        } else if (type === 'guest') {
+            this.guests.push('');
+        }
+        
+        this.renderTalent();
+        this.saveTalent();
+    }
+
+    removeTalent(type, index) {
+        if (type === 'host' && index < this.hosts.length) {
+            this.hosts.splice(index, 1);
+        } else if (type === 'guest' && index < this.guests.length) {
+            this.guests.splice(index, 1);
+        }
+        
+        this.renderTalent();
+        this.saveTalent();
+    }
+
+    updateTalentName(type, index, value) {
+        if (type === 'host' && index < this.hosts.length) {
+            this.hosts[index] = value;
+        } else if (type === 'guest' && index < this.guests.length) {
+            this.guests[index] = value;
+        }
+        
+        // Debounce save
+        clearTimeout(this.saveTimeout);
+        this.saveTimeout = setTimeout(() => this.saveTalent(), 500);
+    }
+    
+    async saveTalent() {
+        if (!this.currentRundownId) return;
+        
+        try {
+            // Clear existing talent for this rundown
+            const existingTalent = await RundownUtils.apiRequest(`/rundown-talent/rundown/${this.currentRundownId}`);
+            
+            // Delete existing talent
+            for (const person of existingTalent) {
+                await RundownUtils.apiRequest(`/rundown-talent/${person.id}`, {
+                    method: 'DELETE'
+                });
             }
-        }
-    }
-    
-    async addTalent() {
-        const form = document.getElementById('addTalentForm');
-        const errors = RundownUtils.validateForm(form);
-        
-        if (errors.length > 0) {
-            RundownUtils.showError(errors.join(', '));
-            return;
-        }
-        
-        if (this.talent.length >= 4) {
-            RundownUtils.showError('Maximum 4 talent members allowed per rundown');
-            return;
-        }
-        
-        try {
-            const formData = RundownUtils.getFormData(form);
-            formData.rundown_id = this.currentRundownId;
             
-            const talent = await RundownUtils.apiRequest('/rundown-talent', {
-                method: 'POST',
-                body: JSON.stringify(formData)
-            });
+            // Add hosts
+            for (const hostName of this.hosts) {
+                if (hostName.trim()) {
+                    await RundownUtils.apiRequest('/rundown-talent', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            rundown_id: this.currentRundownId,
+                            name: hostName.trim(),
+                            role: 'host'
+                        })
+                    });
+                }
+            }
             
-            RundownUtils.showSuccess('Talent added successfully!');
-            RundownUtils.hideModal('addTalentModal');
-            
-            // Add to local array and re-render
-            this.talent.push(talent);
-            this.renderTalent();
-            this.updateTalentCount();
+            // Add guests
+            for (const guestName of this.guests) {
+                if (guestName.trim()) {
+                    await RundownUtils.apiRequest('/rundown-talent', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            rundown_id: this.currentRundownId,
+                            name: guestName.trim(),
+                            role: 'guest'
+                        })
+                    });
+                }
+            }
             
         } catch (error) {
-            console.error('Error adding talent:', error);
-            RundownUtils.showError('Failed to add talent: ' + error.message);
+            console.error('Error saving talent:', error);
         }
     }
     
-    editTalent(talentId) {
-        const person = this.talent.find(t => t.id === talentId);
-        if (!person) {
-            RundownUtils.showError('Talent not found');
+    // @tagging system for questions
+    toggleTagPanel(button) {
+        const tagPanel = button.parentElement.querySelector('.tag-panel');
+        if (!tagPanel) return;
+        
+        this.rebuildTagPanel(tagPanel);
+        tagPanel.style.display = tagPanel.style.display === 'block' ? 'none' : 'block';
+    }
+    
+    rebuildTagPanel(tagPanel) {
+        tagPanel.innerHTML = '';
+        const hTotal = this.hosts.length;
+        const gTotal = this.guests.length;
+        
+        if (hTotal + gTotal === 0) {
+            const emptyNote = document.createElement('div');
+            emptyNote.className = 'empty-note';
+            emptyNote.textContent = 'No hosts or guests yet.';
+            tagPanel.appendChild(emptyNote);
             return;
         }
         
-        // Populate edit form (reuse add form)
-        this.populateTalentForm(person);
-        document.querySelector('#addTalentModal h2').textContent = '✏️ Edit Talent';
-        document.querySelector('#addTalentModal .btn-primary').textContent = 'Update Talent';
-        document.querySelector('#addTalentModal .btn-primary').onclick = () => this.updateTalent(talentId);
-        
-        RundownUtils.showModal('addTalentModal');
-    }
-    
-    populateTalentForm(person) {
-        document.getElementById('talentName').value = person.name || '';
-        document.getElementById('talentRole').value = person.role || '';
-        document.getElementById('talentBio').value = person.bio || '';
-        document.getElementById('talentNotes').value = person.notes || '';
-    }
-    
-    async updateTalent(talentId) {
-        const form = document.getElementById('addTalentForm');
-        const errors = RundownUtils.validateForm(form);
-        
-        if (errors.length > 0) {
-            RundownUtils.showError(errors.join(', '));
-            return;
-        }
-        
-        try {
-            const formData = RundownUtils.getFormData(form);
+        // Hosts section
+        if (hTotal > 0) {
+            const hostsHeader = document.createElement('h5');
+            hostsHeader.textContent = 'Hosts';
+            tagPanel.appendChild(hostsHeader);
             
-            await RundownUtils.apiRequest(`/rundown-talent/${talentId}`, {
-                method: 'PUT',
-                body: JSON.stringify(formData)
+            this.hosts.forEach(name => {
+                if (name.trim()) {
+                    const button = document.createElement('button');
+                    button.className = 'chip-btn';
+                    button.textContent = name;
+                    button.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.insertAtCursor(this.activeQuestionInput, `@Host(${name})`);
+                        tagPanel.style.display = 'none';
+                    });
+                    tagPanel.appendChild(button);
+                }
             });
-            
-            RundownUtils.showSuccess('Talent updated successfully!');
-            this.resetTalentModal();
-            
-            // Reload talent
-            await this.loadTalent(this.currentRundownId);
-            
-        } catch (error) {
-            console.error('Error updating talent:', error);
-            RundownUtils.showError('Failed to update talent: ' + error.message);
-        }
-    }
-    
-    async deleteTalentConfirm(talentId) {
-        const person = this.talent.find(t => t.id === talentId);
-        if (!person) return;
-        
-        if (!confirm(`Are you sure you want to remove ${person.name} from this rundown?`)) {
-            return;
         }
         
-        try {
-            await RundownUtils.apiRequest(`/rundown-talent/${talentId}`, {
-                method: 'DELETE'
+        // Guests section
+        if (gTotal > 0) {
+            const guestsHeader = document.createElement('h5');
+            guestsHeader.textContent = 'Guests';
+            tagPanel.appendChild(guestsHeader);
+            
+            this.guests.forEach(name => {
+                if (name.trim()) {
+                    const button = document.createElement('button');
+                    button.className = 'chip-btn';
+                    button.textContent = name;
+                    button.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.insertAtCursor(this.activeQuestionInput, `@Guest(${name})`);
+                        tagPanel.style.display = 'none';
+                    });
+                    tagPanel.appendChild(button);
+                }
             });
-            
-            RundownUtils.showSuccess('Talent removed successfully!');
-            
-            // Remove from local array and re-render
-            this.talent = this.talent.filter(t => t.id !== talentId);
-            this.renderTalent();
-            this.updateTalentCount();
-            
-        } catch (error) {
-            console.error('Error removing talent:', error);
-            RundownUtils.showError('Failed to remove talent: ' + error.message);
         }
     }
     
-    resetTalentModal() {
-        RundownUtils.hideModal('addTalentModal');
+    insertAtCursor(input, text) {
+        if (!input) return;
         
-        // Reset modal to add mode
-        document.querySelector('#addTalentModal h2').textContent = '👥 Add Talent';
-        document.querySelector('#addTalentModal .btn-primary').textContent = 'Add Talent';
-        document.querySelector('#addTalentModal .btn-primary').onclick = () => this.addTalent();
+        const start = input.selectionStart ?? input.value.length;
+        const end = input.selectionEnd ?? input.value.length;
+        const before = input.value.slice(0, start);
+        const after = input.value.slice(end);
+        
+        input.value = before + text + after;
+        
+        const newPosition = start + text.length;
+        input.setSelectionRange(newPosition, newPosition);
+        input.dispatchEvent(new Event('input', {bubbles: true}));
+        input.focus();
     }
     
-    // Get talent names for use in segments (e.g., question templates)
-    getTalentNames() {
-        return this.talent.map(person => person.name);
+    // Get all talent names for use in other components
+    getAllTalentNames() {
+        return [...this.hosts.filter(h => h.trim()), ...this.guests.filter(g => g.trim())];
     }
     
-    // Get talent by role
-    getTalentByRole(role) {
-        return this.talent.filter(person => person.role === role);
+    // Get hosts specifically
+    getHosts() {
+        return this.hosts.filter(h => h.trim());
     }
     
-    // Insert talent name into text at cursor position
-    insertTalentName(textareaId, talentName) {
-        const textarea = document.getElementById(textareaId);
-        if (!textarea) return;
-        
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const text = textarea.value;
-        
-        const before = text.substring(0, start);
-        const after = text.substring(end);
-        
-        textarea.value = before + `@${talentName}` + after;
-        
-        // Move cursor after inserted name
-        const newPosition = start + talentName.length + 1;
-        textarea.setSelectionRange(newPosition, newPosition);
-        textarea.focus();
+    // Get guests specifically
+    getGuests() {
+        return this.guests.filter(g => g.trim());
     }
+    
 }
 
-// Global functions
-function showAddTalentModal() {
-    // Check talent limit
-    if (window.rundownTalent && window.rundownTalent.talent.length >= 4) {
-        RundownUtils.showError('Maximum 4 talent members allowed per rundown');
-        return;
+// Close tag panels when clicking elsewhere
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.tag-panel') && !e.target.matches('.tag-btn')) {
+        document.querySelectorAll('.tag-panel').forEach(panel => {
+            panel.style.display = 'none';
+        });
     }
-    
-    RundownUtils.showModal('addTalentModal');
-}
-
-function hideAddTalentModal() {
-    if (window.rundownTalent) {
-        window.rundownTalent.resetTalentModal();
-    } else {
-        RundownUtils.hideModal('addTalentModal');
-    }
-}
-
-function addTalent() {
-    if (window.rundownTalent) {
-        window.rundownTalent.addTalent();
-    }
-}
+});
 
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', () => {

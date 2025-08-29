@@ -327,7 +327,7 @@ router.post('/setup', async (req, res) => {
       $$ LANGUAGE plpgsql;
     `);
     
-    -- Create essential indexes
+    // Create essential indexes
     await client.query(`CREATE INDEX IF NOT EXISTS idx_courses_teacher_id ON courses(teacher_id)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_courses_school_id ON courses(school_id)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_lessons_course_id ON lessons(course_id)`);

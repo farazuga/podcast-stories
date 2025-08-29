@@ -1,4 +1,0 @@
-idea_title,idea_description,question_1,question_2,question_3,coverage_start_date,coverage_end_date,tags,interviewees
-"Test Auto-Approval Story","This story should be automatically approved when imported via CSV","What is your background?","How did you get started?","What challenges did you face?","2024-02-15","2024-02-15","Education,Technology","John Smith,Jane Doe"
-"Single Day Coverage Test","Testing single day coverage display","Tell us about your experience","What motivated you?","Any advice for others?","2024-03-10","2024-03-10","Business,Innovation","Sarah Johnson"
-"Date Range Coverage Test","Testing date range coverage display","What's your story?","How did it begin?","What's next?","2024-04-01","2024-04-05","Sports,Community","Mike Wilson,Lisa Chen"

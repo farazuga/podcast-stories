@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/navigation.css">
     <link rel="stylesheet" href="css/rundown.css">
+    <link rel="stylesheet" href="css/rundown-print.css">
 </head>
 <body>
     <!-- Navigation will auto-load here -->
@@ -108,8 +109,13 @@
             <div class="modal-header">
                 <h2 id="editorRundownTitle">📝 Rundown Editor</h2>
                 <div class="editor-actions">
-                    <button class="btn btn-outline btn-small" onclick="exportRundownPDF()" id="exportPDFBtn">
-                        📄 Export PDF
+                    <div class="expand-collapse-controls">
+                        <button class="expand-all-btn" id="expandAllSegments">📖 Expand All</button>
+                        <button class="collapse-all-btn" id="collapseAllSegments">📕 Collapse All</button>
+                    </div>
+                    <button class="print-preview-btn" id="exportPDFBtn">
+                        <span class="print-icon">🖨️</span>
+                        Print PDF
                     </button>
                     <span class="close" onclick="hideRundownEditor()">&times;</span>
                 </div>
@@ -126,12 +132,25 @@
                             </div>
                         </div>
                         
-                        <div class="sidebar-section">
-                            <h3>👥 Talent <span class="talent-count" id="talentCount">(0/4)</span></h3>
-                            <div id="talentList" class="talent-list">
-                                <!-- Talent will be loaded here -->
+                        <div class="sidebar-section" id="talentCard">
+                            <div class="card-header">
+                                <h3>👥 Talent</h3>
+                                <span id="peopleCount" class="people-count">0/4</span>
                             </div>
-                            <button class="btn btn-outline btn-small" onclick="showAddTalentModal()">+ Add Talent</button>
+                            <div class="card-body">
+                                <div class="row">
+                                    <label>Hosts 
+                                        <button id="addHostBtn" class="icon-btn" title="Add host">+</button>
+                                    </label>
+                                    <div id="hostStack" class="talent-col"></div>
+                                </div>
+                                <div class="row">
+                                    <label>Guests 
+                                        <button id="addGuestBtn" class="icon-btn" title="Add guest">+</button>
+                                    </label>
+                                    <div id="guestStack" class="talent-col"></div>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="sidebar-section">
@@ -268,6 +287,10 @@
     <script src="js/navigation.js"></script>
     <script src="js/include-navigation.js"></script>
     <script src="js/rundown-utils.js"></script>
+    <script src="js/rundown-database-mapping.js"></script>
+    <script src="js/rundown-debug.js"></script>
+    <script src="js/rundown-auto-save.js"></script>
+    <script src="js/rundown-editor.js"></script>
     <script src="js/rundowns.js"></script>
     <script src="js/rundown-segments.js"></script>
     <script src="js/rundown-talent.js"></script>

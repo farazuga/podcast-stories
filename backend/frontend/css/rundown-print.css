@@ -1,0 +1,624 @@
+/**
+ * VidPOD Rundown Print Styles
+ * Professional print layout optimized for podcast rundowns
+ * Based on prototype v4-8 with enhanced typography and layout
+ */
+
+/* ========================================
+   PRINT MEDIA QUERIES AND RESETS
+   ======================================== */
+
+@media print {
+    /* Reset and base styles */
+    * {
+        box-sizing: border-box;
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    html, body {
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        font-family: 'Times New Roman', Times, serif !important;
+        font-size: 12pt !important;
+        line-height: 1.4 !important;
+        color: black !important;
+    }
+    
+    /* Page setup */
+    @page {
+        size: A4;
+        margin: 0.75in;
+        
+        @top-left {
+            content: "VidPOD Rundown";
+            font-size: 10pt;
+            font-weight: bold;
+        }
+        
+        @top-right {
+            content: counter(page) " of " counter(pages);
+            font-size: 10pt;
+        }
+        
+        @bottom-center {
+            content: "Generated on " date(iso);
+            font-size: 9pt;
+            color: #666;
+        }
+    }
+    
+    /* ========================================
+       HIDE NON-PRINT ELEMENTS
+       ======================================== */
+    
+    /* Hide all UI controls and interactive elements */
+    .modal,
+    .modal-backdrop,
+    .editor-actions,
+    .editor-toolbar,
+    .segment-actions,
+    .talent-actions,
+    .drag-handle,
+    .segment-drag-handle,
+    .mini-btn,
+    .icon-btn,
+    .btn,
+    button,
+    .caret,
+    .segment-caret,
+    .tag-panel,
+    .arrow-btn,
+    .status-prev-btn,
+    .status-next-btn,
+    .after-insert,
+    .add-segment-after,
+    .add-segment-btn,
+    .question-controls,
+    .question-up-btn,
+    .question-down-btn,
+    .question-remove-btn,
+    .add-question-btn,
+    .tag-btn,
+    .auto-save-indicator,
+    .last-save-indicator,
+    .drop-indicator,
+    input[type="button"],
+    input[type="submit"],
+    .sidebar-actions,
+    .rundown-actions {
+        display: none !important;
+        visibility: hidden !important;
+    }
+    
+    /* Hide scrollbars and overflow */
+    ::-webkit-scrollbar {
+        display: none !important;
+    }
+    
+    body {
+        overflow: visible !important;
+    }
+    
+    /* ========================================
+       RUNDOWN HEADER LAYOUT
+       ======================================== */
+    
+    .rundown-print-header {
+        border-bottom: 3px solid #333;
+        margin-bottom: 1in;
+        padding-bottom: 0.25in;
+        page-break-after: avoid;
+    }
+    
+    .rundown-title {
+        font-size: 24pt !important;
+        font-weight: bold !important;
+        margin: 0 0 0.25in 0 !important;
+        color: black !important;
+        text-align: center !important;
+        font-family: 'Arial', sans-serif !important;
+    }
+    
+    .rundown-metadata {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: flex-start !important;
+        margin-bottom: 0.25in !important;
+        font-size: 11pt !important;
+        font-family: 'Arial', sans-serif !important;
+    }
+    
+    .rundown-meta-left,
+    .rundown-meta-right {
+        flex: 1 !important;
+    }
+    
+    .rundown-meta-right {
+        text-align: right !important;
+    }
+    
+    .meta-row {
+        margin-bottom: 0.1in !important;
+    }
+    
+    .meta-label {
+        font-weight: bold !important;
+        display: inline !important;
+        margin-right: 0.2in !important;
+    }
+    
+    .meta-value {
+        display: inline !important;
+    }
+    
+    /* ========================================
+       TIMING INFORMATION
+       ======================================== */
+    
+    .print-timing-summary {
+        background: #f8f8f8 !important;
+        border: 2px solid #ddd !important;
+        border-radius: 8px !important;
+        padding: 0.2in !important;
+        margin: 0.25in 0 0.5in 0 !important;
+        text-align: center !important;
+        page-break-inside: avoid !important;
+    }
+    
+    .timing-display-large {
+        font-size: 20pt !important;
+        font-weight: bold !important;
+        color: #333 !important;
+        margin-bottom: 0.1in !important;
+        font-family: 'Arial', sans-serif !important;
+    }
+    
+    .timing-breakdown {
+        font-size: 10pt !important;
+        color: #666 !important;
+        display: flex !important;
+        justify-content: space-around !important;
+    }
+    
+    .timing-item {
+        text-align: center !important;
+    }
+    
+    .timing-item-label {
+        display: block !important;
+        font-weight: bold !important;
+        margin-bottom: 0.05in !important;
+    }
+    
+    .timing-item-value {
+        display: block !important;
+        font-size: 11pt !important;
+        color: black !important;
+    }
+    
+    /* ========================================
+       TALENT SECTION
+       ======================================== */
+    
+    .print-talent-section {
+        margin: 0.5in 0 !important;
+        page-break-inside: avoid !important;
+    }
+    
+    .talent-section-header {
+        font-size: 16pt !important;
+        font-weight: bold !important;
+        margin-bottom: 0.2in !important;
+        border-bottom: 2px solid #333 !important;
+        padding-bottom: 0.05in !important;
+        font-family: 'Arial', sans-serif !important;
+    }
+    
+    .talent-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.3in !important;
+        margin-bottom: 0.25in !important;
+    }
+    
+    .talent-category {
+        margin-bottom: 0.2in !important;
+    }
+    
+    .talent-category-header {
+        font-size: 12pt !important;
+        font-weight: bold !important;
+        margin-bottom: 0.1in !important;
+        color: #333 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5pt !important;
+    }
+    
+    .talent-list {
+        list-style: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .talent-item {
+        font-size: 11pt !important;
+        margin-bottom: 0.05in !important;
+        padding-left: 0.2in !important;
+        position: relative !important;
+    }
+    
+    .talent-item::before {
+        content: "•" !important;
+        position: absolute !important;
+        left: 0 !important;
+        font-weight: bold !important;
+    }
+    
+    /* ========================================
+       SEGMENT LAYOUT
+       ======================================== */
+    
+    .print-segments-section {
+        margin-top: 0.5in !important;
+    }
+    
+    .segments-header {
+        font-size: 16pt !important;
+        font-weight: bold !important;
+        margin-bottom: 0.25in !important;
+        border-bottom: 2px solid #333 !important;
+        padding-bottom: 0.05in !important;
+        font-family: 'Arial', sans-serif !important;
+    }
+    
+    /* Segment items */
+    .segment-item {
+        background: white !important;
+        border: 2px solid #333 !important;
+        border-radius: 0 !important;
+        margin: 0.25in 0 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid !important;
+        page-break-after: auto !important;
+    }
+    
+    .segment-item.pinned {
+        border-color: #666 !important;
+        border-style: dashed !important;
+    }
+    
+    /* Force all segments to be expanded */
+    .segment-content {
+        display: block !important;
+        visibility: visible !important;
+    }
+    
+    /* Segment headers */
+    .segment-header {
+        background: #f0f0f0 !important;
+        padding: 0.15in 0.2in !important;
+        border-bottom: 1px solid #ccc !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+    }
+    
+    .segment-title-info {
+        flex: 1 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.2in !important;
+    }
+    
+    .segment-title-input {
+        border: none !important;
+        background: transparent !important;
+        font-size: 14pt !important;
+        font-weight: bold !important;
+        color: black !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: auto !important;
+        flex: none !important;
+        font-family: 'Arial', sans-serif !important;
+    }
+    
+    .segment-pin {
+        background: #ddd !important;
+        color: #666 !important;
+        padding: 0.05in 0.15in !important;
+        border-radius: 0.1in !important;
+        font-size: 9pt !important;
+        font-weight: bold !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5pt !important;
+        margin-left: 0.1in !important;
+    }
+    
+    .segment-controls {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.2in !important;
+        font-size: 11pt !important;
+        font-weight: bold !important;
+    }
+    
+    .segment-time-input {
+        border: 1px solid #ccc !important;
+        background: white !important;
+        padding: 0.05in 0.1in !important;
+        font-size: 11pt !important;
+        font-weight: bold !important;
+        font-family: 'Courier New', monospace !important;
+        text-align: center !important;
+        width: 0.8in !important;
+    }
+    
+    .segment-status-pill {
+        border: 1px solid #333 !important;
+        background: white !important;
+        padding: 0.05in 0.15in !important;
+        border-radius: 0.1in !important;
+        font-size: 9pt !important;
+        font-weight: bold !important;
+        text-transform: uppercase !important;
+        text-align: center !important;
+        min-width: 1in !important;
+    }
+    
+    /* Status-specific styling */
+    .segment-status-pill.status-ready {
+        background: #e8f5e8 !important;
+        border-color: #4caf50 !important;
+        color: #2e7d32 !important;
+    }
+    
+    .segment-status-pill.status-review {
+        background: #fff3e0 !important;
+        border-color: #ff9800 !important;
+        color: #ef6c00 !important;
+    }
+    
+    .segment-status-pill.status-draft {
+        background: #f5f5f5 !important;
+        border-color: #9e9e9e !important;
+        color: #616161 !important;
+    }
+    
+    /* ========================================
+       SEGMENT CONTENT
+       ======================================== */
+    
+    .segment-content {
+        padding: 0.2in !important;
+        background: white !important;
+        font-size: 11pt !important;
+        line-height: 1.5 !important;
+    }
+    
+    .segment-field {
+        margin-bottom: 0.2in !important;
+        page-break-inside: avoid !important;
+    }
+    
+    .segment-field:last-child {
+        margin-bottom: 0 !important;
+    }
+    
+    .segment-field label {
+        display: block !important;
+        font-weight: bold !important;
+        font-size: 10pt !important;
+        color: #333 !important;
+        margin-bottom: 0.1in !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5pt !important;
+        border-bottom: 1px solid #ddd !important;
+        padding-bottom: 0.05in !important;
+    }
+    
+    /* Text inputs and textareas */
+    .segment-intro-input,
+    .segment-close-input,
+    .segment-notes-input {
+        border: none !important;
+        background: transparent !important;
+        width: 100% !important;
+        padding: 0 !important;
+        font-size: 11pt !important;
+        line-height: 1.5 !important;
+        color: black !important;
+        font-family: 'Times New Roman', Times, serif !important;
+        resize: none !important;
+        white-space: pre-wrap !important;
+        word-wrap: break-word !important;
+    }
+    
+    /* Questions section */
+    .questions-field {
+        position: relative !important;
+    }
+    
+    .questions-header {
+        margin-bottom: 0.15in !important;
+    }
+    
+    .questions-list {
+        margin-left: 0.2in !important;
+    }
+    
+    .question-row {
+        margin-bottom: 0.15in !important;
+        page-break-inside: avoid !important;
+        position: relative !important;
+        display: block !important;
+        padding-left: 0.3in !important;
+    }
+    
+    .question-row::before {
+        content: "Q" counter(question-counter) ": " !important;
+        counter-increment: question-counter !important;
+        position: absolute !important;
+        left: 0 !important;
+        font-weight: bold !important;
+        color: #333 !important;
+        font-size: 10pt !important;
+    }
+    
+    .question-input {
+        border: none !important;
+        background: transparent !important;
+        width: 100% !important;
+        padding: 0 !important;
+        font-size: 11pt !important;
+        line-height: 1.5 !important;
+        color: black !important;
+        font-family: 'Times New Roman', Times, serif !important;
+        resize: none !important;
+        white-space: pre-wrap !important;
+        word-wrap: break-word !important;
+        min-height: auto !important;
+    }
+    
+    /* Reset question counter for each segment */
+    .segment-item {
+        counter-reset: question-counter !important;
+    }
+    
+    /* ========================================
+       PAGE BREAK MANAGEMENT
+       ======================================== */
+    
+    /* Avoid breaking these elements */
+    .rundown-print-header,
+    .print-timing-summary,
+    .talent-section-header,
+    .segments-header,
+    .segment-header,
+    .segment-field,
+    .question-row {
+        page-break-inside: avoid !important;
+    }
+    
+    /* Always break before these elements if needed */
+    .print-segments-section {
+        page-break-before: auto !important;
+    }
+    
+    /* Orphan and widow control */
+    p, div, li {
+        orphans: 3 !important;
+        widows: 3 !important;
+    }
+    
+    /* ========================================
+       TYPOGRAPHY ENHANCEMENTS
+       ======================================== */
+    
+    /* Clean up text rendering */
+    .segment-intro-input:empty::before,
+    .segment-close-input:empty::before,
+    .segment-notes-input:empty::before,
+    .question-input:empty::before {
+        content: "[No content]" !important;
+        color: #ccc !important;
+        font-style: italic !important;
+    }
+    
+    /* Highlight @mentions in questions */
+    .question-input {
+        text-decoration: none !important;
+    }
+    
+    /* ========================================
+       LAYOUT UTILITIES
+       ======================================== */
+    
+    .print-page-break {
+        page-break-before: always !important;
+    }
+    
+    .print-no-break {
+        page-break-inside: avoid !important;
+    }
+    
+    .print-hide {
+        display: none !important;
+    }
+    
+    .print-show {
+        display: block !important;
+    }
+    
+    /* ========================================
+       FOOTER INFORMATION
+       ======================================== */
+    
+    .print-footer {
+        position: fixed !important;
+        bottom: 0.5in !important;
+        left: 0.75in !important;
+        right: 0.75in !important;
+        font-size: 9pt !important;
+        color: #666 !important;
+        text-align: center !important;
+        border-top: 1px solid #ddd !important;
+        padding-top: 0.1in !important;
+    }
+    
+    /* ========================================
+       ACCESSIBILITY AND QUALITY
+       ======================================== */
+    
+    /* Ensure sufficient contrast */
+    .segment-header {
+        background: #f8f8f8 !important;
+    }
+    
+    /* Clean borders and spacing */
+    .segment-item:first-child {
+        margin-top: 0 !important;
+    }
+    
+    .segment-item:last-child {
+        margin-bottom: 0.5in !important;
+    }
+    
+    /* High-quality image rendering if any */
+    img {
+        max-width: 100% !important;
+        height: auto !important;
+        page-break-inside: avoid !important;
+    }
+}
+
+/* ========================================
+   PRINT PREVIEW STYLES (SCREEN)
+   ======================================== */
+
+/* When print preview is active */
+.print-preview-mode {
+    background: #f0f0f0 !important;
+    padding: 1in !important;
+}
+
+.print-preview-mode .rundown-print-container {
+    background: white !important;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1) !important;
+    max-width: 8.5in !important;
+    margin: 0 auto !important;
+    padding: 0.75in !important;
+}
+
+/* Hide non-print elements in preview */
+.print-preview-mode .editor-actions,
+.print-preview-mode .editor-toolbar,
+.print-preview-mode button,
+.print-preview-mode .btn {
+    display: none !important;
+}
