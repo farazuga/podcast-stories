@@ -258,6 +258,7 @@ async function checkMigrationStatus() {
 /**
  * Run Rundown System Migration
  * Creates all rundown tables if they don't exist
+ * Added: 2025-08-29 for VidPOD rundown system
  */
 router.post('/migrate-rundown-system', verifyToken, isAmitraceAdmin, async (req, res) => {
     console.log('🔧 Rundown migration request received from user:', req.user.email);
