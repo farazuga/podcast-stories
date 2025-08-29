@@ -697,7 +697,7 @@ async function approveTeacherRequest(e) {
     
     try {
         const response = await fetch(`${window.API_URL}/teacher-requests/${requestId}/approve`, {
-            method: 'POST',
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
