@@ -49,6 +49,27 @@ const upload = multer({
  * GET /api/lessons/course/:courseId
  * Get all lessons for a specific course
  */
+// Temporary route to fix schema
+router.get('/fix-schema-temp', async (req, res) => {
+  try {
+    console.log('🔧 Comprehensive lessons schema fix...');
+    
+    await pool.query(`
+      ALTER TABLE lessons 
+      ADD COLUMN IF NOT EXISTS lesson_number INTEGER DEFAULT 1,
+      ADD COLUMN IF NOT EXISTS difficulty_level VARCHAR(20) DEFAULT 'beginner',
+      ADD COLUMN IF NOT EXISTS is_quiz_required BOOLEAN DEFAULT false,
+      ADD COLUMN IF NOT EXISTS requires_completion_of INTEGER,
+      ADD COLUMN IF NOT EXISTS unlock_criteria JSONB DEFAULT '{"type": "none"}'::jsonb,
+      ADD COLUMN IF NOT EXISTS vocabulary_terms JSONB DEFAULT '{}'::jsonb
+    `);
+    
+    res.json({ success: true, message: 'Lessons schema comprehensively fixed!' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.get('/course/:courseId', verifyToken, async (req, res) => {
   try {
     const { courseId } = req.params;
@@ -275,7 +296,7 @@ router.post('/', verifyToken, isTeacherOrAbove, async (req, res) => {
         week_number,
         lesson_number,
         JSON.stringify(vocabulary_terms || []),
-        requires_completion_of || [],
+        requires_completion_of || null,
         JSON.stringify(unlock_criteria || {}),
         is_published || false
       ]
@@ -835,5 +856,168 @@ async function checkCourseAccess(userId, courseId, userRole) {
     return false;
   }
 }
+
+// =============================================================================
+// TEMPORARY DATABASE MIGRATION ROUTE (REMOVE AFTER DEPLOYMENT)
+// =============================================================================
+
+/**
+ * POST /api/lessons/temp-migrate-comprehensive
+ * Execute comprehensive schema migration to fix all database inconsistencies
+ * This is a temporary route for testing purposes
+ */
+router.post('/temp-migrate-comprehensive', async (req, res) => {
+  const client = await pool.connect();
+  
+  try {
+    console.log('🚀 Starting comprehensive lesson schema migration...');
+    
+    // Read and execute the comprehensive migration
+    const migrationPath = path.join(__dirname, '..', 'migrations', '016_fix_lesson_schema_comprehensive.sql');
+    const migrationSQL = await fs.readFile(migrationPath, 'utf8');
+    
+    // Split into individual statements and execute
+    const statements = migrationSQL
+      .split(';')
+      .map(stmt => stmt.trim())
+      .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
+    
+    let executedStatements = 0;
+    let skippedStatements = 0;
+    const results = [];
+    
+    for (const statement of statements) {
+      try {
+        if (statement.toLowerCase().includes('insert into schema_migrations')) {
+          // Handle migration logging separately
+          await client.query(statement);
+          results.push(`✅ Migration logged successfully`);
+        } else {
+          const result = await client.query(statement);
+          executedStatements++;
+          
+          if (statement.toLowerCase().includes('alter table')) {
+            const tableName = statement.match(/alter table (\w+)/i)?.[1];
+            results.push(`✅ Updated ${tableName} table structure`);
+          } else if (statement.toLowerCase().includes('create index')) {
+            const indexName = statement.match(/create index (?:if not exists )?(\w+)/i)?.[1];
+            results.push(`✅ Created index ${indexName}`);
+          } else if (statement.toLowerCase().includes('update')) {
+            results.push(`✅ Updated data records`);
+          } else {
+            results.push(`✅ Executed: ${statement.substring(0, 50)}...`);
+          }
+        }
+      } catch (error) {
+        if (error.message.includes('already exists') || error.message.includes('does not exist')) {
+          skippedStatements++;
+          results.push(`⚠️ Skipped (already exists): ${statement.substring(0, 50)}...`);
+        } else {
+          console.error(`Error executing statement: ${statement}`, error);
+          results.push(`❌ Error: ${error.message}`);
+        }
+      }
+    }
+    
+    console.log('✅ Comprehensive migration completed successfully');
+    
+    res.json({ 
+      success: true,
+      message: 'Comprehensive schema migration executed successfully',
+      details: {
+        executedStatements,
+        skippedStatements,
+        totalStatements: statements.length,
+        results
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error during comprehensive migration:', error);
+    res.status(500).json({ 
+      error: 'Migration failed', 
+      details: error.message 
+    });
+  } finally {
+    client.release();
+  }
+});
+
+/**
+ * POST /api/lessons/fix-remaining-constraints
+ * Fix the remaining constraint syntax error
+ */
+router.post('/fix-remaining-constraints', async (req, res) => {
+  const client = await pool.connect();
+  
+  try {
+    console.log('🔧 Fixing remaining constraint syntax errors...');
+    
+    // Fix the PostgreSQL constraint syntax (PostgreSQL uses different syntax)
+    const constraintFixes = [
+      `DO $$ 
+       BEGIN
+         IF NOT EXISTS (
+           SELECT 1 FROM information_schema.table_constraints 
+           WHERE constraint_name = 'courses_total_weeks_positive' 
+           AND table_name = 'courses'
+         ) THEN
+           ALTER TABLE courses ADD CONSTRAINT courses_total_weeks_positive 
+           CHECK (total_weeks > 0 AND total_weeks <= 52);
+         END IF;
+       END $$;`,
+       
+      `DO $$ 
+       BEGIN
+         IF NOT EXISTS (
+           SELECT 1 FROM information_schema.table_constraints 
+           WHERE constraint_name = 'lessons_lesson_number_positive' 
+           AND table_name = 'lessons'
+         ) THEN
+           ALTER TABLE lessons ADD CONSTRAINT lessons_lesson_number_positive 
+           CHECK (lesson_number > 0);
+         END IF;
+       END $$;`
+    ];
+    
+    const results = [];
+    
+    for (const constraint of constraintFixes) {
+      try {
+        await client.query(constraint);
+        results.push('✅ Fixed constraint syntax');
+      } catch (error) {
+        console.error('Constraint error:', error);
+        results.push(`❌ Constraint error: ${error.message}`);
+      }
+    }
+    
+    // Verify the schema updates
+    const schemaCheck = await client.query(`
+      SELECT column_name, data_type, is_nullable, column_default 
+      FROM information_schema.columns 
+      WHERE table_name IN ('courses', 'lessons', 'quizzes', 'schools')
+      ORDER BY table_name, ordinal_position
+    `);
+    
+    console.log('✅ Constraint fixes completed');
+    
+    res.json({ 
+      success: true,
+      message: 'Constraint syntax fixes applied successfully',
+      details: {
+        constraintResults: results,
+        schemaColumns: schemaCheck.rows.length
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error fixing constraints:', error);
+    res.status(500).json({ 
+      error: 'Constraint fix failed', 
+      details: error.message 
+    });
+  } finally {
+    client.release();
+  }
+});
 
 module.exports = router;

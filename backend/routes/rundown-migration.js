@@ -1,8 +1,14 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const db = require('../config/database');
+const { Pool } = require('pg');
 const { verifyToken } = require('../middleware/auth');
+
+// Create database pool (following same pattern as other migration routes)
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
 
 const router = express.Router();
 
@@ -32,7 +38,7 @@ router.post('/run-migration', verifyToken, async (req, res) => {
     
     // Check if tables already exist
     console.log('🔍 Checking existing tables...');
-    const existingTablesCheck = await db.query(`
+    const existingTablesCheck = await pool.query(`
       SELECT table_name 
       FROM information_schema.tables 
       WHERE table_schema = 'public' 
@@ -55,7 +61,7 @@ router.post('/run-migration', verifyToken, async (req, res) => {
     console.log('⏳ Executing migration...');
     
     // Execute the migration in a transaction
-    const client = await db.getPool().connect();
+    const client = await pool.connect();
     
     try {
       await client.query('BEGIN');
@@ -124,7 +130,7 @@ router.post('/run-migration', verifyToken, async (req, res) => {
     
     // Verify tables were created
     console.log('🔍 Verifying migration results...');
-    const verificationCheck = await db.query(`
+    const verificationCheck = await pool.query(`
       SELECT table_name, 
              (SELECT COUNT(*) FROM information_schema.columns WHERE table_name = t.table_name) as column_count
       FROM information_schema.tables t
@@ -139,7 +145,7 @@ router.post('/run-migration', verifyToken, async (req, res) => {
     }));
     
     // Check indexes
-    const indexCheck = await db.query(`
+    const indexCheck = await pool.query(`
       SELECT indexname, tablename 
       FROM pg_indexes 
       WHERE tablename LIKE 'rundown%' 
