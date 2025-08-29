@@ -44,6 +44,7 @@ const rundownsRoutes = require('./routes/rundowns');
 const rundownSegmentsRoutes = require('./routes/rundown-segments');
 const rundownTalentRoutes = require('./routes/rundown-talent');
 const rundownStoriesRoutes = require('./routes/rundown-stories');
+const rundownMigrationRoutes = require('./routes/rundown-migration');
 
 // Lesson management system routes
 const coursesRoutes = require('./routes/courses');
@@ -76,6 +77,7 @@ app.use('/api/rundowns', rundownsRoutes);
 app.use('/api/rundown-segments', rundownSegmentsRoutes);
 app.use('/api/rundown-talent', rundownTalentRoutes);
 app.use('/api/rundown-stories', rundownStoriesRoutes);
+app.use('/api/rundown-migration', rundownMigrationRoutes);
 
 // Lesson management system routes
 app.use('/api/courses', coursesRoutes);
