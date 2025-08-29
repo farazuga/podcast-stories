@@ -594,12 +594,11 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
       });
     }
     
-    // Comment 14 - Generate secure token instead of sending password
-    const invitationToken = tokenUtils.generateTeacherInvitationToken(
-      normalizedEmail,
-      request.id,
-      { name: request.name, school_id: request.school_id }
-    );
+    // Comment 14 - Generate secure database token for unified password reset system
+    // Use database tokens instead of JWT tokens to be compatible with password reset flow
+    const tokenService = require('../utils/token-service');
+    const dbToken = await tokenService.createPasswordResetToken(user.id, 168); // 7 days = 168 hours
+    const invitationToken = { token: dbToken };
     
     // Hash the unusable password - user cannot login until password is set via invitation
     const saltRounds = 10;
@@ -654,9 +653,9 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
     // Comment 15 - Rename emailResult to mailResult
     let mailResult = { success: false };
     
-    // Comment 14 - Create secure invitation URL
+    // Comment 14 - Create secure invitation URL using unified system
     const baseUrl = process.env.APP_BASE_URL || 'https://podcast-stories-production.up.railway.app';
-    const invitationUrl = tokenUtils.createTeacherInvitationUrl(baseUrl, invitationToken.token);
+    const invitationUrl = `${baseUrl.replace(/\/$/, '')}/reset-password.html?token=${invitationToken.token}`;
     
     // Comment 11 - Wrap email sending in try-catch blocks
     logger.info('Sending teacher approval email', { email: normalizedEmail });
@@ -926,16 +925,14 @@ router.post('/:id/reset-password', verifyToken, isAmitraceAdmin, async (req, res
     
     const user = userResult.rows[0];
     
-    // Generate new invitation token
-    const invitationToken = tokenUtils.generateTeacherInvitationToken(
-      normalizedEmail,
-      id,
-      { userId: user.id }
-    );
+    // Generate new database token for unified password reset system
+    const tokenService = require('../utils/token-service');
+    const dbToken = await tokenService.createPasswordResetToken(user.id, 168); // 7 days
+    const invitationToken = { token: dbToken };
     
-    // Create password reset URL
+    // Create password reset URL using unified system
     const baseUrl = process.env.APP_BASE_URL || 'https://podcast-stories-production.up.railway.app';
-    const invitationUrl = tokenUtils.createTeacherInvitationUrl(baseUrl, invitationToken.token);
+    const invitationUrl = `${baseUrl.replace(/\/$/, '')}/reset-password.html?token=${invitationToken.token}`;
     
     // Send password reset email
     const mailResult = await sendPasswordResetEmail(normalizedEmail, user.name, invitationUrl);
