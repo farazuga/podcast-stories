@@ -594,12 +594,6 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
       });
     }
     
-    // Comment 14 - Generate secure database token for unified password reset system
-    // Use database tokens instead of JWT tokens to be compatible with password reset flow
-    const tokenService = require('../utils/token-service');
-    const dbToken = await tokenService.createPasswordResetToken(user.id, 168); // 7 days = 168 hours
-    const invitationToken = { token: dbToken };
-    
     // Hash the unusable password - user cannot login until password is set via invitation
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(unusablePassword, saltRounds);
@@ -620,6 +614,15 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
     `, [normalizedEmail, hashedPassword, 'teacher', request.name, request.school_id]);
     
     logger.info('User account created successfully', { userId: userResult.rows[0].id });
+    
+    // Comment 14 - Generate secure database token for unified password reset system
+    // Use database tokens instead of JWT tokens to be compatible with password reset flow
+    // IMPORTANT: Create token AFTER user creation using the new user's ID
+    const tokenService = require('../utils/token-service');
+    const dbToken = await tokenService.createPasswordResetToken(userResult.rows[0].id, 168); // 7 days = 168 hours
+    const invitationToken = { token: dbToken };
+    
+    logger.info('Password reset token created successfully', { userId: userResult.rows[0].id, tokenLength: dbToken?.length });
     
     // Comment 12 - Update with processed_at and action_type fields (conditionally)
     logger.info('Updating teacher request status');
