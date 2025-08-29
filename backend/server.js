@@ -190,6 +190,35 @@ async function initializeDatabase() {
       }
       console.log('Default tags created');
     }
+
+    // EMERGENCY FIX: Ensure password_reset_tokens table exists
+    console.log('🔧 Checking password_reset_tokens table...');
+    const tableCheck = await db.query(`
+      SELECT table_name FROM information_schema.tables 
+      WHERE table_name = 'password_reset_tokens'
+    `);
+    
+    if (tableCheck.rows.length === 0) {
+      console.log('⚠️ CREATING MISSING password_reset_tokens table...');
+      
+      await db.query(`
+        CREATE TABLE password_reset_tokens (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          token VARCHAR(255) UNIQUE NOT NULL,
+          expires_at TIMESTAMP NOT NULL,
+          used BOOLEAN DEFAULT false,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      
+      await db.query(`CREATE INDEX idx_password_reset_token ON password_reset_tokens(token)`);
+      await db.query(`CREATE INDEX idx_password_reset_expires ON password_reset_tokens(expires_at)`);
+      
+      console.log('✅ password_reset_tokens table created - teacher approval fixed!');
+    } else {
+      console.log('✅ password_reset_tokens table exists');
+    }
   } catch (error) {
     console.error('Database initialization error:', error);
   }
