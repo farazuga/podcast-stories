@@ -720,9 +720,30 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
       });
     }
     
-    logger.error('Error approving teacher request', error);
-    // Comment 8 & 10 - Return generic error in production
-    res.status(500).json(createErrorResponse(error, 'Failed to approve teacher request'));
+    // Enhanced error logging for debugging
+    logger.error('Error approving teacher request - DETAILED DEBUG', {
+      errorMessage: error.message,
+      errorCode: error.code,
+      errorName: error.name,
+      errorStack: error.stack,
+      requestId: req.params.id,
+      adminId: req.user?.id,
+      isProduction: process.env.NODE_ENV === 'production'
+    });
+    
+    // Comment 8 & 10 - Return generic error in production, but include more info in development
+    if (process.env.NODE_ENV !== 'production') {
+      res.status(500).json({ 
+        error: 'Failed to approve teacher request',
+        debug: {
+          message: error.message,
+          code: error.code,
+          name: error.name
+        }
+      });
+    } else {
+      res.status(500).json(createErrorResponse(error, 'Failed to approve teacher request'));
+    }
   } finally {
     // Comment 1 - Always release the client
     if (client) {
