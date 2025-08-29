@@ -255,4 +255,96 @@ async function checkMigrationStatus() {
     }
 }
 
+/**
+ * Run Rundown System Migration
+ * Creates all rundown tables if they don't exist
+ */
+router.post('/migrate-rundown-system', verifyToken, isAmitraceAdmin, async (req, res) => {
+    console.log('🔧 Rundown migration request received from user:', req.user.email);
+    
+    try {
+        const migrationResult = await runRundownMigration();
+        
+        console.log('✅ Rundown migration completed successfully');
+        
+        res.json({
+            success: true,
+            message: 'Rundown system migration completed successfully',
+            ...migrationResult
+        });
+        
+    } catch (error) {
+        console.error('❌ Rundown migration failed:', error);
+        
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            details: process.env.NODE_ENV === 'production' ? undefined : error.stack
+        });
+    }
+});
+
+/**
+ * Actually run the rundown system migration
+ */
+async function runRundownMigration() {
+    const client = await pool.connect();
+    
+    try {
+        console.log('🔍 Checking rundown system schema...');
+        
+        // Check if rundown tables exist
+        const tablesCheck = await pool.query(`
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name IN ('rundowns', 'rundown_segments', 'rundown_talent', 'rundown_stories')
+            ORDER BY table_name;
+        `);
+        
+        const existingTables = tablesCheck.rows.map(row => row.table_name);
+        console.log('📊 Existing rundown tables:', existingTables);
+        
+        if (existingTables.length === 4) {
+            return {
+                alreadyUpToDate: true,
+                message: 'All rundown tables already exist - no migration needed',
+                existingTables
+            };
+        }
+        
+        console.log('🔄 Creating missing rundown tables...');
+        
+        // Read and execute the migration file
+        const migrationPath = path.join(__dirname, '..', 'migrations', '014_create_rundown_system.sql');
+        const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
+        
+        // Execute the migration
+        await client.query(migrationSQL);
+        
+        // Verify tables were created
+        const verifyCheck = await pool.query(`
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name IN ('rundowns', 'rundown_segments', 'rundown_talent', 'rundown_stories')
+            ORDER BY table_name;
+        `);
+        
+        const createdTables = verifyCheck.rows.map(row => row.table_name);
+        
+        return {
+            migrationApplied: true,
+            message: `Successfully created ${createdTables.length} rundown tables`,
+            createdTables,
+            totalTables: createdTables.length
+        };
+        
+    } catch (error) {
+        throw new Error(`Rundown migration failed: ${error.message}`);
+    } finally {
+        client.release();
+    }
+}
+
 module.exports = router;
