@@ -7,26 +7,34 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/navigation.css">
     <link rel="stylesheet" href="css/rundown.css">
+    <link rel="stylesheet" href="css/rundown-mobile.css">
+    <link rel="stylesheet" href="css/rundown-animations.css">
+    <link rel="stylesheet" href="css/rundown-accessibility.css">
     <link rel="stylesheet" href="css/rundown-print.css">
 </head>
 <body>
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="skip-link focus-ring" tabindex="1">Skip to main content</a>
+    
     <!-- Navigation will auto-load here -->
     
     <div class="container">
         <!-- Loading Screen -->
-        <div id="loadingScreen" class="loading-screen">
-            <div class="loading-spinner"></div>
+        <div id="loadingScreen" class="loading-screen" role="status" aria-live="polite">
+            <div class="loading-spinner" aria-hidden="true"></div>
             <p>Loading rundown editor...</p>
         </div>
 
         <!-- Error Screen -->
-        <div id="errorScreen" class="error-screen" style="display: none;">
+        <div id="errorScreen" class="error-screen" style="display: none;" role="alert" aria-live="assertive">
             <div class="error-content">
-                <h2>⚠️ Error Loading Rundown</h2>
+                <h2 id="errorTitle">⚠️ Error Loading Rundown</h2>
                 <p id="errorMessage">Unable to load rundown data.</p>
                 <div class="error-actions">
-                    <button onclick="window.history.back()" class="btn btn-secondary">Go Back</button>
-                    <button onclick="location.reload()" class="btn btn-primary">Try Again</button>
+                    <button onclick="window.history.back()" class="btn btn-secondary focus-ring" 
+                            aria-label="Go back to previous page">Go Back</button>
+                    <button onclick="location.reload()" class="btn btn-primary focus-ring"
+                            aria-label="Try loading the rundown again">Try Again</button>
                 </div>
             </div>
         </div>
@@ -34,41 +42,51 @@
         <!-- Main Editor Interface -->
         <div id="editorInterface" class="rundown-editor" style="display: none;">
             <!-- Editor Header -->
-            <div class="editor-header">
+            <header class="editor-header" role="banner">
                 <div class="rundown-info">
-                    <h1 id="rundownTitle" class="rundown-title" contenteditable="true"></h1>
-                    <p id="rundownDescription" class="rundown-description" contenteditable="true"></p>
-                    <div class="rundown-meta">
-                        <span id="rundownStatus" class="status-badge">Draft</span>
-                        <span id="rundownDuration" class="duration-badge">00:00</span>
-                        <span id="rundownUpdated" class="updated-badge">Just now</span>
+                    <h1 id="rundownTitle" class="rundown-title focus-ring" contenteditable="true" 
+                        role="textbox" aria-label="Rundown title - click to edit"
+                        tabindex="2"></h1>
+                    <p id="rundownDescription" class="rundown-description focus-ring" contenteditable="true"
+                       role="textbox" aria-label="Rundown description - click to edit"
+                       tabindex="3"></p>
+                    <div class="rundown-meta" role="group" aria-label="Rundown metadata">
+                        <span id="rundownStatus" class="status-badge" aria-label="Rundown status">Draft</span>
+                        <span id="rundownDuration" class="duration-badge" aria-label="Total duration">00:00</span>
+                        <span id="rundownUpdated" class="updated-badge" aria-label="Last updated">Just now</span>
                     </div>
                 </div>
                 
-                <div class="editor-actions">
-                    <div class="action-group">
-                        <button id="expandAllSegments" class="btn btn-sm btn-ghost">
+                <div class="editor-actions" role="toolbar" aria-label="Editor actions">
+                    <div class="action-group" role="group" aria-label="Segment visibility controls">
+                        <button id="expandAllSegments" class="btn btn-sm btn-ghost focus-ring"
+                                aria-label="Expand all segments to show details" tabindex="4">
                             📖 Expand All
                         </button>
-                        <button id="collapseAllSegments" class="btn btn-sm btn-ghost">
+                        <button id="collapseAllSegments" class="btn btn-sm btn-ghost focus-ring"
+                                aria-label="Collapse all segments to hide details" tabindex="5">
                             📋 Collapse All
                         </button>
                     </div>
                     
-                    <div class="action-group">
-                        <button id="autoSaveToggle" class="btn btn-sm btn-ghost">
+                    <div class="action-group" role="group" aria-label="Save controls">
+                        <button id="autoSaveToggle" class="btn btn-sm btn-ghost focus-ring"
+                                aria-label="Toggle automatic saving" aria-pressed="true" tabindex="6">
                             💾 Auto-save: ON
                         </button>
-                        <button id="manualSaveBtn" class="btn btn-sm btn-secondary">
+                        <button id="manualSaveBtn" class="btn btn-sm btn-secondary focus-ring"
+                                aria-label="Save rundown now" tabindex="7">
                             💾 Save Now
                         </button>
                     </div>
                     
-                    <div class="action-group">
-                        <button id="printRundown" class="btn btn-sm btn-primary">
+                    <div class="action-group" role="group" aria-label="Export controls">
+                        <button id="printRundown" class="btn btn-sm btn-primary focus-ring"
+                                aria-label="Print rundown" tabindex="8">
                             🖨️ Print
                         </button>
-                        <button id="exportPDFBtn" class="btn btn-sm btn-primary" style="display: none;">
+                        <button id="exportPDFBtn" class="btn btn-sm btn-primary focus-ring" style="display: none;"
+                                aria-label="Export rundown as PDF" tabindex="9">
                             📄 Export PDF
                         </button>
                     </div>
@@ -76,76 +94,88 @@
             </div>
 
             <!-- Editor Toolbar -->
-            <div class="editor-toolbar">
+            <nav class="editor-toolbar" role="toolbar" aria-label="Segment creation and management tools">
                 <div class="toolbar-section">
-                    <h3>Add Segments</h3>
-                    <div class="toolbar-buttons">
-                        <button id="addStorySegment" class="btn btn-sm btn-outline">
+                    <h3 id="addSegmentsHeading">Add Segments</h3>
+                    <div class="toolbar-buttons" role="group" aria-labelledby="addSegmentsHeading">
+                        <button id="addStorySegment" class="btn btn-sm btn-outline focus-ring"
+                                aria-label="Add story segment" tabindex="10">
                             📰 Story
                         </button>
-                        <button id="addInterviewSegment" class="btn btn-sm btn-outline">
+                        <button id="addInterviewSegment" class="btn btn-sm btn-outline focus-ring"
+                                aria-label="Add interview segment" tabindex="11">
                             🎤 Interview
                         </button>
-                        <button id="addBreakSegment" class="btn btn-sm btn-outline">
+                        <button id="addBreakSegment" class="btn btn-sm btn-outline focus-ring"
+                                aria-label="Add break segment" tabindex="12">
                             ⏸️ Break
                         </button>
-                        <button id="addCustomSegment" class="btn btn-sm btn-outline">
+                        <button id="addCustomSegment" class="btn btn-sm btn-outline focus-ring"
+                                aria-label="Add custom segment" tabindex="13">
                             ⭐ Custom
                         </button>
                     </div>
                 </div>
 
                 <div class="toolbar-section">
-                    <h3>Manage</h3>
-                    <div class="toolbar-buttons">
-                        <button id="addTalentBtn" class="btn btn-sm btn-secondary">
+                    <h3 id="manageHeading">Manage</h3>
+                    <div class="toolbar-buttons" role="group" aria-labelledby="manageHeading">
+                        <button id="addTalentBtn" class="btn btn-sm btn-secondary focus-ring"
+                                aria-label="Add talent to rundown" tabindex="14">
                             👥 Add Talent
                         </button>
-                        <button id="linkStoryBtn" class="btn btn-sm btn-secondary">
+                        <button id="linkStoryBtn" class="btn btn-sm btn-secondary focus-ring"
+                                aria-label="Link existing story to rundown" tabindex="15">
                             🔗 Link Story
                         </button>
-                        <button id="bulkEditBtn" class="btn btn-sm btn-ghost">
+                        <button id="bulkEditBtn" class="btn btn-sm btn-ghost focus-ring"
+                                aria-label="Edit multiple segments at once" tabindex="16">
                             ⚡ Bulk Edit
                         </button>
                     </div>
                 </div>
-            </div>
+            </nav>
 
             <!-- Main Editor Content -->
-            <div class="editor-content">
+            <main id="main-content" class="editor-content">
                 <!-- Segments List -->
-                <div class="segments-container">
+                <section class="segments-container" aria-labelledby="segmentsHeading">
                     <div class="segments-header">
-                        <h2>📋 Rundown Segments</h2>
-                        <div class="segments-stats">
-                            <span id="segmentCount">0 segments</span>
-                            <span id="totalDuration">00:00 total</span>
+                        <h2 id="segmentsHeading">📋 Rundown Segments</h2>
+                        <div class="segments-stats" role="group" aria-label="Segments statistics">
+                            <span id="segmentCount" aria-label="Number of segments">0 segments</span>
+                            <span id="totalDuration" aria-label="Total duration">00:00 total</span>
                         </div>
                     </div>
 
-                    <div id="segmentsList" class="segments-list">
+                    <div id="segmentsList" class="segments-list" 
+                         role="list" 
+                         aria-label="Rundown segments - use arrow keys to navigate, Enter to edit, Delete to remove"
+                         tabindex="0">
                         <!-- Segments will be loaded here -->
                     </div>
 
                     <div class="segments-footer">
-                        <button id="addSegmentAtEnd" class="add-segment-btn">
+                        <button id="addSegmentAtEnd" class="add-segment-btn focus-ring"
+                                aria-label="Add new segment at end of rundown" tabindex="17">
                             ➕ Add Segment
                         </button>
                     </div>
-                </div>
+                </section>
 
                 <!-- Sidebar -->
-                <div class="editor-sidebar">
+                <aside class="editor-sidebar" role="complementary" aria-label="Rundown tools and information">
                     <!-- Talent Panel -->
-                    <div class="sidebar-panel">
+                    <section class="sidebar-panel" aria-labelledby="talentHeading">
                         <div class="panel-header">
-                            <h3>👥 Talent</h3>
-                            <button id="addTalentSidebarBtn" class="btn btn-sm btn-ghost">+</button>
+                            <h3 id="talentHeading">👥 Talent</h3>
+                            <button id="addTalentSidebarBtn" class="btn btn-sm btn-ghost focus-ring"
+                                    aria-label="Add new talent" tabindex="18">+</button>
                         </div>
-                        <div id="talentList" class="talent-list">
+                        <div id="talentList" class="talent-list" role="list" aria-live="polite">
                             <!-- Talent will be loaded here -->
                         </div>
-                    </div>
+                    </section>
 
                     <!-- Stories Panel -->
                     <div class="sidebar-panel">
@@ -343,6 +373,7 @@
     <script src="js/rundown-segments.js"></script>
     <script src="js/rundown-talent.js"></script>
     <script src="js/rundown-stories.js"></script>
+    <script src="js/rundown-touch-mobile.js"></script>
     <script src="js/rundown-editor.js"></script>
 
     <script>

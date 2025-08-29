@@ -1,0 +1,568 @@
+/* VidPOD Rundown Editor - Accessibility Enhancements */
+/* Phase 5: ARIA labels, keyboard navigation, and accessibility features */
+
+/* ========================================
+   SKIP NAVIGATION
+   ======================================== */
+
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 8px;
+    background: #667eea;
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 0 0 8px 8px;
+    font-weight: 600;
+    font-size: 14px;
+    z-index: 9999;
+    transition: all 0.3s ease;
+}
+
+.skip-link:focus {
+    top: 0;
+    outline: 2px solid #fbbf24;
+    outline-offset: 2px;
+}
+
+/* ========================================
+   FOCUS INDICATORS
+   ======================================== */
+
+/* Enhanced focus ring for better visibility */
+.focus-ring:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+    border-radius: 4px;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+    z-index: 1;
+    position: relative;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .focus-ring:focus {
+        outline-width: 3px;
+        outline-color: #000;
+        box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.3);
+    }
+}
+
+/* Focus indicators for interactive elements */
+button:focus,
+input:focus,
+textarea:focus,
+select:focus,
+[contenteditable]:focus,
+[tabindex]:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+}
+
+/* Remove default focus styles */
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+}
+
+/* Re-add for keyboard users only */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[contenteditable]:focus-visible,
+[tabindex]:focus-visible {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+}
+
+/* ========================================
+   SCREEN READER ENHANCEMENTS
+   ======================================== */
+
+/* Screen reader only content */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Make visible when focused */
+.sr-only:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 0.5rem;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    background: #667eea;
+    color: white;
+    border-radius: 4px;
+}
+
+/* Live regions for dynamic content */
+[aria-live] {
+    /* Ensure live regions are announced */
+}
+
+/* ========================================
+   KEYBOARD NAVIGATION
+   ======================================== */
+
+/* Segment keyboard navigation */
+.segment-item {
+    position: relative;
+    cursor: pointer;
+}
+
+.segment-item:focus {
+    outline: 3px solid #667eea;
+    outline-offset: 2px;
+    z-index: 10;
+}
+
+.segment-item.selected {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.05) 100%);
+    border-color: #667eea;
+    border-width: 2px;
+}
+
+/* Keyboard navigation hints */
+.keyboard-hint {
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+}
+
+.segment-item:focus .keyboard-hint {
+    opacity: 1;
+}
+
+/* ========================================
+   HIGH CONTRAST MODE SUPPORT
+   ======================================== */
+
+@media (prefers-contrast: high) {
+    /* Increase contrast for all interactive elements */
+    .btn {
+        border: 2px solid currentColor;
+    }
+    
+    .segment-item {
+        border: 2px solid #000;
+    }
+    
+    .segment-item:hover,
+    .segment-item:focus {
+        border-width: 3px;
+    }
+    
+    .modal-content {
+        border: 2px solid #000;
+    }
+    
+    /* Ensure sufficient color contrast */
+    .btn-primary {
+        background: #000;
+        color: #fff;
+    }
+    
+    .btn-secondary {
+        background: #fff;
+        color: #000;
+        border: 2px solid #000;
+    }
+}
+
+/* ========================================
+   REDUCED MOTION SUPPORT
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    /* Disable all animations for users who prefer reduced motion */
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    /* Keep essential transitions but make them instant */
+    .focus-ring:focus {
+        transition: none;
+    }
+    
+    /* Disable hover transforms */
+    .segment-item:hover,
+    .btn:hover {
+        transform: none;
+    }
+}
+
+/* ========================================
+   FORM ACCESSIBILITY
+   ======================================== */
+
+/* Required field indicators */
+.form-group.required label::after {
+    content: " *";
+    color: #dc2626;
+    font-weight: bold;
+}
+
+/* Error states */
+.form-group.error input,
+.form-group.error textarea,
+.form-group.error select {
+    border-color: #dc2626;
+    background: #fef2f2;
+}
+
+.form-group.error label {
+    color: #dc2626;
+}
+
+/* Error messages */
+.error-message {
+    color: #dc2626;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.error-message::before {
+    content: "⚠️";
+    flex-shrink: 0;
+}
+
+/* Success states */
+.form-group.success input,
+.form-group.success textarea,
+.form-group.success select {
+    border-color: #059669;
+    background: #f0fdf4;
+}
+
+.success-message {
+    color: #059669;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.success-message::before {
+    content: "✅";
+    flex-shrink: 0;
+}
+
+/* ========================================
+   MODAL ACCESSIBILITY
+   ======================================== */
+
+/* Modal focus trap */
+.modal {
+    /* Focus will be managed by JavaScript */
+}
+
+.modal-content {
+    /* Ensure modal content is focusable */
+    outline: none;
+}
+
+/* Modal close button accessibility */
+.modal-close {
+    position: relative;
+}
+
+.modal-close::after {
+    content: "Close modal";
+    position: absolute;
+    left: -9999px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.modal-close:focus::after {
+    left: 120%;
+    opacity: 1;
+}
+
+/* ========================================
+   DRAG & DROP ACCESSIBILITY
+   ======================================== */
+
+/* Drag handle accessibility */
+.segment-drag-handle {
+    position: relative;
+}
+
+.segment-drag-handle::after {
+    content: "Drag to reorder";
+    position: absolute;
+    left: 150%;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+}
+
+.segment-drag-handle:focus::after,
+.segment-drag-handle:hover::after {
+    opacity: 1;
+}
+
+/* Keyboard reordering instructions */
+.segment-item[tabindex="0"]::after {
+    content: "Use Ctrl+↑/↓ to reorder";
+    position: absolute;
+    top: -30px;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.segment-item[tabindex="0"]:focus::after {
+    opacity: 1;
+}
+
+/* ========================================
+   STATUS ANNOUNCEMENTS
+   ======================================== */
+
+/* Status announcements container */
+.status-announcements {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+/* Auto-save status accessibility */
+.auto-save-indicator[aria-live] {
+    /* Ensure changes are announced */
+}
+
+/* ========================================
+   BUTTON STATES
+   ======================================== */
+
+/* Pressed state for toggle buttons */
+button[aria-pressed="true"] {
+    background: #667eea;
+    color: white;
+    border-color: #5b6de8;
+}
+
+button[aria-pressed="false"] {
+    background: #f8fafc;
+    color: #64748b;
+    border-color: #e2e8f0;
+}
+
+/* Disabled state */
+button:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+button:disabled:focus,
+input:disabled:focus,
+textarea:disabled:focus,
+select:disabled:focus {
+    outline: 2px solid #94a3b8;
+    outline-offset: 2px;
+}
+
+/* ========================================
+   TOOLTIP ACCESSIBILITY
+   ======================================== */
+
+/* Tooltip implementation */
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 150%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.3;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+    max-width: 200px;
+    white-space: normal;
+    text-align: center;
+}
+
+[data-tooltip]:hover::after,
+[data-tooltip]:focus::after {
+    opacity: 1;
+}
+
+/* Tooltip arrow */
+[data-tooltip]::before {
+    content: "";
+    position: absolute;
+    bottom: 142%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.9);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1001;
+}
+
+[data-tooltip]:hover::before,
+[data-tooltip]:focus::before {
+    opacity: 1;
+}
+
+/* ========================================
+   MOBILE ACCESSIBILITY
+   ======================================== */
+
+@media (max-width: 768px) {
+    /* Larger touch targets */
+    button,
+    input,
+    select,
+    textarea,
+    [tabindex] {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Improved focus indicators on mobile */
+    .focus-ring:focus {
+        outline-width: 3px;
+        outline-offset: 3px;
+    }
+    
+    /* Skip link positioning for mobile */
+    .skip-link {
+        left: 50%;
+        transform: translateX(-50%);
+        top: -50px;
+        width: auto;
+    }
+    
+    .skip-link:focus {
+        top: 10px;
+    }
+    
+    /* Tooltip adjustments for mobile */
+    [data-tooltip]::after {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        top: auto;
+        transform: none;
+        max-width: none;
+        white-space: normal;
+        text-align: left;
+    }
+    
+    [data-tooltip]::before {
+        display: none; /* Hide arrow on mobile */
+    }
+}
+
+/* ========================================
+   PRINT ACCESSIBILITY
+   ======================================== */
+
+@media print {
+    /* Ensure focus indicators are visible in print */
+    .focus-ring:focus,
+    button:focus,
+    input:focus,
+    textarea:focus,
+    select:focus {
+        outline: 2px solid #000 !important;
+        outline-offset: 2px;
+        box-shadow: none;
+    }
+    
+    /* Hide interactive elements that don't make sense in print */
+    .skip-link,
+    [data-tooltip]::after,
+    [data-tooltip]::before,
+    .keyboard-hint {
+        display: none !important;
+    }
+    
+    /* Ensure sufficient contrast in print */
+    * {
+        color-adjust: exact;
+    }
+}
