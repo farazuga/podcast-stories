@@ -28,20 +28,16 @@ router.get('/lesson/:lessonId', verifyToken, async (req, res) => {
       return res.status(403).json({ error: 'Access denied. You do not have access to this lesson.' });
     }
 
-    // Get quiz through lesson materials
+    // Get quiz directly linked to lesson
     const quizQuery = `
       SELECT 
         q.*,
-        lm.title as material_title,
-        lm.description as material_description,
-        lm.points_possible,
         l.title as lesson_title,
         c.title as course_title
       FROM quizzes q
-      JOIN lesson_materials lm ON q.lesson_material_id = lm.id
-      JOIN lessons l ON lm.lesson_id = l.id
+      JOIN lessons l ON q.lesson_id = l.id
       JOIN courses c ON l.course_id = c.id
-      WHERE l.id = $1 AND lm.material_type = 'quiz'
+      WHERE l.id = $1
     `;
 
     const quizResult = await pool.query(quizQuery, [lessonId]);
@@ -117,16 +113,12 @@ router.get('/:id', verifyToken, async (req, res) => {
     const quizQuery = `
       SELECT 
         q.*,
-        lm.lesson_id,
-        lm.title as material_title,
-        lm.description as material_description,
-        lm.points_possible,
+        q.lesson_id,
         l.title as lesson_title,
         c.title as course_title,
         c.teacher_id
       FROM quizzes q
-      JOIN lesson_materials lm ON q.lesson_material_id = lm.id
-      JOIN lessons l ON lm.lesson_id = l.id
+      JOIN lessons l ON q.lesson_id = l.id
       JOIN courses c ON l.course_id = c.id
       WHERE q.id = $1
     `;
@@ -204,7 +196,7 @@ router.post('/', verifyToken, isTeacherOrAbove, async (req, res) => {
     await client.query('BEGIN');
     
     const {
-      lesson_material_id,
+      lesson_id,
       title,
       description,
       instructions,
@@ -222,9 +214,9 @@ router.post('/', verifyToken, isTeacherOrAbove, async (req, res) => {
     } = req.body;
 
     // Validation
-    if (!lesson_material_id || !title) {
+    if (!lesson_id || !title) {
       return res.status(400).json({ 
-        error: 'Lesson material ID and title are required' 
+        error: 'Lesson ID and title are required' 
       });
     }
 
@@ -234,58 +226,52 @@ router.post('/', verifyToken, isTeacherOrAbove, async (req, res) => {
       });
     }
 
-    // Check if user can create quiz for this lesson material
-    const materialCheck = await client.query(
-      `SELECT lm.*, c.teacher_id 
-       FROM lesson_materials lm 
-       JOIN lessons l ON lm.lesson_id = l.id 
+    // Check if user can create quiz for this lesson
+    const lessonCheck = await client.query(
+      `SELECT l.*, c.teacher_id 
+       FROM lessons l 
        JOIN courses c ON l.course_id = c.id 
-       WHERE lm.id = $1 AND lm.material_type = 'quiz'`,
-      [lesson_material_id]
+       WHERE l.id = $1`,
+      [lesson_id]
     );
     
-    if (materialCheck.rows.length === 0) {
-      return res.status(404).json({ error: 'Quiz material not found' });
+    if (lessonCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Lesson not found' });
     }
 
     const canCreate = 
       req.user.role === 'amitrace_admin' || 
-      materialCheck.rows[0].teacher_id === req.user.id;
+      lessonCheck.rows[0].teacher_id === req.user.id;
 
     if (!canCreate) {
       return res.status(403).json({ error: 'Access denied. You can only create quizzes for your own courses.' });
     }
 
-    // Check if quiz already exists for this material
-    const existingQuiz = await client.query('SELECT id FROM quizzes WHERE lesson_material_id = $1', [lesson_material_id]);
+    // Check if quiz already exists for this lesson
+    const existingQuiz = await client.query('SELECT id FROM quizzes WHERE lesson_id = $1', [lesson_id]);
     
     if (existingQuiz.rows.length > 0) {
-      return res.status(400).json({ error: 'A quiz already exists for this lesson material' });
+      return res.status(400).json({ error: 'A quiz already exists for this lesson' });
     }
 
     // Create quiz
     const quizResult = await client.query(
       `INSERT INTO quizzes (
-        lesson_material_id, title, description, instructions,
-        time_limit, attempts_allowed, grading_method, passing_score,
-        randomize_questions, randomize_answers, show_correct_answers,
-        show_hints, lockdown_browser, password
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
+        lesson_id, title, description, time_limit, attempts_allowed, 
+        grading_method, passing_score, randomize_questions, 
+        show_correct_answers, is_published
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
       [
-        lesson_material_id,
+        lesson_id,
         title,
         description || '',
-        instructions || '',
         time_limit || null,
-        attempts_allowed || -1, // -1 means unlimited
+        attempts_allowed || 3, // Use 3 as default instead of -1
         grading_method || 'best',
         passing_score || 70,
         randomize_questions || false,
-        randomize_answers || false,
         show_correct_answers || true,
-        show_hints || true,
-        lockdown_browser || false,
-        password || null
+        false // is_published defaults to false
       ]
     );
 
@@ -405,8 +391,7 @@ router.put('/:id', verifyToken, isTeacherOrAbove, async (req, res) => {
     const quizCheck = await client.query(
       `SELECT q.*, c.teacher_id 
        FROM quizzes q
-       JOIN lesson_materials lm ON q.lesson_material_id = lm.id
-       JOIN lessons l ON lm.lesson_id = l.id
+       JOIN lessons l ON q.lesson_id = l.id
        JOIN courses c ON l.course_id = c.id
        WHERE q.id = $1`,
       [id]
@@ -490,9 +475,8 @@ router.post('/:id/attempts', verifyToken, hasAnyRole(['student', 'admin', 'amitr
 
     // Get quiz details
     const quizQuery = await client.query(
-      `SELECT q.*, lm.lesson_id, lm.points_possible
+      `SELECT q.*, q.lesson_id
        FROM quizzes q
-       JOIN lesson_materials lm ON q.lesson_material_id = lm.id
        WHERE q.id = $1`,
       [quizId]
     );
@@ -614,8 +598,7 @@ router.get('/:id/attempts', verifyToken, isTeacherOrAbove, async (req, res) => {
     const quizCheck = await pool.query(
       `SELECT c.teacher_id 
        FROM quizzes q
-       JOIN lesson_materials lm ON q.lesson_material_id = lm.id
-       JOIN lessons l ON lm.lesson_id = l.id
+       JOIN lessons l ON q.lesson_id = l.id
        JOIN courses c ON l.course_id = c.id
        WHERE q.id = $1`,
       [quizId]
@@ -703,8 +686,7 @@ router.get('/:id/attempts/:attemptId', verifyToken, async (req, res) => {
       const teacherCheck = await pool.query(
         `SELECT c.teacher_id 
          FROM quizzes q
-         JOIN lesson_materials lm ON q.lesson_material_id = lm.id
-         JOIN lessons l ON lm.lesson_id = l.id
+         JOIN lessons l ON q.lesson_id = l.id
          JOIN courses c ON l.course_id = c.id
          WHERE q.id = $1`,
         [quizId]
