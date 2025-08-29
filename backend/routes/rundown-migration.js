@@ -60,6 +60,10 @@ router.post('/run-migration', verifyToken, async (req, res) => {
     
     console.log('⏳ Executing migration...');
     
+    // Initialize tracking variables
+    let executedCount = 0;
+    const results = [];
+    
     // Execute the migration in a transaction
     const client = await pool.connect();
     
@@ -71,9 +75,6 @@ router.post('/run-migration', verifyToken, async (req, res) => {
         .split(';')
         .map(stmt => stmt.trim())
         .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
-      
-      let executedCount = 0;
-      const results = [];
       
       for (const statement of statements) {
         try {
