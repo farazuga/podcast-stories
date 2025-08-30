@@ -155,12 +155,8 @@ const NavigationLoader = {
             userAvatar.textContent = user.name.substring(0, 2).toUpperCase();
         }
 
-        // Role-based visibility will be handled by VidPODNav.updateRoleVisibility()
-        // Just add body class for CSS targeting
-        if (user.role) {
-            const userRole = user.role.toLowerCase().trim();
-            document.body.classList.add(`user-role-${userRole}`);
-        }
+        // Role visibility will be handled by VidPODNav.updateRoleVisibility()
+        // No duplicate logic needed here
         
         // Mark navigation as initialized
         const navbar = document.getElementById('vidpodNavbar');

@@ -196,13 +196,7 @@ const VidPODNav = {
             element.style.display = shouldShow ? '' : 'none';
         });
 
-        // Handle legacy admin links without data-role (backward compatibility)
-        document.querySelectorAll('#adminLink, [href*="admin"]:not([data-role])').forEach(link => {
-            const shouldShow = ['admin', 'amitrace_admin'].includes(userRole);
-            link.style.display = shouldShow ? '' : 'none';
-        });
-
-        // Add body class for CSS targeting if needed
+        // Add body class for CSS targeting if needed  
         document.body.className = document.body.className.replace(/user-role-\w+/g, '');
         document.body.classList.add(`user-role-${userRole}`);
     },
