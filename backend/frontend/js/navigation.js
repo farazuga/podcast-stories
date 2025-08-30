@@ -178,7 +178,7 @@ const VidPODNav = {
         if (!this.currentUser?.role) {
             console.warn('No user role found, hiding all role-specific elements');
             document.querySelectorAll('[data-role]').forEach(element => {
-                element.style.display = 'none';
+                element.classList.add('nav-hidden');
             });
             return;
         }
@@ -193,7 +193,13 @@ const VidPODNav = {
                 .map(role => role.trim());
             
             const shouldShow = allowedRoles.includes(userRole);
-            element.style.display = shouldShow ? '' : 'none';
+            
+            // Use CSS class instead of inline styles to override !important rules
+            if (shouldShow) {
+                element.classList.remove('nav-hidden');
+            } else {
+                element.classList.add('nav-hidden');
+            }
         });
 
         // Add body class for CSS targeting if needed  
