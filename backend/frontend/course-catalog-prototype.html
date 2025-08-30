@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD Lessons - Course Catalog</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/lesson-styles.css">
+    <style>
+        /* Enhanced Course Catalog Styles */
+        .catalog-header {
+            background: var(--lesson-content-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        .catalog-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .catalog-subtitle {
+            color: var(--text-light);
+            font-size: 1.125rem;
+            margin-bottom: 2rem;
+        }
+        
+        .search-section {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .search-container {
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 3rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--lesson-primary);
+            box-shadow: 0 0 0 3px rgba(247, 155, 91, 0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 1.25rem;
+        }
+        
+        .view-toggle {
+            display: flex;
+            background: var(--lesson-sidebar-bg);
+            border-radius: 8px;
+            padding: 0.25rem;
+        }
+        
+        .toggle-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+        
+        .toggle-btn.active {
+            background: var(--lesson-primary);
+            color: white;
+        }
+        
+        .filter-bar {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .filter-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: white;
+            min-width: 120px;
+        }
+        
+        .active-filters {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+        
+        .filter-tag {
+            background: var(--lesson-primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 16px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .filter-remove {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0;
+        }
+        
+        .catalog-layout {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 2rem;
+        }
+        
+        .filters-sidebar {
+            background: var(--lesson-content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            padding: var(--card-padding);
+            height: fit-content;
+            position: sticky;
+            top: 80px;
+        }
+        
+        .filters-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .clear-filters {
+            color: var(--lesson-primary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        
+        .filter-section {
+            margin-bottom: 2rem;
+        }
+        
+        .filter-section-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .checkbox-label {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .course-count {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+        
+        .rating-filter {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .rating-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 6px;
+            transition: background 0.2s ease;
+        }
+        
+        .rating-item:hover {
+            background: var(--lesson-sidebar-bg);
+        }
+        
+        .rating-stars {
+            color: var(--lesson-warning);
+        }
+        
+        .courses-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .results-count {
+            font-size: 1.125rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        
+        .sort-dropdown {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .sort-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: white;
+        }
+        
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+        
+        .courses-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .course-card-detailed {
+            background: var(--lesson-content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .course-card-detailed:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-2px);
+        }
+        
+        .course-thumbnail {
+            height: 180px;
+            background: linear-gradient(135deg, var(--lesson-primary), var(--lesson-info));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .course-duration {
+            position: absolute;
+            bottom: 0.75rem;
+            right: 0.75rem;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        
+        .course-body {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .course-header {
+            margin-bottom: 1rem;
+        }
+        
+        .course-title-large {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .course-instructor-large {
+            color: var(--text-light);
+            margin-bottom: 0.75rem;
+        }
+        
+        .course-rating-large {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .stars {
+            color: var(--lesson-warning);
+        }
+        
+        .rating-text {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+        
+        .course-description {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            flex: 1;
+        }
+        
+        .course-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        
+        .course-tag {
+            background: var(--lesson-sidebar-bg);
+            color: var(--text-light);
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+        
+        .course-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .course-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+        
+        .enroll-btn {
+            background: var(--lesson-primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .enroll-btn:hover {
+            background: var(--primary-hover);
+        }
+        
+        .enroll-btn.enrolled {
+            background: var(--lesson-success);
+        }
+        
+        /* List view specific styles */
+        .course-card-list {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            background: var(--lesson-content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .course-card-list:hover {
+            box-shadow: var(--shadow-hover);
+        }
+        
+        .course-thumbnail-small {
+            width: 120px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--lesson-primary), var(--lesson-info));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+        
+        .course-content-list {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .course-info-list {
+            flex: 1;
+        }
+        
+        .course-actions-list {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 3rem;
+        }
+        
+        .page-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .page-btn:hover {
+            border-color: var(--lesson-primary);
+            background: #fff7ed;
+        }
+        
+        .page-btn.active {
+            background: var(--lesson-primary);
+            color: white;
+            border-color: var(--lesson-primary);
+        }
+        
+        .loading-placeholder {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+        
+        .placeholder-card {
+            background: var(--lesson-content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            padding: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-light);
+        }
+        
+        .no-results-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 1024px) {
+            .catalog-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters-sidebar {
+                position: relative;
+                top: auto;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .search-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .courses-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .course-card-list {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .course-content-list {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+    
+    <div class="catalog-header">
+        <div class="header-content">
+            <h1 class="catalog-title">Course Catalog</h1>
+            <p class="catalog-subtitle">Discover our comprehensive library of podcasting courses</p>
+            
+            <div class="search-section">
+                <div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="Search for courses, instructors, or topics..." id="searchInput">
+                </div>
+                <div class="view-toggle">
+                    <button class="toggle-btn active" data-view="grid">
+                        <span>⊞</span>
+                    </button>
+                    <button class="toggle-btn" data-view="list">
+                        <span>☰</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <span class="filter-label">Category:</span>
+                    <select class="filter-select" id="categoryFilter">
+                        <option value="">All Categories</option>
+                        <option value="fundamentals">Fundamentals</option>
+                        <option value="technical">Technical Skills</option>
+                        <option value="creative">Creative Content</option>
+                        <option value="business">Business</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <span class="filter-label">Level:</span>
+                    <select class="filter-select" id="levelFilter">
+                        <option value="">All Levels</option>
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <span class="filter-label">Duration:</span>
+                    <select class="filter-select" id="durationFilter">
+                        <option value="">Any Duration</option>
+                        <option value="short">Under 2 hours</option>
+                        <option value="medium">2-5 hours</option>
+                        <option value="long">5+ hours</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="active-filters" id="activeFilters">
+                <!-- Active filters will appear here -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="catalog-layout">
+        <aside class="filters-sidebar">
+            <div class="filters-title">
+                <span>🎛️ Filters</span>
+                <button class="clear-filters" onclick="clearAllFilters()">Clear All</button>
+            </div>
+            
+            <div class="filter-section">
+                <div class="filter-section-title">Categories</div>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="cat-fundamentals" value="fundamentals">
+                        <label class="checkbox-label" for="cat-fundamentals">
+                            <span>Podcast Fundamentals</span>
+                            <span class="course-count">8</span>
+                        </label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="cat-technical" value="technical">
+                        <label class="checkbox-label" for="cat-technical">
+                            <span>Technical Skills</span>
+                            <span class="course-count">12</span>
+                        </label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="cat-creative" value="creative">
+                        <label class="checkbox-label" for="cat-creative">
+                            <span>Creative Content</span>
+                            <span class="course-count">6</span>
+                        </label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="cat-business" value="business">
+                        <label class="checkbox-label" for="cat-business">
+                            <span>Business & Marketing</span>
+                            <span class="course-count">9</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <div class="filter-section-title">Difficulty Level</div>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="level-beginner" value="beginner">
+                        <label class="checkbox-label" for="level-beginner">
+                            <span>Beginner</span>
+                            <span class="course-count">15</span>
+                        </label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="level-intermediate" value="intermediate">
+                        <label class="checkbox-label" for="level-intermediate">
+                            <span>Intermediate</span>
+                            <span class="course-count">12</span>
+                        </label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="level-advanced" value="advanced">
+                        <label class="checkbox-label" for="level-advanced">
+                            <span>Advanced</span>
+                            <span class="course-count">8</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <div class="filter-section-title">Rating</div>
+                <div class="rating-filter">
+                    <div class="rating-item">
+                        <input type="radio" name="rating" value="4.5" id="rating-4.5">
+                        <label for="rating-4.5">
+                            <span class="rating-stars">⭐⭐⭐⭐⭐</span>
+                            <span>4.5 & up</span>
+                        </label>
+                    </div>
+                    <div class="rating-item">
+                        <input type="radio" name="rating" value="4.0" id="rating-4.0">
+                        <label for="rating-4.0">
+                            <span class="rating-stars">⭐⭐⭐⭐</span>
+                            <span>4.0 & up</span>
+                        </label>
+                    </div>
+                    <div class="rating-item">
+                        <input type="radio" name="rating" value="3.5" id="rating-3.5">
+                        <label for="rating-3.5">
+                            <span class="rating-stars">⭐⭐⭐</span>
+                            <span>3.5 & up</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <main class="courses-container">
+            <div class="results-header">
+                <div class="results-count" id="resultsCount">
+                    Showing 35 courses
+                </div>
+                <div class="sort-dropdown">
+                    <span class="filter-label">Sort by:</span>
+                    <select class="sort-select" id="sortSelect">
+                        <option value="popular">Most Popular</option>
+                        <option value="newest">Newest First</option>
+                        <option value="rating">Highest Rated</option>
+                        <option value="title">Title A-Z</option>
+                        <option value="duration">Duration</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="coursesContainer">
+                <!-- Grid view courses -->
+                <div class="courses-grid" id="gridView">
+                    <div class="course-card-detailed" onclick="location.href='student-course-view-prototype.html?course=1'">
+                        <div class="course-thumbnail">
+                            🎙️
+                            <div class="course-duration">3.5 hours</div>
+                        </div>
+                        <div class="course-body">
+                            <div class="course-header">
+                                <h3 class="course-title-large">Podcast Fundamentals</h3>
+                                <p class="course-instructor-large">by Sarah Johnson</p>
+                                <div class="course-rating-large">
+                                    <span class="stars">⭐⭐⭐⭐⭐</span>
+                                    <span class="rating-text">4.8 (234 reviews)</span>
+                                </div>
+                            </div>
+                            
+                            <p class="course-description">
+                                Learn the essential skills needed to create, produce, and distribute your own podcast. 
+                                From planning your first episode to building an audience.
+                            </p>
+                            
+                            <div class="course-tags">
+                                <span class="course-tag">Beginner</span>
+                                <span class="course-tag">Fundamentals</span>
+                                <span class="course-tag">Recording</span>
+                            </div>
+                            
+                            <div class="course-footer">
+                                <div class="course-stats">
+                                    <span>📚 12 lessons</span>
+                                    <span>👥 1,234 students</span>
+                                </div>
+                                <button class="enroll-btn enrolled">Enrolled ✓</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="course-card-detailed">
+                        <div class="course-thumbnail">
+                            🎧
+                            <div class="course-duration">5.2 hours</div>
+                        </div>
+                        <div class="course-body">
+                            <div class="course-header">
+                                <h3 class="course-title-large">Audio Editing Mastery</h3>
+                                <p class="course-instructor-large">by Mike Chen</p>
+                                <div class="course-rating-large">
+                                    <span class="stars">⭐⭐⭐⭐⭐</span>
+                                    <span class="rating-text">4.9 (189 reviews)</span>
+                                </div>
+                            </div>
+                            
+                            <p class="course-description">
+                                Master professional audio editing techniques using industry-standard tools. 
+                                Learn to create polished, professional-sounding podcasts.
+                            </p>
+                            
+                            <div class="course-tags">
+                                <span class="course-tag">Intermediate</span>
+                                <span class="course-tag">Technical</span>
+                                <span class="course-tag">Audacity</span>
+                            </div>
+                            
+                            <div class="course-footer">
+                                <div class="course-stats">
+                                    <span>📚 18 lessons</span>
+                                    <span>👥 892 students</span>
+                                </div>
+                                <button class="enroll-btn enrolled">Enrolled ✓</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="course-card-detailed">
+                        <div class="course-thumbnail">
+                            📻
+                            <div class="course-duration">2.8 hours</div>
+                        </div>
+                        <div class="course-body">
+                            <div class="course-header">
+                                <h3 class="course-title-large">Voice Training for Podcasters</h3>
+                                <p class="course-instructor-large">by Emma Rodriguez</p>
+                                <div class="course-rating-large">
+                                    <span class="stars">⭐⭐⭐⭐</span>
+                                    <span class="rating-text">4.7 (156 reviews)</span>
+                                </div>
+                            </div>
+                            
+                            <p class="course-description">
+                                Develop your voice as a podcaster. Learn breathing techniques, vocal exercises, 
+                                and how to maintain vocal health for long recording sessions.
+                            </p>
+                            
+                            <div class="course-tags">
+                                <span class="course-tag">Beginner</span>
+                                <span class="course-tag">Creative</span>
+                                <span class="course-tag">Voice</span>
+                            </div>
+                            
+                            <div class="course-footer">
+                                <div class="course-stats">
+                                    <span>📚 8 lessons</span>
+                                    <span>👥 567 students</span>
+                                </div>
+                                <button class="enroll-btn">Enroll Now</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="course-card-detailed">
+                        <div class="course-thumbnail">
+                            🎤
+                            <div class="course-duration">4.1 hours</div>
+                        </div>
+                        <div class="course-body">
+                            <div class="course-header">
+                                <h3 class="course-title-large">Interview Techniques</h3>
+                                <p class="course-instructor-large">by David Park</p>
+                                <div class="course-rating-large">
+                                    <span class="stars">⭐⭐⭐⭐⭐</span>
+                                    <span class="rating-text">4.9 (267 reviews)</span>
+                                </div>
+                            </div>
+                            
+                            <p class="course-description">
+                                Master the art of podcast interviewing. Learn how to prepare questions, 
+                                build rapport with guests, and conduct engaging conversations.
+                            </p>
+                            
+                            <div class="course-tags">
+                                <span class="course-tag">Intermediate</span>
+                                <span class="course-tag">Creative</span>
+                                <span class="course-tag">Interviewing</span>
+                            </div>
+                            
+                            <div class="course-footer">
+                                <div class="course-stats">
+                                    <span>📚 15 lessons</span>
+                                    <span>👥 734 students</span>
+                                </div>
+                                <button class="enroll-btn">Enroll Now</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="course-card-detailed">
+                        <div class="course-thumbnail">
+                            📈
+                            <div class="course-duration">6.0 hours</div>
+                        </div>
+                        <div class="course-body">
+                            <div class="course-header">
+                                <h3 class="course-title-large">Podcast Marketing & Growth</h3>
+                                <p class="course-instructor-large">by Lisa Thompson</p>
+                                <div class="course-rating-large">
+                                    <span class="stars">⭐⭐⭐⭐</span>
+                                    <span class="rating-text">4.6 (198 reviews)</span>
+                                </div>
+                            </div>
+                            
+                            <p class="course-description">
+                                Learn proven strategies to grow your podcast audience, engage listeners, 
+                                and monetize your content effectively.
+                            </p>
+                            
+                            <div class="course-tags">
+                                <span class="course-tag">Advanced</span>
+                                <span class="course-tag">Business</span>
+                                <span class="course-tag">Marketing</span>
+                            </div>
+                            
+                            <div class="course-footer">
+                                <div class="course-stats">
+                                    <span>📚 22 lessons</span>
+                                    <span>👥 445 students</span>
+                                </div>
+                                <button class="enroll-btn">Enroll Now</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="course-card-detailed">
+                        <div class="course-thumbnail">
+                            🎼
+                            <div class="course-duration">3.3 hours</div>
+                        </div>
+                        <div class="course-body">
+                            <div class="course-header">
+                                <h3 class="course-title-large">Podcast Music & Sound Design</h3>
+                                <p class="course-instructor-large">by Alex Rivera</p>
+                                <div class="course-rating-large">
+                                    <span class="stars">⭐⭐⭐⭐⭐</span>
+                                    <span class="rating-text">4.8 (142 reviews)</span>
+                                </div>
+                            </div>
+                            
+                            <p class="course-description">
+                                Create compelling audio experiences with music, sound effects, and ambient audio. 
+                                Learn to use audio to enhance storytelling.
+                            </p>
+                            
+                            <div class="course-tags">
+                                <span class="course-tag">Intermediate</span>
+                                <span class="course-tag">Creative</span>
+                                <span class="course-tag">Sound Design</span>
+                            </div>
+                            
+                            <div class="course-footer">
+                                <div class="course-stats">
+                                    <span>📚 14 lessons</span>
+                                    <span>👥 356 students</span>
+                                </div>
+                                <button class="enroll-btn">Enroll Now</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- List view courses (initially hidden) -->
+                <div class="courses-list d-none" id="listView">
+                    <div class="course-card-list">
+                        <div class="course-thumbnail-small">🎙️</div>
+                        <div class="course-content-list">
+                            <div class="course-info-list">
+                                <h3 class="course-title-large">Podcast Fundamentals</h3>
+                                <p class="course-instructor-large">by Sarah Johnson</p>
+                                <div class="course-rating-large">
+                                    <span class="stars">⭐⭐⭐⭐⭐</span>
+                                    <span class="rating-text">4.8 (234 reviews)</span>
+                                </div>
+                                <div class="course-stats">
+                                    <span>📚 12 lessons</span>
+                                    <span>⏱️ 3.5 hours</span>
+                                    <span>👥 1,234 students</span>
+                                </div>
+                            </div>
+                            <div class="course-actions-list">
+                                <button class="enroll-btn enrolled">Enrolled ✓</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Additional list view courses would go here -->
+                </div>
+            </div>
+            
+            <div class="pagination">
+                <button class="page-btn">← Previous</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">...</button>
+                <button class="page-btn">8</button>
+                <button class="page-btn">Next →</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
+    <script>
+        // Course catalog functionality
+        let currentView = 'grid';
+        let activeFilters = {
+            search: '',
+            category: '',
+            level: '',
+            duration: '',
+            rating: ''
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeFilters();
+            initializeViewToggle();
+            initializeSearch();
+            loadCoursesFromURL();
+        });
+        
+        function initializeViewToggle() {
+            const toggleBtns = document.querySelectorAll('.toggle-btn');
+            const gridView = document.getElementById('gridView');
+            const listView = document.getElementById('listView');
+            
+            toggleBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const view = this.dataset.view;
+                    
+                    // Update button states
+                    toggleBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Toggle views
+                    if (view === 'grid') {
+                        gridView.classList.remove('d-none');
+                        listView.classList.add('d-none');
+                    } else {
+                        gridView.classList.add('d-none');
+                        listView.classList.remove('d-none');
+                    }
+                    
+                    currentView = view;
+                });
+            });
+        }
+        
+        function initializeSearch() {
+            const searchInput = document.getElementById('searchInput');
+            let searchTimeout;
+            
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    activeFilters.search = this.value;
+                    updateResults();
+                }, 300);
+            });
+        }
+        
+        function initializeFilters() {
+            // Dropdown filters
+            const categoryFilter = document.getElementById('categoryFilter');
+            const levelFilter = document.getElementById('levelFilter');
+            const durationFilter = document.getElementById('durationFilter');
+            const sortSelect = document.getElementById('sortSelect');
+            
+            [categoryFilter, levelFilter, durationFilter].forEach(filter => {
+                filter.addEventListener('change', function() {
+                    activeFilters[this.id.replace('Filter', '')] = this.value;
+                    updateResults();
+                });
+            });
+            
+            sortSelect.addEventListener('change', function() {
+                updateResults();
+            });
+            
+            // Checkbox filters
+            const checkboxes = document.querySelectorAll('.checkbox-item input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateResults);
+            });
+            
+            // Rating filters
+            const ratingRadios = document.querySelectorAll('input[name="rating"]');
+            ratingRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    activeFilters.rating = this.value;
+                    updateResults();
+                });
+            });
+        }
+        
+        function loadCoursesFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchTerm = urlParams.get('search');
+            
+            if (searchTerm) {
+                document.getElementById('searchInput').value = searchTerm;
+                activeFilters.search = searchTerm;
+                updateResults();
+                
+                // Add search term as active filter
+                addActiveFilter('search', searchTerm);
+            }
+        }
+        
+        function updateResults() {
+            // Show loading state
+            showLoadingState();
+            
+            // Simulate API call delay
+            setTimeout(() => {
+                filterCourses();
+                updateActiveFilters();
+                updateResultsCount();
+                hideLoadingState();
+            }, 500);
+        }
+        
+        function filterCourses() {
+            const courses = document.querySelectorAll('.course-card-detailed, .course-card-list');
+            let visibleCount = 0;
+            
+            courses.forEach(course => {
+                const shouldShow = matchesFilters(course);
+                course.style.display = shouldShow ? 'block' : 'none';
+                if (shouldShow) visibleCount++;
+            });
+            
+            // Show no results message if needed
+            toggleNoResults(visibleCount === 0);
+        }
+        
+        function matchesFilters(course) {
+            // This is a simplified filter matching
+            // In a real application, this would check against course data
+            return true;
+        }
+        
+        function updateActiveFilters() {
+            const container = document.getElementById('activeFilters');
+            container.innerHTML = '';
+            
+            Object.entries(activeFilters).forEach(([key, value]) => {
+                if (value && value.trim() !== '') {
+                    addActiveFilter(key, value);
+                }
+            });
+        }
+        
+        function addActiveFilter(type, value) {
+            const container = document.getElementById('activeFilters');
+            const tag = document.createElement('div');
+            tag.className = 'filter-tag';
+            tag.innerHTML = `
+                <span>${type}: ${value}</span>
+                <button class="filter-remove" onclick="removeFilter('${type}')">×</button>
+            `;
+            container.appendChild(tag);
+        }
+        
+        function removeFilter(type) {
+            activeFilters[type] = '';
+            
+            // Reset corresponding UI elements
+            if (type === 'search') {
+                document.getElementById('searchInput').value = '';
+            } else if (type === 'category') {
+                document.getElementById('categoryFilter').value = '';
+            } else if (type === 'level') {
+                document.getElementById('levelFilter').value = '';
+            } else if (type === 'duration') {
+                document.getElementById('durationFilter').value = '';
+            }
+            
+            updateResults();
+        }
+        
+        function clearAllFilters() {
+            // Reset all filters
+            Object.keys(activeFilters).forEach(key => {
+                activeFilters[key] = '';
+            });
+            
+            // Reset UI elements
+            document.getElementById('searchInput').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('levelFilter').value = '';
+            document.getElementById('durationFilter').value = '';
+            
+            // Uncheck all checkboxes
+            document.querySelectorAll('.checkbox-item input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+            
+            // Uncheck all rating radios
+            document.querySelectorAll('input[name="rating"]').forEach(radio => {
+                radio.checked = false;
+            });
+            
+            updateResults();
+        }
+        
+        function updateResultsCount() {
+            const visibleCourses = document.querySelectorAll('.course-card-detailed:not([style*="display: none"])').length;
+            document.getElementById('resultsCount').textContent = `Showing ${visibleCourses} courses`;
+        }
+        
+        function showLoadingState() {
+            const container = document.getElementById('coursesContainer');
+            container.innerHTML = `
+                <div class="loading-placeholder">
+                    <div class="placeholder-card"></div>
+                    <div class="placeholder-card"></div>
+                    <div class="placeholder-card"></div>
+                    <div class="placeholder-card"></div>
+                </div>
+            `;
+        }
+        
+        function hideLoadingState() {
+            // This would restore the actual course content
+            // For the prototype, we'll just reload the page content
+            location.reload();
+        }
+        
+        function toggleNoResults(show) {
+            let noResultsMsg = document.querySelector('.no-results');
+            
+            if (show && !noResultsMsg) {
+                noResultsMsg = document.createElement('div');
+                noResultsMsg.className = 'no-results';
+                noResultsMsg.innerHTML = `
+                    <div class="no-results-icon">🔍</div>
+                    <h3>No courses found</h3>
+                    <p>Try adjusting your filters or search terms</p>
+                `;
+                document.getElementById('coursesContainer').appendChild(noResultsMsg);
+            } else if (!show && noResultsMsg) {
+                noResultsMsg.remove();
+            }
+        }
+        
+        // Enrollment functionality
+        function enrollInCourse(button, courseId) {
+            const originalText = button.textContent;
+            
+            button.textContent = 'Enrolling...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                button.textContent = 'Enrolled ✓';
+                button.classList.add('enrolled');
+                button.disabled = false;
+                
+                // Show success message
+                showNotification('Successfully enrolled in course!');
+            }, 1500);
+        }
+        
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--lesson-success);
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                z-index: 1000;
+                animation: slideIn 0.3s ease-out;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        // Add enrollment click handlers to all enroll buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('enroll-btn') && !e.target.classList.contains('enrolled')) {
+                e.preventDefault();
+                enrollInCourse(e.target, 'course-id');
+            }
+        });
+    </script>
+</body>
+</html>

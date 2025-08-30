@@ -1,0 +1,2320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD - Course Analytics</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/lesson-styles.css">
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+
+    <div class="container">
+        <!-- Analytics Header -->
+        <div class="analytics-header">
+            <div class="header-title-section">
+                <div class="breadcrumb">
+                    <a href="teacher-lessons-dashboard-prototype.html">Dashboard</a>
+                    <span class="breadcrumb-separator">›</span>
+                    <span class="current">Course Analytics</span>
+                </div>
+                <h1>📈 Course Analytics</h1>
+                <div class="course-selector">
+                    <select class="form-control" id="courseSelector" onchange="switchCourse()">
+                        <option value="course_123" selected>Podcast Journalism 101</option>
+                        <option value="course_456">Audio Production Basics</option>
+                        <option value="course_789">Story Development Workshop</option>
+                        <option value="course_101">Interview Techniques</option>
+                    </select>
+                    <div class="course-meta">
+                        <span class="enrollment">32 students</span>
+                        <span class="separator">•</span>
+                        <span class="duration">8 weeks</span>
+                        <span class="separator">•</span>
+                        <span class="progress">Week 6</span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="date-range-selector">
+                    <select class="form-control" id="dateRange" onchange="updateTimeframe()">
+                        <option value="7">Last 7 days</option>
+                        <option value="30" selected>Last 30 days</option>
+                        <option value="90">Last 3 months</option>
+                        <option value="all">All time</option>
+                    </select>
+                </div>
+                <button class="btn btn-secondary" onclick="exportAnalytics()">
+                    <span class="icon">📊</span>
+                    Export Report
+                </button>
+                <button class="btn btn-primary" onclick="scheduleReport()">
+                    <span class="icon">📅</span>
+                    Schedule Report
+                </button>
+            </div>
+        </div>
+
+        <!-- Key Metrics Overview -->
+        <div class="metrics-overview">
+            <div class="metric-card primary">
+                <div class="metric-icon">🎯</div>
+                <div class="metric-content">
+                    <div class="metric-value">87%</div>
+                    <div class="metric-label">Overall Progress</div>
+                    <div class="metric-change positive">+5% from last week</div>
+                </div>
+                <div class="metric-chart">
+                    <div class="mini-chart">
+                        <div class="chart-bar" style="height: 60%"></div>
+                        <div class="chart-bar" style="height: 70%"></div>
+                        <div class="chart-bar" style="height: 85%"></div>
+                        <div class="chart-bar current" style="height: 87%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">👥</div>
+                <div class="metric-content">
+                    <div class="metric-value">91%</div>
+                    <div class="metric-label">Engagement Rate</div>
+                    <div class="metric-change positive">+3% from last week</div>
+                </div>
+                <div class="metric-detail">
+                    <div class="detail-item">
+                        <span class="detail-label">Daily Active</span>
+                        <span class="detail-value">24/32</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Weekly Active</span>
+                        <span class="detail-value">30/32</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">📝</div>
+                <div class="metric-content">
+                    <div class="metric-value">94%</div>
+                    <div class="metric-label">Assignment Completion</div>
+                    <div class="metric-change positive">+8% from last module</div>
+                </div>
+                <div class="metric-detail">
+                    <div class="detail-item">
+                        <span class="detail-label">On Time</span>
+                        <span class="detail-value">85%</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Late</span>
+                        <span class="detail-value">9%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">⭐</div>
+                <div class="metric-content">
+                    <div class="metric-value">4.7</div>
+                    <div class="metric-label">Course Rating</div>
+                    <div class="metric-change neutral">Based on 28 reviews</div>
+                </div>
+                <div class="metric-detail">
+                    <div class="rating-distribution">
+                        <div class="rating-bar">
+                            <div class="rating-fill" style="width: 85%"></div>
+                        </div>
+                        <span class="rating-text">85% would recommend</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-card warning">
+                <div class="metric-icon">⚠️</div>
+                <div class="metric-content">
+                    <div class="metric-value">3</div>
+                    <div class="metric-label">Students at Risk</div>
+                    <div class="metric-change negative">2 new this week</div>
+                </div>
+                <div class="metric-detail">
+                    <div class="risk-indicators">
+                        <div class="risk-item">Low engagement</div>
+                        <div class="risk-item">Missing assignments</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">⏱️</div>
+                <div class="metric-content">
+                    <div class="metric-value">42min</div>
+                    <div class="metric-label">Avg. Session Time</div>
+                    <div class="metric-change positive">+7min from last week</div>
+                </div>
+                <div class="metric-detail">
+                    <div class="detail-item">
+                        <span class="detail-label">Peak Time</span>
+                        <span class="detail-value">2-4 PM</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Total Hours</span>
+                        <span class="detail-value">184h</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Dashboard -->
+        <div class="analytics-dashboard">
+            <!-- Left Column - Charts -->
+            <div class="analytics-main">
+                <!-- Student Progress Chart -->
+                <div class="chart-section">
+                    <div class="section-header">
+                        <h3>📊 Student Progress Over Time</h3>
+                        <div class="chart-controls">
+                            <button class="chart-control-btn active" onclick="switchChartView('progress', 'weekly')">Weekly</button>
+                            <button class="chart-control-btn" onclick="switchChartView('progress', 'daily')">Daily</button>
+                            <button class="chart-control-btn" onclick="switchChartView('progress', 'module')">By Module</button>
+                        </div>
+                    </div>
+                    <div class="chart-container large">
+                        <div class="chart-content" id="progressChart">
+                            <!-- Mock Progress Chart -->
+                            <div class="progress-timeline">
+                                <div class="timeline-header">
+                                    <div class="timeline-period">Week 1</div>
+                                    <div class="timeline-period">Week 2</div>
+                                    <div class="timeline-period">Week 3</div>
+                                    <div class="timeline-period">Week 4</div>
+                                    <div class="timeline-period">Week 5</div>
+                                    <div class="timeline-period current">Week 6</div>
+                                </div>
+                                <div class="progress-lines">
+                                    <div class="progress-line excellent">
+                                        <span class="line-label">Top Performers (8 students)</span>
+                                        <div class="line-path">
+                                            <div class="point" data-value="95%" style="left: 16.66%"></div>
+                                            <div class="point" data-value="96%" style="left: 33.33%"></div>
+                                            <div class="point" data-value="97%" style="left: 50%"></div>
+                                            <div class="point" data-value="98%" style="left: 66.66%"></div>
+                                            <div class="point" data-value="97%" style="left: 83.33%"></div>
+                                            <div class="point current" data-value="98%" style="left: 100%"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="progress-line good">
+                                        <span class="line-label">Average Performers (18 students)</span>
+                                        <div class="line-path">
+                                            <div class="point" data-value="78%" style="left: 16.66%"></div>
+                                            <div class="point" data-value="82%" style="left: 33.33%"></div>
+                                            <div class="point" data-value="85%" style="left: 50%"></div>
+                                            <div class="point" data-value="87%" style="left: 66.66%"></div>
+                                            <div class="point" data-value="86%" style="left: 83.33%"></div>
+                                            <div class="point current" data-value="87%" style="left: 100%"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="progress-line warning">
+                                        <span class="line-label">Below Average (6 students)</span>
+                                        <div class="line-path">
+                                            <div class="point" data-value="65%" style="left: 16.66%"></div>
+                                            <div class="point" data-value="68%" style="left: 33.33%"></div>
+                                            <div class="point" data-value="72%" style="left: 50%"></div>
+                                            <div class="point" data-value="74%" style="left: 66.66%"></div>
+                                            <div class="point" data-value="71%" style="left: 83.33%"></div>
+                                            <div class="point current" data-value="69%" style="left: 100%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="chart-summary">
+                                    <p><strong>Insights:</strong> Top performers maintaining excellence. Average group showing steady improvement. 6 students need attention - performance declining since Week 4.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Engagement Analytics -->
+                <div class="chart-section">
+                    <div class="section-header">
+                        <h3>💡 Engagement Analytics</h3>
+                        <div class="chart-controls">
+                            <button class="chart-control-btn active" onclick="switchChartView('engagement', 'activity')">Activity</button>
+                            <button class="chart-control-btn" onclick="switchChartView('engagement', 'content')">Content</button>
+                            <button class="chart-control-btn" onclick="switchChartView('engagement', 'time')">Time Patterns</button>
+                        </div>
+                    </div>
+                    <div class="chart-grid">
+                        <div class="chart-item">
+                            <h4>Daily Activity Heatmap</h4>
+                            <div class="heatmap">
+                                <div class="heatmap-grid">
+                                    <div class="heatmap-day">
+                                        <div class="day-label">Mon</div>
+                                        <div class="activity-cells">
+                                            <div class="activity-cell low" title="9 AM - 12 active"></div>
+                                            <div class="activity-cell medium" title="12 PM - 18 active"></div>
+                                            <div class="activity-cell high" title="3 PM - 24 active"></div>
+                                            <div class="activity-cell medium" title="6 PM - 15 active"></div>
+                                            <div class="activity-cell low" title="9 PM - 8 active"></div>
+                                        </div>
+                                    </div>
+                                    <div class="heatmap-day">
+                                        <div class="day-label">Tue</div>
+                                        <div class="activity-cells">
+                                            <div class="activity-cell low" title="9 AM - 11 active"></div>
+                                            <div class="activity-cell high" title="12 PM - 22 active"></div>
+                                            <div class="activity-cell very-high" title="3 PM - 28 active"></div>
+                                            <div class="activity-cell medium" title="6 PM - 16 active"></div>
+                                            <div class="activity-cell low" title="9 PM - 9 active"></div>
+                                        </div>
+                                    </div>
+                                    <div class="heatmap-day">
+                                        <div class="day-label">Wed</div>
+                                        <div class="activity-cells">
+                                            <div class="activity-cell medium" title="9 AM - 14 active"></div>
+                                            <div class="activity-cell high" title="12 PM - 21 active"></div>
+                                            <div class="activity-cell very-high" title="3 PM - 26 active"></div>
+                                            <div class="activity-cell high" title="6 PM - 20 active"></div>
+                                            <div class="activity-cell medium" title="9 PM - 12 active"></div>
+                                        </div>
+                                    </div>
+                                    <div class="heatmap-day">
+                                        <div class="day-label">Thu</div>
+                                        <div class="activity-cells">
+                                            <div class="activity-cell low" title="9 AM - 10 active"></div>
+                                            <div class="activity-cell medium" title="12 PM - 17 active"></div>
+                                            <div class="activity-cell high" title="3 PM - 23 active"></div>
+                                            <div class="activity-cell medium" title="6 PM - 14 active"></div>
+                                            <div class="activity-cell low" title="9 PM - 7 active"></div>
+                                        </div>
+                                    </div>
+                                    <div class="heatmap-day">
+                                        <div class="day-label">Fri</div>
+                                        <div class="activity-cells">
+                                            <div class="activity-cell medium" title="9 AM - 13 active"></div>
+                                            <div class="activity-cell low" title="12 PM - 9 active"></div>
+                                            <div class="activity-cell medium" title="3 PM - 15 active"></div>
+                                            <div class="activity-cell low" title="6 PM - 11 active"></div>
+                                            <div class="activity-cell very-low" title="9 PM - 4 active"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="heatmap-legend">
+                                    <span class="legend-item very-low">0-5</span>
+                                    <span class="legend-item low">6-10</span>
+                                    <span class="legend-item medium">11-15</span>
+                                    <span class="legend-item high">16-25</span>
+                                    <span class="legend-item very-high">26+</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chart-item">
+                            <h4>Content Engagement Score</h4>
+                            <div class="engagement-bars">
+                                <div class="engagement-item">
+                                    <div class="content-info">
+                                        <span class="content-title">Video Lectures</span>
+                                        <span class="engagement-score">92%</span>
+                                    </div>
+                                    <div class="engagement-bar">
+                                        <div class="bar-fill excellent" style="width: 92%"></div>
+                                    </div>
+                                    <div class="engagement-meta">Avg. completion: 8.5/9 videos</div>
+                                </div>
+
+                                <div class="engagement-item">
+                                    <div class="content-info">
+                                        <span class="content-title">Interactive Exercises</span>
+                                        <span class="engagement-score">87%</span>
+                                    </div>
+                                    <div class="engagement-bar">
+                                        <div class="bar-fill good" style="width: 87%"></div>
+                                    </div>
+                                    <div class="engagement-meta">Avg. attempts: 2.3 per exercise</div>
+                                </div>
+
+                                <div class="engagement-item">
+                                    <div class="content-info">
+                                        <span class="content-title">Reading Materials</span>
+                                        <span class="engagement-score">76%</span>
+                                    </div>
+                                    <div class="engagement-bar">
+                                        <div class="bar-fill moderate" style="width: 76%"></div>
+                                    </div>
+                                    <div class="engagement-meta">Avg. time: 12 min per article</div>
+                                </div>
+
+                                <div class="engagement-item">
+                                    <div class="content-info">
+                                        <span class="content-title">Discussion Forums</span>
+                                        <span class="engagement-score">64%</span>
+                                    </div>
+                                    <div class="engagement-bar">
+                                        <div class="bar-fill needs-improvement" style="width: 64%"></div>
+                                    </div>
+                                    <div class="engagement-meta">Avg. posts: 3.2 per student</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assignment Performance -->
+                <div class="chart-section">
+                    <div class="section-header">
+                        <h3>📝 Assignment Performance Analysis</h3>
+                        <div class="chart-controls">
+                            <button class="chart-control-btn active" onclick="switchChartView('assignments', 'overview')">Overview</button>
+                            <button class="chart-control-btn" onclick="switchChartView('assignments', 'difficulty')">Difficulty</button>
+                            <button class="chart-control-btn" onclick="switchChartView('assignments', 'trends')">Trends</button>
+                        </div>
+                    </div>
+                    
+                    <div class="assignments-analysis">
+                        <div class="assignment-performance-chart">
+                            <div class="performance-header">
+                                <h4>Grade Distribution by Assignment</h4>
+                                <div class="grade-legend">
+                                    <span class="grade-item a">A (90-100%)</span>
+                                    <span class="grade-item b">B (80-89%)</span>
+                                    <span class="grade-item c">C (70-79%)</span>
+                                    <span class="grade-item d">D (60-69%)</span>
+                                    <span class="grade-item f">F (<60%)</span>
+                                </div>
+                            </div>
+                            
+                            <div class="performance-bars">
+                                <div class="assignment-bar">
+                                    <div class="assignment-label">
+                                        <strong>Module 1 Quiz</strong>
+                                        <span class="assignment-avg">Avg: 76%</span>
+                                    </div>
+                                    <div class="grade-distribution-bar">
+                                        <div class="grade-segment a" style="width: 25%" title="A: 8 students">8</div>
+                                        <div class="grade-segment b" style="width: 40%" title="B: 13 students">13</div>
+                                        <div class="grade-segment c" style="width: 25%" title="C: 8 students">8</div>
+                                        <div class="grade-segment d" style="width: 10%" title="D: 3 students">3</div>
+                                    </div>
+                                </div>
+
+                                <div class="assignment-bar">
+                                    <div class="assignment-label">
+                                        <strong>Interview Assignment</strong>
+                                        <span class="assignment-avg">Avg: 84%</span>
+                                    </div>
+                                    <div class="grade-distribution-bar">
+                                        <div class="grade-segment a" style="width: 35%" title="A: 11 students">11</div>
+                                        <div class="grade-segment b" style="width: 45%" title="B: 14 students">14</div>
+                                        <div class="grade-segment c" style="width: 15%" title="C: 5 students">5</div>
+                                        <div class="grade-segment d" style="width: 5%" title="D: 2 students">2</div>
+                                    </div>
+                                </div>
+
+                                <div class="assignment-bar">
+                                    <div class="assignment-label">
+                                        <strong>Participation</strong>
+                                        <span class="assignment-avg">Avg: 88%</span>
+                                    </div>
+                                    <div class="grade-distribution-bar">
+                                        <div class="grade-segment a" style="width: 50%" title="A: 16 students">16</div>
+                                        <div class="grade-segment b" style="width: 35%" title="B: 11 students">11</div>
+                                        <div class="grade-segment c" style="width: 10%" title="C: 3 students">3</div>
+                                        <div class="grade-segment d" style="width: 5%" title="D: 2 students">2</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="assignment-insights">
+                            <h4>📋 Assignment Insights</h4>
+                            <div class="insights-grid">
+                                <div class="insight-card positive">
+                                    <div class="insight-icon">🎉</div>
+                                    <div class="insight-content">
+                                        <strong>Participation Excellence</strong>
+                                        <p>50% of students earning A's in participation - highest in any assignment type.</p>
+                                    </div>
+                                </div>
+
+                                <div class="insight-card warning">
+                                    <div class="insight-icon">📈</div>
+                                    <div class="insight-content">
+                                        <strong>Quiz Performance</strong>
+                                        <p>Module 1 Quiz shows wider grade distribution - consider review session for challenging concepts.</p>
+                                    </div>
+                                </div>
+
+                                <div class="insight-card info">
+                                    <div class="insight-icon">⏰</div>
+                                    <div class="insight-content">
+                                        <strong>Submission Patterns</strong>
+                                        <p>87% of assignments submitted on time. Peak submission time: Sunday evenings.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Student Lists and Insights -->
+            <div class="analytics-sidebar">
+                <!-- Top Performers -->
+                <div class="sidebar-section">
+                    <div class="section-header">
+                        <h4>🌟 Top Performers</h4>
+                        <button class="btn-link" onclick="viewAllStudents('top')">View All</button>
+                    </div>
+                    <div class="student-list">
+                        <div class="student-item excellence">
+                            <div class="student-avatar">SC</div>
+                            <div class="student-info">
+                                <div class="student-name">Sarah Chen</div>
+                                <div class="student-score">98% overall</div>
+                                <div class="student-trend positive">+2% this week</div>
+                            </div>
+                            <button class="btn-icon" onclick="viewStudentDetails(1)" title="View details">👁️</button>
+                        </div>
+
+                        <div class="student-item excellence">
+                            <div class="student-avatar">DR</div>
+                            <div class="student-info">
+                                <div class="student-name">David Rodriguez</div>
+                                <div class="student-score">96% overall</div>
+                                <div class="student-trend positive">+1% this week</div>
+                            </div>
+                            <button class="btn-icon" onclick="viewStudentDetails(2)" title="View details">👁️</button>
+                        </div>
+
+                        <div class="student-item excellence">
+                            <div class="student-avatar">LP</div>
+                            <div class="student-info">
+                                <div class="student-name">Lisa Park</div>
+                                <div class="student-score">95% overall</div>
+                                <div class="student-trend neutral">No change</div>
+                            </div>
+                            <button class="btn-icon" onclick="viewStudentDetails(3)" title="View details">👁️</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Students Needing Attention -->
+                <div class="sidebar-section priority">
+                    <div class="section-header">
+                        <h4>⚠️ Needs Attention</h4>
+                        <button class="btn-link" onclick="viewAllStudents('risk')">View All</button>
+                    </div>
+                    <div class="student-list">
+                        <div class="student-item warning">
+                            <div class="student-avatar">EW</div>
+                            <div class="student-info">
+                                <div class="student-name">Emma Wilson</div>
+                                <div class="student-score">62% overall</div>
+                                <div class="student-trend negative">-8% this week</div>
+                                <div class="risk-factors">Missing 2 assignments</div>
+                            </div>
+                            <button class="btn-icon" onclick="contactStudent(3)" title="Contact student">📧</button>
+                        </div>
+
+                        <div class="student-item warning">
+                            <div class="student-avatar">JT</div>
+                            <div class="student-info">
+                                <div class="student-name">Jake Thompson</div>
+                                <div class="student-score">67% overall</div>
+                                <div class="student-trend negative">-3% this week</div>
+                                <div class="risk-factors">Low engagement</div>
+                            </div>
+                            <button class="btn-icon" onclick="contactStudent(4)" title="Contact student">📧</button>
+                        </div>
+
+                        <div class="student-item warning">
+                            <div class="student-avatar">AS</div>
+                            <div class="student-info">
+                                <div class="student-name">Alex Smith</div>
+                                <div class="student-score">69% overall</div>
+                                <div class="student-trend negative">-1% this week</div>
+                                <div class="risk-factors">Declining quiz scores</div>
+                            </div>
+                            <button class="btn-icon" onclick="contactStudent(5)" title="Contact student">📧</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="sidebar-section">
+                    <div class="section-header">
+                        <h4>🔄 Recent Activity</h4>
+                        <button class="btn-link" onclick="viewAllActivity()">View All</button>
+                    </div>
+                    <div class="activity-feed">
+                        <div class="activity-item">
+                            <div class="activity-icon">✅</div>
+                            <div class="activity-content">
+                                <div class="activity-text">15 students completed Module 3 quiz</div>
+                                <div class="activity-time">2 hours ago</div>
+                            </div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon">📝</div>
+                            <div class="activity-content">
+                                <div class="activity-text">New assignment: "Podcast Pitch" submitted by 8 students</div>
+                                <div class="activity-time">4 hours ago</div>
+                            </div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon">💬</div>
+                            <div class="activity-content">
+                                <div class="activity-text">12 new forum posts in "Interview Techniques" discussion</div>
+                                <div class="activity-time">6 hours ago</div>
+                            </div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon">📈</div>
+                            <div class="activity-content">
+                                <div class="activity-text">Course engagement increased 12% this week</div>
+                                <div class="activity-time">1 day ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="sidebar-section">
+                    <div class="section-header">
+                        <h4>💡 AI Recommendations</h4>
+                    </div>
+                    <div class="recommendations">
+                        <div class="recommendation-item high">
+                            <div class="recommendation-priority">High Priority</div>
+                            <div class="recommendation-text">Consider scheduling office hours - 3 students showing declining performance</div>
+                            <button class="btn btn-sm btn-primary" onclick="scheduleOfficeHours()">Schedule</button>
+                        </div>
+
+                        <div class="recommendation-item medium">
+                            <div class="recommendation-priority">Medium Priority</div>
+                            <div class="recommendation-text">Add review quiz for Module 1 - 25% of students scored below 75%</div>
+                            <button class="btn btn-sm btn-secondary" onclick="createReviewQuiz()">Create</button>
+                        </div>
+
+                        <div class="recommendation-item low">
+                            <div class="recommendation-priority">Low Priority</div>
+                            <div class="recommendation-text">Forum engagement is low (64%) - consider discussion prompts</div>
+                            <button class="btn btn-sm btn-secondary" onclick="improveDiscussion()">Improve</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Reports Section -->
+        <div class="reports-section">
+            <div class="section-header">
+                <h3>📊 Detailed Reports</h3>
+                <div class="report-actions">
+                    <button class="btn btn-secondary" onclick="customizeReport()">Customize Report</button>
+                    <button class="btn btn-primary" onclick="generateReport()">Generate PDF</button>
+                </div>
+            </div>
+
+            <div class="reports-grid">
+                <div class="report-card">
+                    <div class="report-header">
+                        <h4>📈 Progress Report</h4>
+                        <div class="report-date">Last updated: 2 hours ago</div>
+                    </div>
+                    <div class="report-preview">
+                        <div class="report-stat">
+                            <span class="stat-label">Class Average</span>
+                            <span class="stat-value">87%</span>
+                        </div>
+                        <div class="report-stat">
+                            <span class="stat-label">Improvement</span>
+                            <span class="stat-value positive">+5%</span>
+                        </div>
+                    </div>
+                    <div class="report-actions">
+                        <button class="btn btn-sm btn-secondary" onclick="previewReport('progress')">Preview</button>
+                        <button class="btn btn-sm btn-primary" onclick="downloadReport('progress')">Download</button>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <div class="report-header">
+                        <h4>🎯 Engagement Report</h4>
+                        <div class="report-date">Last updated: 1 hour ago</div>
+                    </div>
+                    <div class="report-preview">
+                        <div class="report-stat">
+                            <span class="stat-label">Active Students</span>
+                            <span class="stat-value">30/32</span>
+                        </div>
+                        <div class="report-stat">
+                            <span class="stat-label">Avg. Session</span>
+                            <span class="stat-value">42min</span>
+                        </div>
+                    </div>
+                    <div class="report-actions">
+                        <button class="btn btn-sm btn-secondary" onclick="previewReport('engagement')">Preview</button>
+                        <button class="btn btn-sm btn-primary" onclick="downloadReport('engagement')">Download</button>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <div class="report-header">
+                        <h4>📝 Assessment Report</h4>
+                        <div class="report-date">Last updated: 30 minutes ago</div>
+                    </div>
+                    <div class="report-preview">
+                        <div class="report-stat">
+                            <span class="stat-label">Completion Rate</span>
+                            <span class="stat-value">94%</span>
+                        </div>
+                        <div class="report-stat">
+                            <span class="stat-label">On Time</span>
+                            <span class="stat-value">85%</span>
+                        </div>
+                    </div>
+                    <div class="report-actions">
+                        <button class="btn btn-sm btn-secondary" onclick="previewReport('assessment')">Preview</button>
+                        <button class="btn btn-sm btn-primary" onclick="downloadReport('assessment')">Download</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Preview Modal -->
+    <div id="reportModal" class="modal large" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="reportModalTitle">Report Preview</h3>
+                <button class="modal-close" onclick="closeReportModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="report-preview-content" id="reportPreviewContent">
+                    <!-- Report content will be loaded here -->
+                    <div class="report-loading">Loading report preview...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeReportModal()">Close</button>
+                <button class="btn btn-primary" onclick="downloadCurrentReport()">Download PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
+    <script>
+        // Course Analytics JavaScript
+        
+        let currentCourse = 'course_123';
+        let currentTimeframe = 30;
+        let analyticsData = {};
+
+        // Initialize analytics
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAnalyticsData();
+            setupEventListeners();
+            initializeCharts();
+        });
+
+        function setupEventListeners() {
+            // Auto-refresh data every 5 minutes
+            setInterval(refreshAnalytics, 300000);
+        }
+
+        // Course Selection
+        function switchCourse() {
+            const courseId = document.getElementById('courseSelector').value;
+            currentCourse = courseId;
+            loadAnalyticsData();
+            updateCourseInfo(courseId);
+        }
+
+        function updateTimeframe() {
+            const timeframe = document.getElementById('dateRange').value;
+            currentTimeframe = timeframe;
+            loadAnalyticsData();
+        }
+
+        function updateCourseInfo(courseId) {
+            const courseInfo = {
+                'course_123': { name: 'Podcast Journalism 101', students: 32, weeks: 8, current: 6 },
+                'course_456': { name: 'Audio Production Basics', students: 28, weeks: 6, current: 4 },
+                'course_789': { name: 'Story Development Workshop', students: 45, weeks: 9, current: 7 },
+                'course_101': { name: 'Interview Techniques', students: 38, weeks: 12, current: 12 }
+            };
+
+            const info = courseInfo[courseId];
+            if (info) {
+                document.querySelector('.course-meta').innerHTML = `
+                    <span class="enrollment">${info.students} students</span>
+                    <span class="separator">•</span>
+                    <span class="duration">${info.weeks} weeks</span>
+                    <span class="separator">•</span>
+                    <span class="progress">Week ${info.current}</span>
+                `;
+            }
+        }
+
+        // Data Management
+        function loadAnalyticsData() {
+            console.log(`Loading analytics for course ${currentCourse}, timeframe: ${currentTimeframe} days`);
+            // Simulate API call
+            setTimeout(() => {
+                updateAnalyticsDashboard();
+                showNotification('Analytics updated', 'success');
+            }, 1000);
+        }
+
+        function refreshAnalytics() {
+            console.log('Auto-refreshing analytics data');
+            loadAnalyticsData();
+        }
+
+        function updateAnalyticsDashboard() {
+            // Update all dashboard components with fresh data
+            updateMetricsCards();
+            updateCharts();
+            updateStudentLists();
+            updateActivityFeed();
+            updateRecommendations();
+        }
+
+        function updateMetricsCards() {
+            // Update metric cards with current data
+            console.log('Updating metrics cards');
+        }
+
+        function updateCharts() {
+            // Update all chart visualizations
+            console.log('Updating charts');
+        }
+
+        function updateStudentLists() {
+            // Update top performers and at-risk students
+            console.log('Updating student lists');
+        }
+
+        function updateActivityFeed() {
+            // Update recent activity feed
+            console.log('Updating activity feed');
+        }
+
+        function updateRecommendations() {
+            // Update AI recommendations
+            console.log('Updating recommendations');
+        }
+
+        // Chart Controls
+        function switchChartView(chartType, viewType) {
+            // Remove active class from all buttons in this chart section
+            event.target.closest('.chart-controls').querySelectorAll('.chart-control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+            
+            // Update chart view
+            console.log(`Switching ${chartType} chart to ${viewType} view`);
+            updateChartView(chartType, viewType);
+        }
+
+        function updateChartView(chartType, viewType) {
+            // Update specific chart based on type and view
+            switch (chartType) {
+                case 'progress':
+                    updateProgressChart(viewType);
+                    break;
+                case 'engagement':
+                    updateEngagementChart(viewType);
+                    break;
+                case 'assignments':
+                    updateAssignmentsChart(viewType);
+                    break;
+            }
+        }
+
+        function updateProgressChart(viewType) {
+            console.log(`Updating progress chart: ${viewType}`);
+            // Implementation would update the progress visualization
+        }
+
+        function updateEngagementChart(viewType) {
+            console.log(`Updating engagement chart: ${viewType}`);
+            // Implementation would update the engagement visualization
+        }
+
+        function updateAssignmentsChart(viewType) {
+            console.log(`Updating assignments chart: ${viewType}`);
+            // Implementation would update the assignments visualization
+        }
+
+        function initializeCharts() {
+            // Initialize all chart visualizations
+            console.log('Initializing charts');
+            setupHeatmapInteractions();
+            setupProgressLineInteractions();
+        }
+
+        function setupHeatmapInteractions() {
+            // Add hover effects and tooltips to heatmap
+            const cells = document.querySelectorAll('.activity-cell');
+            cells.forEach(cell => {
+                cell.addEventListener('mouseenter', (e) => {
+                    const tooltip = e.target.getAttribute('title');
+                    // Show tooltip
+                });
+            });
+        }
+
+        function setupProgressLineInteractions() {
+            // Add interactions to progress line chart
+            const points = document.querySelectorAll('.progress-line .point');
+            points.forEach(point => {
+                point.addEventListener('mouseenter', (e) => {
+                    const value = e.target.getAttribute('data-value');
+                    // Show value tooltip
+                });
+            });
+        }
+
+        // Student Actions
+        function viewStudentDetails(studentId) {
+            window.location.href = `student-analytics.html?id=${studentId}&course=${currentCourse}`;
+        }
+
+        function contactStudent(studentId) {
+            // Open messaging interface for at-risk student
+            window.location.href = `student-messaging.html?id=${studentId}&template=support`;
+        }
+
+        function viewAllStudents(category) {
+            window.location.href = `students-list.html?category=${category}&course=${currentCourse}`;
+        }
+
+        function viewAllActivity() {
+            window.location.href = `activity-log.html?course=${currentCourse}`;
+        }
+
+        // Recommendation Actions
+        function scheduleOfficeHours() {
+            if (confirm('Schedule office hours for students needing support?')) {
+                // Open scheduling interface
+                window.location.href = 'schedule-office-hours.html';
+                showNotification('Office hours scheduling opened', 'info');
+            }
+        }
+
+        function createReviewQuiz() {
+            if (confirm('Create a review quiz for Module 1 concepts?')) {
+                // Open quiz creator
+                window.location.href = 'lesson-content-editor-prototype.html?type=review-quiz&module=1';
+                showNotification('Opening quiz creator...', 'info');
+            }
+        }
+
+        function improveDiscussion() {
+            if (confirm('Add discussion prompts to improve forum engagement?')) {
+                // Open discussion manager
+                window.location.href = 'discussion-manager.html';
+                showNotification('Opening discussion manager...', 'info');
+            }
+        }
+
+        // Report Functions
+        function exportAnalytics() {
+            // Export comprehensive analytics report
+            showNotification('Preparing analytics export...', 'info');
+            setTimeout(() => {
+                showNotification('Analytics report downloaded!', 'success');
+            }, 3000);
+        }
+
+        function scheduleReport() {
+            // Open report scheduling interface
+            const schedule = prompt('How often would you like to receive analytics reports?', 'Weekly');
+            if (schedule) {
+                showNotification(`Scheduled ${schedule.toLowerCase()} reports`, 'success');
+            }
+        }
+
+        function customizeReport() {
+            // Open report customization interface
+            window.location.href = 'report-builder.html';
+        }
+
+        function generateReport() {
+            showNotification('Generating comprehensive PDF report...', 'info');
+            setTimeout(() => {
+                showNotification('PDF report generated and downloaded!', 'success');
+            }, 4000);
+        }
+
+        function previewReport(reportType) {
+            // Show report preview modal
+            document.getElementById('reportModalTitle').textContent = `${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report Preview`;
+            document.getElementById('reportModal').style.display = 'flex';
+            
+            // Load report content
+            loadReportPreview(reportType);
+        }
+
+        function loadReportPreview(reportType) {
+            const content = document.getElementById('reportPreviewContent');
+            content.innerHTML = '<div class="report-loading">Loading report preview...</div>';
+            
+            setTimeout(() => {
+                content.innerHTML = generateReportContent(reportType);
+            }, 1500);
+        }
+
+        function generateReportContent(reportType) {
+            const templates = {
+                progress: `
+                    <div class="report-content">
+                        <h4>Student Progress Report</h4>
+                        <p><strong>Course:</strong> Podcast Journalism 101</p>
+                        <p><strong>Period:</strong> Last 30 days</p>
+                        <p><strong>Class Average:</strong> 87% (+5% improvement)</p>
+                        <div class="report-section">
+                            <h5>Key Findings:</h5>
+                            <ul>
+                                <li>Top 25% of students maintaining 95%+ performance</li>
+                                <li>Average group showing steady 5% improvement</li>
+                                <li>3 students requiring additional support</li>
+                            </ul>
+                        </div>
+                    </div>
+                `,
+                engagement: `
+                    <div class="report-content">
+                        <h4>Student Engagement Report</h4>
+                        <p><strong>Course:</strong> Podcast Journalism 101</p>
+                        <p><strong>Period:</strong> Last 30 days</p>
+                        <p><strong>Overall Engagement:</strong> 91%</p>
+                        <div class="report-section">
+                            <h5>Engagement Metrics:</h5>
+                            <ul>
+                                <li>Average session time: 42 minutes (+7 min)</li>
+                                <li>Daily active users: 24/32 students</li>
+                                <li>Video completion rate: 92%</li>
+                                <li>Forum participation: 64% (needs improvement)</li>
+                            </ul>
+                        </div>
+                    </div>
+                `,
+                assessment: `
+                    <div class="report-content">
+                        <h4>Assessment Performance Report</h4>
+                        <p><strong>Course:</strong> Podcast Journalism 101</p>
+                        <p><strong>Period:</strong> Last 30 days</p>
+                        <p><strong>Completion Rate:</strong> 94%</p>
+                        <div class="report-section">
+                            <h5>Assessment Summary:</h5>
+                            <ul>
+                                <li>On-time submissions: 85%</li>
+                                <li>Average grade: 84%</li>
+                                <li>Highest performing: Participation (88% avg)</li>
+                                <li>Needs review: Module 1 Quiz (76% avg)</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            };
+            
+            return templates[reportType] || '<p>Report content not available</p>';
+        }
+
+        function closeReportModal() {
+            document.getElementById('reportModal').style.display = 'none';
+        }
+
+        function downloadReport(reportType) {
+            showNotification(`Downloading ${reportType} report...`, 'info');
+            setTimeout(() => {
+                showNotification('Report downloaded successfully!', 'success');
+            }, 2000);
+        }
+
+        function downloadCurrentReport() {
+            showNotification('Downloading current report...', 'info');
+            setTimeout(() => {
+                closeReportModal();
+                showNotification('Report downloaded successfully!', 'success');
+            }, 2000);
+        }
+
+        // Utility Functions
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.classList.add('show'), 100);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Initialize tooltips and interactive elements
+        function initializeInteractiveElements() {
+            // Add hover effects to chart elements
+            const chartElements = document.querySelectorAll('[data-value]');
+            chartElements.forEach(element => {
+                element.addEventListener('mouseenter', showTooltip);
+                element.addEventListener('mouseleave', hideTooltip);
+            });
+        }
+
+        function showTooltip(event) {
+            const value = event.target.getAttribute('data-value');
+            if (value) {
+                // Create and show tooltip
+                const tooltip = document.createElement('div');
+                tooltip.className = 'tooltip';
+                tooltip.textContent = value;
+                document.body.appendChild(tooltip);
+                
+                // Position tooltip
+                const rect = event.target.getBoundingClientRect();
+                tooltip.style.left = rect.left + 'px';
+                tooltip.style.top = (rect.top - 30) + 'px';
+            }
+        }
+
+        function hideTooltip() {
+            const tooltip = document.querySelector('.tooltip');
+            if (tooltip) {
+                tooltip.remove();
+            }
+        }
+
+        // Initialize everything when DOM is ready
+        initializeInteractiveElements();
+    </script>
+
+    <style>
+        /* Course Analytics Specific Styles */
+        .analytics-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--white);
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .header-title-section .breadcrumb {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .course-selector {
+            margin-top: 1rem;
+        }
+
+        .course-selector .form-control {
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .course-meta {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .separator {
+            margin: 0 0.5rem;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .date-range-selector .form-control {
+            min-width: 150px;
+        }
+
+        /* Metrics Overview */
+        .metrics-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .metric-card.primary {
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .metric-card.warning {
+            border-left: 4px solid var(--lesson-warning);
+        }
+
+        .metric-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .metric-icon {
+            font-size: 2.5rem;
+            background: #fff7ed;
+            padding: 1rem;
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .metric-content {
+            flex: 1;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-change {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .metric-change.positive {
+            background: var(--quiz-correct);
+            color: var(--lesson-success);
+        }
+
+        .metric-change.negative {
+            background: var(--quiz-incorrect);
+            color: var(--danger-color);
+        }
+
+        .metric-change.neutral {
+            background: #f3f4f6;
+            color: var(--text-light);
+        }
+
+        .metric-chart {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+        }
+
+        .mini-chart {
+            display: flex;
+            align-items: end;
+            gap: 2px;
+            height: 30px;
+        }
+
+        .chart-bar {
+            width: 6px;
+            background: var(--border-color);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .chart-bar.current {
+            background: var(--primary-color);
+        }
+
+        .metric-detail {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .detail-label {
+            color: var(--text-light);
+        }
+
+        .detail-value {
+            font-weight: 500;
+        }
+
+        .rating-distribution {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .rating-bar {
+            height: 8px;
+            background: var(--progress-bg);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .rating-fill {
+            height: 100%;
+            background: var(--lesson-success);
+            border-radius: 4px;
+        }
+
+        .rating-text {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .risk-indicators {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .risk-item {
+            font-size: 0.75rem;
+            color: var(--lesson-warning);
+            background: #fef3c7;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        /* Analytics Dashboard */
+        .analytics-dashboard {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+        }
+
+        .analytics-main {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Chart Sections */
+        .chart-section {
+            background: var(--white);
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header h3,
+        .section-header h4 {
+            margin: 0;
+            color: var(--text-color);
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .chart-control-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .chart-control-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .chart-control-btn:hover:not(.active) {
+            background: #f8fafc;
+        }
+
+        .chart-container {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            min-height: 300px;
+        }
+
+        .chart-container.large {
+            min-height: 400px;
+        }
+
+        /* Progress Timeline */
+        .progress-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            height: 100%;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .timeline-period {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-light);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
+
+        .timeline-period.current {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .progress-lines {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            position: relative;
+        }
+
+        .progress-line {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .line-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .progress-line.excellent .line-label {
+            color: var(--lesson-success);
+        }
+
+        .progress-line.good .line-label {
+            color: var(--lesson-info);
+        }
+
+        .progress-line.warning .line-label {
+            color: var(--lesson-warning);
+        }
+
+        .line-path {
+            position: relative;
+            height: 40px;
+            background: linear-gradient(to right, #f3f4f6 0%, #f3f4f6 100%);
+            border-radius: 4px;
+        }
+
+        .point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            border: 2px solid var(--white);
+            top: 50%;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .point:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+
+        .point.current {
+            background: var(--lesson-success);
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+        }
+
+        .chart-summary {
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 4px solid var(--lesson-info);
+        }
+
+        .chart-summary p {
+            margin: 0;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        /* Chart Grid */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .chart-item {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .chart-item h4 {
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            color: var(--text-color);
+        }
+
+        /* Heatmap */
+        .heatmap-grid {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .heatmap-day {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .day-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .activity-cells {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .activity-cell {
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .activity-cell:hover {
+            transform: scale(1.1);
+        }
+
+        .activity-cell.very-low {
+            background: #f3f4f6;
+        }
+
+        .activity-cell.low {
+            background: #fef3c7;
+        }
+
+        .activity-cell.medium {
+            background: #fed7aa;
+        }
+
+        .activity-cell.high {
+            background: var(--primary-color);
+        }
+
+        .activity-cell.very-high {
+            background: var(--lesson-success);
+        }
+
+        .heatmap-legend {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .legend-item {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .legend-item.very-low {
+            background: #f3f4f6;
+        }
+
+        .legend-item.low {
+            background: #fef3c7;
+        }
+
+        .legend-item.medium {
+            background: #fed7aa;
+        }
+
+        .legend-item.high {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .legend-item.very-high {
+            background: var(--lesson-success);
+            color: white;
+        }
+
+        /* Engagement Bars */
+        .engagement-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .engagement-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .content-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .engagement-score {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .engagement-bar {
+            height: 20px;
+            background: var(--progress-bg);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .bar-fill.excellent {
+            background: var(--lesson-success);
+        }
+
+        .bar-fill.good {
+            background: var(--lesson-info);
+        }
+
+        .bar-fill.moderate {
+            background: var(--lesson-warning);
+        }
+
+        .bar-fill.needs-improvement {
+            background: var(--danger-color);
+        }
+
+        .engagement-meta {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        /* Assignment Analysis */
+        .assignments-analysis {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .assignment-performance-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .performance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .grade-legend {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.75rem;
+        }
+
+        .grade-item {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .grade-item.a {
+            background: var(--lesson-success);
+            color: white;
+        }
+
+        .grade-item.b {
+            background: var(--lesson-info);
+            color: white;
+        }
+
+        .grade-item.c {
+            background: var(--lesson-warning);
+            color: white;
+        }
+
+        .grade-item.d {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .grade-item.f {
+            background: #374151;
+            color: white;
+        }
+
+        .performance-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .assignment-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .assignment-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .assignment-avg {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .grade-distribution-bar {
+            height: 40px;
+            display: flex;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .grade-segment {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .grade-segment:hover {
+            opacity: 0.8;
+        }
+
+        .grade-segment.a {
+            background: var(--lesson-success);
+        }
+
+        .grade-segment.b {
+            background: var(--lesson-info);
+        }
+
+        .grade-segment.c {
+            background: var(--lesson-warning);
+        }
+
+        .grade-segment.d {
+            background: var(--danger-color);
+        }
+
+        .assignment-insights {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .assignment-insights h4 {
+            margin-bottom: 1rem;
+        }
+
+        .insights-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .insight-card {
+            display: flex;
+            gap: 0.75rem;
+            padding: 1rem;
+            border-radius: 6px;
+        }
+
+        .insight-card.positive {
+            background: var(--quiz-correct);
+            border-left: 4px solid var(--lesson-success);
+        }
+
+        .insight-card.warning {
+            background: #fef3c7;
+            border-left: 4px solid var(--lesson-warning);
+        }
+
+        .insight-card.info {
+            background: #dbeafe;
+            border-left: 4px solid var(--lesson-info);
+        }
+
+        .insight-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .insight-content {
+            flex: 1;
+        }
+
+        .insight-content strong {
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .insight-content p {
+            margin: 0;
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+
+        /* Analytics Sidebar */
+        .analytics-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .sidebar-section {
+            background: var(--white);
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+        }
+
+        .sidebar-section.priority {
+            border-left: 4px solid var(--lesson-warning);
+        }
+
+        .sidebar-section .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-section h4 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        /* Student Lists */
+        .student-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .student-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .student-item:hover {
+            background: #f8fafc;
+        }
+
+        .student-item.excellence {
+            border-left: 4px solid var(--lesson-success);
+        }
+
+        .student-item.warning {
+            border-left: 4px solid var(--lesson-warning);
+        }
+
+        .student-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+
+        .student-info {
+            flex: 1;
+        }
+
+        .student-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .student-score {
+            font-size: 0.875rem;
+            color: var(--text-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .student-trend {
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.125rem 0.5rem;
+            border-radius: 8px;
+        }
+
+        .student-trend.positive {
+            background: var(--quiz-correct);
+            color: var(--lesson-success);
+        }
+
+        .student-trend.negative {
+            background: var(--quiz-incorrect);
+            color: var(--danger-color);
+        }
+
+        .student-trend.neutral {
+            background: #f3f4f6;
+            color: var(--text-light);
+        }
+
+        .risk-factors {
+            font-size: 0.75rem;
+            color: var(--lesson-warning);
+            margin-top: 0.25rem;
+        }
+
+        /* Activity Feed */
+        .activity-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-left: 3px solid var(--border-color);
+            border-radius: 4px;
+            background: #f8fafc;
+        }
+
+        .activity-icon {
+            font-size: 1rem;
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+            margin-top: 0.125rem;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-text {
+            font-size: 0.875rem;
+            line-height: 1.4;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-time {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        /* Recommendations */
+        .recommendations {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .recommendation-item {
+            padding: 1rem;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .recommendation-item.high {
+            background: var(--quiz-incorrect);
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .recommendation-item.medium {
+            background: #fef3c7;
+            border-left: 4px solid var(--lesson-warning);
+        }
+
+        .recommendation-item.low {
+            background: #dbeafe;
+            border-left: 4px solid var(--lesson-info);
+        }
+
+        .recommendation-priority {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .recommendation-text {
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+
+        /* Reports Section */
+        .reports-section {
+            background: var(--white);
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .report-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            background: #f8fafc;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .report-header h4 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .report-date {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .report-preview {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .report-stat {
+            text-align: center;
+        }
+
+        .report-stat .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-bottom: 0.25rem;
+        }
+
+        .report-stat .stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .report-stat .stat-value.positive {
+            color: var(--lesson-success);
+        }
+
+        .report-card .report-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Report Modal */
+        .report-content {
+            padding: 1rem;
+        }
+
+        .report-content h4 {
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+
+        .report-content p {
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .report-section {
+            margin-top: 1.5rem;
+        }
+
+        .report-section h5 {
+            margin-bottom: 0.75rem;
+            color: var(--text-color);
+        }
+
+        .report-section ul {
+            margin-left: 1rem;
+            line-height: 1.6;
+        }
+
+        .report-loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-light);
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: var(--text-color);
+            color: white;
+            padding: 0.375rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--lesson-success);
+            background: var(--quiz-correct);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--danger-color);
+            background: var(--quiz-incorrect);
+        }
+
+        .notification.warning {
+            border-left: 4px solid var(--lesson-warning);
+            background: #fef3c7;
+        }
+
+        .notification.info {
+            border-left: 4px solid var(--lesson-info);
+            background: #dbeafe;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .analytics-dashboard {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .assignments-analysis {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .analytics-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .header-actions {
+                justify-content: space-between;
+            }
+
+            .metrics-overview {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .metrics-overview {
+                grid-template-columns: 1fr;
+            }
+
+            .metric-card {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .metric-chart {
+                position: static;
+                align-self: center;
+            }
+
+            .chart-controls {
+                flex-wrap: wrap;
+            }
+
+            .heatmap-grid {
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+
+            .heatmap-day {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .activity-cells {
+                flex-direction: row;
+                gap: 2px;
+            }
+
+            .reports-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .analytics-header {
+                padding: 1rem;
+            }
+
+            .header-actions {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .chart-section {
+                padding: 1rem;
+            }
+
+            .sidebar-section {
+                padding: 1rem;
+            }
+
+            .student-item {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.5rem;
+            }
+
+            .grade-legend {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</body>
+</html>

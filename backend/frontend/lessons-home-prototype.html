@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD Lessons - Home</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/lesson-styles.css">
+    <style>
+        /* Enhanced Lessons Home Styles */
+        .lessons-hero {
+            background: linear-gradient(135deg, var(--lesson-primary) 0%, var(--lesson-secondary) 100%);
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            text-align: center;
+        }
+        
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.125rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.8;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .sidebar-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .section-card {
+            background: var(--lesson-content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            padding: var(--card-padding);
+            box-shadow: var(--shadow);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .view-all-btn {
+            color: var(--lesson-primary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.875rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        .view-all-btn:hover {
+            background: #fff7ed;
+        }
+        
+        .featured-courses {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .featured-course {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .featured-course:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-2px);
+        }
+        
+        .course-image {
+            height: 160px;
+            background: linear-gradient(45deg, var(--lesson-primary), var(--lesson-info));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+        
+        .course-content {
+            padding: 1.25rem;
+        }
+        
+        .course-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+        
+        .course-instructor {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-bottom: 0.75rem;
+        }
+        
+        .course-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .course-progress {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .progress-mini {
+            width: 60px;
+            height: 4px;
+            background: var(--progress-bg);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .progress-mini-fill {
+            height: 100%;
+            background: var(--lesson-success);
+        }
+        
+        .course-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+            color: var(--lesson-warning);
+        }
+        
+        .continue-btn {
+            background: var(--lesson-primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+        
+        .continue-btn:hover {
+            background: var(--primary-hover);
+        }
+        
+        .recent-activity {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .activity-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.25rem;
+        }
+        
+        .activity-icon.completed {
+            background: var(--quiz-correct);
+        }
+        
+        .activity-icon.progress {
+            background: #fff7ed;
+        }
+        
+        .activity-icon.new {
+            background: var(--quiz-selected);
+        }
+        
+        .activity-content {
+            flex: 1;
+        }
+        
+        .activity-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        
+        .activity-meta {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+        
+        .achievement-badge {
+            background: linear-gradient(135deg, var(--lesson-purple), var(--lesson-info));
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        .badge-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .badge-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .badge-desc {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+        
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .action-btn:hover {
+            border-color: var(--lesson-primary);
+            background: #fff7ed;
+        }
+        
+        .search-suggestions {
+            margin-top: 1rem;
+        }
+        
+        .suggestion-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .suggestion-tag {
+            background: var(--lesson-sidebar-bg);
+            color: var(--text-light);
+            padding: 0.25rem 0.75rem;
+            border-radius: 16px;
+            font-size: 0.875rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .suggestion-tag:hover {
+            background: var(--lesson-primary);
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                padding: 0 1rem;
+            }
+            
+            .hero-title {
+                font-size: 2rem;
+            }
+            
+            .quick-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .featured-courses {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+    
+    <!-- Hero Section -->
+    <section class="lessons-hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Welcome to VidPOD Lessons</h1>
+            <p class="hero-subtitle">Expand your podcasting skills with our comprehensive course library. Learn at your own pace with interactive lessons, quizzes, and hands-on projects.</p>
+            
+            <div class="quick-stats">
+                <div class="stat-item">
+                    <span class="stat-number">5</span>
+                    <span class="stat-label">Courses Enrolled</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">73%</span>
+                    <span class="stat-label">Average Progress</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">12</span>
+                    <span class="stat-label">Completed Lessons</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">3</span>
+                    <span class="stat-label">Certificates Earned</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="dashboard-grid">
+        <div class="main-content">
+            <!-- Continue Learning Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span>📚</span>
+                        Continue Learning
+                    </h2>
+                    <a href="course-catalog-prototype.html" class="view-all-btn">View All Courses</a>
+                </div>
+                
+                <div class="featured-courses">
+                    <div class="featured-course" onclick="location.href='student-course-view-prototype.html'">
+                        <div class="course-image">🎙️</div>
+                        <div class="course-content">
+                            <h3 class="course-title">Podcast Fundamentals</h3>
+                            <p class="course-instructor">by Sarah Johnson</p>
+                            <div class="course-meta">
+                                <div class="course-progress">
+                                    <div class="progress-mini">
+                                        <div class="progress-mini-fill" style="width: 75%"></div>
+                                    </div>
+                                    <span>75%</span>
+                                </div>
+                                <div class="course-rating">
+                                    <span>⭐</span>
+                                    <span>4.8</span>
+                                </div>
+                            </div>
+                            <button class="continue-btn">Continue Learning</button>
+                        </div>
+                    </div>
+                    
+                    <div class="featured-course" onclick="location.href='student-course-view-prototype.html'">
+                        <div class="course-image">🎧</div>
+                        <div class="course-content">
+                            <h3 class="course-title">Audio Editing Mastery</h3>
+                            <p class="course-instructor">by Mike Chen</p>
+                            <div class="course-meta">
+                                <div class="course-progress">
+                                    <div class="progress-mini">
+                                        <div class="progress-mini-fill" style="width: 45%"></div>
+                                    </div>
+                                    <span>45%</span>
+                                </div>
+                                <div class="course-rating">
+                                    <span>⭐</span>
+                                    <span>4.9</span>
+                                </div>
+                            </div>
+                            <button class="continue-btn">Continue Learning</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recommended Courses -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span>✨</span>
+                        Recommended for You
+                    </h2>
+                    <a href="course-catalog-prototype.html" class="view-all-btn">Browse All</a>
+                </div>
+                
+                <div class="featured-courses">
+                    <div class="featured-course">
+                        <div class="course-image">📻</div>
+                        <div class="course-content">
+                            <h3 class="course-title">Voice Training for Podcasters</h3>
+                            <p class="course-instructor">by Emma Rodriguez</p>
+                            <div class="course-meta">
+                                <div class="course-progress">
+                                    <span style="color: var(--text-light); font-size: 0.875rem;">8 lessons • 2.5 hours</span>
+                                </div>
+                                <div class="course-rating">
+                                    <span>⭐</span>
+                                    <span>4.7</span>
+                                </div>
+                            </div>
+                            <button class="continue-btn" style="background: var(--lesson-success);">Enroll Now</button>
+                        </div>
+                    </div>
+                    
+                    <div class="featured-course">
+                        <div class="course-image">🎤</div>
+                        <div class="course-content">
+                            <h3 class="course-title">Interview Techniques</h3>
+                            <p class="course-instructor">by David Park</p>
+                            <div class="course-meta">
+                                <div class="course-progress">
+                                    <span style="color: var(--text-light); font-size: 0.875rem;">12 lessons • 4 hours</span>
+                                </div>
+                                <div class="course-rating">
+                                    <span>⭐</span>
+                                    <span>4.9</span>
+                                </div>
+                            </div>
+                            <button class="continue-btn" style="background: var(--lesson-success);">Enroll Now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sidebar-content">
+            <!-- Recent Activity -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <span>🕐</span>
+                        Recent Activity
+                    </h3>
+                </div>
+                
+                <ul class="recent-activity">
+                    <li class="activity-item">
+                        <div class="activity-icon completed">✅</div>
+                        <div class="activity-content">
+                            <div class="activity-title">Completed "Recording Setup"</div>
+                            <div class="activity-meta">Podcast Fundamentals • 2 hours ago</div>
+                        </div>
+                    </li>
+                    
+                    <li class="activity-item">
+                        <div class="activity-icon progress">📝</div>
+                        <div class="activity-content">
+                            <div class="activity-title">Started Quiz: Audio Basics</div>
+                            <div class="activity-meta">Audio Editing Mastery • 1 day ago</div>
+                        </div>
+                    </li>
+                    
+                    <li class="activity-item">
+                        <div class="activity-icon new">🎯</div>
+                        <div class="activity-content">
+                            <div class="activity-title">New lesson available</div>
+                            <div class="activity-meta">Voice Training Course • 2 days ago</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Achievement -->
+            <div class="achievement-badge">
+                <div class="badge-icon">🏆</div>
+                <div class="badge-title">First Course Complete!</div>
+                <div class="badge-desc">You completed your first VidPOD course</div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <span>⚡</span>
+                        Quick Actions
+                    </h3>
+                </div>
+                
+                <div class="quick-actions">
+                    <a href="course-catalog-prototype.html" class="action-btn">
+                        <span>🔍</span>
+                        Browse Courses
+                    </a>
+                    <a href="quiz-interface-prototype.html" class="action-btn">
+                        <span>📝</span>
+                        Take Quiz
+                    </a>
+                    <a href="#" class="action-btn">
+                        <span>📊</span>
+                        View Progress
+                    </a>
+                    <a href="#" class="action-btn">
+                        <span>🎖️</span>
+                        Certificates
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Search Suggestions -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <span>💡</span>
+                        Popular Topics
+                    </h3>
+                </div>
+                
+                <div class="search-suggestions">
+                    <div class="suggestion-tags">
+                        <a href="#" class="suggestion-tag">Audio Editing</a>
+                        <a href="#" class="suggestion-tag">Storytelling</a>
+                        <a href="#" class="suggestion-tag">Equipment</a>
+                        <a href="#" class="suggestion-tag">Marketing</a>
+                        <a href="#" class="suggestion-tag">Interviewing</a>
+                        <a href="#" class="suggestion-tag">Monetization</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
+    <script>
+        // Enhanced lessons home functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate stats on load
+            animateStats();
+            
+            // Add loading states for course cards
+            addCourseInteractions();
+            
+            // Initialize search suggestions
+            initializeSearchSuggestions();
+        });
+        
+        function animateStats() {
+            const statNumbers = document.querySelectorAll('.stat-number');
+            
+            statNumbers.forEach(stat => {
+                const finalValue = stat.textContent.replace('%', '');
+                const isPercentage = stat.textContent.includes('%');
+                let currentValue = 0;
+                const increment = Math.ceil(finalValue / 50);
+                
+                const timer = setInterval(() => {
+                    currentValue += increment;
+                    if (currentValue >= finalValue) {
+                        currentValue = finalValue;
+                        clearInterval(timer);
+                    }
+                    stat.textContent = currentValue + (isPercentage ? '%' : '');
+                }, 20);
+            });
+        }
+        
+        function addCourseInteractions() {
+            const courseCards = document.querySelectorAll('.featured-course');
+            
+            courseCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.borderColor = 'var(--lesson-primary)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.borderColor = 'var(--border-color)';
+                });
+            });
+        }
+        
+        function initializeSearchSuggestions() {
+            const suggestionTags = document.querySelectorAll('.suggestion-tag');
+            
+            suggestionTags.forEach(tag => {
+                tag.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const searchTerm = this.textContent;
+                    
+                    // Simulate search functionality
+                    console.log(`Searching for: ${searchTerm}`);
+                    
+                    // Add loading state
+                    this.style.background = 'var(--lesson-primary)';
+                    this.style.color = 'white';
+                    
+                    setTimeout(() => {
+                        window.location.href = `course-catalog-prototype.html?search=${encodeURIComponent(searchTerm)}`;
+                    }, 300);
+                });
+            });
+        }
+        
+        // Course card click handlers
+        function viewCourse(courseId) {
+            window.location.href = `student-course-view-prototype.html?course=${courseId}`;
+        }
+        
+        function enrollInCourse(courseId) {
+            // Simulate enrollment process
+            const button = event.target;
+            const originalText = button.textContent;
+            
+            button.textContent = 'Enrolling...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                button.textContent = 'Enrolled ✓';
+                button.style.background = 'var(--lesson-success)';
+                
+                setTimeout(() => {
+                    button.textContent = 'Continue Learning';
+                    button.disabled = false;
+                    button.onclick = () => viewCourse(courseId);
+                }, 1500);
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

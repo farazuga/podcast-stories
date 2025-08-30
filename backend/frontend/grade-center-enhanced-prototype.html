@@ -1,0 +1,2677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD - Grade Center</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/lesson-styles.css">
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+
+    <div class="container">
+        <!-- Grade Center Header -->
+        <div class="grade-center-header">
+            <div class="header-title-section">
+                <div class="breadcrumb">
+                    <a href="teacher-lessons-dashboard-prototype.html">Dashboard</a>
+                    <span class="breadcrumb-separator">›</span>
+                    <span class="current">Grade Center</span>
+                </div>
+                <h1>📊 Grade Center</h1>
+                <div class="course-info">
+                    <span class="course-name">Podcast Journalism 101</span>
+                    <span class="course-separator">•</span>
+                    <span class="student-count">32 students</span>
+                    <span class="course-separator">•</span>
+                    <span class="pending-count">5 pending grades</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="exportGrades()">
+                    <span class="icon">📤</span>
+                    Export
+                </button>
+                <button class="btn btn-secondary" onclick="importGrades()">
+                    <span class="icon">📥</span>
+                    Import
+                </button>
+                <button class="btn btn-primary" onclick="bulkGrade()">
+                    <span class="icon">⚡</span>
+                    Bulk Grade
+                </button>
+            </div>
+        </div>
+
+        <!-- Grade Center Toolbar -->
+        <div class="grade-toolbar">
+            <div class="toolbar-section">
+                <div class="view-selector">
+                    <button class="view-btn active" onclick="switchView('gradebook')" data-view="gradebook">
+                        <span class="icon">📋</span>
+                        Gradebook
+                    </button>
+                    <button class="view-btn" onclick="switchView('students')" data-view="students">
+                        <span class="icon">👥</span>
+                        Students
+                    </button>
+                    <button class="view-btn" onclick="switchView('assignments')" data-view="assignments">
+                        <span class="icon">📝</span>
+                        Assignments
+                    </button>
+                    <button class="view-btn" onclick="switchView('analytics')" data-view="analytics">
+                        <span class="icon">📈</span>
+                        Analytics
+                    </button>
+                </div>
+            </div>
+
+            <div class="toolbar-section">
+                <div class="filters">
+                    <select class="form-control" id="statusFilter">
+                        <option value="">All Students</option>
+                        <option value="active">Active</option>
+                        <option value="struggling">Struggling</option>
+                        <option value="excelling">Excelling</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                    
+                    <select class="form-control" id="assignmentFilter">
+                        <option value="">All Assignments</option>
+                        <option value="pending">Pending Grades</option>
+                        <option value="completed">Completed</option>
+                        <option value="overdue">Overdue</option>
+                    </select>
+                    
+                    <input type="search" class="form-control" id="searchStudents" 
+                           placeholder="Search students...">
+                </div>
+            </div>
+
+            <div class="toolbar-section">
+                <div class="grade-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">87%</span>
+                        <span class="stat-label">Class Average</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <span class="stat-value">5</span>
+                        <span class="stat-label">Pending</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grade Center Content -->
+        <div class="grade-center-content">
+            <!-- Gradebook View -->
+            <div class="view-content active" id="gradebook-view">
+                <div class="gradebook-container">
+                    <div class="gradebook-wrapper">
+                        <table class="gradebook-table" id="gradebookTable">
+                            <thead>
+                                <tr>
+                                    <th class="student-column sticky-left">
+                                        <div class="column-header">
+                                            <span class="header-text">Student</span>
+                                            <button class="sort-btn" onclick="sortBy('student')">⇅</button>
+                                        </div>
+                                    </th>
+                                    <th class="assignment-column">
+                                        <div class="column-header">
+                                            <span class="header-text">Module 1 Quiz</span>
+                                            <span class="assignment-meta">Quiz • 20 pts</span>
+                                            <button class="assignment-menu-btn" onclick="openAssignmentMenu(1)">⋮</button>
+                                        </div>
+                                    </th>
+                                    <th class="assignment-column">
+                                        <div class="column-header">
+                                            <span class="header-text">Interview Assignment</span>
+                                            <span class="assignment-meta">Assignment • 50 pts</span>
+                                            <button class="assignment-menu-btn" onclick="openAssignmentMenu(2)">⋮</button>
+                                        </div>
+                                    </th>
+                                    <th class="assignment-column">
+                                        <div class="column-header">
+                                            <span class="header-text">Podcast Pitch</span>
+                                            <span class="assignment-meta">Project • 100 pts</span>
+                                            <button class="assignment-menu-btn" onclick="openAssignmentMenu(3)">⋮</button>
+                                        </div>
+                                    </th>
+                                    <th class="assignment-column">
+                                        <div class="column-header">
+                                            <span class="header-text">Participation</span>
+                                            <span class="assignment-meta">Other • 30 pts</span>
+                                            <button class="assignment-menu-btn" onclick="openAssignmentMenu(4)">⋮</button>
+                                        </div>
+                                    </th>
+                                    <th class="total-column sticky-right">
+                                        <div class="column-header">
+                                            <span class="header-text">Total</span>
+                                            <span class="assignment-meta">200 pts</span>
+                                            <button class="sort-btn" onclick="sortBy('total')">⇅</button>
+                                        </div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="student-row">
+                                    <td class="student-cell sticky-left">
+                                        <div class="student-info">
+                                            <div class="student-avatar">SC</div>
+                                            <div class="student-details">
+                                                <div class="student-name">Sarah Chen</div>
+                                                <div class="student-meta">ID: 2024001</div>
+                                            </div>
+                                            <div class="student-status">
+                                                <span class="status-indicator excelling" title="Excelling"></span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="grade-cell">
+                                        <div class="grade-input-container">
+                                            <input type="text" class="grade-input" value="18" data-max="20" 
+                                                   onchange="updateGrade(this)" data-student="1" data-assignment="1">
+                                            <div class="grade-percentage">90%</div>
+                                            <div class="grade-status completed">✓</div>
+                                        </div>
+                                    </td>
+                                    <td class="grade-cell">
+                                        <div class="grade-input-container">
+                                            <input type="text" class="grade-input" value="47" data-max="50"
+                                                   onchange="updateGrade(this)" data-student="1" data-assignment="2">
+                                            <div class="grade-percentage">94%</div>
+                                            <div class="grade-status completed">✓</div>
+                                        </div>
+                                    </td>
+                                    <td class="grade-cell pending">
+                                        <div class="grade-input-container">
+                                            <input type="text" class="grade-input pending" placeholder="--" data-max="100"
+                                                   onchange="updateGrade(this)" data-student="1" data-assignment="3">
+                                            <div class="grade-percentage">--</div>
+                                            <div class="grade-status pending">⏳</div>
+                                            <button class="grade-btn" onclick="gradeSubmission(1, 3)">Grade</button>
+                                        </div>
+                                    </td>
+                                    <td class="grade-cell">
+                                        <div class="grade-input-container">
+                                            <input type="text" class="grade-input" value="28" data-max="30"
+                                                   onchange="updateGrade(this)" data-student="1" data-assignment="4">
+                                            <div class="grade-percentage">93%</div>
+                                            <div class="grade-status completed">✓</div>
+                                        </div>
+                                    </td>
+                                    <td class="total-cell sticky-right">
+                                        <div class="total-grade">
+                                            <div class="total-points">93/130</div>
+                                            <div class="total-percentage excellent">92%</div>
+                                            <div class="letter-grade">A-</div>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <tr class="student-row">
+                                    <td class="student-cell sticky-left">
+                                        <div class="student-info">
+                                            <div class="student-avatar">MJ</div>
+                                            <div class="student-details">
+                                                <div class="student-name">Michael Johnson</div>
+                                                <div class="student-meta">ID: 2024002</div>
+                                            </div>
+                                            <div class="student-status">
+                                                <span class="status-indicator active" title="On Track"></span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="grade-cell">
+                                        <div class="grade-input-container">
+                                            <input type="text" class="grade-input" value="16" data-max="20"
+                                                   onchange="updateGrade(this)" data-student="2" data-assignment="1">
+                                            <div class="grade-percentage">80%</div>
+                                            <div class="grade-status completed">✓</div>
+                                        </div>
+                                    </td>
+                                    <td class="grade-cell">
+                                        <div class="grade-input-container">
+                                            <input type="text" class="grade-input" value="42" data-max="50"
+                                                   onchange="updateGrade(this)" data-student="2" data-assignment="2">
+                                            <div class="grade-percentage">84%</div>
+                                            <div class="grade-status completed">✓</div>
+                                        </div>
+                                    </td>
+                                    <td class="grade-cell pending">
+                                        <div class="grade-input-container">
+                                            <input type="text" class="grade-input pending" placeholder="--" data-max="100"
+                                                   onchange="updateGrade(this)" data-student="2" data-assignment="3">
+                                            <div class="grade-percentage">--</div>
+                                            <div class="grade-status pending">⏳</div>
+                                            <button class="grade-btn" onclick="gradeSubmission(2, 3)">Grade</button>
+                                        </div>
+                                    </td>
+                                    <td class="grade-cell">
+                                        <div class="grade-input-container">
+                                            <input type="text" class="grade-input" value="25" data-max="30"
+                                                   onchange="updateGrade(this)" data-student="2" data-assignment="4">
+                                            <div class="grade-percentage">83%</div>
+                                            <div class="grade-status completed">✓</div>
+                                        </div>
+                                    </td>
+                                    <td class="total-cell sticky-right">
+                                        <div class="total-grade">
+                                            <div class="total-points">83/130</div>
+                                            <div class="total-percentage good">82%</div>
+                                            <div class="letter-grade">B</div>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <tr class="student-row">
+                                    <td class="student-cell sticky-left">
+                                        <div class="student-info">
+                                            <div class="student-avatar">EW</div>
+                                            <div class="student-details">
+                                                <div class="student-name">Emma Wilson</div>
+                                                <div class="student-meta">ID: 2024003</div>
+                                            </div>
+                                            <div class="student-status">
+                                                <span class="status-indicator struggling" title="Needs Support"></span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="grade-cell">
+                                        <div class="grade-input-container">
+                                            <input type="text" class="grade-input" value="12" data-max="20"
+                                                   onchange="updateGrade(this)" data-student="3" data-assignment="1">
+                                            <div class="grade-percentage">60%</div>
+                                            <div class="grade-status completed">✓</div>
+                                        </div>
+                                    </td>
+                                    <td class="grade-cell missing">
+                                        <div class="grade-input-container">
+                                            <input type="text" class="grade-input missing" placeholder="--" data-max="50"
+                                                   onchange="updateGrade(this)" data-student="3" data-assignment="2">
+                                            <div class="grade-percentage">0%</div>
+                                            <div class="grade-status missing">✗</div>
+                                            <button class="grade-btn" onclick="contactStudent(3, 2)">Contact</button>
+                                        </div>
+                                    </td>
+                                    <td class="grade-cell pending">
+                                        <div class="grade-input-container">
+                                            <input type="text" class="grade-input pending" placeholder="--" data-max="100"
+                                                   onchange="updateGrade(this)" data-student="3" data-assignment="3">
+                                            <div class="grade-percentage">--</div>
+                                            <div class="grade-status pending">⏳</div>
+                                            <button class="grade-btn" onclick="gradeSubmission(3, 3)">Grade</button>
+                                        </div>
+                                    </td>
+                                    <td class="grade-cell">
+                                        <div class="grade-input-container">
+                                            <input type="text" class="grade-input" value="22" data-max="30"
+                                                   onchange="updateGrade(this)" data-student="3" data-assignment="4">
+                                            <div class="grade-percentage">73%</div>
+                                            <div class="grade-status completed">✓</div>
+                                        </div>
+                                    </td>
+                                    <td class="total-cell sticky-right">
+                                        <div class="total-grade">
+                                            <div class="total-points">34/130</div>
+                                            <div class="total-percentage needs-improvement">62%</div>
+                                            <div class="letter-grade">D</div>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Class Average Row -->
+                                <tr class="summary-row">
+                                    <td class="summary-cell sticky-left">
+                                        <div class="summary-label">
+                                            <strong>Class Average</strong>
+                                            <span class="summary-meta">32 students</span>
+                                        </div>
+                                    </td>
+                                    <td class="summary-data">
+                                        <div class="avg-score">15.2/20</div>
+                                        <div class="avg-percentage">76%</div>
+                                    </td>
+                                    <td class="summary-data">
+                                        <div class="avg-score">40.1/50</div>
+                                        <div class="avg-percentage">80%</div>
+                                    </td>
+                                    <td class="summary-data pending">
+                                        <div class="avg-score">--/100</div>
+                                        <div class="avg-percentage">--</div>
+                                    </td>
+                                    <td class="summary-data">
+                                        <div class="avg-score">24.8/30</div>
+                                        <div class="avg-percentage">83%</div>
+                                    </td>
+                                    <td class="summary-total sticky-right">
+                                        <div class="total-average">
+                                            <div class="avg-points">109.1/200</div>
+                                            <div class="avg-percentage-total">87%</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students View -->
+            <div class="view-content" id="students-view" style="display: none;">
+                <div class="students-grid">
+                    <div class="student-card">
+                        <div class="student-card-header">
+                            <div class="student-avatar-large">SC</div>
+                            <div class="student-info-detailed">
+                                <h3 class="student-name-large">Sarah Chen</h3>
+                                <div class="student-meta-large">ID: 2024001 • Enrolled: Sep 2024</div>
+                                <div class="student-contact">
+                                    <span class="email">sarah.chen@university.edu</span>
+                                </div>
+                            </div>
+                            <div class="student-status-large">
+                                <span class="status-badge excelling">Excelling</span>
+                                <div class="overall-grade">92% (A-)</div>
+                            </div>
+                        </div>
+
+                        <div class="student-progress-overview">
+                            <div class="progress-section">
+                                <h4>Course Progress</h4>
+                                <div class="progress-bar-detailed">
+                                    <div class="progress-fill" style="width: 75%"></div>
+                                    <span class="progress-text">6 of 8 modules completed</span>
+                                </div>
+                            </div>
+
+                            <div class="assignment-summary">
+                                <div class="assignment-stat">
+                                    <span class="stat-number">3</span>
+                                    <span class="stat-label">Completed</span>
+                                </div>
+                                <div class="assignment-stat">
+                                    <span class="stat-number">1</span>
+                                    <span class="stat-label">Pending</span>
+                                </div>
+                                <div class="assignment-stat">
+                                    <span class="stat-number">0</span>
+                                    <span class="stat-label">Missing</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="student-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="viewStudentDetails(1)">View Details</button>
+                            <button class="btn btn-secondary btn-sm" onclick="messageStudent(1)">Send Message</button>
+                            <button class="btn btn-primary btn-sm" onclick="gradePending(1)">Grade Pending</button>
+                        </div>
+                    </div>
+
+                    <div class="student-card">
+                        <div class="student-card-header">
+                            <div class="student-avatar-large">MJ</div>
+                            <div class="student-info-detailed">
+                                <h3 class="student-name-large">Michael Johnson</h3>
+                                <div class="student-meta-large">ID: 2024002 • Enrolled: Sep 2024</div>
+                                <div class="student-contact">
+                                    <span class="email">m.johnson@university.edu</span>
+                                </div>
+                            </div>
+                            <div class="student-status-large">
+                                <span class="status-badge active">On Track</span>
+                                <div class="overall-grade">82% (B)</div>
+                            </div>
+                        </div>
+
+                        <div class="student-progress-overview">
+                            <div class="progress-section">
+                                <h4>Course Progress</h4>
+                                <div class="progress-bar-detailed">
+                                    <div class="progress-fill" style="width: 70%"></div>
+                                    <span class="progress-text">5 of 8 modules completed</span>
+                                </div>
+                            </div>
+
+                            <div class="assignment-summary">
+                                <div class="assignment-stat">
+                                    <span class="stat-number">3</span>
+                                    <span class="stat-label">Completed</span>
+                                </div>
+                                <div class="assignment-stat">
+                                    <span class="stat-number">1</span>
+                                    <span class="stat-label">Pending</span>
+                                </div>
+                                <div class="assignment-stat">
+                                    <span class="stat-number">0</span>
+                                    <span class="stat-label">Missing</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="student-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="viewStudentDetails(2)">View Details</button>
+                            <button class="btn btn-secondary btn-sm" onclick="messageStudent(2)">Send Message</button>
+                            <button class="btn btn-primary btn-sm" onclick="gradePending(2)">Grade Pending</button>
+                        </div>
+                    </div>
+
+                    <div class="student-card priority">
+                        <div class="student-card-header">
+                            <div class="student-avatar-large">EW</div>
+                            <div class="student-info-detailed">
+                                <h3 class="student-name-large">Emma Wilson</h3>
+                                <div class="student-meta-large">ID: 2024003 • Enrolled: Sep 2024</div>
+                                <div class="student-contact">
+                                    <span class="email">emma.wilson@university.edu</span>
+                                </div>
+                            </div>
+                            <div class="student-status-large">
+                                <span class="status-badge struggling">Needs Support</span>
+                                <div class="overall-grade">62% (D)</div>
+                            </div>
+                        </div>
+
+                        <div class="student-progress-overview">
+                            <div class="progress-section">
+                                <h4>Course Progress</h4>
+                                <div class="progress-bar-detailed">
+                                    <div class="progress-fill warning" style="width: 45%"></div>
+                                    <span class="progress-text">3 of 8 modules completed</span>
+                                </div>
+                            </div>
+
+                            <div class="assignment-summary">
+                                <div class="assignment-stat">
+                                    <span class="stat-number">2</span>
+                                    <span class="stat-label">Completed</span>
+                                </div>
+                                <div class="assignment-stat">
+                                    <span class="stat-number">1</span>
+                                    <span class="stat-label">Pending</span>
+                                </div>
+                                <div class="assignment-stat warning">
+                                    <span class="stat-number">1</span>
+                                    <span class="stat-label">Missing</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="student-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="viewStudentDetails(3)">View Details</button>
+                            <button class="btn btn-warning btn-sm" onclick="messageStudent(3)">Contact Student</button>
+                            <button class="btn btn-primary btn-sm" onclick="gradePending(3)">Review Work</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assignments View -->
+            <div class="view-content" id="assignments-view" style="display: none;">
+                <div class="assignments-overview">
+                    <div class="assignment-card">
+                        <div class="assignment-header">
+                            <div class="assignment-info">
+                                <h3 class="assignment-title">Module 1 Quiz</h3>
+                                <div class="assignment-meta">Quiz • 20 points • Due: Oct 15, 2024</div>
+                            </div>
+                            <div class="assignment-status">
+                                <span class="status-badge completed">All Graded</span>
+                            </div>
+                        </div>
+
+                        <div class="assignment-stats">
+                            <div class="stat-group">
+                                <div class="stat-item">
+                                    <span class="stat-value">32</span>
+                                    <span class="stat-label">Submitted</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">0</span>
+                                    <span class="stat-label">Pending</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">76%</span>
+                                    <span class="stat-label">Average</span>
+                                </div>
+                            </div>
+
+                            <div class="grade-distribution">
+                                <div class="distribution-bar">
+                                    <div class="grade-segment a" style="width: 25%"></div>
+                                    <div class="grade-segment b" style="width: 40%"></div>
+                                    <div class="grade-segment c" style="width: 25%"></div>
+                                    <div class="grade-segment d" style="width: 10%"></div>
+                                </div>
+                                <div class="distribution-labels">
+                                    <span>A: 8</span>
+                                    <span>B: 13</span>
+                                    <span>C: 8</span>
+                                    <span>D: 3</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="assignment-actions">
+                            <button class="btn btn-secondary" onclick="viewAssignmentDetails(1)">View Details</button>
+                            <button class="btn btn-secondary" onclick="downloadSubmissions(1)">Download All</button>
+                            <button class="btn btn-primary" onclick="reopenAssignment(1)">Reopen</button>
+                        </div>
+                    </div>
+
+                    <div class="assignment-card priority">
+                        <div class="assignment-header">
+                            <div class="assignment-info">
+                                <h3 class="assignment-title">Podcast Pitch</h3>
+                                <div class="assignment-meta">Project • 100 points • Due: Nov 1, 2024</div>
+                            </div>
+                            <div class="assignment-status">
+                                <span class="status-badge pending">5 Pending</span>
+                            </div>
+                        </div>
+
+                        <div class="assignment-stats">
+                            <div class="stat-group">
+                                <div class="stat-item">
+                                    <span class="stat-value">27</span>
+                                    <span class="stat-label">Submitted</span>
+                                </div>
+                                <div class="stat-item urgent">
+                                    <span class="stat-value">5</span>
+                                    <span class="stat-label">Pending</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">--</span>
+                                    <span class="stat-label">Average</span>
+                                </div>
+                            </div>
+
+                            <div class="pending-submissions">
+                                <h5>Submissions Awaiting Grade:</h5>
+                                <ul>
+                                    <li>Sarah Chen - submitted 2 days ago</li>
+                                    <li>Michael Johnson - submitted 1 day ago</li>
+                                    <li>David Rodriguez - submitted 1 day ago</li>
+                                    <li>Lisa Park - submitted 6 hours ago</li>
+                                    <li>James Wilson - submitted 2 hours ago</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="assignment-actions">
+                            <button class="btn btn-secondary" onclick="viewAssignmentDetails(3)">View Details</button>
+                            <button class="btn btn-primary" onclick="gradeAllPending(3)">Grade Pending</button>
+                            <button class="btn btn-warning" onclick="sendReminders(3)">Send Reminders</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics View -->
+            <div class="view-content" id="analytics-view" style="display: none;">
+                <div class="analytics-dashboard">
+                    <div class="analytics-summary">
+                        <div class="summary-card">
+                            <div class="summary-icon">📈</div>
+                            <div class="summary-content">
+                                <h3>Class Performance</h3>
+                                <div class="summary-value">87%</div>
+                                <div class="summary-change positive">+5% from last week</div>
+                            </div>
+                        </div>
+
+                        <div class="summary-card">
+                            <div class="summary-icon">⏱️</div>
+                            <div class="summary-content">
+                                <h3>Average Time</h3>
+                                <div class="summary-value">45min</div>
+                                <div class="summary-change neutral">per assignment</div>
+                            </div>
+                        </div>
+
+                        <div class="summary-card">
+                            <div class="summary-icon">🎯</div>
+                            <div class="summary-content">
+                                <h3>Completion Rate</h3>
+                                <div class="summary-value">91%</div>
+                                <div class="summary-change positive">+3% from last module</div>
+                            </div>
+                        </div>
+
+                        <div class="summary-card">
+                            <div class="summary-icon">📊</div>
+                            <div class="summary-content">
+                                <h3>Engagement Score</h3>
+                                <div class="summary-value">8.4/10</div>
+                                <div class="summary-change positive">Above average</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analytics-charts">
+                        <div class="chart-container">
+                            <h4>Grade Distribution Over Time</h4>
+                            <div class="chart-placeholder">
+                                <div class="chart-mock">
+                                    <div class="chart-bar" style="height: 60%">Week 1</div>
+                                    <div class="chart-bar" style="height: 75%">Week 2</div>
+                                    <div class="chart-bar" style="height: 85%">Week 3</div>
+                                    <div class="chart-bar" style="height: 87%">Week 4</div>
+                                    <div class="chart-bar current" style="height: 87%">Current</div>
+                                </div>
+                                <div class="chart-legend">Class average improving over time</div>
+                            </div>
+                        </div>
+
+                        <div class="chart-container">
+                            <h4>Assignment Difficulty Analysis</h4>
+                            <div class="difficulty-chart">
+                                <div class="difficulty-item">
+                                    <span class="assignment-name">Module 1 Quiz</span>
+                                    <div class="difficulty-bar">
+                                        <div class="difficulty-fill easy" style="width: 76%"></div>
+                                        <span class="difficulty-score">76% avg</span>
+                                    </div>
+                                </div>
+                                <div class="difficulty-item">
+                                    <span class="assignment-name">Interview Assignment</span>
+                                    <div class="difficulty-bar">
+                                        <div class="difficulty-fill moderate" style="width: 80%"></div>
+                                        <span class="difficulty-score">80% avg</span>
+                                    </div>
+                                </div>
+                                <div class="difficulty-item">
+                                    <span class="assignment-name">Participation</span>
+                                    <div class="difficulty-bar">
+                                        <div class="difficulty-fill easy" style="width: 83%"></div>
+                                        <span class="difficulty-score">83% avg</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="insights-panel">
+                        <h4>📋 Insights & Recommendations</h4>
+                        <div class="insights-list">
+                            <div class="insight-item positive">
+                                <span class="insight-icon">🎉</span>
+                                <div class="insight-content">
+                                    <strong>Great participation!</strong> Class engagement is 15% above average for this course type.
+                                </div>
+                            </div>
+                            <div class="insight-item warning">
+                                <span class="insight-icon">⚠️</span>
+                                <div class="insight-content">
+                                    <strong>3 students at risk</strong> - Consider reaching out to students with <70% overall grades.
+                                </div>
+                            </div>
+                            <div class="insight-item info">
+                                <span class="insight-icon">💡</span>
+                                <div class="insight-content">
+                                    <strong>Grading efficiency</strong> - You're 25% faster than average at providing feedback.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grading Modal -->
+    <div id="gradingModal" class="modal large" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="gradingModalTitle">Grade Submission</h3>
+                <button class="modal-close" onclick="closeGradingModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="grading-interface">
+                    <div class="grading-sidebar">
+                        <div class="submission-info">
+                            <h4>Student Information</h4>
+                            <div class="student-details">
+                                <div class="student-name">Sarah Chen</div>
+                                <div class="student-id">ID: 2024001</div>
+                                <div class="submission-date">Submitted: Oct 30, 2024 11:45 PM</div>
+                            </div>
+                        </div>
+
+                        <div class="assignment-info">
+                            <h4>Assignment Details</h4>
+                            <div class="assignment-title">Podcast Pitch</div>
+                            <div class="assignment-points">Total Points: 100</div>
+                            <div class="assignment-rubric">
+                                <button class="btn btn-secondary btn-sm" onclick="showRubric()">View Rubric</button>
+                            </div>
+                        </div>
+
+                        <div class="grading-tools">
+                            <h4>Grading Tools</h4>
+                            <div class="tool-buttons">
+                                <button class="tool-btn" onclick="addComment()">💬 Add Comment</button>
+                                <button class="tool-btn" onclick="addAudio()">🎤 Audio Feedback</button>
+                                <button class="tool-btn" onclick="addVideo()">🎥 Video Feedback</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grading-main">
+                        <div class="submission-content">
+                            <div class="content-tabs">
+                                <button class="tab-btn active" onclick="switchGradingTab('submission')">Submission</button>
+                                <button class="tab-btn" onclick="switchGradingTab('rubric')">Rubric</button>
+                                <button class="tab-btn" onclick="switchGradingTab('feedback')">Feedback</button>
+                            </div>
+
+                            <div class="tab-content active" id="submission-tab">
+                                <div class="submission-viewer">
+                                    <h5>Student Submission</h5>
+                                    <div class="submission-text">
+                                        <p><strong>Podcast Pitch: "Stories from the Coffee Shop"</strong></p>
+                                        <p>My podcast concept revolves around the idea that every person has a story worth telling, and some of the most interesting stories emerge in the casual, comfortable environment of a coffee shop...</p>
+                                        <p><em>[Content continues...]</em></p>
+                                    </div>
+                                    
+                                    <div class="attached-files">
+                                        <h6>Attached Files:</h6>
+                                        <div class="file-item">
+                                            <span class="file-icon">🎧</span>
+                                            <span class="file-name">podcast_sample.mp3</span>
+                                            <button class="btn btn-sm" onclick="playAudio()">Play</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tab-content" id="rubric-tab" style="display: none;">
+                                <div class="rubric-grading">
+                                    <h5>Grading Rubric</h5>
+                                    <div class="rubric-criteria">
+                                        <div class="criterion">
+                                            <h6>Concept Clarity (25 pts)</h6>
+                                            <div class="criterion-levels">
+                                                <label class="level-option">
+                                                    <input type="radio" name="concept" value="25">
+                                                    <span class="level-label">Excellent (23-25 pts)</span>
+                                                </label>
+                                                <label class="level-option">
+                                                    <input type="radio" name="concept" value="20">
+                                                    <span class="level-label">Good (20-22 pts)</span>
+                                                </label>
+                                                <label class="level-option">
+                                                    <input type="radio" name="concept" value="17">
+                                                    <span class="level-label">Fair (17-19 pts)</span>
+                                                </label>
+                                                <label class="level-option">
+                                                    <input type="radio" name="concept" value="12">
+                                                    <span class="level-label">Needs Improvement (12-16 pts)</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="criterion">
+                                            <h6>Market Research (25 pts)</h6>
+                                            <div class="criterion-levels">
+                                                <label class="level-option">
+                                                    <input type="radio" name="research" value="25">
+                                                    <span class="level-label">Excellent (23-25 pts)</span>
+                                                </label>
+                                                <label class="level-option">
+                                                    <input type="radio" name="research" value="20">
+                                                    <span class="level-label">Good (20-22 pts)</span>
+                                                </label>
+                                                <label class="level-option">
+                                                    <input type="radio" name="research" value="17">
+                                                    <span class="level-label">Fair (17-19 pts)</span>
+                                                </label>
+                                                <label class="level-option">
+                                                    <input type="radio" name="research" value="12">
+                                                    <span class="level-label">Needs Improvement (12-16 pts)</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tab-content" id="feedback-tab" style="display: none;">
+                                <div class="feedback-section">
+                                    <h5>Feedback & Comments</h5>
+                                    <div class="feedback-editor">
+                                        <textarea class="feedback-text" rows="6" 
+                                                  placeholder="Provide detailed feedback to help the student improve...">Great concept! Your idea for "Stories from the Coffee Shop" shows real creativity and understanding of human interest storytelling. The market research section demonstrates good analytical thinking.
+
+Areas for improvement:
+- Consider expanding on your target audience demographics
+- Include more specific examples of episode formats
+- Add more detail about monetization strategies</textarea>
+                                    </div>
+                                    
+                                    <div class="quick-feedback">
+                                        <h6>Quick Feedback Options</h6>
+                                        <div class="feedback-tags">
+                                            <button class="feedback-tag" onclick="addFeedbackTag('creative')">Creative ✨</button>
+                                            <button class="feedback-tag" onclick="addFeedbackTag('thorough')">Thorough 👍</button>
+                                            <button class="feedback-tag" onclick="addFeedbackTag('needswork')">Needs Work 📝</button>
+                                            <button class="feedback-tag" onclick="addFeedbackTag('excellent')">Excellent 🌟</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grading-panel">
+                            <div class="grade-entry">
+                                <label for="finalGrade">Final Grade</label>
+                                <div class="grade-input-group">
+                                    <input type="number" id="finalGrade" class="form-control" 
+                                           value="88" min="0" max="100">
+                                    <span class="grade-suffix">/ 100 pts</span>
+                                </div>
+                                <div class="grade-percentage">88% (B+)</div>
+                            </div>
+
+                            <div class="grading-actions">
+                                <button class="btn btn-secondary" onclick="saveDraft()">Save Draft</button>
+                                <button class="btn btn-warning" onclick="returnToStudent()">Return for Revision</button>
+                                <button class="btn btn-primary" onclick="submitGrade()">Submit Grade</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
+    <script>
+        // Grade Center JavaScript
+        let currentView = 'gradebook';
+        let gradingData = {
+            students: [],
+            assignments: [],
+            grades: {}
+        };
+
+        // Initialize grade center
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGradeData();
+            setupEventListeners();
+            updateClassStats();
+        });
+
+        function setupEventListeners() {
+            // Filter handlers
+            document.getElementById('statusFilter').addEventListener('change', filterStudents);
+            document.getElementById('assignmentFilter').addEventListener('change', filterAssignments);
+            document.getElementById('searchStudents').addEventListener('input', searchStudents);
+            
+            // Grade input handlers
+            document.addEventListener('change', (e) => {
+                if (e.target.classList.contains('grade-input')) {
+                    validateGradeInput(e.target);
+                }
+            });
+        }
+
+        // View Management
+        function switchView(viewName) {
+            // Update active view button
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-view="${viewName}"]`).classList.add('active');
+            
+            // Show corresponding view content
+            document.querySelectorAll('.view-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.getElementById(`${viewName}-view`).style.display = 'block';
+            
+            currentView = viewName;
+            
+            // Load view-specific data
+            switch (viewName) {
+                case 'students':
+                    loadStudentCards();
+                    break;
+                case 'assignments':
+                    loadAssignmentOverview();
+                    break;
+                case 'analytics':
+                    loadAnalytics();
+                    break;
+            }
+        }
+
+        // Grade Management
+        function updateGrade(input) {
+            const studentId = input.dataset.student;
+            const assignmentId = input.dataset.assignment;
+            const maxPoints = parseInt(input.dataset.max);
+            const grade = parseFloat(input.value) || 0;
+            
+            // Validate grade
+            if (grade > maxPoints) {
+                input.value = maxPoints;
+                showNotification('Grade cannot exceed maximum points', 'warning');
+                return;
+            }
+            
+            if (grade < 0) {
+                input.value = 0;
+                showNotification('Grade cannot be negative', 'warning');
+                return;
+            }
+            
+            // Update percentage
+            const percentage = Math.round((grade / maxPoints) * 100);
+            const percentageEl = input.parentElement.querySelector('.grade-percentage');
+            if (percentageEl) {
+                percentageEl.textContent = `${percentage}%`;
+            }
+            
+            // Update status
+            const statusEl = input.parentElement.querySelector('.grade-status');
+            if (statusEl && input.value !== '') {
+                statusEl.textContent = '✓';
+                statusEl.className = 'grade-status completed';
+                input.parentElement.parentElement.classList.remove('pending');
+            }
+            
+            // Update total
+            updateStudentTotal(studentId);
+            
+            // Save grade
+            saveGrade(studentId, assignmentId, grade);
+            
+            markAsModified();
+        }
+
+        function validateGradeInput(input) {
+            const value = input.value.trim();
+            const maxPoints = parseInt(input.dataset.max);
+            
+            if (value === '') return;
+            
+            const grade = parseFloat(value);
+            if (isNaN(grade)) {
+                input.value = '';
+                showNotification('Please enter a valid number', 'error');
+                return;
+            }
+            
+            if (grade > maxPoints) {
+                input.value = maxPoints;
+                showNotification(`Grade adjusted to maximum: ${maxPoints}`, 'info');
+            }
+            
+            if (grade < 0) {
+                input.value = 0;
+                showNotification('Grade adjusted to minimum: 0', 'info');
+            }
+        }
+
+        function updateStudentTotal(studentId) {
+            const studentRow = document.querySelector(`[data-student="${studentId}"]`).closest('.student-row');
+            const gradeInputs = studentRow.querySelectorAll('.grade-input');
+            
+            let totalPoints = 0;
+            let maxPoints = 0;
+            
+            gradeInputs.forEach(input => {
+                const grade = parseFloat(input.value) || 0;
+                const max = parseInt(input.dataset.max);
+                
+                totalPoints += grade;
+                maxPoints += max;
+            });
+            
+            const percentage = Math.round((totalPoints / maxPoints) * 100);
+            const letterGrade = getLetterGrade(percentage);
+            
+            const totalCell = studentRow.querySelector('.total-cell');
+            const pointsEl = totalCell.querySelector('.total-points');
+            const percentageEl = totalCell.querySelector('.total-percentage');
+            const letterEl = totalCell.querySelector('.letter-grade');
+            
+            if (pointsEl) pointsEl.textContent = `${totalPoints}/${maxPoints}`;
+            if (percentageEl) {
+                percentageEl.textContent = `${percentage}%`;
+                percentageEl.className = `total-percentage ${getGradeClass(percentage)}`;
+            }
+            if (letterEl) letterEl.textContent = letterGrade;
+        }
+
+        function getLetterGrade(percentage) {
+            if (percentage >= 93) return 'A';
+            if (percentage >= 90) return 'A-';
+            if (percentage >= 87) return 'B+';
+            if (percentage >= 83) return 'B';
+            if (percentage >= 80) return 'B-';
+            if (percentage >= 77) return 'C+';
+            if (percentage >= 73) return 'C';
+            if (percentage >= 70) return 'C-';
+            if (percentage >= 67) return 'D+';
+            if (percentage >= 65) return 'D';
+            return 'F';
+        }
+
+        function getGradeClass(percentage) {
+            if (percentage >= 90) return 'excellent';
+            if (percentage >= 80) return 'good';
+            if (percentage >= 70) return 'fair';
+            return 'needs-improvement';
+        }
+
+        // Grading Modal
+        function gradeSubmission(studentId, assignmentId) {
+            // Load submission data
+            const student = getStudentById(studentId);
+            const assignment = getAssignmentById(assignmentId);
+            
+            if (!student || !assignment) return;
+            
+            // Update modal title
+            document.getElementById('gradingModalTitle').textContent = 
+                `Grade ${assignment.title} - ${student.name}`;
+            
+            // Load submission content
+            loadSubmissionContent(studentId, assignmentId);
+            
+            // Show modal
+            document.getElementById('gradingModal').style.display = 'flex';
+        }
+
+        function closeGradingModal() {
+            document.getElementById('gradingModal').style.display = 'none';
+        }
+
+        function switchGradingTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.getElementById(`${tabName}-tab`).style.display = 'block';
+        }
+
+        function submitGrade() {
+            const grade = document.getElementById('finalGrade').value;
+            const feedback = document.querySelector('.feedback-text').value;
+            
+            if (!grade) {
+                showNotification('Please enter a grade', 'error');
+                return;
+            }
+            
+            // Submit grade and feedback
+            console.log('Submitting grade:', grade, 'Feedback:', feedback);
+            
+            showNotification('Grade submitted successfully!', 'success');
+            closeGradingModal();
+            
+            // Update gradebook
+            updateGradebook();
+        }
+
+        function saveDraft() {
+            showNotification('Draft saved', 'info');
+        }
+
+        function returnToStudent() {
+            if (confirm('Return this assignment to student for revision?')) {
+                showNotification('Assignment returned to student', 'info');
+                closeGradingModal();
+            }
+        }
+
+        // Filter Functions
+        function filterStudents() {
+            const status = document.getElementById('statusFilter').value;
+            const rows = document.querySelectorAll('.student-row');
+            
+            rows.forEach(row => {
+                const studentStatus = row.querySelector('.status-indicator').className;
+                
+                if (!status || studentStatus.includes(status)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function filterAssignments() {
+            const filter = document.getElementById('assignmentFilter').value;
+            console.log(`Filtering assignments by: ${filter}`);
+            // Implementation would filter gradebook columns
+        }
+
+        function searchStudents() {
+            const query = document.getElementById('searchStudents').value.toLowerCase();
+            const rows = document.querySelectorAll('.student-row');
+            
+            rows.forEach(row => {
+                const name = row.querySelector('.student-name').textContent.toLowerCase();
+                const id = row.querySelector('.student-meta').textContent.toLowerCase();
+                
+                if (name.includes(query) || id.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Bulk Operations
+        function bulkGrade() {
+            // Open bulk grading interface
+            alert('Bulk grading interface - select multiple students to grade similar assignments together');
+        }
+
+        function exportGrades() {
+            // Generate CSV export
+            showNotification('Exporting grades to CSV...', 'info');
+            setTimeout(() => {
+                showNotification('Grades exported successfully!', 'success');
+            }, 2000);
+        }
+
+        function importGrades() {
+            // Show import interface
+            alert('Import grades from CSV - upload file with student IDs and grades');
+        }
+
+        // Data Management
+        function loadGradeData() {
+            // Load gradebook data from API
+            console.log('Loading grade center data...');
+        }
+
+        function saveGrade(studentId, assignmentId, grade) {
+            // Save individual grade to database
+            console.log(`Saving grade: Student ${studentId}, Assignment ${assignmentId}, Grade: ${grade}`);
+        }
+
+        function updateGradebook() {
+            // Refresh gradebook display
+            console.log('Updating gradebook display...');
+        }
+
+        function updateClassStats() {
+            // Calculate and update class statistics
+            console.log('Updating class statistics...');
+        }
+
+        function markAsModified() {
+            // Mark gradebook as having unsaved changes
+            console.log('Gradebook modified - enabling auto-save');
+        }
+
+        // Utility Functions
+        function getStudentById(id) {
+            return { id, name: 'Sample Student' }; // Mock data
+        }
+
+        function getAssignmentById(id) {
+            return { id, title: 'Sample Assignment' }; // Mock data
+        }
+
+        function loadSubmissionContent(studentId, assignmentId) {
+            // Load actual submission content
+            console.log(`Loading submission: Student ${studentId}, Assignment ${assignmentId}`);
+        }
+
+        function loadStudentCards() {
+            console.log('Loading student cards view');
+        }
+
+        function loadAssignmentOverview() {
+            console.log('Loading assignment overview');
+        }
+
+        function loadAnalytics() {
+            console.log('Loading analytics data');
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.classList.add('show'), 100);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Student Actions
+        function viewStudentDetails(studentId) {
+            window.location.href = `student-details.html?id=${studentId}`;
+        }
+
+        function messageStudent(studentId) {
+            alert('Opening messaging interface for student ' + studentId);
+        }
+
+        function gradePending(studentId) {
+            // Show pending assignments for this student
+            alert('Showing pending assignments for student ' + studentId);
+        }
+
+        function contactStudent(studentId, assignmentId) {
+            alert(`Contacting student ${studentId} about missing assignment ${assignmentId}`);
+        }
+
+        // Assignment Actions  
+        function openAssignmentMenu(assignmentId) {
+            alert(`Opening menu for assignment ${assignmentId}`);
+        }
+
+        function viewAssignmentDetails(assignmentId) {
+            window.location.href = `assignment-details.html?id=${assignmentId}`;
+        }
+
+        function downloadSubmissions(assignmentId) {
+            showNotification('Downloading all submissions...', 'info');
+        }
+
+        function gradeAllPending(assignmentId) {
+            alert(`Opening bulk grading for assignment ${assignmentId}`);
+        }
+
+        function sendReminders(assignmentId) {
+            if (confirm('Send reminder emails to students with pending submissions?')) {
+                showNotification('Reminders sent successfully!', 'success');
+            }
+        }
+
+        // Sorting
+        function sortBy(column) {
+            console.log(`Sorting by ${column}`);
+            // Implementation would sort the gradebook table
+        }
+
+        // Feedback Tools
+        function addComment() {
+            alert('Adding inline comment to submission');
+        }
+
+        function addAudio() {
+            alert('Recording audio feedback');
+        }
+
+        function addVideo() {
+            alert('Recording video feedback');  
+        }
+
+        function showRubric() {
+            switchGradingTab('rubric');
+        }
+
+        function playAudio() {
+            alert('Playing audio submission');
+        }
+
+        function addFeedbackTag(tag) {
+            const textarea = document.querySelector('.feedback-text');
+            const tags = {
+                creative: '✨ Creative work! ',
+                thorough: '👍 Thorough analysis! ',
+                needswork: '📝 This needs more work. ',
+                excellent: '🌟 Excellent job! '
+            };
+            
+            textarea.value = tags[tag] + textarea.value;
+        }
+    </script>
+
+    <style>
+        /* Grade Center Specific Styles */
+        .grade-center-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            background: var(--white);
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .header-title-section .breadcrumb {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .course-info {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-top: 0.5rem;
+        }
+
+        .course-separator {
+            margin: 0 0.5rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* Grade Toolbar */
+        .grade-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding: 1rem 1.5rem;
+            background: var(--white);
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--shadow);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .toolbar-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .view-selector {
+            display: flex;
+            background: #f8fafc;
+            border-radius: 6px;
+            padding: 0.25rem;
+        }
+
+        .view-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            border: none;
+            background: transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .view-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .view-btn:hover:not(.active) {
+            background: var(--border-color);
+        }
+
+        .filters {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .filters .form-control {
+            min-width: 150px;
+        }
+
+        .grade-stats {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .stat-divider {
+            width: 1px;
+            height: 30px;
+            background: var(--border-color);
+        }
+
+        /* Grade Center Content */
+        .grade-center-content {
+            background: var(--white);
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--shadow);
+            min-height: 600px;
+        }
+
+        .view-content {
+            padding: 1.5rem;
+        }
+
+        .view-content.active {
+            display: block;
+        }
+
+        /* Gradebook Table */
+        .gradebook-container {
+            overflow: auto;
+            max-height: 70vh;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .gradebook-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.875rem;
+        }
+
+        .gradebook-table th,
+        .gradebook-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        .gradebook-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .gradebook-table th:last-child,
+        .gradebook-table td:last-child {
+            border-right: none;
+        }
+
+        .sticky-left {
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            background: var(--white);
+            box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+        }
+
+        .sticky-right {
+            position: sticky;
+            right: 0;
+            z-index: 5;
+            background: var(--white);
+            box-shadow: -2px 0 4px rgba(0,0,0,0.1);
+        }
+
+        .student-column {
+            min-width: 200px;
+            width: 200px;
+        }
+
+        .assignment-column {
+            min-width: 120px;
+            width: 120px;
+        }
+
+        .total-column {
+            min-width: 100px;
+            width: 100px;
+        }
+
+        .column-header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .header-text {
+            font-weight: 600;
+        }
+
+        .assignment-meta {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .assignment-menu-btn,
+        .sort-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem;
+            margin-top: 0.25rem;
+            border-radius: 4px;
+        }
+
+        .assignment-menu-btn:hover,
+        .sort-btn:hover {
+            background: var(--border-color);
+        }
+
+        /* Student Rows */
+        .student-row {
+            transition: all 0.3s ease;
+        }
+
+        .student-row:hover {
+            background: #f8fafc;
+        }
+
+        .student-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .student-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .student-details {
+            flex: 1;
+        }
+
+        .student-name {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .student-meta {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-indicator.excelling {
+            background: var(--lesson-success);
+        }
+
+        .status-indicator.active {
+            background: var(--lesson-info);
+        }
+
+        .status-indicator.struggling {
+            background: var(--lesson-warning);
+        }
+
+        .status-indicator.inactive {
+            background: var(--text-light);
+        }
+
+        /* Grade Cells */
+        .grade-input-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            position: relative;
+        }
+
+        .grade-input {
+            width: 60px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.375rem;
+            font-size: 0.875rem;
+        }
+
+        .grade-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .grade-input.pending {
+            border-color: var(--lesson-warning);
+            background: #fef3c7;
+        }
+
+        .grade-input.missing {
+            border-color: var(--danger-color);
+            background: var(--quiz-incorrect);
+        }
+
+        .grade-percentage {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .grade-status {
+            font-size: 0.75rem;
+        }
+
+        .grade-status.completed {
+            color: var(--lesson-success);
+        }
+
+        .grade-status.pending {
+            color: var(--lesson-warning);
+        }
+
+        .grade-status.missing {
+            color: var(--danger-color);
+        }
+
+        .grade-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            margin-top: 0.25rem;
+        }
+
+        .grade-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Total Cells */
+        .total-grade {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .total-points {
+            font-weight: 600;
+        }
+
+        .total-percentage {
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .total-percentage.excellent {
+            background: var(--quiz-correct);
+            color: var(--lesson-success);
+        }
+
+        .total-percentage.good {
+            background: #dbeafe;
+            color: var(--lesson-info);
+        }
+
+        .total-percentage.fair {
+            background: #fef3c7;
+            color: var(--lesson-warning);
+        }
+
+        .total-percentage.needs-improvement {
+            background: var(--quiz-incorrect);
+            color: var(--danger-color);
+        }
+
+        .letter-grade {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        /* Summary Row */
+        .summary-row {
+            background: #f8fafc;
+            border-top: 2px solid var(--border-color);
+        }
+
+        .summary-cell,
+        .summary-data,
+        .summary-total {
+            padding: 1rem 0.75rem;
+        }
+
+        .summary-label {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .summary-meta {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .avg-score {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .avg-percentage {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .total-average {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .avg-points {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .avg-percentage-total {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        /* Students Grid View */
+        .students-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .student-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            background: var(--white);
+            transition: all 0.3s ease;
+        }
+
+        .student-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .student-card.priority {
+            border-left: 4px solid var(--lesson-warning);
+        }
+
+        .student-card-header {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .student-avatar-large {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .student-info-detailed {
+            flex: 1;
+        }
+
+        .student-name-large {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .student-meta-large {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .student-contact {
+            font-size: 0.875rem;
+        }
+
+        .email {
+            color: var(--primary-color);
+        }
+
+        .student-status-large {
+            text-align: right;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .status-badge.excelling {
+            background: var(--quiz-correct);
+            color: var(--lesson-success);
+        }
+
+        .status-badge.active {
+            background: #dbeafe;
+            color: var(--lesson-info);
+        }
+
+        .status-badge.struggling {
+            background: #fef3c7;
+            color: var(--lesson-warning);
+        }
+
+        .overall-grade {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .student-progress-overview {
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-section h4 {
+            font-size: 0.875rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-color);
+        }
+
+        .progress-bar-detailed {
+            background: var(--progress-bg);
+            border-radius: 6px;
+            height: 8px;
+            position: relative;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            background: var(--primary-color);
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.warning {
+            background: var(--lesson-warning);
+        }
+
+        .progress-text {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .assignment-summary {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+
+        .assignment-stat {
+            text-align: center;
+        }
+
+        .assignment-stat .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: block;
+        }
+
+        .assignment-stat.warning .stat-number {
+            color: var(--lesson-warning);
+        }
+
+        .assignment-stat .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .student-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* Assignment Overview */
+        .assignments-overview {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .assignment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            background: var(--white);
+        }
+
+        .assignment-card.priority {
+            border-left: 4px solid var(--lesson-warning);
+        }
+
+        .assignment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .assignment-title {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .assignment-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-group {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .stat-item.urgent .stat-value {
+            color: var(--danger-color);
+        }
+
+        .grade-distribution {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .distribution-bar {
+            height: 20px;
+            border-radius: 4px;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .grade-segment {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .grade-segment.a {
+            background: var(--lesson-success);
+        }
+
+        .grade-segment.b {
+            background: var(--lesson-info);
+        }
+
+        .grade-segment.c {
+            background: var(--lesson-warning);
+        }
+
+        .grade-segment.d {
+            background: var(--danger-color);
+        }
+
+        .distribution-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .pending-submissions {
+            margin-top: 1rem;
+        }
+
+        .pending-submissions h5 {
+            margin-bottom: 0.75rem;
+            color: var(--text-color);
+        }
+
+        .pending-submissions ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .pending-submissions li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.875rem;
+        }
+
+        .assignment-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        /* Analytics Dashboard */
+        .analytics-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .summary-icon {
+            font-size: 2rem;
+            background: #fff7ed;
+            padding: 1rem;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .summary-content h3 {
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .summary-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .summary-change {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .summary-change.positive {
+            background: var(--quiz-correct);
+            color: var(--lesson-success);
+        }
+
+        .summary-change.neutral {
+            background: #f3f4f6;
+            color: var(--text-light);
+        }
+
+        .analytics-charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            padding: 1.5rem;
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .chart-container h4 {
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+
+        .chart-mock {
+            display: flex;
+            align-items: end;
+            gap: 1rem;
+            height: 200px;
+            padding: 1rem 0;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: var(--primary-color);
+            border-radius: 4px 4px 0 0;
+            display: flex;
+            align-items: end;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.5rem;
+        }
+
+        .chart-bar.current {
+            background: var(--lesson-success);
+        }
+
+        .chart-legend {
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-top: 1rem;
+        }
+
+        .difficulty-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .difficulty-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .assignment-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            min-width: 120px;
+        }
+
+        .difficulty-bar {
+            flex: 1;
+            margin: 0 1rem;
+            height: 20px;
+            background: var(--progress-bg);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .difficulty-fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+
+        .difficulty-fill.easy {
+            background: var(--lesson-success);
+        }
+
+        .difficulty-fill.moderate {
+            background: var(--lesson-warning);
+        }
+
+        .difficulty-score {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .insights-panel {
+            padding: 1.5rem;
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .insights-panel h4 {
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+
+        .insights-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .insight-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 6px;
+        }
+
+        .insight-item.positive {
+            background: var(--quiz-correct);
+            border-left: 4px solid var(--lesson-success);
+        }
+
+        .insight-item.warning {
+            background: #fef3c7;
+            border-left: 4px solid var(--lesson-warning);
+        }
+
+        .insight-item.info {
+            background: #dbeafe;
+            border-left: 4px solid var(--lesson-info);
+        }
+
+        .insight-icon {
+            font-size: 1.25rem;
+        }
+
+        .insight-content {
+            font-size: 0.875rem;
+        }
+
+        /* Grading Modal */
+        .modal.large .modal-content {
+            max-width: 1200px;
+            max-height: 90vh;
+        }
+
+        .grading-interface {
+            display: grid;
+            grid-template-columns: 300px 1fr 250px;
+            gap: 1.5rem;
+            height: 600px;
+        }
+
+        .grading-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .submission-info,
+        .assignment-info,
+        .grading-tools {
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+
+        .submission-info h4,
+        .assignment-info h4,
+        .grading-tools h4 {
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-color);
+        }
+
+        .student-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .student-name {
+            font-weight: 600;
+        }
+
+        .tool-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .tool-btn {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            text-align: left;
+        }
+
+        .tool-btn:hover {
+            background: #f8fafc;
+        }
+
+        .grading-main {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .content-tabs {
+            display: flex;
+            margin-bottom: 1rem;
+        }
+
+        .content-tabs .tab-btn {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .content-tabs .tab-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        .submission-viewer {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .submission-text {
+            line-height: 1.6;
+        }
+
+        .attached-files {
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 6px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .rubric-criteria {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .criterion {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+        }
+
+        .criterion h6 {
+            margin-bottom: 0.75rem;
+            color: var(--text-color);
+        }
+
+        .criterion-levels {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .level-option {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .level-option:hover {
+            background: #f8fafc;
+        }
+
+        .feedback-editor {
+            margin-bottom: 1rem;
+        }
+
+        .feedback-text {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-family: inherit;
+            line-height: 1.5;
+            resize: vertical;
+        }
+
+        .feedback-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .feedback-tag {
+            padding: 0.375rem 0.75rem;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .feedback-tag:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .grading-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .grade-entry {
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+
+        .grade-entry label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .grade-input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .grade-input-group input {
+            width: 80px;
+            text-align: center;
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .grade-suffix {
+            color: var(--text-light);
+        }
+
+        .grade-percentage {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .grading-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--lesson-success);
+            background: var(--quiz-correct);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--danger-color);
+            background: var(--quiz-incorrect);
+        }
+
+        .notification.warning {
+            border-left: 4px solid var(--lesson-warning);
+            background: #fef3c7;
+        }
+
+        .notification.info {
+            border-left: 4px solid var(--lesson-info);
+            background: #dbeafe;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .grading-interface {
+                grid-template-columns: 250px 1fr 200px;
+                gap: 1rem;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .grade-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+
+            .toolbar-section {
+                justify-content: space-between;
+            }
+
+            .gradebook-container {
+                font-size: 0.75rem;
+            }
+
+            .students-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .analytics-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .analytics-charts {
+                grid-template-columns: 1fr;
+            }
+
+            .grading-interface {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr;
+                height: auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .grade-center-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .header-actions {
+                justify-content: stretch;
+            }
+
+            .view-selector {
+                overflow-x: auto;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .grade-stats {
+                justify-content: space-around;
+            }
+
+            .assignment-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .analytics-summary {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .gradebook-container {
+                font-size: 0.675rem;
+            }
+
+            .assignment-column,
+            .total-column {
+                min-width: 90px;
+                width: 90px;
+            }
+
+            .grade-input {
+                width: 50px;
+                font-size: 0.75rem;
+                padding: 0.25rem;
+            }
+
+            .student-actions {
+                justify-content: stretch;
+            }
+
+            .assignment-actions {
+                justify-content: stretch;
+            }
+        }
+    </style>
+</body>
+</html>

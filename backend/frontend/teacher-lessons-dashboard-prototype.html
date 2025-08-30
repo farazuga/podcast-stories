@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD - Teacher Lessons Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/lesson-styles.css">
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+
+    <div class="container">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div class="dashboard-title-section">
+                <h1>📚 Lessons Dashboard</h1>
+                <p>Manage your courses, track student progress, and access teaching tools</p>
+            </div>
+            <div class="dashboard-actions">
+                <button class="btn btn-primary" onclick="createNewCourse()">
+                    <span class="icon">➕</span>
+                    Create Course
+                </button>
+                <button class="btn btn-secondary" onclick="openQuickActions()">
+                    <span class="icon">⚡</span>
+                    Quick Actions
+                </button>
+            </div>
+        </div>
+
+        <!-- Overview Stats -->
+        <div class="overview-stats">
+            <div class="stat-card">
+                <div class="stat-icon">📖</div>
+                <div class="stat-content">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">Active Courses</div>
+                    <div class="stat-change positive">+2 this month</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-content">
+                    <div class="stat-number">247</div>
+                    <div class="stat-label">Total Students</div>
+                    <div class="stat-change positive">+15 new enrollments</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                    <div class="stat-number">82%</div>
+                    <div class="stat-label">Avg Completion Rate</div>
+                    <div class="stat-change positive">+5% from last month</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-content">
+                    <div class="stat-number">4.7</div>
+                    <div class="stat-label">Avg Course Rating</div>
+                    <div class="stat-change neutral">Based on 89 reviews</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Main Content -->
+        <div class="dashboard-main">
+            <!-- Recent Activity & Notifications -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2>🔔 Recent Activity</h2>
+                    <button class="btn-link" onclick="viewAllNotifications()">View All</button>
+                </div>
+                <div class="activity-feed">
+                    <div class="activity-item urgent">
+                        <div class="activity-icon">⏰</div>
+                        <div class="activity-content">
+                            <div class="activity-title">5 assignments need grading</div>
+                            <div class="activity-meta">Podcast Journalism 101 • Due 2 hours ago</div>
+                        </div>
+                        <button class="btn btn-sm btn-primary" onclick="viewGrades('course_123')">Grade Now</button>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon">💬</div>
+                        <div class="activity-content">
+                            <div class="activity-title">Sarah Chen submitted a question</div>
+                            <div class="activity-meta">Audio Production Basics • 1 hour ago</div>
+                        </div>
+                        <button class="btn btn-sm btn-secondary" onclick="viewQuestion('q_456')">Respond</button>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon">🎉</div>
+                        <div class="activity-content">
+                            <div class="activity-title">8 students completed Lesson 3</div>
+                            <div class="activity-meta">Story Development Workshop • 3 hours ago</div>
+                        </div>
+                        <button class="btn btn-sm btn-secondary" onclick="viewProgress('course_789')">View Progress</button>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon">📈</div>
+                        <div class="activity-content">
+                            <div class="activity-title">Course engagement increased 25%</div>
+                            <div class="activity-meta">Interview Techniques • This week</div>
+                        </div>
+                        <button class="btn btn-sm btn-secondary" onclick="viewAnalytics('course_101')">View Analytics</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Course Management -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2>🚀 Course Quick Actions</h2>
+                </div>
+                <div class="quick-actions-grid">
+                    <div class="quick-action-card" onclick="createNewCourse()">
+                        <div class="quick-action-icon">➕</div>
+                        <div class="quick-action-content">
+                            <h3>Create New Course</h3>
+                            <p>Start a new course with our guided setup wizard</p>
+                        </div>
+                    </div>
+                    
+                    <div class="quick-action-card" onclick="openCourseBuilder()">
+                        <div class="quick-action-icon">🔧</div>
+                        <div class="quick-action-content">
+                            <h3>Course Builder</h3>
+                            <p>Edit lessons and manage course content</p>
+                        </div>
+                    </div>
+                    
+                    <div class="quick-action-card" onclick="bulkGradeCenter()">
+                        <div class="quick-action-icon">📊</div>
+                        <div class="quick-action-content">
+                            <h3>Grade Center</h3>
+                            <p>Review submissions and manage grades</p>
+                        </div>
+                    </div>
+                    
+                    <div class="quick-action-card" onclick="viewAllAnalytics()">
+                        <div class="quick-action-icon">📈</div>
+                        <div class="quick-action-content">
+                            <h3>Course Analytics</h3>
+                            <p>Track performance and engagement metrics</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Course Overview Grid -->
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h2>📚 My Courses</h2>
+                <div class="course-filters">
+                    <select id="courseStatusFilter" class="form-control">
+                        <option value="">All Courses</option>
+                        <option value="active">Active</option>
+                        <option value="completed">Completed</option>
+                        <option value="draft">Draft</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="openCourseManagement()">Manage All</button>
+                </div>
+            </div>
+
+            <div class="courses-overview-grid">
+                <!-- High Priority Course -->
+                <div class="course-overview-card priority">
+                    <div class="course-header">
+                        <div class="course-badge urgent">Needs Attention</div>
+                        <div class="course-actions-menu" onclick="openCourseMenu('course_123')">⋮</div>
+                    </div>
+                    <h3 class="course-title">Podcast Journalism 101</h3>
+                    <div class="course-stats-mini">
+                        <div class="stat-mini">
+                            <span class="stat-number">32</span>
+                            <span class="stat-label">Students</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="stat-number">5</span>
+                            <span class="stat-label">Pending Grades</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="stat-number">78%</span>
+                            <span class="stat-label">Completion</span>
+                        </div>
+                    </div>
+                    <div class="course-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 78%"></div>
+                        </div>
+                        <div class="progress-label">Week 6 of 8</div>
+                    </div>
+                    <div class="course-actions">
+                        <button class="btn btn-sm btn-primary" onclick="viewGrades('course_123')">Grade Assignments</button>
+                        <button class="btn btn-sm btn-secondary" onclick="manageCourse('course_123')">Manage</button>
+                    </div>
+                </div>
+
+                <!-- Regular Courses -->
+                <div class="course-overview-card">
+                    <div class="course-header">
+                        <div class="course-badge active">Active</div>
+                        <div class="course-actions-menu" onclick="openCourseMenu('course_456')">⋮</div>
+                    </div>
+                    <h3 class="course-title">Audio Production Basics</h3>
+                    <div class="course-stats-mini">
+                        <div class="stat-mini">
+                            <span class="stat-number">28</span>
+                            <span class="stat-label">Students</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">Pending</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="stat-number">92%</span>
+                            <span class="stat-label">Completion</span>
+                        </div>
+                    </div>
+                    <div class="course-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 92%"></div>
+                        </div>
+                        <div class="progress-label">Week 4 of 6</div>
+                    </div>
+                    <div class="course-actions">
+                        <button class="btn btn-sm btn-secondary" onclick="viewProgress('course_456')">View Progress</button>
+                        <button class="btn btn-sm btn-secondary" onclick="manageCourse('course_456')">Manage</button>
+                    </div>
+                </div>
+
+                <div class="course-overview-card">
+                    <div class="course-header">
+                        <div class="course-badge active">Active</div>
+                        <div class="course-actions-menu" onclick="openCourseMenu('course_789')">⋮</div>
+                    </div>
+                    <h3 class="course-title">Story Development Workshop</h3>
+                    <div class="course-stats-mini">
+                        <div class="stat-mini">
+                            <span class="stat-number">45</span>
+                            <span class="stat-label">Students</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="stat-number">2</span>
+                            <span class="stat-label">Pending</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="stat-number">85%</span>
+                            <span class="stat-label">Completion</span>
+                        </div>
+                    </div>
+                    <div class="course-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 85%"></div>
+                        </div>
+                        <div class="progress-label">Week 7 of 9</div>
+                    </div>
+                    <div class="course-actions">
+                        <button class="btn btn-sm btn-secondary" onclick="viewProgress('course_789')">View Progress</button>
+                        <button class="btn btn-sm btn-secondary" onclick="manageCourse('course_789')">Manage</button>
+                    </div>
+                </div>
+
+                <div class="course-overview-card">
+                    <div class="course-header">
+                        <div class="course-badge completed">Completed</div>
+                        <div class="course-actions-menu" onclick="openCourseMenu('course_101')">⋮</div>
+                    </div>
+                    <h3 class="course-title">Interview Techniques</h3>
+                    <div class="course-stats-mini">
+                        <div class="stat-mini">
+                            <span class="stat-number">38</span>
+                            <span class="stat-label">Students</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">Pending</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="stat-number">96%</span>
+                            <span class="stat-label">Completion</span>
+                        </div>
+                    </div>
+                    <div class="course-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill complete" style="width: 100%"></div>
+                        </div>
+                        <div class="progress-label">Course Complete</div>
+                    </div>
+                    <div class="course-actions">
+                        <button class="btn btn-sm btn-secondary" onclick="viewAnalytics('course_101')">View Analytics</button>
+                        <button class="btn btn-sm btn-secondary" onclick="duplicateCourse('course_101')">Duplicate</button>
+                    </div>
+                </div>
+
+                <!-- Draft Course -->
+                <div class="course-overview-card draft">
+                    <div class="course-header">
+                        <div class="course-badge draft">Draft</div>
+                        <div class="course-actions-menu" onclick="openCourseMenu('course_draft')">⋮</div>
+                    </div>
+                    <h3 class="course-title">Advanced Editing Techniques</h3>
+                    <div class="course-stats-mini">
+                        <div class="stat-mini">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">Students</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="stat-number">3</span>
+                            <span class="stat-label">Lessons</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="stat-number">45%</span>
+                            <span class="stat-label">Built</span>
+                        </div>
+                    </div>
+                    <div class="course-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill draft" style="width: 45%"></div>
+                        </div>
+                        <div class="progress-label">In Development</div>
+                    </div>
+                    <div class="course-actions">
+                        <button class="btn btn-sm btn-primary" onclick="editCourse('course_draft')">Continue Building</button>
+                        <button class="btn btn-sm btn-secondary" onclick="manageCourse('course_draft')">Settings</button>
+                    </div>
+                </div>
+
+                <!-- Create New Course Card -->
+                <div class="course-overview-card create-new" onclick="createNewCourse()">
+                    <div class="create-new-content">
+                        <div class="create-new-icon">➕</div>
+                        <h3>Create New Course</h3>
+                        <p>Start teaching with a new course</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teaching Resources Section -->
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h2>📖 Teaching Resources</h2>
+                <button class="btn-link" onclick="browseAllResources()">Browse All</button>
+            </div>
+            <div class="resources-grid">
+                <div class="resource-card">
+                    <div class="resource-icon">📝</div>
+                    <h4>Course Templates</h4>
+                    <p>Pre-built course structures for common topics</p>
+                    <button class="btn btn-sm btn-secondary" onclick="viewTemplates()">Browse Templates</button>
+                </div>
+                
+                <div class="resource-card">
+                    <div class="resource-icon">🎯</div>
+                    <h4>Assessment Builder</h4>
+                    <p>Create quizzes and assignments easily</p>
+                    <button class="btn btn-sm btn-secondary" onclick="openAssessmentBuilder()">Create Assessment</button>
+                </div>
+                
+                <div class="resource-card">
+                    <div class="resource-icon">📊</div>
+                    <h4>Analytics Guide</h4>
+                    <p>Learn to interpret student performance data</p>
+                    <button class="btn btn-sm btn-secondary" onclick="viewAnalyticsGuide()">Learn More</button>
+                </div>
+                
+                <div class="resource-card">
+                    <div class="resource-icon">💬</div>
+                    <h4>Discussion Forums</h4>
+                    <p>Connect with other educators</p>
+                    <button class="btn btn-sm btn-secondary" onclick="openForums()">Join Discussion</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Modal -->
+    <div id="quickActionsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚡ Quick Actions</h3>
+                <button class="modal-close" onclick="closeQuickActions()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="quick-actions-list">
+                    <button class="action-btn" onclick="createNewCourse()">
+                        <span class="icon">➕</span>
+                        <div>
+                            <strong>Create New Course</strong>
+                            <p>Start a new course from scratch</p>
+                        </div>
+                    </button>
+                    
+                    <button class="action-btn" onclick="importCourse()">
+                        <span class="icon">📥</span>
+                        <div>
+                            <strong>Import Course</strong>
+                            <p>Import from another platform</p>
+                        </div>
+                    </button>
+                    
+                    <button class="action-btn" onclick="bulkGradeCenter()">
+                        <span class="icon">📊</span>
+                        <div>
+                            <strong>Grade All Pending</strong>
+                            <p>Review all pending assignments</p>
+                        </div>
+                    </button>
+                    
+                    <button class="action-btn" onclick="exportGrades()">
+                        <span class="icon">📤</span>
+                        <div>
+                            <strong>Export Grades</strong>
+                            <p>Download gradebook data</p>
+                        </div>
+                    </button>
+                    
+                    <button class="action-btn" onclick="sendAnnouncement()">
+                        <span class="icon">📢</span>
+                        <div>
+                            <strong>Send Announcement</strong>
+                            <p>Message all students</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
+    <script>
+        // Teacher Dashboard JavaScript
+        
+        // Mock data for demonstration
+        const dashboardData = {
+            stats: {
+                activeCourses: 8,
+                totalStudents: 247,
+                completionRate: 82,
+                avgRating: 4.7
+            },
+            recentActivity: [
+                { type: 'urgent', title: '5 assignments need grading', course: 'Podcast Journalism 101', time: '2 hours ago' },
+                { type: 'message', title: 'Sarah Chen submitted a question', course: 'Audio Production Basics', time: '1 hour ago' },
+                { type: 'success', title: '8 students completed Lesson 3', course: 'Story Development Workshop', time: '3 hours ago' },
+                { type: 'analytics', title: 'Course engagement increased 25%', course: 'Interview Techniques', time: 'This week' }
+            ]
+        };
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboardData();
+            setupEventListeners();
+            checkPendingItems();
+        });
+
+        function loadDashboardData() {
+            // Update stats with real-time data
+            updateStats();
+            // Load recent activity
+            updateActivityFeed();
+        }
+
+        function updateStats() {
+            // This would typically fetch from an API
+            console.log('Loading dashboard statistics...');
+        }
+
+        function updateActivityFeed() {
+            // This would typically fetch recent activity from an API
+            console.log('Loading recent activity...');
+        }
+
+        function setupEventListeners() {
+            // Course status filter
+            document.getElementById('courseStatusFilter').addEventListener('change', filterCourses);
+            
+            // Close modal when clicking outside
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal')) {
+                    e.target.style.display = 'none';
+                }
+            });
+        }
+
+        function checkPendingItems() {
+            // Check for urgent items that need attention
+            const pendingGrades = document.querySelectorAll('.course-overview-card .urgent');
+            if (pendingGrades.length > 0) {
+                // Could show notification or highlight items
+                console.log(`${pendingGrades.length} courses need attention`);
+            }
+        }
+
+        // Course Management Functions
+        function createNewCourse() {
+            window.location.href = 'course-builder-prototype.html';
+        }
+
+        function manageCourse(courseId) {
+            window.location.href = `course-management.html?course_id=${courseId}`;
+        }
+
+        function viewGrades(courseId) {
+            window.location.href = `grade-center-enhanced-prototype.html?course_id=${courseId}`;
+        }
+
+        function viewProgress(courseId) {
+            window.location.href = `grade-center-enhanced-prototype.html?course_id=${courseId}&view=progress`;
+        }
+
+        function viewAnalytics(courseId) {
+            window.location.href = `course-analytics-prototype.html?course_id=${courseId}`;
+        }
+
+        function editCourse(courseId) {
+            window.location.href = `lesson-content-editor-prototype.html?course_id=${courseId}`;
+        }
+
+        function duplicateCourse(courseId) {
+            if (confirm('Create a duplicate of this course?')) {
+                // API call to duplicate course
+                console.log(`Duplicating course ${courseId}`);
+                // Refresh dashboard after duplication
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            }
+        }
+
+        // Quick Actions
+        function openQuickActions() {
+            document.getElementById('quickActionsModal').style.display = 'flex';
+        }
+
+        function closeQuickActions() {
+            document.getElementById('quickActionsModal').style.display = 'none';
+        }
+
+        function openCourseBuilder() {
+            window.location.href = 'course-builder-prototype.html';
+        }
+
+        function bulkGradeCenter() {
+            window.location.href = 'grade-center-enhanced-prototype.html';
+        }
+
+        function viewAllAnalytics() {
+            window.location.href = 'course-analytics-prototype.html';
+        }
+
+        function importCourse() {
+            // Open import course modal/page
+            alert('Course import functionality - coming soon!');
+        }
+
+        function exportGrades() {
+            // Trigger grades export
+            alert('Exporting all grades...');
+        }
+
+        function sendAnnouncement() {
+            // Open announcement composer
+            alert('Send announcement to all students - coming soon!');
+        }
+
+        // Utility Functions
+        function filterCourses() {
+            const filter = document.getElementById('courseStatusFilter').value;
+            const courseCards = document.querySelectorAll('.course-overview-card');
+            
+            courseCards.forEach(card => {
+                if (card.classList.contains('create-new')) return;
+                
+                const badge = card.querySelector('.course-badge');
+                const status = badge ? badge.textContent.toLowerCase().trim() : '';
+                
+                if (filter === '' || status.includes(filter)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function openCourseMenu(courseId) {
+            // Open context menu for course actions
+            console.log(`Opening menu for course ${courseId}`);
+            // This would show a dropdown with options like edit, duplicate, delete, etc.
+        }
+
+        // Navigation Functions
+        function viewAllNotifications() {
+            // Navigate to notifications page
+            window.location.href = 'notifications.html';
+        }
+
+        function openCourseManagement() {
+            window.location.href = 'course-management.html';
+        }
+
+        function browseAllResources() {
+            window.location.href = 'teaching-resources.html';
+        }
+
+        function viewTemplates() {
+            window.location.href = 'course-templates.html';
+        }
+
+        function openAssessmentBuilder() {
+            window.location.href = 'assessment-builder.html';
+        }
+
+        function viewAnalyticsGuide() {
+            window.location.href = 'analytics-guide.html';
+        }
+
+        function openForums() {
+            window.location.href = 'teacher-forums.html';
+        }
+
+        // Responsive helper functions
+        function viewQuestion(questionId) {
+            window.location.href = `student-questions.html?question_id=${questionId}`;
+        }
+
+        // Auto-refresh dashboard every 5 minutes
+        setInterval(() => {
+            loadDashboardData();
+        }, 300000);
+    </script>
+
+    <style>
+        /* Teacher Dashboard Specific Styles */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--white);
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .dashboard-title-section h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .dashboard-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* Overview Stats */
+        .overview-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            background: #fff7ed;
+            padding: 1rem;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-change {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+        }
+
+        .stat-change.positive {
+            background: var(--quiz-correct);
+            color: var(--lesson-success);
+        }
+
+        .stat-change.neutral {
+            background: #f3f4f6;
+            color: var(--text-light);
+        }
+
+        /* Dashboard Main Content */
+        .dashboard-main {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-section {
+            background: var(--white);
+            border-radius: var(--card-border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.25rem;
+            color: var(--text-color);
+        }
+
+        /* Activity Feed */
+        .activity-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .activity-item:hover {
+            background: #f1f5f9;
+        }
+
+        .activity-item.urgent {
+            border-left: 4px solid var(--danger-color);
+            background: #fef2f2;
+        }
+
+        .activity-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            text-align: center;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-meta {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        /* Quick Actions Grid */
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .quick-action-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: #f8fafc;
+            border: 2px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quick-action-card:hover {
+            border-color: var(--primary-color);
+            background: #fff7ed;
+            transform: translateY(-2px);
+        }
+
+        .quick-action-icon {
+            font-size: 2rem;
+            background: var(--primary-color);
+            color: white;
+            padding: 0.75rem;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quick-action-content h3 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .quick-action-content p {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin: 0;
+        }
+
+        /* Course Overview Cards */
+        .courses-overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .course-overview-card {
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .course-overview-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .course-overview-card.priority {
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .course-overview-card.draft {
+            border-left: 4px solid var(--lesson-warning);
+        }
+
+        .course-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .course-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .course-badge.active {
+            background: var(--quiz-correct);
+            color: var(--lesson-success);
+        }
+
+        .course-badge.completed {
+            background: var(--quiz-selected);
+            color: var(--lesson-info);
+        }
+
+        .course-badge.draft {
+            background: #fef3c7;
+            color: var(--lesson-warning);
+        }
+
+        .course-badge.urgent {
+            background: var(--quiz-incorrect);
+            color: var(--danger-color);
+        }
+
+        .course-actions-menu {
+            cursor: pointer;
+            padding: 0.5rem;
+            font-weight: bold;
+            color: var(--text-light);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .course-actions-menu:hover {
+            background: var(--border-color);
+        }
+
+        .course-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+
+        .course-stats-mini {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .stat-mini {
+            text-align: center;
+        }
+
+        .stat-mini .stat-number {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-mini .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .course-progress {
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--progress-bg);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.complete {
+            background: var(--lesson-success);
+        }
+
+        .progress-fill.draft {
+            background: var(--lesson-warning);
+        }
+
+        .progress-label {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .course-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* Create New Course Card */
+        .course-overview-card.create-new {
+            border: 2px dashed var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            min-height: 200px;
+        }
+
+        .course-overview-card.create-new:hover {
+            border-color: var(--primary-color);
+            background: #fff7ed;
+        }
+
+        .create-new-content {
+            text-align: center;
+        }
+
+        .create-new-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .create-new-content h3 {
+            margin-bottom: 0.5rem;
+        }
+
+        .create-new-content p {
+            color: var(--text-light);
+            margin: 0;
+        }
+
+        /* Resources Grid */
+        .resources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .resource-card {
+            text-align: center;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            transition: all 0.3s ease;
+        }
+
+        .resource-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .resource-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .resource-card h4 {
+            margin-bottom: 0.5rem;
+        }
+
+        .resource-card p {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+
+        /* Course Filters */
+        .course-filters {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        /* Modal Styles */
+        .quick-actions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .dashboard-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .dashboard-actions {
+                justify-content: stretch;
+            }
+
+            .dashboard-actions .btn {
+                flex: 1;
+            }
+
+            .overview-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .courses-overview-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .course-filters {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .overview-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-card {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.75rem;
+            }
+
+            .activity-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            .quick-actions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html>

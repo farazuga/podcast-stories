@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD Lessons - Podcast Fundamentals</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/lesson-styles.css">
+    <style>
+        /* Enhanced Student Course View Styles */
+        .course-header {
+            background: linear-gradient(135deg, var(--lesson-primary) 0%, var(--lesson-secondary) 100%);
+            color: white;
+            padding: 3rem 0;
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+        
+        .course-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .course-category {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            width: fit-content;
+        }
+        
+        .course-title-main {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .course-subtitle {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+        
+        .course-meta-header {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+        }
+        
+        .instructor-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+        
+        .instructor-avatar {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .instructor-details h4 {
+            margin-bottom: 0.25rem;
+        }
+        
+        .instructor-details p {
+            font-size: 0.875rem;
+            opacity: 0.8;
+        }
+        
+        .course-preview {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .preview-video {
+            width: 100%;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .preview-video:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        .play-button {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--lesson-primary);
+        }
+        
+        .enrollment-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            color: var(--text-color);
+        }
+        
+        .price-info {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .price-current {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--lesson-primary);
+        }
+        
+        .price-original {
+            text-decoration: line-through;
+            color: var(--text-light);
+            margin-left: 0.5rem;
+        }
+        
+        .enroll-main-btn {
+            width: 100%;
+            background: var(--lesson-primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .enroll-main-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+        
+        .enroll-main-btn.enrolled {
+            background: var(--lesson-success);
+        }
+        
+        .course-guarantees {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.875rem;
+        }
+        
+        .course-guarantees li {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .course-layout {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 3rem;
+        }
+        
+        .course-sidebar {
+            position: sticky;
+            top: 80px;
+            height: fit-content;
+        }
+        
+        .progress-widget {
+            background: var(--lesson-content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            padding: var(--card-padding);
+            margin-bottom: 2rem;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .progress-title {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        .progress-percentage {
+            font-weight: 700;
+            color: var(--lesson-primary);
+        }
+        
+        .progress-bar-large {
+            width: 100%;
+            height: 12px;
+            background: var(--progress-bg);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        
+        .progress-fill-large {
+            height: 100%;
+            background: linear-gradient(90deg, var(--lesson-primary), var(--lesson-success));
+            width: 75%;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+        
+        .course-navigation {
+            background: var(--lesson-content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            overflow: hidden;
+        }
+        
+        .nav-header {
+            background: var(--lesson-sidebar-bg);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .expand-toggle {
+            background: none;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+        
+        .lessons-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .lesson-section {
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .section-header {
+            background: #f8fafc;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            transition: background 0.2s ease;
+        }
+        
+        .section-header:hover {
+            background: #f1f5f9;
+        }
+        
+        .section-title {
+            font-weight: 500;
+            color: var(--text-color);
+            flex: 1;
+        }
+        
+        .section-progress {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-right: 1rem;
+        }
+        
+        .section-lessons {
+            display: none;
+        }
+        
+        .section-lessons.expanded {
+            display: block;
+        }
+        
+        .lesson-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1.5rem 0.75rem 2.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .lesson-item:hover {
+            background: #f8fafc;
+        }
+        
+        .lesson-item.current {
+            background: #fff7ed;
+            border-left-color: var(--lesson-primary);
+        }
+        
+        .lesson-item.completed {
+            background: var(--quiz-correct);
+        }
+        
+        .lesson-status {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+        
+        .lesson-status.completed {
+            background: var(--lesson-success);
+            color: white;
+        }
+        
+        .lesson-status.current {
+            background: var(--lesson-primary);
+            color: white;
+        }
+        
+        .lesson-status.locked {
+            background: var(--progress-bg);
+            color: var(--text-light);
+        }
+        
+        .lesson-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .lesson-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .lesson-meta {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .course-main {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .course-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            gap: 0;
+        }
+        
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 1rem 2rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            color: var(--text-light);
+            transition: all 0.2s ease;
+        }
+        
+        .tab-btn.active {
+            color: var(--lesson-primary);
+            border-bottom-color: var(--lesson-primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .overview-section {
+            background: var(--lesson-content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            padding: var(--card-padding);
+            margin-bottom: 2rem;
+        }
+        
+        .section-title-main {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+        
+        .course-description-full {
+            line-height: 1.7;
+            color: var(--text-color);
+            margin-bottom: 2rem;
+        }
+        
+        .what-you-learn {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        
+        .learn-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+        
+        .learn-icon {
+            color: var(--lesson-success);
+            font-size: 1.125rem;
+            margin-top: 0.125rem;
+        }
+        
+        .requirements-section {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .requirements-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .requirements-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .reviews-section {
+            background: var(--lesson-content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            padding: var(--card-padding);
+        }
+        
+        .reviews-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .reviews-summary {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .rating-display {
+            text-align: center;
+        }
+        
+        .rating-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--lesson-primary);
+        }
+        
+        .rating-stars-large {
+            color: var(--lesson-warning);
+            font-size: 1.25rem;
+            margin: 0.5rem 0;
+        }
+        
+        .rating-count {
+            color: var(--text-light);
+            font-size: 0.875rem;
+        }
+        
+        .rating-breakdown {
+            flex: 1;
+        }
+        
+        .rating-bar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .bar-label {
+            font-size: 0.875rem;
+            width: 60px;
+            color: var(--text-light);
+        }
+        
+        .bar-fill-container {
+            flex: 1;
+            height: 8px;
+            background: var(--progress-bg);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .bar-fill {
+            height: 100%;
+            background: var(--lesson-warning);
+        }
+        
+        .bar-count {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            width: 30px;
+            text-align: right;
+        }
+        
+        .reviews-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .review-item {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 2rem;
+        }
+        
+        .review-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        
+        .review-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .reviewer-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .reviewer-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--lesson-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .reviewer-details h4 {
+            margin-bottom: 0.25rem;
+        }
+        
+        .reviewer-details p {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+        
+        .review-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .review-text {
+            line-height: 1.6;
+            color: var(--text-color);
+        }
+        
+        .instructor-section {
+            background: var(--lesson-content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            padding: var(--card-padding);
+        }
+        
+        .instructor-profile {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .instructor-avatar-large {
+            width: 120px;
+            height: 120px;
+            background: var(--lesson-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .instructor-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stat-box {
+            text-align: center;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--lesson-primary);
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+        
+        @media (max-width: 1024px) {
+            .course-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .course-sidebar {
+                position: relative;
+                top: auto;
+            }
+            
+            .header-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .course-title-main {
+                font-size: 2rem;
+            }
+            
+            .course-meta-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .what-you-learn {
+                grid-template-columns: 1fr;
+            }
+            
+            .reviews-summary {
+                flex-direction: column;
+            }
+            
+            .instructor-profile {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+    
+    <!-- Course Header -->
+    <section class="course-header">
+        <div class="header-content">
+            <div class="course-info">
+                <div class="course-category">Fundamentals</div>
+                <h1 class="course-title-main">Podcast Fundamentals</h1>
+                <p class="course-subtitle">Master the essential skills needed to create, produce, and distribute your own podcast</p>
+                
+                <div class="course-meta-header">
+                    <div class="meta-item">
+                        <span>⭐</span>
+                        <span>4.8 (234 reviews)</span>
+                    </div>
+                    <div class="meta-item">
+                        <span>👥</span>
+                        <span>1,234 students</span>
+                    </div>
+                    <div class="meta-item">
+                        <span>⏱️</span>
+                        <span>3.5 total hours</span>
+                    </div>
+                    <div class="meta-item">
+                        <span>📚</span>
+                        <span>12 lessons</span>
+                    </div>
+                    <div class="meta-item">
+                        <span>📱</span>
+                        <span>Mobile & Desktop</span>
+                    </div>
+                </div>
+                
+                <div class="instructor-info">
+                    <div class="instructor-avatar">👩‍🎓</div>
+                    <div class="instructor-details">
+                        <h4>Sarah Johnson</h4>
+                        <p>Podcast Producer & Educator • 5 years experience</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="course-preview">
+                <div class="preview-video" onclick="playPreview()">
+                    <div class="play-button">▶️</div>
+                </div>
+                
+                <div class="enrollment-card">
+                    <div class="price-info">
+                        <span class="price-current">Free</span>
+                        <span class="price-original">$49.99</span>
+                    </div>
+                    
+                    <button class="enroll-main-btn enrolled" id="mainEnrollBtn">
+                        ✓ Enrolled - Continue Learning
+                    </button>
+                    
+                    <ul class="course-guarantees">
+                        <li><span>✅</span> Lifetime access</li>
+                        <li><span>✅</span> 30-day money-back guarantee</li>
+                        <li><span>✅</span> Certificate of completion</li>
+                        <li><span>✅</span> Mobile and desktop access</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <div class="course-layout">
+        <div class="course-sidebar">
+            <!-- Progress Widget -->
+            <div class="progress-widget">
+                <div class="progress-header">
+                    <span class="progress-title">Course Progress</span>
+                    <span class="progress-percentage">75%</span>
+                </div>
+                <div class="progress-bar-large">
+                    <div class="progress-fill-large"></div>
+                </div>
+                <div class="progress-stats">
+                    <span>9 of 12 lessons completed</span>
+                    <span>3 remaining</span>
+                </div>
+            </div>
+            
+            <!-- Course Navigation -->
+            <div class="course-navigation">
+                <div class="nav-header">
+                    <span>📋 Course Content</span>
+                    <button class="expand-toggle" onclick="toggleAllSections()">⊞</button>
+                </div>
+                
+                <div class="lessons-list">
+                    <div class="lesson-section">
+                        <div class="section-header" onclick="toggleSection(this)">
+                            <span class="section-title">Getting Started</span>
+                            <span class="section-progress">3/3 completed</span>
+                            <span class="expand-toggle">▼</span>
+                        </div>
+                        <div class="section-lessons expanded">
+                            <div class="lesson-item completed" onclick="goToLesson(1)">
+                                <div class="lesson-status completed">✓</div>
+                                <div class="lesson-content">
+                                    <div class="lesson-title">Welcome to Podcasting</div>
+                                    <div class="lesson-meta">
+                                        <span>📹 Video</span>
+                                        <span>5 min</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="lesson-item completed" onclick="goToLesson(2)">
+                                <div class="lesson-status completed">✓</div>
+                                <div class="lesson-content">
+                                    <div class="lesson-title">Choosing Your Podcast Topic</div>
+                                    <div class="lesson-meta">
+                                        <span>📹 Video</span>
+                                        <span>12 min</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="lesson-item completed" onclick="goToLesson(3)">
+                                <div class="lesson-status completed">✓</div>
+                                <div class="lesson-content">
+                                    <div class="lesson-title">Planning Your First Episode</div>
+                                    <div class="lesson-meta">
+                                        <span>📝 Text</span>
+                                        <span>8 min</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="lesson-section">
+                        <div class="section-header" onclick="toggleSection(this)">
+                            <span class="section-title">Recording Essentials</span>
+                            <span class="section-progress">3/4 completed</span>
+                            <span class="expand-toggle">▼</span>
+                        </div>
+                        <div class="section-lessons expanded">
+                            <div class="lesson-item completed" onclick="goToLesson(4)">
+                                <div class="lesson-status completed">✓</div>
+                                <div class="lesson-content">
+                                    <div class="lesson-title">Equipment You Need</div>
+                                    <div class="lesson-meta">
+                                        <span>📹 Video</span>
+                                        <span>15 min</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="lesson-item completed" onclick="goToLesson(5)">
+                                <div class="lesson-status completed">✓</div>
+                                <div class="lesson-content">
+                                    <div class="lesson-title">Setting Up Your Recording Space</div>
+                                    <div class="lesson-meta">
+                                        <span>📹 Video</span>
+                                        <span>10 min</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="lesson-item current" onclick="goToLesson(6)">
+                                <div class="lesson-status current">▶️</div>
+                                <div class="lesson-content">
+                                    <div class="lesson-title">Recording Techniques</div>
+                                    <div class="lesson-meta">
+                                        <span>📹 Video</span>
+                                        <span>18 min</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="lesson-item" onclick="goToLesson(7)">
+                                <div class="lesson-status">7</div>
+                                <div class="lesson-content">
+                                    <div class="lesson-title">Audio Quality Best Practices</div>
+                                    <div class="lesson-meta">
+                                        <span>📹 Video</span>
+                                        <span>22 min</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="lesson-section">
+                        <div class="section-header" onclick="toggleSection(this)">
+                            <span class="section-title">Editing & Production</span>
+                            <span class="section-progress">0/3 completed</span>
+                            <span class="expand-toggle">▼</span>
+                        </div>
+                        <div class="section-lessons">
+                            <div class="lesson-item">
+                                <div class="lesson-status locked">🔒</div>
+                                <div class="lesson-content">
+                                    <div class="lesson-title">Introduction to Audio Editing</div>
+                                    <div class="lesson-meta">
+                                        <span>📹 Video</span>
+                                        <span>20 min</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="lesson-item">
+                                <div class="lesson-status locked">🔒</div>
+                                <div class="lesson-content">
+                                    <div class="lesson-title">Adding Music and Effects</div>
+                                    <div class="lesson-meta">
+                                        <span>📹 Video</span>
+                                        <span>16 min</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="lesson-item">
+                                <div class="lesson-status locked">🔒</div>
+                                <div class="lesson-content">
+                                    <div class="lesson-title">Final Mix and Master</div>
+                                    <div class="lesson-meta">
+                                        <span>📝 Quiz</span>
+                                        <span>5 questions</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="lesson-section">
+                        <div class="section-header" onclick="toggleSection(this)">
+                            <span class="section-title">Publishing & Promotion</span>
+                            <span class="section-progress">0/2 completed</span>
+                            <span class="expand-toggle">▼</span>
+                        </div>
+                        <div class="section-lessons">
+                            <div class="lesson-item">
+                                <div class="lesson-status locked">🔒</div>
+                                <div class="lesson-content">
+                                    <div class="lesson-title">Hosting and Distribution</div>
+                                    <div class="lesson-meta">
+                                        <span>📹 Video</span>
+                                        <span>25 min</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="lesson-item">
+                                <div class="lesson-status locked">🔒</div>
+                                <div class="lesson-content">
+                                    <div class="lesson-title">Growing Your Audience</div>
+                                    <div class="lesson-meta">
+                                        <span>📹 Video</span>
+                                        <span>30 min</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="course-main">
+            <!-- Course Tabs -->
+            <div class="course-tabs">
+                <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+                <button class="tab-btn" onclick="switchTab('curriculum')">Curriculum</button>
+                <button class="tab-btn" onclick="switchTab('instructor')">Instructor</button>
+                <button class="tab-btn" onclick="switchTab('reviews')">Reviews</button>
+            </div>
+            
+            <!-- Overview Tab -->
+            <div class="tab-content active" id="overview-tab">
+                <div class="overview-section">
+                    <h2 class="section-title-main">What you'll learn</h2>
+                    <div class="what-you-learn">
+                        <div class="learn-item">
+                            <span class="learn-icon">✅</span>
+                            <span>Plan and structure your podcast episodes effectively</span>
+                        </div>
+                        <div class="learn-item">
+                            <span class="learn-icon">✅</span>
+                            <span>Set up professional recording equipment on any budget</span>
+                        </div>
+                        <div class="learn-item">
+                            <span class="learn-icon">✅</span>
+                            <span>Record high-quality audio in any environment</span>
+                        </div>
+                        <div class="learn-item">
+                            <span class="learn-icon">✅</span>
+                            <span>Edit your podcast using free and paid tools</span>
+                        </div>
+                        <div class="learn-item">
+                            <span class="learn-icon">✅</span>
+                            <span>Publish and distribute your podcast to all major platforms</span>
+                        </div>
+                        <div class="learn-item">
+                            <span class="learn-icon">✅</span>
+                            <span>Build and engage with your podcast audience</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="overview-section">
+                    <h2 class="section-title-main">Course Description</h2>
+                    <div class="course-description-full">
+                        <p>Welcome to the complete beginner's guide to podcasting! Whether you're looking to start a personal podcast, grow your business, or share your expertise with the world, this course will give you all the tools and knowledge you need to succeed.</p>
+                        
+                        <p>In this comprehensive course, you'll learn everything from the initial planning stages to building a loyal audience. We'll cover:</p>
+                        
+                        <ul>
+                            <li>How to choose the perfect topic and format for your podcast</li>
+                            <li>Essential equipment recommendations for every budget</li>
+                            <li>Recording techniques that ensure professional sound quality</li>
+                            <li>Step-by-step editing workflow using popular software</li>
+                            <li>Publishing strategies to reach the widest audience</li>
+                            <li>Marketing tactics to grow your listener base organically</li>
+                        </ul>
+                        
+                        <p>By the end of this course, you'll have created your first complete podcast episode and have the confidence to continue growing your podcast independently.</p>
+                    </div>
+                </div>
+                
+                <div class="requirements-section">
+                    <h3 class="section-title-main">Requirements</h3>
+                    <ul class="requirements-list">
+                        <li>
+                            <span>📋</span>
+                            <span>No prior podcasting experience required</span>
+                        </li>
+                        <li>
+                            <span>💻</span>
+                            <span>A computer (Windows, Mac, or Linux)</span>
+                        </li>
+                        <li>
+                            <span>🎤</span>
+                            <span>A basic microphone (even a smartphone mic works to start)</span>
+                        </li>
+                        <li>
+                            <span>🌐</span>
+                            <span>Internet connection for uploading and course access</span>
+                        </li>
+                        <li>
+                            <span>⏰</span>
+                            <span>Willingness to practice and implement what you learn</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Other tabs content here -->
+            <div class="tab-content" id="curriculum-tab">
+                <div class="overview-section">
+                    <h2 class="section-title-main">Course Curriculum</h2>
+                    <p>This course is organized into 4 main sections with a total of 12 lessons. Each lesson builds upon the previous one, taking you from complete beginner to confident podcaster.</p>
+                    
+                    <div style="margin-top: 2rem; padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                        <p><strong>💡 Pro Tip:</strong> The curriculum on the left sidebar shows your current progress and allows you to jump to any lesson you've unlocked. Complete lessons in order for the best learning experience!</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="instructor-tab">
+                <div class="instructor-section">
+                    <div class="instructor-profile">
+                        <div class="instructor-avatar-large">👩‍🎓</div>
+                        <div class="instructor-info-large">
+                            <h2>Sarah Johnson</h2>
+                            <p style="color: var(--text-light); margin-bottom: 1rem;">Podcast Producer & Educator</p>
+                            <p style="line-height: 1.6;">Sarah has been producing podcasts for over 5 years and has helped launch over 50 successful shows. She specializes in helping beginners overcome the technical barriers to podcasting and focuses on practical, actionable advice that gets results.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="instructor-stats">
+                        <div class="stat-box">
+                            <div class="stat-number">4.9</div>
+                            <div class="stat-label">Instructor Rating</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">152</div>
+                            <div class="stat-label">Reviews</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">3,247</div>
+                            <div class="stat-label">Students</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">8</div>
+                            <div class="stat-label">Courses</div>
+                        </div>
+                    </div>
+                    
+                    <p style="line-height: 1.6;">Sarah's teaching philosophy centers on learning by doing. Rather than overwhelming students with theory, she provides step-by-step practical exercises that build confidence and skills simultaneously. Her courses have helped thousands of students launch successful podcasts across every genre imaginable.</p>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="reviews-tab">
+                <div class="reviews-section">
+                    <div class="reviews-header">
+                        <h2 class="section-title-main">Student Reviews</h2>
+                    </div>
+                    
+                    <div class="reviews-summary">
+                        <div class="rating-display">
+                            <div class="rating-number">4.8</div>
+                            <div class="rating-stars-large">⭐⭐⭐⭐⭐</div>
+                            <div class="rating-count">234 reviews</div>
+                        </div>
+                        
+                        <div class="rating-breakdown">
+                            <div class="rating-bar">
+                                <span class="bar-label">5 star</span>
+                                <div class="bar-fill-container">
+                                    <div class="bar-fill" style="width: 85%"></div>
+                                </div>
+                                <span class="bar-count">199</span>
+                            </div>
+                            <div class="rating-bar">
+                                <span class="bar-label">4 star</span>
+                                <div class="bar-fill-container">
+                                    <div class="bar-fill" style="width: 12%"></div>
+                                </div>
+                                <span class="bar-count">28</span>
+                            </div>
+                            <div class="rating-bar">
+                                <span class="bar-label">3 star</span>
+                                <div class="bar-fill-container">
+                                    <div class="bar-fill" style="width: 2%"></div>
+                                </div>
+                                <span class="bar-count">5</span>
+                            </div>
+                            <div class="rating-bar">
+                                <span class="bar-label">2 star</span>
+                                <div class="bar-fill-container">
+                                    <div class="bar-fill" style="width: 1%"></div>
+                                </div>
+                                <span class="bar-count">2</span>
+                            </div>
+                            <div class="rating-bar">
+                                <span class="bar-label">1 star</span>
+                                <div class="bar-fill-container">
+                                    <div class="bar-fill" style="width: 0%"></div>
+                                </div>
+                                <span class="bar-count">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="reviews-list">
+                        <div class="review-item">
+                            <div class="review-header">
+                                <div class="reviewer-info">
+                                    <div class="reviewer-avatar">MR</div>
+                                    <div class="reviewer-details">
+                                        <h4>Mike Rodriguez</h4>
+                                        <p>2 weeks ago</p>
+                                    </div>
+                                </div>
+                                <div class="review-rating">
+                                    <span class="stars">⭐⭐⭐⭐⭐</span>
+                                    <span>5.0</span>
+                                </div>
+                            </div>
+                            <div class="review-text">
+                                Absolutely fantastic course! Sarah breaks down everything in a way that's easy to understand. I went from knowing nothing about podcasting to launching my first episode in just 3 weeks. The technical sections were especially helpful - no more guessing about equipment or recording techniques.
+                            </div>
+                        </div>
+                        
+                        <div class="review-item">
+                            <div class="review-header">
+                                <div class="reviewer-info">
+                                    <div class="reviewer-avatar">AL</div>
+                                    <div class="reviewer-details">
+                                        <h4>Amy Liu</h4>
+                                        <p>1 month ago</p>
+                                    </div>
+                                </div>
+                                <div class="review-rating">
+                                    <span class="stars">⭐⭐⭐⭐⭐</span>
+                                    <span>5.0</span>
+                                </div>
+                            </div>
+                            <div class="review-text">
+                                This course gave me the confidence I needed to finally start my podcast. The step-by-step approach is perfect for beginners, and Sarah's teaching style is engaging and supportive. The bonus materials and templates saved me hours of work!
+                            </div>
+                        </div>
+                        
+                        <div class="review-item">
+                            <div class="review-header">
+                                <div class="reviewer-info">
+                                    <div class="reviewer-avatar">JS</div>
+                                    <div class="reviewer-details">
+                                        <h4>Jordan Smith</h4>
+                                        <p>1 month ago</p>
+                                    </div>
+                                </div>
+                                <div class="review-rating">
+                                    <span class="stars">⭐⭐⭐⭐</span>
+                                    <span>4.0</span>
+                                </div>
+                            </div>
+                            <div class="review-text">
+                                Great comprehensive course covering all the basics. I particularly appreciated the practical exercises and real-world examples. Would love to see more advanced content in future courses, but this is perfect for getting started.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
+    <script>
+        // Course view functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCourseView();
+        });
+        
+        function initializeCourseView() {
+            // Initialize progress tracking
+            updateProgressDisplay();
+            
+            // Set up lesson navigation
+            highlightCurrentLesson();
+            
+            // Initialize tab functionality
+            setupTabs();
+        }
+        
+        function switchTab(tabName) {
+            // Remove active class from all tabs and content
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding content
+            event.target.classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+        
+        function toggleSection(sectionHeader) {
+            const section = sectionHeader.parentElement;
+            const lessonsContainer = section.querySelector('.section-lessons');
+            const expandIcon = sectionHeader.querySelector('.expand-toggle');
+            
+            if (lessonsContainer.classList.contains('expanded')) {
+                lessonsContainer.classList.remove('expanded');
+                expandIcon.textContent = '▶';
+            } else {
+                lessonsContainer.classList.add('expanded');
+                expandIcon.textContent = '▼';
+            }
+        }
+        
+        function toggleAllSections() {
+            const sections = document.querySelectorAll('.section-lessons');
+            const expandIcon = event.target;
+            const areExpanded = document.querySelectorAll('.section-lessons.expanded').length > 0;
+            
+            sections.forEach(section => {
+                const header = section.previousElementSibling;
+                const icon = header.querySelector('.expand-toggle');
+                
+                if (areExpanded) {
+                    section.classList.remove('expanded');
+                    icon.textContent = '▶';
+                } else {
+                    section.classList.add('expanded');
+                    icon.textContent = '▼';
+                }
+            });
+            
+            expandIcon.textContent = areExpanded ? '⊞' : '⊟';
+        }
+        
+        function goToLesson(lessonId) {
+            // Check if lesson is available
+            const lessonElement = event.currentTarget;
+            const status = lessonElement.querySelector('.lesson-status');
+            
+            if (status.classList.contains('locked')) {
+                showNotification('Complete previous lessons to unlock this one', 'warning');
+                return;
+            }
+            
+            // Navigate to lesson player
+            window.location.href = `lesson-player-prototype.html?lesson=${lessonId}`;
+        }
+        
+        function playPreview() {
+            const previewVideo = event.currentTarget;
+            const playButton = previewVideo.querySelector('.play-button');
+            
+            // Simulate video loading
+            playButton.innerHTML = '⏳';
+            
+            setTimeout(() => {
+                // Simulate opening video player
+                showNotification('Preview video would play here in the full implementation');
+                playButton.innerHTML = '▶️';
+            }, 1000);
+        }
+        
+        function updateProgressDisplay() {
+            // Animate progress bar
+            const progressFill = document.querySelector('.progress-fill-large');
+            setTimeout(() => {
+                progressFill.style.width = '75%';
+            }, 500);
+        }
+        
+        function highlightCurrentLesson() {
+            // Current lesson highlighting is already set in HTML
+            // In a real app, this would be dynamic based on user progress
+        }
+        
+        function setupTabs() {
+            // Tabs are already set up in HTML with onclick handlers
+            // This could include additional tab-specific initialization
+        }
+        
+        function enrollInCourse() {
+            const enrollBtn = document.getElementById('mainEnrollBtn');
+            
+            if (enrollBtn.classList.contains('enrolled')) {
+                // Continue to current lesson
+                goToLesson(6); // Current lesson
+            } else {
+                // Enroll in course
+                enrollBtn.textContent = 'Enrolling...';
+                enrollBtn.disabled = true;
+                
+                setTimeout(() => {
+                    enrollBtn.textContent = '✓ Enrolled - Continue Learning';
+                    enrollBtn.classList.add('enrolled');
+                    enrollBtn.disabled = false;
+                    
+                    showNotification('Successfully enrolled! Welcome to the course.', 'success');
+                }, 1500);
+            }
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            const colors = {
+                'success': 'var(--lesson-success)',
+                'warning': 'var(--lesson-warning)',
+                'error': 'var(--danger-color)',
+                'info': 'var(--lesson-info)'
+            };
+            
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${colors[type]};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                z-index: 1000;
+                animation: slideIn 0.3s ease-out;
+                box-shadow: var(--shadow-hover);
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // Add click handler to main enroll button
+        document.getElementById('mainEnrollBtn').addEventListener('click', enrollInCourse);
+    </script>
+</body>
+</html>

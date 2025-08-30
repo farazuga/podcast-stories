@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD - Course Builder</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/lesson-styles.css">
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+
+    <div class="container">
+        <!-- Course Builder Header -->
+        <div class="builder-header">
+            <div class="builder-title">
+                <h1>🔧 Course Builder</h1>
+                <p>Create comprehensive courses with our step-by-step wizard</p>
+            </div>
+            <div class="builder-actions">
+                <button class="btn btn-secondary" onclick="saveDraft()">
+                    <span class="icon">💾</span>
+                    Save Draft
+                </button>
+                <button class="btn btn-primary" onclick="previewCourse()" style="display: none;" id="previewBtn">
+                    <span class="icon">👁️</span>
+                    Preview
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div class="wizard-progress">
+            <div class="step-indicator">
+                <div class="step active completed" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Course Info</div>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step active" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Curriculum</div>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Content</div>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Assessments</div>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step" data-step="5">
+                    <div class="step-number">5</div>
+                    <div class="step-label">Settings</div>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step" data-step="6">
+                    <div class="step-number">6</div>
+                    <div class="step-label">Publish</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Course Builder Content -->
+        <div class="builder-content">
+            <!-- Step 1: Course Information -->
+            <div class="wizard-step" id="step-1" style="display: none;">
+                <div class="step-content">
+                    <h2>📋 Course Information</h2>
+                    <p>Set up the basic information for your course</p>
+
+                    <form id="courseInfoForm" class="wizard-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="courseTitle" class="form-label">Course Title *</label>
+                                <input type="text" id="courseTitle" class="form-control" 
+                                       placeholder="e.g., Advanced Podcast Production Techniques" required>
+                                <div class="form-help">Choose a clear, descriptive title that reflects the course content</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="courseSubtitle" class="form-label">Course Subtitle</label>
+                                <input type="text" id="courseSubtitle" class="form-control" 
+                                       placeholder="A comprehensive guide to professional audio production">
+                                <div class="form-help">Optional subtitle to provide additional context</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="courseDescription" class="form-label">Course Description *</label>
+                                <textarea id="courseDescription" class="form-control" rows="4" required
+                                          placeholder="Describe what students will learn, the skills they'll gain, and how this course will benefit them..."></textarea>
+                                <div class="form-help">Provide a comprehensive overview that will help students understand the value of your course</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row two-column">
+                            <div class="form-group">
+                                <label for="courseDuration" class="form-label">Duration *</label>
+                                <select id="courseDuration" class="form-control" required>
+                                    <option value="">Select duration...</option>
+                                    <option value="4">4 weeks</option>
+                                    <option value="6">6 weeks</option>
+                                    <option value="8">8 weeks</option>
+                                    <option value="10">10 weeks</option>
+                                    <option value="12">12 weeks</option>
+                                    <option value="16">16 weeks (Full Semester)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="difficultyLevel" class="form-label">Difficulty Level *</label>
+                                <select id="difficultyLevel" class="form-control" required>
+                                    <option value="">Select level...</option>
+                                    <option value="beginner">Beginner - No prior experience needed</option>
+                                    <option value="intermediate">Intermediate - Some background helpful</option>
+                                    <option value="advanced">Advanced - Solid foundation required</option>
+                                    <option value="expert">Expert - Extensive experience required</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="courseCategory" class="form-label">Course Category *</label>
+                                <select id="courseCategory" class="form-control" required>
+                                    <option value="">Select category...</option>
+                                    <option value="journalism">Podcast Journalism</option>
+                                    <option value="production">Audio Production</option>
+                                    <option value="storytelling">Storytelling Techniques</option>
+                                    <option value="interviewing">Interview Skills</option>
+                                    <option value="editing">Audio Editing</option>
+                                    <option value="marketing">Podcast Marketing</option>
+                                    <option value="business">Podcast Business</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>🎯 Learning Objectives</h3>
+                            <p>Define what students will be able to do after completing your course</p>
+                            
+                            <div id="objectivesContainer">
+                                <div class="objective-item">
+                                    <div class="objective-input">
+                                        <input type="text" name="objectives[]" class="form-control" 
+                                               placeholder="Students will be able to...">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="button" class="btn btn-secondary" onclick="addObjective()">
+                                <span class="icon">➕</span>
+                                Add Learning Objective
+                            </button>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>🎨 Course Appearance</h3>
+                            <div class="form-row two-column">
+                                <div class="form-group">
+                                    <label for="courseThumbnail" class="form-label">Course Thumbnail</label>
+                                    <div class="file-upload-area" onclick="document.getElementById('courseThumbnail').click()">
+                                        <div class="upload-placeholder">
+                                            <span class="upload-icon">📷</span>
+                                            <span>Click to upload thumbnail</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="courseThumbnail" style="display: none;" accept="image/*">
+                                </div>
+                                <div class="form-group">
+                                    <label for="courseColor" class="form-label">Course Color Theme</label>
+                                    <div class="color-picker">
+                                        <input type="color" id="courseColor" value="#f79b5b">
+                                        <div class="color-preview" style="background-color: #f79b5b;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Step 2: Curriculum Planning -->
+            <div class="wizard-step" id="step-2">
+                <div class="step-content">
+                    <h2>📚 Curriculum Planning</h2>
+                    <p>Structure your course content with lessons and modules</p>
+
+                    <div class="curriculum-builder">
+                        <div class="curriculum-sidebar">
+                            <div class="sidebar-section">
+                                <h3>Course Structure</h3>
+                                <div class="structure-stats">
+                                    <div class="stat">
+                                        <span class="stat-number" id="moduleCount">2</span>
+                                        <span class="stat-label">Modules</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="stat-number" id="lessonCount">8</span>
+                                        <span class="stat-label">Lessons</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="stat-number" id="estimatedHours">12</span>
+                                        <span class="stat-label">Est. Hours</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sidebar-section">
+                                <h4>Quick Add</h4>
+                                <div class="quick-add-buttons">
+                                    <button class="btn btn-secondary btn-sm" onclick="addModule()">
+                                        <span class="icon">📂</span>
+                                        Add Module
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm" onclick="addLesson()">
+                                        <span class="icon">📄</span>
+                                        Add Lesson
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="sidebar-section">
+                                <h4>Templates</h4>
+                                <div class="template-list">
+                                    <div class="template-item" onclick="applyTemplate('journalism')">
+                                        <div class="template-icon">📰</div>
+                                        <div class="template-name">Journalism Course</div>
+                                    </div>
+                                    <div class="template-item" onclick="applyTemplate('production')">
+                                        <div class="template-icon">🎧</div>
+                                        <div class="template-name">Production Course</div>
+                                    </div>
+                                    <div class="template-item" onclick="applyTemplate('storytelling')">
+                                        <div class="template-icon">📖</div>
+                                        <div class="template-name">Storytelling Course</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="curriculum-main">
+                            <div class="curriculum-header">
+                                <h3>Course Outline</h3>
+                                <div class="curriculum-actions">
+                                    <button class="btn btn-secondary" onclick="collapseAll()">Collapse All</button>
+                                    <button class="btn btn-secondary" onclick="expandAll()">Expand All</button>
+                                    <button class="btn btn-primary" onclick="reorderMode()">Reorder</button>
+                                </div>
+                            </div>
+
+                            <div class="curriculum-content" id="curriculumContent">
+                                <!-- Module 1 -->
+                                <div class="module-container" draggable="true">
+                                    <div class="module-header" onclick="toggleModule(1)">
+                                        <div class="module-info">
+                                            <span class="drag-handle">≡</span>
+                                            <span class="module-icon">📂</span>
+                                            <span class="module-title">Module 1: Introduction to Podcast Production</span>
+                                            <span class="module-meta">4 lessons • 6 hours</span>
+                                        </div>
+                                        <div class="module-actions">
+                                            <button class="btn-icon" onclick="editModule(1)">✏️</button>
+                                            <button class="btn-icon" onclick="deleteModule(1)">🗑️</button>
+                                            <span class="expand-icon">⌄</span>
+                                        </div>
+                                    </div>
+                                    <div class="module-content expanded" id="module-1">
+                                        <div class="lessons-container">
+                                            <div class="lesson-item" draggable="true">
+                                                <div class="lesson-info">
+                                                    <span class="drag-handle">≡</span>
+                                                    <span class="lesson-icon">📄</span>
+                                                    <span class="lesson-title">What is Podcasting?</span>
+                                                    <span class="lesson-meta">Video • 45 min</span>
+                                                </div>
+                                                <div class="lesson-actions">
+                                                    <button class="btn-icon" onclick="editLesson(1,1)">✏️</button>
+                                                    <button class="btn-icon" onclick="duplicateLesson(1,1)">📋</button>
+                                                    <button class="btn-icon" onclick="deleteLesson(1,1)">🗑️</button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="lesson-item" draggable="true">
+                                                <div class="lesson-info">
+                                                    <span class="drag-handle">≡</span>
+                                                    <span class="lesson-icon">📄</span>
+                                                    <span class="lesson-title">Podcast Types and Formats</span>
+                                                    <span class="lesson-meta">Reading • 30 min</span>
+                                                </div>
+                                                <div class="lesson-actions">
+                                                    <button class="btn-icon" onclick="editLesson(1,2)">✏️</button>
+                                                    <button class="btn-icon" onclick="duplicateLesson(1,2)">📋</button>
+                                                    <button class="btn-icon" onclick="deleteLesson(1,2)">🗑️</button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="lesson-item" draggable="true">
+                                                <div class="lesson-info">
+                                                    <span class="drag-handle">≡</span>
+                                                    <span class="lesson-icon">🎯</span>
+                                                    <span class="lesson-title">Finding Your Podcast Niche</span>
+                                                    <span class="lesson-meta">Interactive • 90 min</span>
+                                                </div>
+                                                <div class="lesson-actions">
+                                                    <button class="btn-icon" onclick="editLesson(1,3)">✏️</button>
+                                                    <button class="btn-icon" onclick="duplicateLesson(1,3)">📋</button>
+                                                    <button class="btn-icon" onclick="deleteLesson(1,3)">🗑️</button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="lesson-item" draggable="true">
+                                                <div class="lesson-info">
+                                                    <span class="drag-handle">≡</span>
+                                                    <span class="lesson-icon">✅</span>
+                                                    <span class="lesson-title">Module 1 Assessment</span>
+                                                    <span class="lesson-meta">Quiz • 15 min</span>
+                                                </div>
+                                                <div class="lesson-actions">
+                                                    <button class="btn-icon" onclick="editAssessment(1,4)">✏️</button>
+                                                    <button class="btn-icon" onclick="deleteLesson(1,4)">🗑️</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="module-footer">
+                                            <button class="btn btn-secondary btn-sm" onclick="addLessonToModule(1)">
+                                                <span class="icon">➕</span>
+                                                Add Lesson
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Module 2 -->
+                                <div class="module-container" draggable="true">
+                                    <div class="module-header" onclick="toggleModule(2)">
+                                        <div class="module-info">
+                                            <span class="drag-handle">≡</span>
+                                            <span class="module-icon">📂</span>
+                                            <span class="module-title">Module 2: Audio Recording Fundamentals</span>
+                                            <span class="module-meta">4 lessons • 6 hours</span>
+                                        </div>
+                                        <div class="module-actions">
+                                            <button class="btn-icon" onclick="editModule(2)">✏️</button>
+                                            <button class="btn-icon" onclick="deleteModule(2)">🗑️</button>
+                                            <span class="expand-icon">⌄</span>
+                                        </div>
+                                    </div>
+                                    <div class="module-content" id="module-2">
+                                        <div class="lessons-container">
+                                            <div class="lesson-item" draggable="true">
+                                                <div class="lesson-info">
+                                                    <span class="drag-handle">≡</span>
+                                                    <span class="lesson-icon">🎤</span>
+                                                    <span class="lesson-title">Microphone Selection and Setup</span>
+                                                    <span class="lesson-meta">Video • 60 min</span>
+                                                </div>
+                                                <div class="lesson-actions">
+                                                    <button class="btn-icon" onclick="editLesson(2,1)">✏️</button>
+                                                    <button class="btn-icon" onclick="duplicateLesson(2,1)">📋</button>
+                                                    <button class="btn-icon" onclick="deleteLesson(2,1)">🗑️</button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="lesson-item" draggable="true">
+                                                <div class="lesson-info">
+                                                    <span class="drag-handle">≡</span>
+                                                    <span class="lesson-icon">🎛️</span>
+                                                    <span class="lesson-title">Recording Software Basics</span>
+                                                    <span class="lesson-meta">Hands-on • 90 min</span>
+                                                </div>
+                                                <div class="lesson-actions">
+                                                    <button class="btn-icon" onclick="editLesson(2,2)">✏️</button>
+                                                    <button class="btn-icon" onclick="duplicateLesson(2,2)">📋</button>
+                                                    <button class="btn-icon" onclick="deleteLesson(2,2)">🗑️</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="module-footer">
+                                            <button class="btn btn-secondary btn-sm" onclick="addLessonToModule(2)">
+                                                <span class="icon">➕</span>
+                                                Add Lesson
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Add Module Button -->
+                                <div class="add-module-container">
+                                    <button class="btn btn-primary" onclick="addModule()">
+                                        <span class="icon">➕</span>
+                                        Add New Module
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Content Creation -->
+            <div class="wizard-step" id="step-3" style="display: none;">
+                <div class="step-content">
+                    <h2>📝 Content Creation</h2>
+                    <p>Create rich lesson content with multimedia support</p>
+                    
+                    <div class="content-builder">
+                        <div class="content-sidebar">
+                            <div class="lesson-selector">
+                                <h4>Select Lesson to Edit</h4>
+                                <div class="lesson-list">
+                                    <div class="lesson-option active" onclick="selectLessonForEdit(1)">
+                                        <span class="lesson-number">1.1</span>
+                                        <span class="lesson-name">What is Podcasting?</span>
+                                    </div>
+                                    <div class="lesson-option" onclick="selectLessonForEdit(2)">
+                                        <span class="lesson-number">1.2</span>
+                                        <span class="lesson-name">Podcast Types and Formats</span>
+                                    </div>
+                                    <div class="lesson-option" onclick="selectLessonForEdit(3)">
+                                        <span class="lesson-number">1.3</span>
+                                        <span class="lesson-name">Finding Your Podcast Niche</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="content-main">
+                            <div class="content-header">
+                                <h3>Lesson 1.1: What is Podcasting?</h3>
+                                <div class="content-actions">
+                                    <button class="btn btn-secondary" onclick="previewLesson()">Preview</button>
+                                    <button class="btn btn-primary" onclick="saveContent()">Save Content</button>
+                                </div>
+                            </div>
+
+                            <div class="content-editor">
+                                <div class="editor-tabs">
+                                    <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+                                    <button class="tab-btn" onclick="switchTab('content')">Content</button>
+                                    <button class="tab-btn" onclick="switchTab('resources')">Resources</button>
+                                    <button class="tab-btn" onclick="switchTab('settings')">Settings</button>
+                                </div>
+
+                                <div class="tab-content active" id="tab-overview">
+                                    <div class="form-group">
+                                        <label class="form-label">Lesson Title</label>
+                                        <input type="text" class="form-control" value="What is Podcasting?">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Lesson Description</label>
+                                        <textarea class="form-control" rows="3" placeholder="Brief description of what students will learn in this lesson"></textarea>
+                                    </div>
+                                    
+                                    <div class="form-row two-column">
+                                        <div class="form-group">
+                                            <label class="form-label">Estimated Duration</label>
+                                            <select class="form-control">
+                                                <option>15 minutes</option>
+                                                <option>30 minutes</option>
+                                                <option selected>45 minutes</option>
+                                                <option>60 minutes</option>
+                                                <option>90 minutes</option>
+                                                <option>120 minutes</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Lesson Type</label>
+                                            <select class="form-control">
+                                                <option selected>Video Lecture</option>
+                                                <option>Reading Material</option>
+                                                <option>Interactive Activity</option>
+                                                <option>Assignment</option>
+                                                <option>Quiz</option>
+                                                <option>Discussion</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Learning Objectives</label>
+                                        <div class="objectives-list">
+                                            <div class="objective-input">
+                                                <input type="text" class="form-control" placeholder="Students will be able to...">
+                                                <button class="btn-icon">🗑️</button>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-secondary btn-sm" onclick="addLessonObjective()">Add Objective</button>
+                                    </div>
+                                </div>
+
+                                <div class="tab-content" id="tab-content" style="display: none;">
+                                    <div class="content-blocks">
+                                        <div class="block-header">
+                                            <h4>Lesson Content Blocks</h4>
+                                            <div class="block-actions">
+                                                <button class="btn btn-secondary btn-sm" onclick="addContentBlock('text')">
+                                                    <span class="icon">📝</span> Text
+                                                </button>
+                                                <button class="btn btn-secondary btn-sm" onclick="addContentBlock('video')">
+                                                    <span class="icon">🎥</span> Video
+                                                </button>
+                                                <button class="btn btn-secondary btn-sm" onclick="addContentBlock('audio')">
+                                                    <span class="icon">🎧</span> Audio
+                                                </button>
+                                                <button class="btn btn-secondary btn-sm" onclick="addContentBlock('quiz')">
+                                                    <span class="icon">❓</span> Quiz
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="content-blocks-container">
+                                            <!-- Text Block -->
+                                            <div class="content-block" data-type="text">
+                                                <div class="block-header-mini">
+                                                    <span class="block-icon">📝</span>
+                                                    <span class="block-type">Text Content</span>
+                                                    <div class="block-actions-mini">
+                                                        <button class="btn-icon" onclick="moveBlockUp(this)">↑</button>
+                                                        <button class="btn-icon" onclick="moveBlockDown(this)">↓</button>
+                                                        <button class="btn-icon" onclick="deleteBlock(this)">🗑️</button>
+                                                    </div>
+                                                </div>
+                                                <div class="block-content">
+                                                    <div class="rich-editor">
+                                                        <div class="editor-toolbar">
+                                                            <button class="editor-btn" onclick="formatText('bold')"><b>B</b></button>
+                                                            <button class="editor-btn" onclick="formatText('italic')"><i>I</i></button>
+                                                            <button class="editor-btn" onclick="formatText('underline')"><u>U</u></button>
+                                                            <button class="editor-btn" onclick="insertList('ul')">• List</button>
+                                                            <button class="editor-btn" onclick="insertList('ol')">1. List</button>
+                                                            <button class="editor-btn" onclick="insertLink()">🔗 Link</button>
+                                                            <button class="editor-btn" onclick="insertImage()">🖼️ Image</button>
+                                                        </div>
+                                                        <div class="editor-content" contenteditable="true">
+                                                            <p>Welcome to our comprehensive introduction to podcasting! In this lesson, we'll explore what podcasting is, how it works, and why it has become such a powerful medium for storytelling and communication.</p>
+                                                            <p><strong>What you'll learn:</strong></p>
+                                                            <ul>
+                                                                <li>The definition and history of podcasting</li>
+                                                                <li>How podcasts differ from traditional radio</li>
+                                                                <li>The podcast ecosystem and distribution</li>
+                                                                <li>Popular podcast formats and styles</li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Video Block -->
+                                            <div class="content-block" data-type="video">
+                                                <div class="block-header-mini">
+                                                    <span class="block-icon">🎥</span>
+                                                    <span class="block-type">Video Content</span>
+                                                    <div class="block-actions-mini">
+                                                        <button class="btn-icon" onclick="moveBlockUp(this)">↑</button>
+                                                        <button class="btn-icon" onclick="moveBlockDown(this)">↓</button>
+                                                        <button class="btn-icon" onclick="deleteBlock(this)">🗑️</button>
+                                                    </div>
+                                                </div>
+                                                <div class="block-content">
+                                                    <div class="video-upload-area">
+                                                        <div class="video-placeholder">
+                                                            <span class="video-icon">🎥</span>
+                                                            <h4>Upload Video or Paste URL</h4>
+                                                            <p>Supported formats: MP4, WebM, YouTube, Vimeo</p>
+                                                            <div class="upload-options">
+                                                                <button class="btn btn-primary" onclick="uploadVideo()">Upload File</button>
+                                                                <span class="or-divider">or</span>
+                                                                <input type="url" class="form-control" placeholder="Paste video URL">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="add-content-block">
+                                            <button class="btn btn-primary" onclick="showContentBlockOptions()">
+                                                <span class="icon">➕</span>
+                                                Add Content Block
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-content" id="tab-resources" style="display: none;">
+                                    <h4>Lesson Resources</h4>
+                                    <div class="resources-section">
+                                        <div class="resource-upload">
+                                            <h5>📎 Additional Resources</h5>
+                                            <div class="upload-area" onclick="document.getElementById('resourceFile').click()">
+                                                <span class="upload-icon">📁</span>
+                                                <span>Drag files here or click to upload</span>
+                                                <p>PDFs, documents, images, audio files</p>
+                                            </div>
+                                            <input type="file" id="resourceFile" multiple style="display: none;">
+                                        </div>
+
+                                        <div class="uploaded-resources">
+                                            <div class="resource-item">
+                                                <span class="resource-icon">📄</span>
+                                                <span class="resource-name">Podcasting_Guide.pdf</span>
+                                                <span class="resource-size">2.4 MB</span>
+                                                <button class="btn-icon" onclick="deleteResource(this)">🗑️</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="resources-section">
+                                        <h5>🔗 External Links</h5>
+                                        <div class="links-container">
+                                            <div class="link-item">
+                                                <input type="url" class="form-control" placeholder="Enter URL" value="https://www.podcastinsights.com/podcast-statistics/">
+                                                <input type="text" class="form-control" placeholder="Link title" value="Podcast Statistics 2024">
+                                                <button class="btn-icon" onclick="deleteLink(this)">🗑️</button>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-secondary btn-sm" onclick="addExternalLink()">Add Link</button>
+                                    </div>
+                                </div>
+
+                                <div class="tab-content" id="tab-settings" style="display: none;">
+                                    <h4>Lesson Settings</h4>
+                                    
+                                    <div class="settings-section">
+                                        <h5>📅 Availability</h5>
+                                        <div class="form-group">
+                                            <label>
+                                                <input type="checkbox" checked>
+                                                Make this lesson available immediately
+                                            </label>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>
+                                                <input type="checkbox">
+                                                Require previous lesson completion
+                                            </label>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="releaseDate">Scheduled release date</label>
+                                            <input type="datetime-local" id="releaseDate" class="form-control">
+                                        </div>
+                                    </div>
+
+                                    <div class="settings-section">
+                                        <h5>🎯 Completion Settings</h5>
+                                        <div class="form-group">
+                                            <label for="completionCriteria">Mark as complete when</label>
+                                            <select id="completionCriteria" class="form-control">
+                                                <option>Student views all content</option>
+                                                <option>Student spends minimum time</option>
+                                                <option>Student passes quiz</option>
+                                                <option>Student submits assignment</option>
+                                                <option>Manual completion only</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="minTime">Minimum time to spend (minutes)</label>
+                                            <input type="number" id="minTime" class="form-control" value="30">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="wizard-navigation">
+                <button class="btn btn-secondary" onclick="previousStep()" id="prevBtn" style="display: none;">
+                    <span class="icon">←</span>
+                    Previous
+                </button>
+                <button class="btn btn-primary" onclick="nextStep()" id="nextBtn">
+                    Next
+                    <span class="icon">→</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
+    <script>
+        // Course Builder JavaScript
+        let currentStep = 2;
+        let courseData = {
+            info: {},
+            curriculum: [],
+            content: {},
+            assessments: [],
+            settings: {}
+        };
+
+        // Initialize the wizard
+        document.addEventListener('DOMContentLoaded', () => {
+            showStep(currentStep);
+            updateStepIndicator();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Form validation
+            document.getElementById('courseInfoForm').addEventListener('input', validateStep1);
+            
+            // Color picker
+            document.getElementById('courseColor').addEventListener('change', updateColorPreview);
+            
+            // Drag and drop for curriculum
+            setupDragAndDrop();
+        }
+
+        // Step Navigation
+        function nextStep() {
+            if (validateCurrentStep()) {
+                if (currentStep < 6) {
+                    currentStep++;
+                    showStep(currentStep);
+                    updateStepIndicator();
+                }
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+                updateStepIndicator();
+            }
+        }
+
+        function showStep(step) {
+            // Hide all steps
+            document.querySelectorAll('.wizard-step').forEach(s => s.style.display = 'none');
+            
+            // Show current step
+            const stepElement = document.getElementById(`step-${step}`);
+            if (stepElement) {
+                stepElement.style.display = 'block';
+            }
+            
+            // Update navigation buttons
+            updateNavigationButtons();
+        }
+
+        function updateStepIndicator() {
+            document.querySelectorAll('.step').forEach((step, index) => {
+                const stepNum = index + 1;
+                step.classList.remove('active', 'completed');
+                
+                if (stepNum < currentStep) {
+                    step.classList.add('completed');
+                } else if (stepNum === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+        }
+
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.style.display = currentStep > 1 ? 'inline-flex' : 'none';
+            
+            if (currentStep === 6) {
+                nextBtn.innerHTML = '<span class="icon">🚀</span> Publish Course';
+            } else {
+                nextBtn.innerHTML = 'Next <span class="icon">→</span>';
+            }
+        }
+
+        function validateCurrentStep() {
+            switch (currentStep) {
+                case 1:
+                    return validateStep1();
+                case 2:
+                    return validateStep2();
+                case 3:
+                    return validateStep3();
+                default:
+                    return true;
+            }
+        }
+
+        function validateStep1() {
+            const title = document.getElementById('courseTitle').value;
+            const description = document.getElementById('courseDescription').value;
+            const duration = document.getElementById('courseDuration').value;
+            const difficulty = document.getElementById('difficultyLevel').value;
+            const category = document.getElementById('courseCategory').value;
+            
+            return title && description && duration && difficulty && category;
+        }
+
+        function validateStep2() {
+            return document.querySelectorAll('.module-container').length > 0;
+        }
+
+        function validateStep3() {
+            return true; // Content can be empty initially
+        }
+
+        // Step 1: Course Information Functions
+        function addObjective() {
+            const container = document.getElementById('objectivesContainer');
+            const objectiveDiv = document.createElement('div');
+            objectiveDiv.className = 'objective-item';
+            objectiveDiv.innerHTML = `
+                <div class="objective-input">
+                    <input type="text" name="objectives[]" class="form-control" placeholder="Students will be able to...">
+                    <button type="button" class="btn-icon" onclick="removeObjective(this)">🗑️</button>
+                </div>
+            `;
+            container.appendChild(objectiveDiv);
+        }
+
+        function removeObjective(button) {
+            button.closest('.objective-item').remove();
+        }
+
+        function updateColorPreview() {
+            const color = document.getElementById('courseColor').value;
+            document.querySelector('.color-preview').style.backgroundColor = color;
+        }
+
+        // Step 2: Curriculum Functions
+        function addModule() {
+            const moduleCount = document.querySelectorAll('.module-container').length + 1;
+            const moduleHtml = `
+                <div class="module-container" draggable="true">
+                    <div class="module-header" onclick="toggleModule(${moduleCount})">
+                        <div class="module-info">
+                            <span class="drag-handle">≡</span>
+                            <span class="module-icon">📂</span>
+                            <span class="module-title">Module ${moduleCount}: New Module</span>
+                            <span class="module-meta">0 lessons • 0 hours</span>
+                        </div>
+                        <div class="module-actions">
+                            <button class="btn-icon" onclick="editModule(${moduleCount})">✏️</button>
+                            <button class="btn-icon" onclick="deleteModule(${moduleCount})">🗑️</button>
+                            <span class="expand-icon">⌄</span>
+                        </div>
+                    </div>
+                    <div class="module-content" id="module-${moduleCount}">
+                        <div class="lessons-container"></div>
+                        <div class="module-footer">
+                            <button class="btn btn-secondary btn-sm" onclick="addLessonToModule(${moduleCount})">
+                                <span class="icon">➕</span>
+                                Add Lesson
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const addButton = document.querySelector('.add-module-container');
+            addButton.insertAdjacentHTML('beforebegin', moduleHtml);
+            updateModuleCount();
+        }
+
+        function addLessonToModule(moduleId) {
+            const moduleContent = document.getElementById(`module-${moduleId}`);
+            const lessonsContainer = moduleContent.querySelector('.lessons-container');
+            const lessonCount = lessonsContainer.children.length + 1;
+            
+            const lessonHtml = `
+                <div class="lesson-item" draggable="true">
+                    <div class="lesson-info">
+                        <span class="drag-handle">≡</span>
+                        <span class="lesson-icon">📄</span>
+                        <span class="lesson-title">New Lesson ${lessonCount}</span>
+                        <span class="lesson-meta">Video • 45 min</span>
+                    </div>
+                    <div class="lesson-actions">
+                        <button class="btn-icon" onclick="editLesson(${moduleId},${lessonCount})">✏️</button>
+                        <button class="btn-icon" onclick="duplicateLesson(${moduleId},${lessonCount})">📋</button>
+                        <button class="btn-icon" onclick="deleteLesson(${moduleId},${lessonCount})">🗑️</button>
+                    </div>
+                </div>
+            `;
+            
+            lessonsContainer.insertAdjacentHTML('beforeend', lessonHtml);
+            updateLessonCount();
+        }
+
+        function toggleModule(moduleId) {
+            const moduleContent = document.getElementById(`module-${moduleId}`);
+            const expandIcon = moduleContent.parentElement.querySelector('.expand-icon');
+            
+            if (moduleContent.classList.contains('expanded')) {
+                moduleContent.classList.remove('expanded');
+                expandIcon.textContent = '⌄';
+            } else {
+                moduleContent.classList.add('expanded');
+                expandIcon.textContent = '⌃';
+            }
+        }
+
+        function editModule(moduleId) {
+            const title = prompt('Enter module title:');
+            if (title) {
+                const moduleTitle = document.querySelector(`#module-${moduleId}`).parentElement.querySelector('.module-title');
+                moduleTitle.textContent = title;
+            }
+        }
+
+        function deleteModule(moduleId) {
+            if (confirm('Are you sure you want to delete this module and all its lessons?')) {
+                document.querySelector(`#module-${moduleId}`).parentElement.remove();
+                updateModuleCount();
+            }
+        }
+
+        function updateModuleCount() {
+            const count = document.querySelectorAll('.module-container').length;
+            document.getElementById('moduleCount').textContent = count;
+        }
+
+        function updateLessonCount() {
+            const count = document.querySelectorAll('.lesson-item').length;
+            document.getElementById('lessonCount').textContent = count;
+            
+            // Update estimated hours (rough calculation)
+            const estimatedHours = Math.ceil(count * 0.75); // 45 min average per lesson
+            document.getElementById('estimatedHours').textContent = estimatedHours;
+        }
+
+        function applyTemplate(type) {
+            if (confirm(`This will replace your current curriculum with the ${type} template. Continue?`)) {
+                // Clear current curriculum
+                document.getElementById('curriculumContent').innerHTML = `
+                    <div class="add-module-container">
+                        <button class="btn btn-primary" onclick="addModule()">
+                            <span class="icon">➕</span>
+                            Add New Module
+                        </button>
+                    </div>
+                `;
+                
+                // Apply template based on type
+                applyTemplateContent(type);
+                updateModuleCount();
+                updateLessonCount();
+            }
+        }
+
+        function applyTemplateContent(type) {
+            const templates = {
+                journalism: [
+                    { title: 'Introduction to Podcast Journalism', lessons: ['What is Podcast Journalism?', 'Ethics in Audio Journalism', 'Research Techniques'] },
+                    { title: 'Interview Skills', lessons: ['Preparing for Interviews', 'Active Listening', 'Follow-up Questions'] },
+                    { title: 'Story Structure', lessons: ['Narrative Arc', 'Sound Design', 'Editing for Impact'] }
+                ],
+                production: [
+                    { title: 'Audio Fundamentals', lessons: ['Understanding Sound', 'Recording Basics', 'Equipment Setup'] },
+                    { title: 'Recording Techniques', lessons: ['Microphone Placement', 'Room Acoustics', 'Live Recording'] },
+                    { title: 'Post-Production', lessons: ['Editing Workflow', 'Mixing and Mastering', 'Distribution'] }
+                ],
+                storytelling: [
+                    { title: 'Story Fundamentals', lessons: ['What Makes a Good Story?', 'Character Development', 'Setting the Scene'] },
+                    { title: 'Narrative Techniques', lessons: ['Point of View', 'Pacing and Tension', 'Using Sound Effectively'] },
+                    { title: 'Audience Engagement', lessons: ['Hook Strategies', 'Maintaining Interest', 'Memorable Endings'] }
+                ]
+            };
+            
+            const template = templates[type];
+            if (template) {
+                template.forEach((module, index) => {
+                    addModule();
+                    // Would populate with actual template content
+                });
+            }
+        }
+
+        // Step 3: Content Creation Functions
+        function selectLessonForEdit(lessonId) {
+            // Update UI to show selected lesson
+            document.querySelectorAll('.lesson-option').forEach(option => option.classList.remove('active'));
+            event.target.closest('.lesson-option').classList.add('active');
+            
+            // Load lesson content (would typically fetch from API)
+            loadLessonContent(lessonId);
+        }
+
+        function loadLessonContent(lessonId) {
+            // This would load the actual lesson content from the server
+            console.log(`Loading content for lesson ${lessonId}`);
+        }
+
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            document.getElementById(`tab-${tabName}`).style.display = 'block';
+        }
+
+        function addContentBlock(type) {
+            // Add new content block of specified type
+            const container = document.querySelector('.content-blocks-container');
+            const blockHtml = generateContentBlockHTML(type);
+            container.insertAdjacentHTML('beforeend', blockHtml);
+        }
+
+        function generateContentBlockHTML(type) {
+            const blocks = {
+                text: `
+                    <div class="content-block" data-type="text">
+                        <div class="block-header-mini">
+                            <span class="block-icon">📝</span>
+                            <span class="block-type">Text Content</span>
+                            <div class="block-actions-mini">
+                                <button class="btn-icon" onclick="moveBlockUp(this)">↑</button>
+                                <button class="btn-icon" onclick="moveBlockDown(this)">↓</button>
+                                <button class="btn-icon" onclick="deleteBlock(this)">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="block-content">
+                            <div class="rich-editor">
+                                <div class="editor-content" contenteditable="true">
+                                    <p>Enter your content here...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                video: `
+                    <div class="content-block" data-type="video">
+                        <div class="block-header-mini">
+                            <span class="block-icon">🎥</span>
+                            <span class="block-type">Video Content</span>
+                            <div class="block-actions-mini">
+                                <button class="btn-icon" onclick="moveBlockUp(this)">↑</button>
+                                <button class="btn-icon" onclick="moveBlockDown(this)">↓</button>
+                                <button class="btn-icon" onclick="deleteBlock(this)">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="block-content">
+                            <div class="video-upload-area">
+                                <input type="url" class="form-control" placeholder="Paste video URL or upload file">
+                                <button class="btn btn-primary" onclick="uploadVideo()">Upload Video</button>
+                            </div>
+                        </div>
+                    </div>
+                `
+            };
+            
+            return blocks[type] || blocks.text;
+        }
+
+        function deleteBlock(button) {
+            if (confirm('Delete this content block?')) {
+                button.closest('.content-block').remove();
+            }
+        }
+
+        // Utility Functions
+        function saveDraft() {
+            // Save current progress as draft
+            console.log('Saving draft...');
+            alert('Draft saved successfully!');
+        }
+
+        function previewCourse() {
+            // Open course preview
+            window.open('course-preview.html', '_blank');
+        }
+
+        function setupDragAndDrop() {
+            // Enable drag and drop for curriculum reordering
+            console.log('Setting up drag and drop functionality');
+        }
+
+        // Initialize step on page load
+        showStep(currentStep);
+        updateStepIndicator();
+    </script>
+
+    <style>
+        /* Course Builder Specific Styles */
+        .builder-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--white);
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .builder-title h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .builder-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* Wizard Progress */
+        .wizard-progress {
+            margin-bottom: 2rem;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 80px;
+            position: relative;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--border-color);
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .step.active .step-number {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .step.completed .step-number {
+            background: var(--lesson-success);
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.875rem;
+            text-align: center;
+            color: var(--text-light);
+        }
+
+        .step.active .step-label,
+        .step.completed .step-label {
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .step-connector {
+            height: 2px;
+            width: 60px;
+            background: var(--border-color);
+            margin: 0 1rem;
+        }
+
+        /* Builder Content */
+        .builder-content {
+            background: var(--white);
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--shadow);
+            min-height: 600px;
+        }
+
+        .wizard-step {
+            padding: 2rem;
+        }
+
+        .step-content h2 {
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .step-content p {
+            margin-bottom: 2rem;
+            color: var(--text-light);
+        }
+
+        /* Form Styles */
+        .wizard-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .form-row.two-column {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .form-section {
+            border-top: 1px solid var(--border-color);
+            padding-top: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .form-section h3 {
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+
+        .objective-item {
+            display: flex;
+            margin-bottom: 0.75rem;
+        }
+
+        .objective-input {
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .file-upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-area:hover {
+            border-color: var(--primary-color);
+            background: #fff7ed;
+        }
+
+        .upload-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            color: var(--primary-color);
+        }
+
+        .color-picker {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .color-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Curriculum Builder */
+        .curriculum-builder {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            height: 600px;
+        }
+
+        .curriculum-sidebar {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 1.5rem;
+            height: fit-content;
+        }
+
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .sidebar-section h3,
+        .sidebar-section h4 {
+            margin-bottom: 1rem;
+        }
+
+        .structure-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .quick-add-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .template-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .template-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .template-item:hover {
+            border-color: var(--primary-color);
+            background: #fff7ed;
+        }
+
+        .template-icon {
+            font-size: 1.25rem;
+        }
+
+        .template-name {
+            font-size: 0.875rem;
+        }
+
+        /* Curriculum Main */
+        .curriculum-main {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .curriculum-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .curriculum-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Modules and Lessons */
+        .module-container {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            cursor: pointer;
+            background: #f8fafc;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .module-header:hover {
+            background: #f1f5f9;
+        }
+
+        .module-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex: 1;
+        }
+
+        .drag-handle {
+            cursor: grab;
+            color: var(--text-light);
+            font-size: 1.25rem;
+        }
+
+        .module-icon,
+        .lesson-icon {
+            font-size: 1.25rem;
+        }
+
+        .module-title {
+            font-weight: 600;
+            margin-right: 1rem;
+        }
+
+        .module-meta {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .module-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            padding: 0.25rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+
+        .btn-icon:hover {
+            background: var(--border-color);
+        }
+
+        .expand-icon {
+            font-size: 1.25rem;
+            transition: transform 0.3s ease;
+        }
+
+        .module-content {
+            display: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .module-content.expanded {
+            display: block;
+        }
+
+        .lessons-container {
+            padding: 0.5rem;
+        }
+
+        .lesson-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .lesson-item:hover {
+            box-shadow: var(--shadow);
+        }
+
+        .lesson-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex: 1;
+        }
+
+        .lesson-title {
+            font-weight: 500;
+            margin-right: 1rem;
+        }
+
+        .lesson-meta {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .lesson-actions {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .module-footer {
+            padding: 1rem;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .add-module-container {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        /* Content Builder */
+        .content-builder {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+            height: 600px;
+        }
+
+        .content-sidebar {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 1rem;
+            height: fit-content;
+        }
+
+        .lesson-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .lesson-option {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .lesson-option:hover,
+        .lesson-option.active {
+            border-color: var(--primary-color);
+            background: #fff7ed;
+        }
+
+        .lesson-number {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .lesson-name {
+            font-size: 0.875rem;
+        }
+
+        /* Content Editor */
+        .content-main {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .editor-tabs {
+            display: flex;
+            gap: 0.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .tab-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Content Blocks */
+        .content-blocks-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .content-block {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            background: #f8fafc;
+        }
+
+        .block-header-mini {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .block-actions-mini {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .video-upload-area {
+            padding: 2rem;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .video-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .video-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+        }
+
+        .upload-options {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .or-divider {
+            color: var(--text-light);
+        }
+
+        /* Rich Editor */
+        .rich-editor {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--white);
+        }
+
+        .editor-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            background: #f8fafc;
+        }
+
+        .editor-btn {
+            padding: 0.5rem;
+            border: none;
+            background: transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .editor-btn:hover {
+            background: var(--border-color);
+        }
+
+        .editor-content {
+            padding: 1rem;
+            min-height: 200px;
+            outline: none;
+            line-height: 1.6;
+        }
+
+        /* Resources */
+        .resources-section {
+            margin-bottom: 2rem;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background: #fff7ed;
+        }
+
+        .resource-item,
+        .link-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+
+        .resource-icon {
+            font-size: 1.25rem;
+        }
+
+        .resource-name {
+            flex: 1;
+        }
+
+        .resource-size {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        /* Navigation */
+        .wizard-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-top: 1px solid var(--border-color);
+            background: #f8fafc;
+            border-radius: 0 0 var(--card-border-radius) var(--card-border-radius);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .curriculum-builder,
+            .content-builder {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .curriculum-sidebar,
+            .content-sidebar {
+                order: 2;
+            }
+            
+            .curriculum-main,
+            .content-main {
+                order: 1;
+                height: auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .builder-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .step-indicator {
+                overflow-x: auto;
+                justify-content: flex-start;
+                padding: 1rem;
+            }
+
+            .step {
+                min-width: 60px;
+            }
+
+            .step-connector {
+                width: 40px;
+                margin: 0 0.5rem;
+            }
+
+            .form-row.two-column {
+                grid-template-columns: 1fr;
+            }
+
+            .editor-tabs {
+                flex-wrap: wrap;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .wizard-step {
+                padding: 1rem;
+            }
+
+            .wizard-navigation {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .curriculum-actions {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</body>
+</html>

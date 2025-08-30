@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidPOD Lessons - Recording Techniques Quiz</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/lesson-styles.css">
+    <style>
+        /* Enhanced Quiz Interface Styles */
+        .quiz-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: var(--bg-color);
+            min-height: calc(100vh - 56px);
+        }
+        
+        .quiz-header {
+            background: var(--lesson-content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .breadcrumb-quiz {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+        
+        .breadcrumb-quiz a {
+            color: var(--lesson-primary);
+            text-decoration: none;
+        }
+        
+        .breadcrumb-quiz a:hover {
+            text-decoration: underline;
+        }
+        
+        .quiz-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .quiz-subtitle {
+            color: var(--text-light);
+            font-size: 1.125rem;
+            margin-bottom: 2rem;
+        }
+        
+        .quiz-meta {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-bottom: 2rem;
+        }
+        
+        .meta-item-quiz {
+            text-align: center;
+        }
+        
+        .meta-label-quiz {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .meta-value-quiz {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--lesson-primary);
+        }
+        
+        .quiz-progress-header {
+            width: 100%;
+            height: 8px;
+            background: var(--progress-bg);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        
+        .quiz-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--lesson-primary), var(--lesson-success));
+            width: 20%;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-text {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+        
+        .start-quiz-btn {
+            background: var(--lesson-primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .start-quiz-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+        
+        .quiz-instructions {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .instructions-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+        
+        .instructions-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .instructions-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.925rem;
+            color: var(--text-color);
+        }
+        
+        .quiz-question-container {
+            background: var(--lesson-content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            display: none;
+        }
+        
+        .quiz-question-container.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .question-counter {
+            background: var(--lesson-primary);
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.925rem;
+        }
+        
+        .question-timer {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.925rem;
+            color: var(--text-light);
+        }
+        
+        .timer-circle {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--lesson-primary);
+            position: relative;
+        }
+        
+        .timer-circle.warning {
+            border-color: var(--lesson-warning);
+            color: var(--lesson-warning);
+        }
+        
+        .timer-circle.danger {
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+        
+        .question-text {
+            font-size: 1.25rem;
+            font-weight: 500;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            color: var(--text-color);
+        }
+        
+        .question-image {
+            width: 100%;
+            max-width: 500px;
+            height: 250px;
+            background: linear-gradient(135deg, var(--lesson-primary), var(--lesson-info));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 1.5rem auto;
+            color: white;
+            font-size: 3rem;
+        }
+        
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .quiz-option {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem 1.5rem;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--lesson-content-bg);
+            position: relative;
+        }
+        
+        .quiz-option:hover {
+            border-color: var(--lesson-primary);
+            background: #fff7ed;
+        }
+        
+        .quiz-option.selected {
+            border-color: var(--lesson-primary);
+            background: var(--quiz-selected);
+        }
+        
+        .quiz-option.correct {
+            border-color: var(--lesson-success);
+            background: var(--quiz-correct);
+        }
+        
+        .quiz-option.incorrect {
+            border-color: var(--danger-color);
+            background: var(--quiz-incorrect);
+        }
+        
+        .quiz-option.disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        
+        .option-indicator {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-option.selected .option-indicator {
+            border-color: var(--lesson-primary);
+            background: var(--lesson-primary);
+            color: white;
+        }
+        
+        .quiz-option.correct .option-indicator {
+            border-color: var(--lesson-success);
+            background: var(--lesson-success);
+            color: white;
+        }
+        
+        .quiz-option.incorrect .option-indicator {
+            border-color: var(--danger-color);
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        .option-text {
+            flex: 1;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        
+        .option-feedback {
+            position: absolute;
+            top: 50%;
+            right: 1rem;
+            transform: translateY(-50%);
+            font-size: 1.25rem;
+        }
+        
+        .question-explanation {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: none;
+        }
+        
+        .question-explanation.show {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .explanation-title {
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+        
+        .explanation-text {
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .quiz-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 0;
+        }
+        
+        .control-btn {
+            background: var(--lesson-primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .control-btn:hover {
+            background: var(--primary-hover);
+        }
+        
+        .control-btn:disabled {
+            background: var(--progress-bg);
+            color: var(--text-light);
+            cursor: not-allowed;
+        }
+        
+        .control-btn.secondary {
+            background: var(--lesson-sidebar-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+        
+        .control-btn.secondary:hover {
+            background: var(--border-color);
+        }
+        
+        .quiz-results {
+            background: var(--lesson-content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-border-radius);
+            padding: 3rem 2rem;
+            text-align: center;
+            display: none;
+        }
+        
+        .quiz-results.show {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .results-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .results-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .results-subtitle {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+        }
+        
+        .results-score {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--lesson-primary);
+            margin-bottom: 1rem;
+        }
+        
+        .results-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+            padding: 2rem;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+        
+        .breakdown-item {
+            text-align: center;
+        }
+        
+        .breakdown-number {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .breakdown-number.correct {
+            color: var(--lesson-success);
+        }
+        
+        .breakdown-number.incorrect {
+            color: var(--danger-color);
+        }
+        
+        .breakdown-number.time {
+            color: var(--lesson-info);
+        }
+        
+        .breakdown-label {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .results-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .results-message {
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .results-message.excellent {
+            background: var(--quiz-correct);
+            color: var(--lesson-success);
+        }
+        
+        .results-message.good {
+            background: #fef3c7;
+            color: var(--lesson-warning);
+        }
+        
+        .results-message.needs-work {
+            background: var(--quiz-incorrect);
+            color: var(--danger-color);
+        }
+        
+        .question-review {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .review-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
+        }
+        
+        .review-item {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .review-question {
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            color: var(--text-color);
+        }
+        
+        .review-answer {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.925rem;
+        }
+        
+        .review-answer.correct {
+            color: var(--lesson-success);
+        }
+        
+        .review-answer.incorrect {
+            color: var(--danger-color);
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @media (max-width: 768px) {
+            .quiz-container {
+                padding: 1rem;
+            }
+            
+            .quiz-header {
+                padding: 1.5rem;
+            }
+            
+            .quiz-meta {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .question-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            
+            .quiz-controls {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .results-breakdown {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .results-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation will auto-load here -->
+    
+    <div class="quiz-container">
+        <!-- Quiz Header (Start Screen) -->
+        <div class="quiz-header" id="quizStart">
+            <div class="breadcrumb-quiz">
+                <a href="student-course-view-prototype.html">Podcast Fundamentals</a> > 
+                <a href="lesson-player-prototype.html?lesson=6">Recording Techniques</a> > 
+                <span>Quiz</span>
+            </div>
+            
+            <h1 class="quiz-title">Recording Techniques Quiz</h1>
+            <p class="quiz-subtitle">Test your knowledge of professional recording techniques</p>
+            
+            <div class="quiz-meta">
+                <div class="meta-item-quiz">
+                    <div class="meta-label-quiz">Questions</div>
+                    <div class="meta-value-quiz">5</div>
+                </div>
+                
+                <div class="meta-item-quiz">
+                    <div class="meta-label-quiz">Time Limit</div>
+                    <div class="meta-value-quiz">2 min each</div>
+                </div>
+                
+                <div class="meta-item-quiz">
+                    <div class="meta-label-quiz">Passing Score</div>
+                    <div class="meta-value-quiz">70%</div>
+                </div>
+            </div>
+            
+            <div class="quiz-progress-header">
+                <div class="quiz-progress-fill" id="overallProgress"></div>
+            </div>
+            <div class="progress-text">Complete this quiz to unlock the next lesson</div>
+            
+            <div class="quiz-instructions">
+                <div class="instructions-title">Instructions:</div>
+                <ul class="instructions-list">
+                    <li>
+                        <span>📝</span>
+                        <span>Read each question carefully before selecting your answer</span>
+                    </li>
+                    <li>
+                        <span>⏱️</span>
+                        <span>You have 2 minutes per question - use your time wisely</span>
+                    </li>
+                    <li>
+                        <span>🎯</span>
+                        <span>You need 70% (4 out of 5) to pass and unlock the next lesson</span>
+                    </li>
+                    <li>
+                        <span>🔄</span>
+                        <span>You can retake the quiz if you don't pass on the first attempt</span>
+                    </li>
+                    <li>
+                        <span>💡</span>
+                        <span>Review explanations after each question to reinforce your learning</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <button class="start-quiz-btn" onclick="startQuiz()">Start Quiz</button>
+        </div>
+        
+        <!-- Quiz Questions -->
+        <div class="quiz-question-container" id="question1">
+            <div class="question-header">
+                <div class="question-counter">Question 1 of 5</div>
+                <div class="question-timer">
+                    <div class="timer-circle" id="timer1">120</div>
+                    <span>seconds remaining</span>
+                </div>
+            </div>
+            
+            <div class="question-text">
+                What is the optimal distance between a podcaster and their microphone for recording?
+            </div>
+            
+            <div class="quiz-options">
+                <div class="quiz-option" data-answer="a" onclick="selectAnswer(1, 'a', this)">
+                    <div class="option-indicator">A</div>
+                    <div class="option-text">2-3 inches from the microphone</div>
+                </div>
+                
+                <div class="quiz-option" data-answer="b" onclick="selectAnswer(1, 'b', this)">
+                    <div class="option-indicator">B</div>
+                    <div class="option-text">6-8 inches from the microphone</div>
+                </div>
+                
+                <div class="quiz-option" data-answer="c" onclick="selectAnswer(1, 'c', this)">
+                    <div class="option-indicator">C</div>
+                    <div class="option-text">12-15 inches from the microphone</div>
+                </div>
+                
+                <div class="quiz-option" data-answer="d" onclick="selectAnswer(1, 'd', this)">
+                    <div class="option-indicator">D</div>
+                    <div class="option-text">It doesn't matter as long as you can be heard</div>
+                </div>
+            </div>
+            
+            <div class="question-explanation" id="explanation1">
+                <div class="explanation-title">✅ Correct Answer: B</div>
+                <div class="explanation-text">
+                    6-8 inches is the optimal distance for most podcasting microphones. This distance provides the best balance of clarity and warmth while avoiding proximity effect (bass buildup) that occurs when too close, and maintaining good signal-to-noise ratio without being too far away.
+                </div>
+            </div>
+        </div>
+        
+        <div class="quiz-question-container" id="question2">
+            <div class="question-header">
+                <div class="question-counter">Question 2 of 5</div>
+                <div class="question-timer">
+                    <div class="timer-circle" id="timer2">120</div>
+                    <span>seconds remaining</span>
+                </div>
+            </div>
+            
+            <div class="question-text">
+                Which room characteristic is MOST important for achieving good podcast audio quality?
+            </div>
+            
+            <div class="question-image">🏠</div>
+            
+            <div class="quiz-options">
+                <div class="quiz-option" data-answer="a" onclick="selectAnswer(2, 'a', this)">
+                    <div class="option-indicator">A</div>
+                    <div class="option-text">Large, empty space with hard surfaces</div>
+                </div>
+                
+                <div class="quiz-option" data-answer="b" onclick="selectAnswer(2, 'b', this)">
+                    <div class="option-indicator">B</div>
+                    <div class="option-text">Small room with lots of soft furnishings</div>
+                </div>
+                
+                <div class="quiz-option" data-answer="c" onclick="selectAnswer(2, 'c', this)">
+                    <div class="option-indicator">C</div>
+                    <div class="option-text">Professional recording studio only</div>
+                </div>
+                
+                <div class="quiz-option" data-answer="d" onclick="selectAnswer(2, 'd', this)">
+                    <div class="option-text">Outdoor location for natural acoustics</div>
+                    <div class="option-indicator">D</div>
+                </div>
+            </div>
+            
+            <div class="question-explanation" id="explanation2">
+                <div class="explanation-title">✅ Correct Answer: B</div>
+                <div class="explanation-text">
+                    A small room with soft furnishings (carpets, curtains, furniture, books) is ideal for podcasting. These materials absorb sound reflections and reduce echo, creating a more controlled acoustic environment. Large empty spaces create unwanted reverb, while outdoor locations introduce unpredictable background noise.
+                </div>
+            </div>
+        </div>
+        
+        <div class="quiz-question-container" id="question3">
+            <div class="question-header">
+                <div class="question-counter">Question 3 of 5</div>
+                <div class="question-timer">
+                    <div class="timer-circle" id="timer3">120</div>
+                    <span>seconds remaining</span>
+                </div>
+            </div>
+            
+            <div class="question-text">
+                What should you do FIRST when you notice background noise during recording?
+            </div>
+            
+            <div class="quiz-options">
+                <div class="quiz-option" data-answer="a" onclick="selectAnswer(3, 'a', this)">
+                    <div class="option-indicator">A</div>
+                    <div class="option-text">Continue recording and fix it in post-production</div>
+                </div>
+                
+                <div class="quiz-option" data-answer="b" onclick="selectAnswer(3, 'b', this)">
+                    <div class="option-indicator">B</div>
+                    <div class="option-text">Turn up your microphone gain to overpower the noise</div>
+                </div>
+                
+                <div class="quiz-option" data-answer="c" onclick="selectAnswer(3, 'c', this)">
+                    <div class="option-indicator">C</div>
+                    <div class="option-text">Stop recording and eliminate the noise source if possible</div>
+                </div>
+                
+                <div class="quiz-option" data-answer="d" onclick="selectAnswer(3, 'd', this)">
+                    <div class="option-indicator">D</div>
+                    <div class="option-text">Speak louder to compensate for the background noise</div>
+                </div>
+            </div>
+            
+            <div class="question-explanation" id="explanation3">
+                <div class="explanation-title">✅ Correct Answer: C</div>
+                <div class="explanation-text">
+                    Always stop recording and eliminate the noise source when possible. It's much easier and more effective to fix the problem at the source than to try to remove noise in post-production. Good recording practices save time in editing and result in better overall audio quality.
+                </div>
+            </div>
+        </div>
+        
+        <div class="quiz-question-container" id="question4">
+            <div class="question-header">
+                <div class="question-counter">Question 4 of 5</div>
+                <div class="question-timer">
+                    <div class="timer-circle" id="timer4">120</div>
+                    <span>seconds remaining</span>
+                </div>
+            </div>
+            
+            <div class="question-text">
+                Which of the following is the best practice for consistent audio levels throughout a podcast episode?
+            </div>
+            
+            <div class="quiz-options">
+                <div class="quiz-option" data-answer="a" onclick="selectAnswer(4, 'a', this)">
+                    <div class="option-indicator">A</div>
+                    <div class="option-text">Set levels once at the beginning and don't touch them</div>
+                </div>
+                
+                <div class="quiz-option" data-answer="b" onclick="selectAnswer(4, 'b', this)">
+                    <div class="option-indicator">B</div>
+                    <div class="option-text">Monitor levels throughout and maintain consistent distance from mic</div>
+                </div>
+                
+                <div class="quiz-option" data-answer="c" onclick="selectAnswer(4, 'c', this)">
+                    <div class="option-text">Keep adjusting gain throughout the recording</div>
+                    <div class="option-indicator">C</div>
+                </div>
+                
+                <div class="quiz-option" data-answer="d" onclick="selectAnswer(4, 'd', this)">
+                    <div class="option-indicator">D</div>
+                    <div class="option-text">Record everything very quietly to avoid clipping</div>
+                </div>
+            </div>
+            
+            <div class="question-explanation" id="explanation4">
+                <div class="explanation-title">✅ Correct Answer: B</div>
+                <div class="explanation-text">
+                    Monitor your levels throughout recording and maintain consistent distance from the microphone. This ensures steady audio levels without sudden changes. Constantly adjusting gain creates inconsistent audio, while recording too quietly introduces unnecessary noise in post-production.
+                </div>
+            </div>
+        </div>
+        
+        <div class="quiz-question-container" id="question5">
+            <div class="question-header">
+                <div class="question-counter">Question 5 of 5</div>
+                <div class="question-timer">
+                    <div class="timer-circle" id="timer5">120</div>
+                    <span>seconds remaining</span>
+                </div>
+            </div>
+            
+            <div class="question-text">
+                What is the primary benefit of using a pop filter when recording podcasts?
+            </div>
+            
+            <div class="quiz-options">
+                <div class="quiz-option" data-answer="a" onclick="selectAnswer(5, 'a', this)">
+                    <div class="option-indicator">A</div>
+                    <div class="option-text">It makes your voice sound more professional</div>
+                </div>
+                
+                <div class="quiz-option" data-answer="b" onclick="selectAnswer(5, 'b', this)">
+                    <div class="option-indicator">B</div>
+                    <div class="option-text">It reduces plosive sounds from 'P' and 'B' consonants</div>
+                </div>
+                
+                <div class="quiz-option" data-answer="c" onclick="selectAnswer(5, 'c', this)">
+                    <div class="option-indicator">C</div>
+                    <div class="option-text">It eliminates all background noise</div>
+                </div>
+                
+                <div class="quiz-option" data-answer="d" onclick="selectAnswer(5, 'd', this)">
+                    <div class="option-indicator">D</div>
+                    <div class="option-text">It increases the microphone's sensitivity</div>
+                </div>
+            </div>
+            
+            <div class="question-explanation" id="explanation5">
+                <div class="explanation-title">✅ Correct Answer: B</div>
+                <div class="explanation-text">
+                    A pop filter's primary function is to reduce plosive sounds - the bursts of air that occur when pronouncing 'P' and 'B' consonants (and sometimes 'T' and 'K'). These sounds can cause unwanted popping or thumping in recordings. A pop filter disperses this air before it reaches the microphone diaphragm.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quiz Results -->
+        <div class="quiz-results" id="quizResults">
+            <div class="results-icon">🎉</div>
+            <h2 class="results-title">Congratulations!</h2>
+            <p class="results-subtitle">You've completed the Recording Techniques Quiz</p>
+            
+            <div class="results-score" id="finalScore">80%</div>
+            
+            <div class="results-message excellent" id="resultsMessage">
+                <strong>Excellent work!</strong> You have a solid understanding of recording techniques. You're ready to move on to the next lesson.
+            </div>
+            
+            <div class="results-breakdown">
+                <div class="breakdown-item">
+                    <div class="breakdown-number correct" id="correctCount">4</div>
+                    <div class="breakdown-label">Correct</div>
+                </div>
+                
+                <div class="breakdown-item">
+                    <div class="breakdown-number incorrect" id="incorrectCount">1</div>
+                    <div class="breakdown-label">Incorrect</div>
+                </div>
+                
+                <div class="breakdown-item">
+                    <div class="breakdown-number time" id="totalTime">7:32</div>
+                    <div class="breakdown-label">Total Time</div>
+                </div>
+                
+                <div class="breakdown-item">
+                    <div class="breakdown-number" id="passStatus" style="color: var(--lesson-success)">PASSED</div>
+                    <div class="breakdown-label">Status</div>
+                </div>
+            </div>
+            
+            <div class="results-actions">
+                <button class="control-btn" onclick="continueToNextLesson()">Continue to Next Lesson</button>
+                <button class="control-btn secondary" onclick="retakeQuiz()">Retake Quiz</button>
+                <button class="control-btn secondary" onclick="reviewAnswers()">Review Answers</button>
+            </div>
+            
+            <div class="question-review" id="questionReview" style="display: none;">
+                <div class="review-title">📋 Question Review</div>
+                <div id="reviewContent">
+                    <!-- Review items will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quiz Controls -->
+        <div class="quiz-controls" id="quizControls" style="display: none;">
+            <button class="control-btn secondary" onclick="previousQuestion()" id="prevBtn">Previous</button>
+            <div style="display: flex; gap: 1rem;">
+                <button class="control-btn secondary" onclick="skipQuestion()" id="skipBtn">Skip Question</button>
+                <button class="control-btn" onclick="nextQuestion()" id="nextBtn" disabled>Next Question</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/navigation.js"></script>
+    <script src="js/include-navigation.js"></script>
+    <script>
+        // Quiz functionality
+        let currentQuestion = 0;
+        let answers = {};
+        let timers = {};
+        let quizStarted = false;
+        let quizCompleted = false;
+        let totalQuestions = 5;
+        let correctAnswers = ['b', 'b', 'c', 'b', 'b'];
+        let timeSpent = 0;
+        let startTime = 0;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize quiz
+            showNotification('Welcome to the Recording Techniques Quiz! Read the instructions carefully before starting.', 'info');
+        });
+        
+        function startQuiz() {
+            document.getElementById('quizStart').style.display = 'none';
+            document.getElementById('quizControls').style.display = 'flex';
+            document.getElementById('question1').classList.add('active');
+            
+            currentQuestion = 1;
+            quizStarted = true;
+            startTime = Date.now();
+            
+            startTimer(1);
+            updateOverallProgress();
+            
+            showNotification('Quiz started! Good luck!', 'success');
+        }
+        
+        function startTimer(questionNum) {
+            let timeLeft = 120; // 2 minutes
+            const timerElement = document.getElementById(`timer${questionNum}`);
+            
+            timers[questionNum] = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = timeLeft;
+                
+                // Update timer visual state
+                if (timeLeft <= 30) {
+                    timerElement.classList.add('danger');
+                    timerElement.classList.remove('warning');
+                } else if (timeLeft <= 60) {
+                    timerElement.classList.add('warning');
+                    timerElement.classList.remove('danger');
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timers[questionNum]);
+                    autoSubmitQuestion(questionNum);
+                }
+            }, 1000);
+        }
+        
+        function selectAnswer(questionNum, answer, element) {
+            // Remove selection from all options in this question
+            const options = document.querySelectorAll(`#question${questionNum} .quiz-option`);
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            // Add selection to clicked option
+            element.classList.add('selected');
+            
+            // Store answer
+            answers[questionNum] = answer;
+            
+            // Enable next button
+            document.getElementById('nextBtn').disabled = false;
+            
+            // Show immediate feedback
+            setTimeout(() => {
+                showAnswerFeedback(questionNum, answer);
+            }, 500);
+        }
+        
+        function showAnswerFeedback(questionNum, selectedAnswer) {
+            const correctAnswer = correctAnswers[questionNum - 1];
+            const options = document.querySelectorAll(`#question${questionNum} .quiz-option`);
+            
+            options.forEach(option => {
+                const answerValue = option.dataset.answer;
+                option.classList.add('disabled');
+                
+                if (answerValue === correctAnswer) {
+                    option.classList.add('correct');
+                    option.innerHTML += '<div class="option-feedback">✓</div>';
+                } else if (answerValue === selectedAnswer && selectedAnswer !== correctAnswer) {
+                    option.classList.add('incorrect');
+                    option.innerHTML += '<div class="option-feedback">✗</div>';
+                }
+            });
+            
+            // Show explanation
+            document.getElementById(`explanation${questionNum}`).classList.add('show');
+            
+            // Stop timer
+            clearInterval(timers[questionNum]);
+        }
+        
+        function autoSubmitQuestion(questionNum) {
+            if (!answers[questionNum]) {
+                showNotification(`Time's up for question ${questionNum}! Moving to next question.`, 'warning');
+            }
+            
+            // Disable all options
+            const options = document.querySelectorAll(`#question${questionNum} .quiz-option`);
+            options.forEach(opt => opt.classList.add('disabled'));
+            
+            // Show correct answer
+            showAnswerFeedback(questionNum, answers[questionNum] || null);
+            
+            // Auto-advance after 3 seconds
+            setTimeout(() => {
+                if (currentQuestion < totalQuestions) {
+                    nextQuestion();
+                } else {
+                    finishQuiz();
+                }
+            }, 3000);
+        }
+        
+        function nextQuestion() {
+            if (currentQuestion < totalQuestions) {
+                // Hide current question
+                document.getElementById(`question${currentQuestion}`).classList.remove('active');
+                
+                currentQuestion++;
+                
+                // Show next question
+                document.getElementById(`question${currentQuestion}`).classList.add('active');
+                
+                // Start timer for new question
+                startTimer(currentQuestion);
+                
+                // Reset next button
+                document.getElementById('nextBtn').disabled = true;
+                
+                // Update progress
+                updateOverallProgress();
+                
+                // Update navigation buttons
+                updateNavigationButtons();
+            } else {
+                finishQuiz();
+            }
+        }
+        
+        function previousQuestion() {
+            if (currentQuestion > 1) {
+                // Hide current question
+                document.getElementById(`question${currentQuestion}`).classList.remove('active');
+                
+                // Clear current timer
+                clearInterval(timers[currentQuestion]);
+                
+                currentQuestion--;
+                
+                // Show previous question
+                document.getElementById(`question${currentQuestion}`).classList.add('active');
+                
+                // Update navigation buttons
+                updateNavigationButtons();
+                
+                // Update progress
+                updateOverallProgress();
+            }
+        }
+        
+        function skipQuestion() {
+            showNotification('Question skipped. You can return to it later.', 'info');
+            nextQuestion();
+        }
+        
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.disabled = currentQuestion === 1;
+            nextBtn.textContent = currentQuestion === totalQuestions ? 'Finish Quiz' : 'Next Question';
+        }
+        
+        function updateOverallProgress() {
+            const progress = (currentQuestion / totalQuestions) * 100;
+            document.getElementById('overallProgress').style.width = `${progress}%`;
+        }
+        
+        function finishQuiz() {
+            // Hide current question and controls
+            document.getElementById(`question${currentQuestion}`).classList.remove('active');
+            document.getElementById('quizControls').style.display = 'none';
+            
+            // Calculate results
+            calculateResults();
+            
+            // Show results
+            document.getElementById('quizResults').classList.add('show');
+            
+            quizCompleted = true;
+            
+            showNotification('Quiz completed! Check your results below.', 'success');
+        }
+        
+        function calculateResults() {
+            let correct = 0;
+            let incorrect = 0;
+            
+            for (let i = 1; i <= totalQuestions; i++) {
+                if (answers[i] === correctAnswers[i - 1]) {
+                    correct++;
+                } else {
+                    incorrect++;
+                }
+            }
+            
+            const percentage = Math.round((correct / totalQuestions) * 100);
+            const passed = percentage >= 70;
+            
+            timeSpent = Math.round((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(timeSpent / 60);
+            const seconds = timeSpent % 60;
+            
+            // Update results display
+            document.getElementById('finalScore').textContent = `${percentage}%`;
+            document.getElementById('correctCount').textContent = correct;
+            document.getElementById('incorrectCount').textContent = incorrect;
+            document.getElementById('totalTime').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('passStatus').textContent = passed ? 'PASSED' : 'FAILED';
+            document.getElementById('passStatus').style.color = passed ? 'var(--lesson-success)' : 'var(--danger-color)';
+            
+            // Update results message
+            const resultsMessage = document.getElementById('resultsMessage');
+            if (percentage >= 90) {
+                resultsMessage.className = 'results-message excellent';
+                resultsMessage.innerHTML = '<strong>Excellent work!</strong> You have mastered recording techniques. You\'re ready for advanced topics.';
+            } else if (percentage >= 70) {
+                resultsMessage.className = 'results-message good';
+                resultsMessage.innerHTML = '<strong>Good job!</strong> You have a solid understanding of recording techniques. You\'re ready to move on.';
+            } else {
+                resultsMessage.className = 'results-message needs-work';
+                resultsMessage.innerHTML = '<strong>Keep studying!</strong> Review the lesson material and try the quiz again to unlock the next lesson.';
+            }
+            
+            // Update results icon
+            const resultsIcon = document.querySelector('.results-icon');
+            if (passed) {
+                resultsIcon.textContent = '🎉';
+                resultsIcon.classList.add('pulse-animation');
+            } else {
+                resultsIcon.textContent = '📚';
+            }
+        }
+        
+        function continueToNextLesson() {
+            const percentage = parseInt(document.getElementById('finalScore').textContent);
+            
+            if (percentage >= 70) {
+                showNotification('Great job! Moving to the next lesson...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'lesson-player-prototype.html?lesson=7';
+                }, 1500);
+            } else {
+                showNotification('You need 70% to continue. Please retake the quiz.', 'warning');
+            }
+        }
+        
+        function retakeQuiz() {
+            // Reset quiz state
+            currentQuestion = 0;
+            answers = {};
+            timers = {};
+            quizStarted = false;
+            quizCompleted = false;
+            timeSpent = 0;
+            
+            // Reset UI
+            document.getElementById('quizResults').classList.remove('show');
+            document.getElementById('quizStart').style.display = 'block';
+            
+            // Reset all questions
+            for (let i = 1; i <= totalQuestions; i++) {
+                document.getElementById(`question${i}`).classList.remove('active');
+                
+                // Reset options
+                const options = document.querySelectorAll(`#question${i} .quiz-option`);
+                options.forEach(opt => {
+                    opt.classList.remove('selected', 'correct', 'incorrect', 'disabled');
+                    const feedback = opt.querySelector('.option-feedback');
+                    if (feedback) feedback.remove();
+                });
+                
+                // Reset explanations
+                document.getElementById(`explanation${i}`).classList.remove('show');
+                
+                // Reset timers
+                document.getElementById(`timer${i}`).textContent = '120';
+                document.getElementById(`timer${i}`).className = 'timer-circle';
+            }
+            
+            // Reset progress
+            document.getElementById('overallProgress').style.width = '0%';
+            
+            showNotification('Quiz reset! You can try again now.', 'info');
+        }
+        
+        function reviewAnswers() {
+            const reviewContent = document.getElementById('reviewContent');
+            reviewContent.innerHTML = '';
+            
+            const questions = [
+                'What is the optimal distance between a podcaster and their microphone for recording?',
+                'Which room characteristic is MOST important for achieving good podcast audio quality?',
+                'What should you do FIRST when you notice background noise during recording?',
+                'Which of the following is the best practice for consistent audio levels throughout a podcast episode?',
+                'What is the primary benefit of using a pop filter when recording podcasts?'
+            ];
+            
+            const options = [
+                ['2-3 inches from the microphone', '6-8 inches from the microphone', '12-15 inches from the microphone', "It doesn't matter as long as you can be heard"],
+                ['Large, empty space with hard surfaces', 'Small room with lots of soft furnishings', 'Professional recording studio only', 'Outdoor location for natural acoustics'],
+                ['Continue recording and fix it in post-production', 'Turn up your microphone gain to overpower the noise', 'Stop recording and eliminate the noise source if possible', 'Speak louder to compensate for the background noise'],
+                ["Set levels once at the beginning and don't touch them", 'Monitor levels throughout and maintain consistent distance from mic', 'Keep adjusting gain throughout the recording', 'Record everything very quietly to avoid clipping'],
+                ['It makes your voice sound more professional', "It reduces plosive sounds from 'P' and 'B' consonants", 'It eliminates all background noise', "It increases the microphone's sensitivity"]
+            ];
+            
+            for (let i = 1; i <= totalQuestions; i++) {
+                const reviewItem = document.createElement('div');
+                reviewItem.className = 'review-item';
+                
+                const userAnswer = answers[i];
+                const correctAnswer = correctAnswers[i - 1];
+                const isCorrect = userAnswer === correctAnswer;
+                
+                const userAnswerText = userAnswer ? options[i-1][['a','b','c','d'].indexOf(userAnswer)] : 'Not answered';
+                const correctAnswerText = options[i-1][['a','b','c','d'].indexOf(correctAnswer)];
+                
+                reviewItem.innerHTML = `
+                    <div class="review-question">Question ${i}: ${questions[i-1]}</div>
+                    <div class="review-answer ${isCorrect ? 'correct' : 'incorrect'}">
+                        <span>${isCorrect ? '✓' : '✗'}</span>
+                        <span>Your answer: ${userAnswerText}</span>
+                    </div>
+                    ${!isCorrect ? `<div class="review-answer correct"><span>✓</span><span>Correct answer: ${correctAnswerText}</span></div>` : ''}
+                `;
+                
+                reviewContent.appendChild(reviewItem);
+            }
+            
+            document.getElementById('questionReview').style.display = 'block';
+            document.getElementById('questionReview').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            const colors = {
+                'success': 'var(--lesson-success)',
+                'warning': 'var(--lesson-warning)',
+                'error': 'var(--danger-color)',
+                'info': 'var(--lesson-info)'
+            };
+            
+            notification.style.cssText = `
+                position: fixed;
+                top: 70px;
+                right: 20px;
+                background: ${colors[type]};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                z-index: 1000;
+                animation: fadeIn 0.3s ease-out;
+                box-shadow: var(--shadow-hover);
+                max-width: 350px;
+                font-size: 0.925rem;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            if (!quizStarted || quizCompleted) return;
+            
+            switch(event.key) {
+                case 'Enter':
+                    if (!document.getElementById('nextBtn').disabled) {
+                        nextQuestion();
+                    }
+                    break;
+                case 'Escape':
+                    if (currentQuestion > 1) {
+                        previousQuestion();
+                    }
+                    break;
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                    const optionIndex = parseInt(event.key) - 1;
+                    const options = document.querySelectorAll(`#question${currentQuestion} .quiz-option`);
+                    if (options[optionIndex] && !options[optionIndex].classList.contains('disabled')) {
+                        const answer = ['a', 'b', 'c', 'd'][optionIndex];
+                        selectAnswer(currentQuestion, answer, options[optionIndex]);
+                    }
+                    break;
+            }
+        });
+        
+        // Auto-save progress
+        setInterval(() => {
+            if (quizStarted && !quizCompleted) {
+                console.log(`Auto-saving quiz progress: Question ${currentQuestion}/5`);
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
