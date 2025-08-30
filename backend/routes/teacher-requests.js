@@ -618,8 +618,9 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
     // Comment 14 - Generate secure database token for unified password reset system
     // Use database tokens instead of JWT tokens to be compatible with password reset flow
     // IMPORTANT: Create token AFTER user creation using the new user's ID
+    // CRITICAL: Use the same transaction client to avoid foreign key constraint violations
     const tokenService = require('../utils/token-service');
-    const dbToken = await tokenService.createPasswordResetToken(userResult.rows[0].id, 168); // 7 days = 168 hours
+    const dbToken = await tokenService.createPasswordResetToken(userResult.rows[0].id, 168, client); // 7 days = 168 hours, use transaction client
     const invitationToken = { token: dbToken };
     
     logger.info('Password reset token created successfully', { userId: userResult.rows[0].id, tokenLength: dbToken?.length });

@@ -23,17 +23,21 @@ function generateToken() {
  * Create password reset token for any user
  * @param {number} userId - User ID
  * @param {number} expirationHours - Hours until expiration (default 1)
+ * @param {Object} client - Optional database client to use (for transactions)
  * @returns {Promise<string>} Generated token
  */
-async function createPasswordResetToken(userId, expirationHours = 1) {
+async function createPasswordResetToken(userId, expirationHours = 1, client = null) {
     const token = generateToken();
     const expiresAt = new Date(Date.now() + (expirationHours * 60 * 60 * 1000));
+
+    // Use provided client (for transactions) or fallback to pool
+    const dbConnection = client || pool;
 
     // Since unique constraint is removed, we can simply insert
     // If user already has tokens, this will create multiple (which is now allowed)
     console.log(`Creating password reset token for user ${userId}, token: ${token}, expires: ${expiresAt}`);
     try {
-        const insertResult = await pool.query(`
+        const insertResult = await dbConnection.query(`
             INSERT INTO password_reset_tokens (user_id, token, expires_at, used, created_at) 
             VALUES ($1, $2, $3, false, CURRENT_TIMESTAMP)
             RETURNING id, created_at
