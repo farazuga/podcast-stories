@@ -613,17 +613,27 @@ router.post('/:id/approve', verifyToken, isAmitraceAdmin, async (req, res) => {
       RETURNING id, email, role, name, school_id
     `, [normalizedEmail, hashedPassword, 'teacher', request.name, request.school_id]);
     
-    logger.info('User account created successfully', { userId: userResult.rows[0].id });
+    const newUserId = userResult.rows[0].id;
+    logger.info('User account created successfully', { userId: newUserId });
+    
+    // CRITICAL DEBUG: Verify user exists in the same transaction context
+    const userVerification = await client.query('SELECT id FROM users WHERE id = $1', [newUserId]);
+    logger.info('User verification in transaction:', { 
+        userId: newUserId, 
+        found: userVerification.rows.length > 0,
+        verificationResult: userVerification.rows[0]
+    });
     
     // Comment 14 - Generate secure database token for unified password reset system
     // Use database tokens instead of JWT tokens to be compatible with password reset flow
     // IMPORTANT: Create token AFTER user creation using the new user's ID
     // CRITICAL: Use the same transaction client to avoid foreign key constraint violations
     const tokenService = require('../utils/token-service');
-    const dbToken = await tokenService.createPasswordResetToken(userResult.rows[0].id, 168, client); // 7 days = 168 hours, use transaction client
+    logger.info('About to create password reset token', { userId: newUserId, clientProvided: !!client });
+    const dbToken = await tokenService.createPasswordResetToken(newUserId, 168, client); // 7 days = 168 hours, use transaction client
     const invitationToken = { token: dbToken };
     
-    logger.info('Password reset token created successfully', { userId: userResult.rows[0].id, tokenLength: dbToken?.length });
+    logger.info('Password reset token created successfully', { userId: newUserId, tokenLength: dbToken?.length });
     
     // Comment 12 - Update with processed_at and action_type fields (conditionally)
     logger.info('Updating teacher request status');
