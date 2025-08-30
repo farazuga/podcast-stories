@@ -670,12 +670,22 @@ function displayTeacherRequests() {
 
 // Make function globally available
 window.showApprovalModal = function(requestId) {
+    console.log('🔍 showApprovalModal called with requestId:', requestId);
     currentRequestId = requestId;
     const modal = document.getElementById('approvalModal');
     modal.style.display = 'block';
     
     // Set request ID
     document.getElementById('requestId').value = requestId;
+    console.log('🔍 Modal displayed, currentRequestId set to:', currentRequestId);
+    
+    // Check if form listener is attached
+    const form = document.getElementById('approveTeacherForm');
+    if (form) {
+        console.log('🔍 Form found, has submit listener:', form.onsubmit !== null);
+    } else {
+        console.error('❌ approveTeacherForm not found!');
+    }
 }
 
 // Make function globally available
@@ -686,16 +696,20 @@ window.closeApprovalModal = function() {
 }
 
 async function approveTeacherRequest(e) {
+    console.log('🔍 approveTeacherRequest called');
     e.preventDefault();
     
     const requestId = currentRequestId;
+    console.log('🔍 Current request ID:', requestId);
     
     if (!requestId) {
+        console.error('❌ No request ID found');
         showError('Request ID is required');
         return;
     }
     
     try {
+        console.log('🔍 Making API call to approve teacher:', `${window.API_URL}/teacher-requests/${requestId}/approve`);
         const response = await fetch(`${window.API_URL}/teacher-requests/${requestId}/approve`, {
             method: 'POST',
             headers: {
@@ -705,7 +719,9 @@ async function approveTeacherRequest(e) {
             body: JSON.stringify({}) // No password needed - auto-generated
         });
         
+        console.log('🔍 API response status:', response.status);
         const result = await response.json();
+        console.log('🔍 API response data:', result);
         
         if (response.ok) {
             showSuccess('Teacher request approved. Invitation link sent via email.');
@@ -714,9 +730,11 @@ async function approveTeacherRequest(e) {
             await loadTeacherRequestStats();
             await loadStatistics();
         } else {
+            console.error('❌ API error:', result.error);
             showError(result.error || 'Failed to approve teacher request');
         }
     } catch (error) {
+        console.error('❌ Network error:', error);
         showError('Network error. Please try again.');
     }
 }
@@ -951,10 +969,13 @@ function setupEventListeners() {
         // Approve teacher form
         const approveTeacherForm = document.getElementById('approveTeacherForm');
         if (approveTeacherForm) {
+            console.log('🔍 Attaching submit listener to approveTeacherForm');
             approveTeacherForm.addEventListener('submit', approveTeacherRequest);
             console.log('✓ Approve teacher form listener attached');
+            // Double-check the listener was attached
+            console.log('🔍 Form.onsubmit after attachment:', approveTeacherForm.onsubmit);
         } else {
-            console.warn('⚠ Approve teacher form not found');
+            console.warn('⚠ Approve teacher form not found - this is critical!');
         }
         
         // Add click listeners to tab buttons using data-tab attribute

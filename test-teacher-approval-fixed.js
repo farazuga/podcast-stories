@@ -50,15 +50,45 @@ async function testTeacherApprovalFixed() {
         console.log('\n3. Switching to Teacher Requests tab...');
         
         const tabSwitch = await page.evaluate(() => {
-            // Find the Teacher Requests tab button
-            const tabButtons = Array.from(document.querySelectorAll('.tab-button'));
-            const teacherButton = tabButtons.find(btn => btn.textContent.includes('Teacher'));
+            // First, let's see what buttons are available
+            const allButtons = Array.from(document.querySelectorAll('button'));
+            console.log('All buttons found:', allButtons.map(b => b.textContent.trim()));
+            
+            // Look for tab buttons more broadly
+            const tabButtons = Array.from(document.querySelectorAll('.tab-button, button'));
+            console.log('Tab buttons found:', tabButtons.map(b => b.textContent.trim()));
+            
+            // Try different variations
+            const teacherButton = tabButtons.find(btn => 
+                btn.textContent.includes('Teacher') || 
+                btn.textContent.includes('Requests') ||
+                btn.textContent.includes('teacher')
+            );
             
             if (teacherButton) {
+                console.log('Found teacher button:', teacherButton.textContent);
                 teacherButton.click();
                 return { success: true, buttonText: teacherButton.textContent };
             }
-            return { success: false, reason: 'Tab button not found' };
+            
+            // Try calling showTab directly with different names
+            if (typeof showTab === 'function') {
+                console.log('Trying showTab function...');
+                try {
+                    showTab('teachers');
+                    return { success: true, method: 'showTab("teachers")' };
+                } catch (e) {
+                    console.log('showTab("teachers") failed:', e.message);
+                    try {
+                        showTab('teacher-requests');
+                        return { success: true, method: 'showTab("teacher-requests")' };
+                    } catch (e2) {
+                        console.log('showTab("teacher-requests") failed:', e2.message);
+                    }
+                }
+            }
+            
+            return { success: false, reason: 'No teacher button or showTab function found' };
         });
         
         console.log(`   Tab switch: ${JSON.stringify(tabSwitch)}`);
