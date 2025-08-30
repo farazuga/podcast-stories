@@ -60,7 +60,7 @@ class RundownUtils {
         };
         
         try {
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+            const response = await fetch(`${window.API_URL}${endpoint}`, config);
             
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ error: 'Network error' }));
