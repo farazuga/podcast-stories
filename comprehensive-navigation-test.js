@@ -21,7 +21,8 @@ class ComprehensiveNavigationTest {
 
     async init() {
         console.log('🚀 Comprehensive Navigation Test Suite');
-        console.log('Testing refactored navigation system (August 2025)');
+        console.log('Testing FIXED navigation system (August 30, 2025)');
+        console.log('Fixed contradictory code and role visibility issues');
         console.log('='*60 + '\n');
     }
 
@@ -280,24 +281,24 @@ class ComprehensiveNavigationTest {
             args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
         
-        // Test each role with clean implementation expectations
+        // Test each role with corrected expectations (August 2025 fix)
         const roleConfigs = [
             {
                 role: 'student',
                 credentials: { email: 'student@vidpod.com', password: 'vidpod' },
-                expectedVisible: ['dashboard', 'stories'],
-                expectedHidden: ['add-story', 'teacher-dashboard', 'admin-browse-stories', 'admin']
+                expectedVisible: ['dashboard', 'stories', 'add-story', 'rundowns'],
+                expectedHidden: ['teacher-dashboard', 'admin-browse-stories', 'admin']
             },
             {
                 role: 'teacher', 
                 credentials: { email: 'teacher@vidpod.com', password: 'vidpod' },
-                expectedVisible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard'],
+                expectedVisible: ['dashboard', 'stories', 'add-story', 'teacher-dashboard', 'rundowns'],
                 expectedHidden: ['admin-browse-stories', 'admin']
             },
             {
                 role: 'admin',
                 credentials: { email: 'admin@vidpod.com', password: 'vidpod' },
-                expectedVisible: ['dashboard', 'stories', 'add-story', 'admin-browse-stories', 'admin'],
+                expectedVisible: ['dashboard', 'admin-browse-stories', 'add-story', 'admin', 'rundowns'],
                 expectedHidden: ['teacher-dashboard']
             }
         ];

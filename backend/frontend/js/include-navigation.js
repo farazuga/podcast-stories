@@ -155,22 +155,8 @@ const NavigationLoader = {
             userAvatar.textContent = user.name.substring(0, 2).toUpperCase();
         }
 
-        // Handle role-based visibility (clean implementation)
-        if (user.role) {
-            const userRole = user.role.toLowerCase().trim();
-            document.querySelectorAll('[data-role]').forEach(element => {
-                const allowedRoles = element.getAttribute('data-role')
-                    .toLowerCase()
-                    .split(',')
-                    .map(role => role.trim());
-                
-                const shouldShow = allowedRoles.includes(userRole);
-                element.style.display = shouldShow ? '' : 'none';
-            });
-            
-            // Add body class for CSS targeting
-            document.body.classList.add(`user-role-${userRole}`);
-        }
+        // Role visibility will be handled by VidPODNav.updateRoleVisibility()
+        // No duplicate logic needed here
         
         // Mark navigation as initialized
         const navbar = document.getElementById('vidpodNavbar');

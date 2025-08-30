@@ -193,9 +193,9 @@ podcast-stories/
 - **Performance optimized**: Removed 300+ lines of redundant hiding code
 
 #### Navigation by Role:
-- **Students**: Dashboard + Browse Stories only
-- **Teachers**: Dashboard + Browse Stories + Add Story + My Classes  
-- **Admins**: All navigation items including Admin Panel + Admin Browse Stories
+- **Students**: Dashboard + Browse Stories + Add Story + Rundowns
+- **Teachers**: Dashboard + Browse Stories + Add Story + My Classes + Rundowns
+- **Admins**: Dashboard + Admin Browse Stories + Add Story + Admin Panel + Rundowns
 
 #### Implementation Details:
 - Navigation template: `includes/navigation.html` with `data-role` attributes
@@ -350,7 +350,7 @@ student@vidpod.com / vidpod (student)
 - **Major Code Cleanup** - Removed 300+ lines of redundant navigation code
 - **Performance Optimization** - Single DOM pass instead of multiple complex functions
 - **Clean Architecture** - Declarative HTML `data-role` system replaces JavaScript complexity
-- **Role Restrictions** - Students now see only Dashboard + Browse Stories (no Add Story access)
+- **Role-Based Navigation** - Clean data-role attribute system for all user types
 - **Maintainability** - Role changes only require HTML template updates
 
 #### Previous Updates - January 20, 2025
@@ -651,19 +651,22 @@ All authenticated application pages follow this pattern:
 - Browse Stories → Admin Browse Stories
 - Add Story
 - Admin Panel
-- User Management
+- Rundowns
 - Logout
 
-#### Teacher Users
-- Dashboard → Teacher Dashboard
+#### Teacher Users  
+- Dashboard
 - Browse Stories
 - Add Story
+- My Classes
+- Rundowns
 - Logout
 
 #### Student Users
 - Dashboard
 - Browse Stories
 - Add Story
+- Rundowns
 - Logout
 
 ### Implementation Benefits
